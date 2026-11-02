@@ -2382,7 +2382,15 @@ catch(error){console.log(JSON.stringify({accepted:false,error:error.message}));}
             historical = copy.deepcopy(groups)
             historical['python']['importFiles'] = {str(actual_repo / name): actual_record(actual_repo / name) for name in names}
             executable = Path(sys.executable).resolve()
-            harness_file = Path('/Users/sam/.agents/skills/software-engineering-harness/scripts/harness_core.py')
+            harness_root = actual_repo / 'synthetic-harness'
+            harness_file = harness_root / 'scripts/harness_core.py'
+            harness_file.parent.mkdir(parents=True)
+            harness_file.write_text('synthetic Harness input fixture\n')
+            original_resolve = Path.resolve
+            def fixture_resolve(value, *args, **kwargs):
+                if str(value) == '/Users/sam/.agents/skills/software-engineering-harness':
+                    return harness_root
+                return original_resolve(value, *args, **kwargs)
             historical['python'].update(files={str(executable): actual_record(executable)},
                 importRoots=[{'path': str(actual_repo), 'realpath': str(actual_repo)}],
                 importOrigins={'synthetic': str(actual_repo / names[0])})
@@ -2402,7 +2410,8 @@ catch(error){console.log(JSON.stringify({accepted:false,error:error.message}));}
                 actual_current[name] = dict(entry(), sha256=actual_record(actual_repo / name)['sha256'])
             _, observed_projection = self.gate.hd235_observational_applicability(actual_raw, suite, 'f' * 64,
                 actual_current, raw['spec_baseline'], actual_obs, core, actual_repo)
-            with mock.patch.object(self.gate.shutil, 'which', return_value=str(executable)), \
+            with mock.patch.object(self.gate.Path, 'resolve', autospec=True, side_effect=fixture_resolve), \
+                 mock.patch.object(self.gate.shutil, 'which', return_value=str(executable)), \
                  mock.patch.object(self.gate, 'mysql_daemon_issues', return_value=[]):
                 context = SimpleNamespace(repo=actual_repo)
                 self.assertEqual(self.gate.current_manifest_issues(observed_projection, context), [])
@@ -2595,9 +2604,18 @@ catch(error){console.log(JSON.stringify({accepted:false,error:error.message}));}
                     if generated: import_files[str(target)]['generatedChildren'] = generated
                     for child in target.iterdir(): capture_imports(child)
                 else: import_files[str(target)] = file_record(target)
+            harness_root = ui_repo / 'synthetic-harness'
+            harness_file = harness_root / 'scripts/harness_core.py'
+            harness_file.parent.mkdir(parents=True)
+            harness_file.write_text('synthetic Harness input fixture\n')
+            original_resolve = Path.resolve
+            def fixture_resolve(value, *args, **kwargs):
+                if str(value) == '/Users/sam/.agents/skills/software-engineering-harness':
+                    return harness_root
+                return original_resolve(value, *args, **kwargs)
             capture_imports(ui_repo)
             executable = Path(sys.executable).resolve()
-            harness_file = Path('/Users/sam/.agents/skills/software-engineering-harness/scripts/harness_core.py')
+
             installed = {name: file_record(ui_repo / name) for name in fixture_files if '/node_modules/' in name}
             observed_groups = {'python': {'files': {str(executable): file_record(executable)},
                 'importFiles': import_files, 'importRoots': [{'path': str(ui_repo), 'realpath': str(ui_repo)}],
@@ -2608,7 +2626,8 @@ catch(error){console.log(JSON.stringify({accepted:false,error:error.message}));}
                          for name in ('node', 'mysql', 'git', 'python')}}
             original_groups = copy.deepcopy(observed_groups)
             context = SimpleNamespace(repo=ui_repo)
-            with mock.patch.object(self.gate.shutil, 'which', return_value=str(executable)), \
+            with mock.patch.object(self.gate.Path, 'resolve', autospec=True, side_effect=fixture_resolve), \
+                 mock.patch.object(self.gate.shutil, 'which', return_value=str(executable)), \
                  mock.patch.object(self.gate, 'mysql_daemon_issues', return_value=[]):
                 self.assertEqual(self.gate.current_manifest_issues(observed_groups, context, old_outputs), [])
                 for name in ('client/dist/output.js', 'server/coverage/lcov.info',

@@ -585,7 +585,7 @@ await check('command Audit deterministic comparison and array-slot work stays li
 
 const enabled=process.env.DB_INTEGRATION_TESTS==='1'&&process.env.INVENTORY_STOCKTAKE_CHARACTERIZATION_TESTS==='1';
 test('ST041-CS01 fresh full-capacity thirty-minute fixed-offer Stocktake resource soak',{skip:!enabled,timeout:2700000},async()=>{
-  const helperUrl=new URL('../../test-support/inventoryStocktakePerformanceChild.js',import.meta.url);
+  const helperUrl=new URL('./inventoryStocktakePerformanceChild.js',import.meta.url);
   const helperSource=await readFile(helperUrl,'utf8');
   let supporting;
   try { supporting=await verifyStocktakeSoakSupportingExamples(helperSource,helperUrl.pathname); }

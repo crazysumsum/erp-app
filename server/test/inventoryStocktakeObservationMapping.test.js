@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import test from "node:test";
-import * as mappingHelper from "../test-support/inventoryStocktakePerformanceChild.js";
+import * as mappingHelper from "../test-capacity/inventory/inventoryStocktakePerformanceChild.js";
 
 // Controlled driver/IPC boundaries exercise the real helper. destroy() below records
 // ownership cleanup; it is not evidence of an OS socket or SQL reaching terminal.

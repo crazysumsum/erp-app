@@ -78,7 +78,7 @@ async function verifyStocktakeExportAuditExamples(verifyRows, registerIntent, re
 }
 
 test("ST041-CP01 full migrated capacity fixture, measurement self-check and twenty real logins", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { createPerformanceFixture, nearestRank, intendedOffer } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { createPerformanceFixture, nearestRank, intendedOffer } = await import("./inventoryStocktakePerformanceChild.js");
   assert.equal(nearestRank([4, 1, 3, 2], 0.95), 4);
   assert.equal(nearestRank([1, 2, 3, 4], 0.5), 2);
   assert.deepEqual(intendedOffer(1, 14399), { atMs: 1799937.5, actor: 9, minute: 29 });
@@ -90,28 +90,28 @@ test("ST041-CP01 full migrated capacity fixture, measurement self-check and twen
 });
 
 test("ST041-CP09 native Control batches preserve fifty thousand rows and roll back later-batch failures", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyControlLockBoundary } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyControlLockBoundary } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyControlLockBoundary(fixture);
 });
 
 test("ST041-CP14 native observation abort, historical SQL terminal and real replacement connection", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyObservationLifecycle } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyObservationLifecycle } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyObservationLifecycle(fixture);
 });
 
 test("ST041-CP15 native short-lived connection mapping history, socket close and real replacement", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyShortLivedConnectionMapping } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyShortLivedConnectionMapping } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyShortLivedConnectionMapping(fixture);
 });
 
 test("ST041-CP02 six original real HTTP query families preserve exact results and existing p95 below two seconds", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyQueryBaseline } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyQueryBaseline } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyQueryBaseline(fixture);
 });
 
 async function verifyLotSampleAdmissionExamples() {
   // Execute the real helper bodies without importing its native fixture/application dependencies.
-  const source = await readFile(new URL("../../test-support/inventoryStocktakePerformanceChild.js", import.meta.url), "utf8");
+  const source = await readFile(new URL("./inventoryStocktakePerformanceChild.js", import.meta.url), "utf8");
   const extract = (start, end) => {
     const first = source.indexOf(start), last = source.indexOf(end, first + start.length);
     assert.ok(first >= 0 && last > first, `Missing actual helper body: ${start}`);
@@ -380,17 +380,17 @@ async function verifyLotSampleAdmissionExamples() {
 
 test("ST041-CP10 full-capacity native Lot plans and balanced OR versus tuple-IN comparison", { skip: !enabled, timeout: 7200000 }, async () => {
   await verifyLotSampleAdmissionExamples();
-  const { verifyLotQueryComparison } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyLotQueryComparison } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyLotQueryComparison(fixture);
 });
 
 test("ST041-CP11 native Lot tuple semantics, collation, ordered rows and owner rollback", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyLotQuerySemantics } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyLotQuerySemantics } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyLotQuerySemantics(fixture);
 });
 
 test("ST041-CP12 native Lot waits, current reads, late keys, gap effects and owner rollback", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyLotLockSafety } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyLotLockSafety } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyLotLockSafety(fixture);
 });
 
@@ -398,21 +398,21 @@ for (const [caseId, bins] of [["CP03", 1], ["CP04", 10], ["CP05", 200]]) {
   test(`ST041-${caseId} three complete real HTTP Stocktakes across ${bins} bins`, { skip: !enabled, timeout: 7200000 }, async () => {
     assert.equal(fixture?.controlLockVerified, true, "CP09 must complete before write workload");
     assert.equal(fixture?.lotSafetyVerified, true, "HD186 preimplementation comparison and lock safety must complete before another write workload");
-    const { stocktakeWorkflow } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+    const { stocktakeWorkflow } = await import("./inventoryStocktakePerformanceChild.js");
     for (let round = 0; round < 3; round++) await stocktakeWorkflow(fixture, bins, round);
   });
 }
 
 test("ST041-CP06 all three full-scope rounds retain six query families and native SQL overlap in every phase", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyQueryCoexistence } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyQueryCoexistence } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyQueryCoexistence(fixture);
 });
 
 test("ST041-CP07 real 100000-line COUNTING CSV, anonymous resources and serial primary-pool-one compatibility", { skip: !enabled, timeout: 7200000 }, async () => {
   assert.equal(fixture?.controlLockVerified, true);
   assert.equal(fixture?.lotSafetyVerified, true);
-  const { verifyStocktakeExportCapacity } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
-  const { verifyStocktakeExportAuditRows, registerStocktakeExportAuditIntent, readStocktakeExportAuditEvidence } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyStocktakeExportCapacity } = await import("./inventoryStocktakePerformanceChild.js");
+  const { verifyStocktakeExportAuditRows, registerStocktakeExportAuditIntent, readStocktakeExportAuditEvidence } = await import("./inventoryStocktakePerformanceChild.js");
   assert.deepEqual(await verifyStocktakeExportAuditExamples(verifyStocktakeExportAuditRows, registerStocktakeExportAuditIntent, readStocktakeExportAuditEvidence),
     { positives: 2, negativeClasses: 8, provenance: "SYNTHETIC_ORACLE_ONLY_NOT_NATIVE" });
   const result = await verifyStocktakeExportCapacity(fixture);
@@ -444,7 +444,7 @@ test("ST041-CP07 real 100000-line COUNTING CSV, anonymous resources and serial p
 });
 
 test("ST041-CP08 zero-variance real HTTP Post/replay and complete full-capacity reconciliation", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyNormalWorkloadsReconciled } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyNormalWorkloadsReconciled } = await import("./inventoryStocktakePerformanceChild.js");
   await verifyNormalWorkloadsReconciled(fixture);
   assert.equal(fixture.normalWorkloadsReconciled, true);
   assert.equal(fixture.characterizationCases.get("CP08"), true);
@@ -452,7 +452,7 @@ test("ST041-CP08 zero-variance real HTTP Post/replay and complete full-capacity 
 
 
 test("ST041-CP13 fixed CPU fault, parent watchdog and exact owned recovery preserve complete Inventory state", { skip: !enabled, timeout: 7200000 }, async () => {
-  const { verifyCpuHoldRecovery } = await import("../../test-support/inventoryStocktakePerformanceChild.js");
+  const { verifyCpuHoldRecovery } = await import("./inventoryStocktakePerformanceChild.js");
   const result = await verifyCpuHoldRecovery(fixture);
   assert.equal(result.outcome, "EXPECTED_TEST_INJECTED_RECOVERY");
   assert.equal(result.stop.forced, true); assert.equal(result.stop.terminal, true);

@@ -10,8 +10,8 @@ import { promisify } from "node:util";
 import http from "node:http";
 
 const execute = promisify(execFile);
-const helperFile = new URL("../test-support/inventoryStocktakePerformanceChild.js", import.meta.url);
-const charFile = new URL("./performance/inventoryStocktakeCharacterization.performance.test.js", import.meta.url);
+const helperFile = new URL("../test-capacity/inventory/inventoryStocktakePerformanceChild.js", import.meta.url);
+const charFile = new URL("../test-capacity/inventory/stocktake-characterization.js", import.meta.url);
 const drain = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); };
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 function extract(source, start, end) { const a = source.indexOf(start), b = source.indexOf(end, a + start.length); assert.ok(a >= 0 && b > a, `Actual function markers ${start}`); return source.slice(a, b).replace(/^export /u, ""); }
@@ -199,11 +199,10 @@ test("FF11 first producer failure survives later sampler failure and cleanup kee
   assert.equal(f.journal.filter(value => value[0] === "RUN_ORIGINAL_ERROR").length, 1);
 });
 test("FF12 original callback bodies and all helper ranges outside the two approved functions stay byte-identical", async () => {
-  const base = new URL("../../docs/inventory_management/implementation/hd227-before/", import.meta.url);
-  const oldChar = await readFile(new URL("characterization.before.txt", base), "utf8"), currentChar = await readFile(charFile, "utf8");
+  const currentChar = await readFile(charFile, "utf8");
   const strip = text => text.replace(/import (?:test|nodeTest), \{ after \}/u, 'import test, { after }').replace(/\n\/\/ BEGIN createStocktakeCharacterizationCase[\s\S]*?\/\/ END createStocktakeCharacterizationCase\nconst test = createStocktakeCharacterizationCase\(nodeTest\);\n/u, "\n");
-  assert.equal(strip(currentChar), strip(oldChar));
-  const oldHelper = await readFile(new URL("performance.before.txt", base), "utf8"), currentHelper = await readFile(helperFile, "utf8");
+  assert.equal(createHash("sha256").update(strip(currentChar)).digest("hex"), "7083850eec2ef74866ebe2962916afc285073dc7e605aeb905031d1b927337ea");
+  const currentHelper = await readFile(helperFile, "utf8");
   const outside = text => text.replace(/export function createStocktakeSoakLane\([\s\S]*?\/\/ END createStocktakeSoakLane/u, "LANE").replace(/export async function runStocktakeResourceSoak\([\s\S]*?(?=\nasync function stocktakeSoakReadCases\()/u, "RUN");
-  assert.equal(outside(currentHelper), outside(oldHelper));
+  assert.equal(createHash("sha256").update(outside(currentHelper)).digest("hex"), "b34f2b4e2b42a8a49cf08fbcfb70651e64a6a39065fd53c817b5d227d131f4dd");
 });

@@ -324,6 +324,7 @@ async function main() {
   if (primary) {
     await atomicJson(path.join(directory, "failure.json"), { kind: "NATIVE_PROOF_FAILED", identity, shard,
       startedAt: before?.at ?? null, endedAt, error: { name: primary.name, code: primary.code ?? null, monitorCleanup: primary.monitorCleanup ?? null },
+      before: before?.snapshot ?? null, after: after ?? null,
       originalOutcome: process.env.INVENTORY_NATIVE_OUTCOME ?? null, terminal: terminal ?? null });
     throw primary;
   }

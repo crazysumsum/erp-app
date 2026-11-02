@@ -239,7 +239,7 @@ jobs:
         env:
           INVENTORY_CI_MYSQL_CONTAINER: ${{ job.services.mysql.id }}
         run: |
-          mkdir -p client/node_modules/.vite/deps
+          mkdir -p client/node_modules/.vite/deps client/node_modules/.vite-temp
           env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs before-shard ${{ matrix.shard }}
 
       - name: Collect native server coverage for this shard

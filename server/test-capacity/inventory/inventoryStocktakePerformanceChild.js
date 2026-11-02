@@ -10,11 +10,11 @@ import { isDeepStrictEqual } from "node:util";
 import { setTimeout } from "node:timers/promises";
 import mysql from "mysql2/promise";
 import { parse } from "csv-parse";
-import { createTestDevice } from "./testDevice.js";
-import { seedItemPerformanceFixtures } from "./itemPerformanceFixtures.js";
-import { hashPassword } from "../src/modules/user/passwordHash.js";
-import { inventoryOperationHash } from "../src/modules/inventory/InventoryOperationService.js";
-import { defaultConfigurationSource, validateApplicationConfiguration } from "../src/framework/configuration/applicationConfiguration.js";
+import { createTestDevice } from "../../test-support/testDevice.js";
+import { seedItemPerformanceFixtures } from "../../test-support/itemPerformanceFixtures.js";
+import { hashPassword } from "../../src/modules/user/passwordHash.js";
+import { inventoryOperationHash } from "../../src/modules/inventory/InventoryOperationService.js";
+import { defaultConfigurationSource, validateApplicationConfiguration } from "../../src/framework/configuration/applicationConfiguration.js";
 
 export async function createStocktakeSoakProgressJournal({runDir,helperSha256=null,testSha256=null}) {
   const stats={status:'OPEN',acceptedRecords:0,writtenRecords:0,syncedRecords:0,acceptedBytes:0,writtenBytes:0,
@@ -95,7 +95,7 @@ function errorObservation(error) {
       sqlState: /^[A-Z0-9]{5}$/u.test(cause.sqlState ?? "") ? cause.sqlState : null,
       assertionOperator: /^[a-zA-Z=]+$/u.test(cause.operator ?? "") ? cause.operator : null,
       frames: String(cause.stack ?? "").split("\n").filter(line => /^\s+at /u.test(line)).slice(0, 4)
-        .map(line => line.replaceAll(fileURLToPath(new URL("../../", import.meta.url)), "<repo>")) });
+        .map(line => line.replaceAll(fileURLToPath(new URL("../../../", import.meta.url)), "<repo>")) });
   }
   return { chain, codes: chain.map(value => value.code) };
 }
@@ -204,7 +204,7 @@ export function installStocktakeResourceSampler(root, incarnation, publish, mapp
     metrics.warningTotal++;
     const type = /^[A-Za-z][A-Za-z0-9]*$/u.test(value.name ?? "") ? value.name : "Warning";
     const frames = String(value.stack ?? "").split("\n").filter(line => /^\s+at /u.test(line)).slice(0, 8)
-      .map(line => line.replaceAll(fileURLToPath(new URL("../../", import.meta.url)), "<repo>"));
+      .map(line => line.replaceAll(fileURLToPath(new URL("../../../", import.meta.url)), "<repo>"));
     const stackHash = sha(String(value.stack ?? "")), key = `${type}:${stackHash}`;
     if (!warningCounts.has(key) && warningCounts.size >= 64) { metrics.warningBucketOverflow++; return; }
     const entry = warningCounts.get(key) ?? { type, stackHash, count: 0, firstAtMs: resourceClock(), emitterIds: [], earliestStacks: [] };
@@ -764,7 +764,7 @@ async function counts(db) {
 async function worker(root, secret, peers = [], primaryLimit = 10, registerOwner, fixtureMode) {
   assert.ok(primaryLimit === 10 || primaryLimit === 1);
   const directory = await fs.mkdtemp(path.join(root, "worker-")), incarnation = randomUUID();
-  const child = fork(new URL(import.meta.url), [], { execArgv: ["--import", new URL("./testEnv.js", import.meta.url).href], env: { ...process.env, TMPDIR: directory }, stdio: ["ignore", "ignore", "pipe", "ipc"] });
+  const child = fork(new URL(import.meta.url), [], { execArgv: ["--import", new URL("../../test-support/testEnv.js", import.meta.url).href], env: { ...process.env, TMPDIR: directory }, stdio: ["ignore", "ignore", "pipe", "ipc"] });
   const pending = new Map(), connections = new Set(), connectionEvents = [], observationIdentities = new Map(), stderr = [], protocolErrors = [], transactionObservations = new Map();
   let exit, closing, stopping, shutdownError, cpuHoldInvocation;
   const owner = { child, incarnation, connections, connectionEvents, observationIdentities, directory, stderr, transactionObservations,
@@ -1482,7 +1482,7 @@ export async function createPerformanceFixture({ mode = "CHARACTERIZATION", cs01
     assert.equal(normalized.customer.attachment, null);
     const [[actual]] = await db.query("SELECT VERSION() AS version,@@skip_networking AS isolated,DATABASE() AS name");
     assert.deepEqual([actual.version, Number(actual.isolated), actual.name], ["26.7.0", 1, options.database]);
-    const names = (await fs.readdir(new URL("../database/migrations/", import.meta.url))).filter(name => /\.(?:js|sql)$/u.test(name)).map(name => "migrations/" + name);
+    const names = (await fs.readdir(new URL("../../database/migrations/", import.meta.url))).filter(name => /\.(?:js|sql)$/u.test(name)).map(name => "migrations/" + name);
     assert.deepEqual((await db.query("SELECT name FROM fr_schema_migrations ORDER BY name"))[0].map(row => row.name), [...names, "framework/idempotency.sql", "framework/jwt.sql", "framework/scheduler.sql"].sort());
     actors = await seedActors(db);
     const secret = randomBytes(32).toString("hex");
@@ -1659,7 +1659,7 @@ async function characterizationQueryExpected(db, testCase) {
 
 async function characterizationQueryPlans(fixture, cases, observation) {
   const [{ InventoryInquiryService }, { ItemLookupService }, { InventoryReservationService }] = await Promise.all([
-    import("../src/modules/inventory/InventoryInquiryService.js"), import("../src/modules/item/ItemLookupService.js"), import("../src/modules/inventory/InventoryReservationService.js")]);
+    import("../../src/modules/inventory/InventoryInquiryService.js"), import("../../src/modules/item/ItemLookupService.js"), import("../../src/modules/inventory/InventoryReservationService.js")]);
   const seen = new Set();
   for (const testCase of cases) {
     const key = JSON.stringify([testCase.family, testCase.input]); if (seen.has(key)) continue; seen.add(key);
@@ -3040,7 +3040,7 @@ async function controlLockScenario(app, scenario) {
   assert.ok(["existing-50000", "new-1001-rollback", "second-insert-fault"].includes(scenario));
   const database = app.services.require("mysqldatabase");
   assert.equal(database.config.transactionTimeoutMs, 20000);
-  const { InventoryLockService } = await import("../src/modules/inventory/InventoryLockService.js");
+  const { InventoryLockService } = await import("../../src/modules/inventory/InventoryLockService.js");
   const count = scenario === "existing-50000" ? 50000 : 1001, first = count === 50000 ? 1 : 50001;
   const input = { warehouseIds: [5], binIds: [801], stockControls: Array.from({ length: count }, (_, index) => ({ warehouseId: 5, skuId: first + count - index - 1 })), now: Date.now() };
   input.stockControls.push({ ...input.stockControls[0] }, { ...input.stockControls.at(-1) });
@@ -3141,7 +3141,7 @@ function lotProbeSql(shape, lots) {
 async function lotSemanticsScenario(app) {
   databaseOptions();
   const database = app.services.require("mysqldatabase");
-  const { InventoryLockService } = await import("../src/modules/inventory/InventoryLockService.js");
+  const { InventoryLockService } = await import("../../src/modules/inventory/InventoryLockService.js");
   const result = { kind: "TEST_ONLY_NATIVE_LOT_SEMANTICS", outcome: "IN_PROGRESS", scenarios: [] };
   const rollback = Object.assign(new Error("Explicit CP11 caller rollback"), { code: "TEST_OWNER_ROLLBACK" });
   const insertedIds = [];
@@ -3255,7 +3255,7 @@ function lotSafetyKeys(scenario) {
 async function lotLockScenario(app, shape, scenario, notify, released) {
   databaseOptions(); assert.ok(["OR_BASELINE", "TUPLE_IN_CANDIDATE"].includes(shape));
   const keys = lotSafetyKeys(scenario), database = app.services.require("mysqldatabase");
-  const { InventoryLockService } = await import("../src/modules/inventory/InventoryLockService.js");
+  const { InventoryLockService } = await import("../../src/modules/inventory/InventoryLockService.js");
   const result = { shape, scenario, outcome: "IN_PROGRESS", stages: [] };
   const rollback = Object.assign(new Error("CP12 explicit owner rollback"), { code: "TEST_OWNER_ROLLBACK" });
   const fault = Object.assign(new Error("CP12 after-Lot before-Balance fault"), { code: "TEST_INJECTED" });
@@ -4317,7 +4317,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       assert.equal(incarnation, undefined);
       assert.match(message.incarnation, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u);
       incarnation = message.incarnation;
-      const { createApplication } = await import("../src/framework/application/createApplication.js");
+      const { createApplication } = await import("../../src/framework/application/createApplication.js");
       const root = await fs.realpath(message.directory);
       assert.equal(root, await fs.realpath(process.env.TMPDIR));
       for (const name of ["media", "imports", "uploads", "tmp"]) await fs.mkdir(path.join(root, name), { mode: 0o700 });
@@ -4326,7 +4326,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (message.primaryLimit === 1) config.database = { ...config.database, connectionLimit: 1 };
       assert.equal(config.api.defaults.upload.enabled, false);
       assert.equal(config.api.defaults.upload.storageMode, "memory");
-      const moduleUrls = ["inventory/stocktakeHandlers.js", "inventory/skuLookupHandlers.js", "inventory/inquiryHandlers.js", "inventory/reservationHandlers.js", "inventory/reservationInquiryHandlers.js", "user/loginHandler.js", "user/refreshTokenHandler.js"].map(name => new URL(`../src/handlers/${name}`, import.meta.url).href);
+      const moduleUrls = ["inventory/stocktakeHandlers.js", "inventory/skuLookupHandlers.js", "inventory/inquiryHandlers.js", "inventory/reservationHandlers.js", "inventory/reservationInquiryHandlers.js", "user/loginHandler.js", "user/refreshTokenHandler.js"].map(name => new URL(`../../src/handlers/${name}`, import.meta.url).href);
       for (const url of moduleUrls) for (const handler of Object.values(await import(url))) {
         assert.notEqual(handler?.api?.upload?.enabled, true, "No upload route may activate the unchanged managed disk-upload path");
       }

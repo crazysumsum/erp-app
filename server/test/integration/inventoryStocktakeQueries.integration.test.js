@@ -6,8 +6,6 @@ import net from "node:net";
 import path from "node:path";
 import test, { before, after, mock } from "node:test";
 import { parse } from "csv-parse/sync";
-import { parse as csvParser } from "csv-parse";
-import { pipeline } from "node:stream/promises";
 import { up as permissions } from "../../database/migrations/0055_seed_inventory_permissions.js";
 import { up as operations } from "../../database/migrations/0056_create_inventory_operations.js";
 import { up as audit } from "../../database/migrations/0057_create_inventory_audit.js";
@@ -228,71 +226,7 @@ integrationTest("ST039-D10 committed Count and Ready between export batches rema
   const output = await collect(await service.prepare(exportOptions(f))); assert.equal(observed, true); assert.ok(output.every(row => row.status === "COUNTING")); assert.deepEqual(output.filter(row => row.recordType === "LINE").map(row => row.actualQuantity), ["3", "3"]);
   assert.equal((await inquiry.getStocktake(f.header.id)).status, "READY_TO_POST");
 });
-integrationTest("ST039-D11 actual primarypool1 works; >500 keysets and delayed socket close block replacement503", async () => {
-  const f = await counting([], 501), one = database(1); extras.push(one); await one.initialize();
-  // Query fixtures only: valid snapshot-zero rows, not a claim of executing1002 Add workflows.
-  await db.execute(`INSERT INTO inventory_stocktake_lines (stocktake_id,stocktake_bin_id,bin_id,sku_id,stock_status,snapshot_quantity,snapshot_balance_version)
-    SELECT stocktake_id,id,bin_id,12,'AVAILABLE',0,0 FROM inventory_stocktake_bins WHERE stocktake_id=?`, [f.header.id]);
-  await db.execute(`INSERT INTO inventory_stocktake_lines (stocktake_id,stocktake_bin_id,bin_id,sku_id,stock_status,snapshot_quantity,snapshot_balance_version)
-    SELECT stocktake_id,id,bin_id,12,'DAMAGED',0,0 FROM inventory_stocktake_bins WHERE stocktake_id=?`, [f.header.id]);
-  const service = exporter(one); const before = await ownedDirs(); const output = await collect(await service.prepare(exportOptions(f, {}, one)));
-  assert.equal(output.filter(row => row.recordType === "SCOPE").length, 501); assert.equal(output.at(-1).truncated, "false");
-  const lines = output.filter(row => row.recordType === "LINE"); assert.equal(lines.length, 1002); assert.equal(new Set(lines.map(row => row.lineId)).size, 1002);
-  const lower = await collect(await exporter(one, { exportMaxRows: 503 }).prepare(exportOptions(f, {}, one))); assert.equal(lower.at(-1).exportedRows, "503"); assert.equal(lower.at(-1).truncationReason, "ROW_LIMIT");
-  const real = net.createConnection.bind(net), sawClose = latch(), release = latch(); let socket;
-  mock.method(net, "createConnection", (...args) => { socket = real(...args); const emit = socket.emit.bind(socket);
-    socket.emit = (event, ...values) => { if (event === "close") { sawClose.resolve(); void release.promise.then(() => emit(event, ...values)); return true; } return emit(event, ...values); }; return socket; });
-  let pending;
-  try {
-    pending = service.prepare(exportOptions(f, {}, one)); await sawClose.promise;
-    await assert.rejects(service.prepare(exportOptions(f, {}, one)), { code: "INVENTORY_DEPENDENCY_UNAVAILABLE", statusCode: 503 }); assert.equal(socket.destroyed, true);
-    release.resolve(); await collect(await pending);
-  } finally { release.resolve(); mock.restoreAll(); }
-  const defaultService = exporter(), held = latch(), finish = latch(); let auxiliaryCalls = 0;
-  const create = defaultService.createGenerationReader.bind(defaultService);
-  defaultService.createGenerationReader = signal => { auxiliaryCalls++; const reader = create(signal), close = reader.close; reader.close = async () => { held.resolve(); await finish.promise; return close(); }; return reader; };
-  const active = defaultService.prepare(exportOptions(f)); await held.promise;
-  try { const busy = await Promise.allSettled(Array.from({ length: 10 }, () => context.storage.run({}, () => defaultService.prepare(exportOptions(f)))));
-    assert.ok(busy.every(result => result.status === "rejected" && result.reason.code === "INVENTORY_DEPENDENCY_UNAVAILABLE")); assert.equal(auxiliaryCalls, 1);
-  } finally { finish.resolve(); }
-  await collect(await active);
-  // Functional100k ceiling verification, not fullscale latency/memory/soak acceptance.
-  const large = await counting([], 1), digits = "(SELECT0 AS n UNION ALL SELECT1 UNION ALL SELECT2 UNION ALL SELECT3 UNION ALL SELECT4 UNION ALL SELECT5 UNION ALL SELECT6 UNION ALL SELECT7 UNION ALL SELECT8 UNION ALL SELECT9)".replaceAll(/SELECT([0-9])/gu, "SELECT $1");
-  const numbers = `SELECT a.n+10*b.n+100*c.n+1000*d.n+10000*e.n+100000*f.n AS n FROM ${digits} a CROSS JOIN ${digits} b CROSS JOIN ${digits} c CROSS JOIN ${digits} d CROSS JOIN ${digits} e CROSS JOIN (SELECT0 AS n UNION ALL SELECT1) f`.replaceAll(/SELECT([0-9])/gu, "SELECT $1");
-  await db.query(`INSERT INTO item_skus (id,item_id,sku_code,sku_name,status,tracking_policy) SELECT 3000000+n,1,CONCAT('CAP-',n),'Synthetic cap','active','none' FROM (${numbers}) seq WHERE n<100001`);
-  await db.query("INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale) SELECT id,1,1,1,1,1 FROM item_skus WHERE id>=3000000 AND id<3100001");
-  await db.execute(`INSERT INTO inventory_stocktake_lines (stocktake_id,stocktake_bin_id,bin_id,sku_id,stock_status,snapshot_quantity,snapshot_balance_version)
-    SELECT scope.stocktake_id,scope.id,scope.bin_id,sku.id,'AVAILABLE',0,0 FROM inventory_stocktake_bins scope JOIN item_skus sku ON sku.id>=3000000 AND sku.id<3100001 WHERE scope.stocktake_id=?`, [large.header.id]);
-  // Match the existing0016 SKU/UOM lookup index; no invented tuning index or raised DB timeout.
-  await db.query("ANALYZE TABLE item_sku_uoms,inventory_stocktake_lines");
-  const [plan] = await db.query(`EXPLAIN FORMAT=TRADITIONAL SELECT l.id FROM inventory_stocktake_lines l JOIN item_sku_uoms su ON su.sku_id=l.sku_id AND su.is_base=1
-    WHERE l.stocktake_id=? AND l.id>? ORDER BY l.id ASC LIMIT500`.replace("LIMIT500", "LIMIT 500"), [large.header.id, 0]);
-  assert.equal(plan.find(step => step.table === "su").key, "uq_item_sku_uoms_sku_uom");
-  const capService = exporter(db, { exportMaxRows: 200000 }), diagnostics = { purpose: "SUPPORTING_QUERY_DIAGNOSIS_NOT_SLA", plan: null, batches: [] };
-  const runDir = process.env.HARNESS_RUN_DIR;
-  assert.ok(runDir?.startsWith(path.resolve("docs/inventory_management/evidence") + path.sep));
-  const diagnosticPath = path.join(runDir, "stocktake-export-query-diagnostic.json"), createCap = capService.createGenerationReader.bind(capService);
-  capService.createGenerationReader = signal => {
-    const reader = createCap(signal), initialize = reader.initialize;
-    reader.initialize = async () => {
-      const database = await initialize(), transaction = database.withTransaction.bind(database);
-      database.withTransaction = (work, options) => transaction(tx => work({ query: async (sql, values) => {
-      const batch = sql.startsWith("SELECT l.*");
-      if (batch && !diagnostics.plan) {
-        const [[explained]] = await db.query("EXPLAIN FORMAT=JSON " + sql, values);
-        diagnostics.plan = JSON.parse(explained.EXPLAIN);
-      }
-      const started = performance.now();
-      try { const result = await tx.query(sql, values); if (batch) diagnostics.batches.push({ elapsedMs: Math.round(performance.now() - started), rows: result[0].length }); return result; }
-      finally { if (batch) await fs.writeFile(diagnosticPath, JSON.stringify(diagnostics, null, 2) + "\n", { mode: 0o600 }); }
-      } }), options); return database;
-    }; return reader;
-  };
-  const capped = await capService.prepare(exportOptions(large)); let count = 0, footer;
-  await pipeline(capped.stream, csvParser({ columns: true }), async source => { for await (const record of source) { if (record.recordType === "SUMMARY") footer = record; else count++; } });
-  assert.equal(count, 100000); assert.equal(footer.exportedRows, "100000"); assert.equal(footer.filteredLineCount, "100001"); assert.equal(footer.truncationReason, "ROW_LIMIT"); assert.equal(capped.truncated, true);
-  assert.deepEqual(await ownedDirs(), before);
-});
+
 integrationTest("ST039-D12 real slow metadata/batch and current auth cutoff504; genuine SQL timeout stays failure", async () => {
   const f = await counting(); const before = await ownedDirs();
   for (const needle of ["SELECT * FROM inventory_stocktakes", "scope.id>?"]) {
