@@ -79,3 +79,23 @@ Sam's rule of 2026-10-30 (`AGENTS.md`, merged in #310 after this branch was cut)
 | Measured cost | About 0.12 s wall per file locally, almost all Node startup; CI speed not measured, estimated under 1 s per job |
 
 Rejected alternatives: B (reduce the UUID loop to 100, saving milliseconds) and C (keep the cases out of CI, leaving the validators every later write handler relies on without regression protection).
+
+## CI admission gate — 2026-11-02
+
+Between the first CI run of this PR and its merge, main gained the static test admission gate (#315) and impact-scoped capacity selection (#313). The CI run on `fed097ea` was cancelled at Sam's request while he changed CI. Under the new procedure (`docs/ci-test-admission.md`) every changed test input needs a receipt binding its exact Git mode and blob, and the approval administrator must publish the receipt's SHA-256 in `CI_TEST_ADMISSION_DIGESTS` before PR tests are dispatched. A feature agent cannot grant that.
+
+Simulated locally with the active digests (read-only), the gate rejected this PR for five unapproved inputs: the two new test files, `configuration.test.js`, `server/config/purchasing.js` (imported by a test) and this module's manifest (referenced document data). Application files need no receipt.
+
+**Sam's decisions on 2026-11-02 — "全部按你的建議執行":**
+
+1. **Receipt location**: this module may write its own receipts, `.github/test-admissions/purchasing-*.json`, added to `allowed_write_paths`. The file grants nothing; publishing its digest is the control. Rejected alternative: an approval-required path with a SCOPE approval per receipt. This moved the baselines `design 600d9d58 → 84b5a22e`, `plan 5b8a282f → 61dff2ac`; `APR-001`–`APR-006` were re-confirmed.
+2. **Receipt content**, re-confirmed for the exact blobs in `.github/test-admissions/purchasing-task010.json`: 10 new cases (3 config, 7 validation), the one affected `configuration.test.js` case, and the two support inputs. This narrows the 2026-10-30 approval of 11 cases after HD-011.
+3. **Capacity execution for this push**: 38 of the 48 existing catalogued capacity cases — Fulfillment 25, Sales 5, Supplier 5, Customer 2, framework 1 — as computed by `selectCapacity` on this PR's diff, not described from memory. `applicationConfiguration.js` alone selects all 38; the Purchasing config and module files alone select 22. No new workload. Duration estimated at 20–25 minutes from the 28 m 10 s bootstrap figure for all 48; not measured.
+
+The receipt was validated before the request on a throwaway branch: without its digest the gate rejects it; with a simulated digest the static gate accepts 6 reviewed inputs and the full gate passes catalog routing with 0 capacity references.
+
+**Acknowledged.** The two pushes of this PR on 2026-10-30 triggered the Fulfillment capacity job (14 scenarios) and Sales TC-042 without Sam's prior capacity approval. I treated them as the existing #310 trigger, but the rule then in force already covered "CI triggered indirectly by a push or PR".
+
+## REV-005 — review of the receipt path
+
+`method: HUMAN`, author the TASK-010 implementation agent, reviewer Sam. It covers the one change between `600d9d58` and `84b5a22e`: the receipt pattern added to `allowed_write_paths`.

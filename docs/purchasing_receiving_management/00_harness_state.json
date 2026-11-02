@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 14,
+  "revision": 15,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-002",
   "current_task": null,
   "baseline": {
-    "design": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
-    "plan": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
+    "design": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
+    "plan": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
     "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "source_fingerprint": "95b181c03bbef52334c436979b81b0db448c6020bd63f18eb629bd4369ff39d5",
     "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
@@ -79,9 +79,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "recorded_at": "2026-11-02T11:55:48+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
+      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management requirement baseline, file 01_requirement_spec.md sha256 75ad45897c6b835712a1b9e84faa0e8822a626d9dd8ec55539da9998dbce4f35; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
@@ -94,7 +94,8 @@
         "OPEN-001 through OPEN-005 closed as DECIDED",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
-        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
       ],
       "expires_at": null
     },
@@ -105,9 +106,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "recorded_at": "2026-11-02T11:55:48+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
+      "baseline_sha256": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
@@ -115,7 +116,8 @@
         "MySQL 8.0 compatibility baseline",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
-        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
       ],
       "expires_at": null
     },
@@ -126,9 +128,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "recorded_at": "2026-11-02T11:55:48+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
+      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
@@ -138,7 +140,8 @@
         "UAT-001 through UAT-106",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
-        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
       ],
       "expires_at": null
     },
@@ -149,9 +152,9 @@
       "actor": "Sam (ERP Product Owner)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "recorded_at": "2026-11-02T11:55:48+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
+      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
       "code_commit": null,
       "scope": [
         "TASK-003",
@@ -165,7 +168,8 @@
         "Path entries are bare globs because the harness reads every scope entry containing a slash as a path pattern. The per-path reasons formerly written inline are in P0_contract_repin.md and P0_consumer_contract_gate.md",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
-        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
       ],
       "expires_at": null
     },
@@ -176,9 +180,9 @@
       "actor": "Sam (ERP Product Owner and named independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#apr-005--inventory-authored-design-changes",
-      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "recorded_at": "2026-11-02T11:55:48+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
+      "baseline_sha256": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
       "code_commit": null,
       "scope": [
         "Inventory-authored changes to this module's 03_design_spec.md, delivered in commits 1e9f8159 and 31324ff1 as part of inventory-purchase-provider/1.1",
@@ -187,7 +191,8 @@
         "§2.4 and §8.7: the inline Inventory command example and its caller-supplied authorization.purpose / requiredCallerPermission object are removed; the ABI is inventory-purchase-provider/1.1 §2-3, with a server-issued opaque context, per-line locked commitment, and findOperationsBySource semantics where NOT_FOUND proves nothing and COMPLETED requires full membership verification",
         "§8.9: reversal reconciliation is per-event on (GOODS_RECEIPT_REVERSAL, original GR ID, reversal event_id, original GR Detail ID) rather than on new Reversal Detail PKs",
         "No purchasing schema change and no purchasing migration follow from this approval",
-        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
       ],
       "expires_at": null
     },
@@ -198,15 +203,16 @@
       "actor": "Sam (ERP Product Owner)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#apr-006--startup-wiring",
-      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "recorded_at": "2026-11-02T11:55:48+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
+      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
       "code_commit": null,
       "scope": [
         "TASK-010",
         "server/src/framework/configuration/applicationConfiguration.js",
         "server/test/configuration.test.js",
-        "Approved on 2026-10-30 together with option A of the TASK-010 startup wiring question. Adds four lines to the configuration loader and the purchasing section to its section test, following the Fulfillment and Sales precedent"
+        "Approved on 2026-10-30 together with option A of the TASK-010 startup wiring question. Adds four lines to the configuration loader and the purchasing section to its section test, following the Fulfillment and Sales precedent",
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
       ],
       "expires_at": null
     }
@@ -255,6 +261,18 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
       "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#rev-004--review-of-the-scope-change",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "HUMAN",
+      "author": "Implementation agent for TASK-010",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#rev-005--review-of-the-receipt-path",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,

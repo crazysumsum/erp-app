@@ -47,7 +47,8 @@
       "server/test-support/fakePurchasingDatabase.js",
       "client/test/**/purchasing*.test.js",
       "client/test/**/receiving*.test.js",
-      "client/e2e/purchasing-receiving-management/**"
+      "client/e2e/purchasing-receiving-management/**",
+      ".github/test-admissions/purchasing-*.json"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
