@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 15,
+  "revision": 17,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-002",
   "current_task": null,
   "baseline": {
-    "design": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
-    "plan": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
+    "design": "08a08a3ddebb5cf430ba46e53dc34907ec8572ad13add8119eda2aa5e97922eb",
+    "plan": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
     "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "source_fingerprint": "95b181c03bbef52334c436979b81b0db448c6020bd63f18eb629bd4369ff39d5",
     "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
@@ -36,7 +36,7 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "PENDING",
+    "TASK-011": "DONE",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
@@ -79,9 +79,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-11-02T11:55:48+08:00",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management requirement baseline, file 01_requirement_spec.md sha256 75ad45897c6b835712a1b9e84faa0e8822a626d9dd8ec55539da9998dbce4f35; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
@@ -95,7 +95,8 @@
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
-        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
       ],
       "expires_at": null
     },
@@ -106,9 +107,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-11-02T11:55:48+08:00",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
+      "baseline_sha256": "08a08a3ddebb5cf430ba46e53dc34907ec8572ad13add8119eda2aa5e97922eb",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
@@ -117,7 +118,8 @@
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
-        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
       ],
       "expires_at": null
     },
@@ -128,9 +130,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-11-02T11:55:48+08:00",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
@@ -141,7 +143,8 @@
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
-        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
       ],
       "expires_at": null
     },
@@ -152,9 +155,9 @@
       "actor": "Sam (ERP Product Owner)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-11-02T11:55:48+08:00",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
       "code_commit": null,
       "scope": [
         "TASK-003",
@@ -169,7 +172,8 @@
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
         "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
-        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
       ],
       "expires_at": null
     },
@@ -180,9 +184,9 @@
       "actor": "Sam (ERP Product Owner and named independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#apr-005--inventory-authored-design-changes",
-      "recorded_at": "2026-11-02T11:55:48+08:00",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
+      "baseline_sha256": "08a08a3ddebb5cf430ba46e53dc34907ec8572ad13add8119eda2aa5e97922eb",
       "code_commit": null,
       "scope": [
         "Inventory-authored changes to this module's 03_design_spec.md, delivered in commits 1e9f8159 and 31324ff1 as part of inventory-purchase-provider/1.1",
@@ -192,7 +196,8 @@
         "§8.9: reversal reconciliation is per-event on (GOODS_RECEIPT_REVERSAL, original GR ID, reversal event_id, original GR Detail ID) rather than on new Reversal Detail PKs",
         "No purchasing schema change and no purchasing migration follow from this approval",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
-        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
       ],
       "expires_at": null
     },
@@ -203,16 +208,59 @@
       "actor": "Sam (ERP Product Owner)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#apr-006--startup-wiring",
-      "recorded_at": "2026-11-02T11:55:48+08:00",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "61dff2ac2dc255fca7c525fd640dc417637abca851ced80f346d0e27b217a41e",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
       "code_commit": null,
       "scope": [
         "TASK-010",
         "server/src/framework/configuration/applicationConfiguration.js",
         "server/test/configuration.test.js",
         "Approved on 2026-10-30 together with option A of the TASK-010 startup wiring question. Adds four lines to the configuration loader and the purchasing section to its section test, following the Fulfillment and Sales precedent",
-        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005."
+        "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-007",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#apr-007--migration-scope",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
+      "code_commit": null,
+      "scope": [
+        "TASK-011",
+        "server/database/migrations/0110_create_purchasing_settings.js",
+        "server/database/migrations/0111_create_purchasing_document_sequences.js",
+        "server/database/migrations/0112_create_purchase_orders.js",
+        "server/database/migrations/0113_create_purchase_order_lines.js",
+        "Approved on 2026-11-02 together with the TASK-011 schema proposal; four additive migrations, one table each",
+        "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-008",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#apr-008--shared-files",
+      "recorded_at": "2026-11-02T14:55:40+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
+      "code_commit": null,
+      "scope": [
+        "TASK-011",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/business-master/http.integration.test.js",
+        "server/test/integration/supplierMigrationAcceptance.integration.test.js",
+        "Approved on 2026-11-02 with option A of the TASK-011 Business Master and Supplier MIG-006 decision; Sam asked for the Supplier test change to be made here"
       ],
       "expires_at": null
     }
@@ -273,6 +321,18 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "84b5a22ef0ce606bc83707ac66f1f9e3f933ce92c0b13d014a03b76686ea69ce",
       "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#rev-005--review-of-the-receipt-path",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "HUMAN",
+      "author": "Implementation agent for TASK-011",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "08a08a3ddebb5cf430ba46e53dc34907ec8572ad13add8119eda2aa5e97922eb",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#rev-006--review-of-the-scope-change",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -428,6 +488,28 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#hd-011--no-purchasing-transaction-timeout"
+    },
+    {
+      "id": "HD-012",
+      "impact": "MAJOR",
+      "question": "TASK-011 schema against design 4.3-4.6: currencies.code is ascii_bin so purchase_orders.currency_code must match or the FK cannot be created; supplier_addresses has UNIQUE(id, supplier_id), allowing a composite ordering-address FK; two line flags lack defaults; MySQL 8.0 allows single-row CHECKs. Adopt these, or implement the design text literally?",
+      "affected_ids": [
+        "TASK-011",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#hd-012--schema-decisions"
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "question": "Creating purchase_orders flips Business Master's placeholder purchasing checker from NOT_INSTALLED to UNKNOWN, which fails closed and blocks Currency and Payment Term changes; Supplier MIG-006 assumes no other module's migration needs Supplier tables. Deliver a real Purchasing impact checker and a dependency-aware MIG-006 in this task, defer to the owning modules, or postpone purchase_orders?",
+      "affected_ids": [
+        "TASK-011",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#hd-013--business-master-and-supplier-mig-006"
     }
   ],
   "external_actions": [
@@ -494,9 +576,17 @@
       "idempotency_key": "purchasing-p1-task009-pr308-merge-20261030",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 1f5ea7217c2bb350e9f3a5a9fd19d7aa54ee8447, verified as an ancestor of origin/main; CI run 41014894116 completed success with all 13 checks on head ad20aa9d8a2540652469ef60f0c648689112d0c5"
+    },
+    {
+      "id": "EXT-009",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/312 -> main",
+      "idempotency_key": "purchasing-p1-task010-pr312-merge-20261102",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 01af6c24714058847d12eed90f348d181ede648a, verified as an ancestor of origin/main; admitted CI run 41387956715 completed success on the dispatched merge of head ebdde943ed786100c6d06ceaf962621e7750496d with origin/main b7886a85 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-010 is DONE and the Purchasing config is validated at server startup. APR-006 approves the two shared files that wiring touches; APR-001 through APR-005 are re-confirmed and REV-004 reviews design 600d9d58ff1c / plan 5b8a282f8244. HD-009, HD-010 and HD-011 (amount scale, amount overflow code, no Purchasing transaction timeout) are answered and pinned by tests; fold them into design sections 2.8, 5.7 and 12.1 at the next design revision. Purchasing HTTP transactions must not pass their own timeoutMs to withTransaction. Next startable task: TASK-011 (settings, sequence and PO core tables), the first migration in this module, which needs schema sign-off before it is written. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY, and HD-006 blocks every harness gate until answered."
+  "next_safe_action": "TASK-011 is DONE: migrations 0110-0113 (settings, sequences, purchase_orders, purchase_order_lines), the Purchasing Business Master impact checker, and a dependency-aware Supplier MIG-006. APR-001 through APR-008 valid on design 08a08a3ddebb / plan d1c00718d37a. Next startable task: TASK-012 (operation request, audit and immutability migrations), which needs schema sign-off and a CI admission receipt before it is written; Supplier MIG-006 excludes its tables transitively without further change, and any new table that references a Currency or Payment Term must be added to PurchasingBusinessMasterImpactChecker. HD-009..HD-013 to fold into the design at its next revision. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY; HD-006 blocks every gate."
 }

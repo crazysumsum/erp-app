@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decisions of 2026-11-02 in Claude Code session f804490c: TASK-011 schema and its seven migration integration cases (\"全部按你的建議執行\"), and HD-013 option A with the Supplier MIG-006 change made by this agent; recorded in docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md. Re-pins TASK-010's four inputs at the byte-identical blobs Sam approved for receipt purchasing-task010 (digest 40efa97a), which this receipt supersedes because one receipt must pin the changed module manifest",
+  "purpose": "Purchasing settings, sequence and PO tables enforce their FKs, composite FKs, CHECKs and uniques on real MySQL and rerun as no-ops; Business Master impact checks count Purchasing references instead of failing closed; Supplier MIG-006 excludes migrations that need Supplier tables; plus TASK-010's config and validation cases unchanged",
+  "data": "Integration: a few rows per case inside rolled-back transactions on months in 2099; the settings singleton restored in finally. Unit: in-memory fakes. No fixture files",
+  "concurrency": "None",
+  "repetitions": "1",
+  "thresholds": "All cases pass",
+  "trigger": "Routine correctness regression on every PR and push to main; integration cases in the existing MySQL jobs",
+  "cost": "Measured locally: purchasing migration integration file 141 ms; impact checker unit file under 0.2 s wall; Business Master and Supplier cases unchanged in cost. CI not measured. No new job and no capacity",
+  "files": [
+    {
+      "path": "server/test/integration/purchasingMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "059808a385499e34067c1b07a5d78dacf1bc70de",
+      "kind": "functional",
+      "cases": [
+        "TASK-011 migrations create the four tables in the approved shape and rerun as no-ops",
+        "TASK-011 the settings default is seeded only when missing and never overwrites a saved value",
+        "TASK-011 document sequences are isolated by type and month and bounded by CHECK",
+        "TASK-011 purchase order numbers, status and currency precision are enforced by the database",
+        "TASK-011 the ordering address must belong to the PO's Supplier, and deleted actors become NULL",
+        "TASK-011 purchase order lines enforce UOM ownership, bounds, the receipt identity and decimal precision",
+        "TASK-011 each migration creates exactly one table, so a failure points at one file"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingBusinessMasterImpactChecker.test.js",
+      "mode": "100644",
+      "blob": "f7390e1b209e5d4bc4cd228b7f7fd00f7f01bdc7",
+      "kind": "functional",
+      "cases": [
+        "HD-013 open and historical counts follow the PO status a document is in",
+        "HD-013 no purchase_orders table means not installed, and no references means ready with zero counts",
+        "HD-013 the watermark changes when a referencing PO changes and only then",
+        "HD-013 unclassified statuses, malformed counts and invalid subjects fail closed",
+        "HD-013 every status the schema allows is classified exactly once"
+      ]
+    },
+    {
+      "path": "server/test/business-master/http.integration.test.js",
+      "mode": "100644",
+      "blob": "4ba449146ef832127b7e0575830336555f1613c6",
+      "kind": "functional",
+      "cases": [
+        "TC-012 real HTTP authentication and authorized admin flow"
+      ]
+    },
+    {
+      "path": "server/test/integration/supplierMigrationAcceptance.integration.test.js",
+      "mode": "100644",
+      "blob": "bc7b99c6086d1e48bbe82c77996d6327a81bad75",
+      "kind": "functional",
+      "cases": [
+        "TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingConfig.test.js",
+      "mode": "100644",
+      "blob": "812c57f53d21f92cda5463d62c583cde2e2dfe8a",
+      "kind": "functional",
+      "cases": [
+        "TASK-010 the defaults are the §12.1 values and the result is frozen",
+        "TASK-010 every setting must be a positive safe integer within its limit",
+        "TASK-010 unknown settings and schema-bound constants cannot be configured"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingValidation.test.js",
+      "mode": "100644",
+      "blob": "8759061ef14f898845f427ecc4f2c27c7e0e8ad6",
+      "kind": "functional",
+      "cases": [
+        "TASK-010 IDs are positive safe integers",
+        "TASK-010 eventId is a canonical lowercase UUID the Inventory provider will accept",
+        "TASK-010 dates are real calendar days in YYYY-MM-DD",
+        "TASK-010 reason is trimmed to 5..500 characters; notes and references are bounded free text",
+        "TASK-010 objects are allowlisted, so client totals, snapshots and status never get through",
+        "TASK-010 line and detail arrays need at least one item and respect the configured cap",
+        "TASK-010 errors carry a stable code and a field name, never the submitted value"
+      ]
+    },
+    {
+      "path": "server/test/configuration.test.js",
+      "mode": "100644",
+      "blob": "8e04431c6fb165ddddca9e34efad6e9434b6e17c",
+      "kind": "functional",
+      "cases": [
+        "global configuration validation normalizes every configuration section"
+      ]
+    },
+    {
+      "path": "server/config/purchasing.js",
+      "mode": "100644",
+      "blob": "8c5661b6140cc260b4a49827e04b70fdb3b36210",
+      "kind": "support"
+    },
+    {
+      "path": "docs/purchasing_receiving_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "34617ea080289667443dfa2d8bae4d0ea9bf152b",
+      "kind": "support"
+    }
+  ]
+}
