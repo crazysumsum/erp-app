@@ -33,14 +33,27 @@ function runnerName(file) {
   return /(?:^test(?:[-.]|$)|[._-](?:test|spec)(?:[._-]|$)|^(?:vitest|vite|playwright|jest|eslint)\.config\.)/iu.test(name);
 }
 
-function referencedData(names, rev) {
+// Audited output declarations in the original Supplier Playwright configs.
+// A changed config or a read elsewhere cannot inherit either exception.
+const junitOutputLines = new Set([
+  "6cd22e3ac0626ba86dcff2ac48336bcd31c3d0aa:27",
+  "8fca9c0857b622c7bdd079457c86e8ba0b83b91f:12"
+]);
+
+function referencedData(names, rev, files) {
   if (!names.length) return "";
   try {
     // One fixed-string scan per tree for all changed assets, including docs
     // consumed via readFile/path.join and inputs imported by test helpers.
-    return execFileSync("git", ["grep", "-I", "-h", "-F", "-f", "-", rev, "--",
+    const lines = execFileSync("git", ["grep", "-n", "-I", "-F", "-f", "-", rev, "--",
       "server/test", "server/test-support", "server/scripts", "client/test", "client/e2e", ".github/scripts"],
     { input: names.join("\n") + "\n", encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    return lines.split("\n").flatMap(line => {
+      const match = /^[^:]+:([^:]+):(\d+):(.*)$/u.exec(line);
+      if (!match) return [line]; // Unknown grep format remains a possible input.
+      const [, file, number, content] = match;
+      return junitOutputLines.has(files.get(file)?.blob + ":" + number) ? [] : [content];
+    }).join("\n");
   } catch (error) {
     if (error.status === 1) return "";
     throw error;
@@ -114,7 +127,7 @@ export function checkAdmission(base, head, approved = allow) {
     return a?.blob !== b?.blob || a?.mode !== b?.mode;
   });
   const assets = [...new Set(paths.filter(file => !/\.[cm]?[jt]sx?$/u.test(file)).map(file => path.posix.basename(file)))];
-  const baseReferences = referencedData(assets, base), headReferences = referencedData(assets, head);
+  const baseReferences = referencedData(assets, base, before), headReferences = referencedData(assets, head, after);
   for (const file of paths) {
     const a = before.get(file), b = after.get(file);
     if (file.startsWith(receipts)) continue;
