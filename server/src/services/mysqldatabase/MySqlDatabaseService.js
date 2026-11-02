@@ -9,6 +9,11 @@ const ISOLATION_LEVELS = new Set([
 ]);
 
 const ACTIVE_TRANSACTIONS = new WeakMap();
+const TRANSACTION_OUTCOMES = new WeakMap();
+
+export function getTransactionOutcome(executor) {
+  return TRANSACTION_OUTCOMES.get(executor) || null;
+}
 
 export function getActiveTransactionIsolation(executor) {
   const active = ACTIVE_TRANSACTIONS.get(executor);
@@ -451,6 +456,8 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
     const onParentAbort = () => controller.abort(parentSignal.reason);
     let transactionStarted = false;
     let connectionDestroyed = false;
+    let connectionQuarantined = false;
+    let transactionOutcome = "INDETERMINATE";
     // COMMIT 送出去之後，交易的結果就不再是這一側能斷定的了。這個旗標同時
     // 擋掉「commit 失敗後再 rollback」，並決定錯誤要不要報成 indeterminate。
     let commitAttempted = false;
@@ -523,19 +530,34 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       commitAttempted = true;
       await raceWithSignal(connection.commit(), controller.signal);
       transactionStarted = false;
+      transactionOutcome = "COMMITTED";
       return result;
     } catch (error) {
       ACTIVE_TRANSACTIONS.delete(transaction);
       // COMMIT 一旦送出去就不能再 rollback：伺服器可能已經提交了。在一條剛剛
       // commit 失敗的連線上再送 rollback，好一點是 no-op，差一點是第二次卡死。
       if (transactionStarted && !commitAttempted && !connectionDestroyed) {
+        const rollbackWasAborted = controller.signal.aborted;
         try {
           await raceWithSignal(connection.rollback(), controller.signal);
+          transactionOutcome = "ROLLED_BACK";
         } catch (rollbackError) {
+          if (!rollbackWasAborted) {
+            connectionQuarantined = true;
+            onTransactionAbort();
+          }
           void this.logger?.error?.("database.transaction.rollback_failed", "Database rollback failed", {
             requestId: context?.requestId || null,
             error: { name: rollbackError.name, message: rollbackError.message }
           });
+          // An already-aborted session follows its existing abort cleanup. An
+          // attempted live rollback that fails must never return to the pool.
+          if (!rollbackWasAborted) {
+            throw new MySqlDatabaseOperationError(
+              "MySQL database transaction rollback did not complete; its outcome is unknown",
+              { code: "DATABASE_TRANSACTION_INDETERMINATE", cause: error }
+            );
+          }
         }
       }
 
@@ -568,12 +590,13 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       });
     } finally {
       ACTIVE_TRANSACTIONS.delete(transaction);
+      TRANSACTION_OUTCOMES.set(transaction, Object.freeze({ state: transactionOutcome }));
       clearTimeout(timer);
       controller.signal.removeEventListener("abort", onTransactionAbort);
       parentSignal?.removeEventListener?.("abort", onParentAbort);
       this.updateContext({ databaseTransaction: previousTransaction });
 
-      if (!connectionDestroyed) {
+      if (!connectionDestroyed && !connectionQuarantined) {
         connection.release();
       }
     }
