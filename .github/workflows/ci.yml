@@ -3,13 +3,16 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
   schedule:
     - cron: "17 2 * * 1"
   workflow_dispatch:
     inputs:
+      admitted_pr:
+        description: "Internal PR number from the trusted admission workflow"
+        required: false
+        type: string
       capacity_base:
-        description: "Optional full baseline SHA: run existing capacity only for related changes since this ancestor"
+        description: "Post-UAT only: approved baseline SHA for related capacity on main"
         required: false
         type: string
 
@@ -19,11 +22,34 @@ permissions:
 # 同一個 ref 有新的一輪 push 時，取消還在跑的舊一輪——PR 連續推幾次 commit
 # 不需要每一輪都跑到底，跑到一半的舊結果反正也不會被採用。
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ inputs.admitted_pr || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  admission:
+    name: Test admission
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Verify approved policy and test inputs before execution
+        env:
+          CI_TEST_ADMISSION_POLICIES: ${{ vars.CI_TEST_ADMISSION_POLICIES }}
+          CI_TEST_ADMISSION_DIGESTS: ${{ vars.CI_TEST_ADMISSION_DIGESTS }}
+        run: |
+          set -euo pipefail
+          script=.github/scripts/test-admission.mjs
+          digest="$(sha256sum "$script" | cut -d' ' -f1)"
+          grep -Fxq "$digest" <<< "$CI_TEST_ADMISSION_POLICIES" || { echo "Unapproved admission policy: $digest"; exit 1; }
+          node "$script"
+
   changes:
+    needs: admission
     name: Capacity impact scope
     runs-on: ubuntu-latest
     outputs:
@@ -42,12 +68,15 @@ jobs:
           node-version: 26
       - name: Verify scope and aggregate-check rules
         run: node --test .github/scripts/sales-import-capacity.test.mjs .github/scripts/coverage-shards-rules.test.mjs
-      - name: Determine related capacity cases (unresolved impact fails closed)
+      - name: Select approved post-UAT capacity or defer all cases
         id: scope
+        env:
+          CI_POST_UAT_CAPACITY: ${{ vars.CI_POST_UAT_CAPACITY }}
         run: node .github/scripts/sales-import-capacity.mjs
 
   # Independent checks and coverage start immediately; capacity gets its own DB.
   audit:
+    needs: admission
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
@@ -67,6 +96,7 @@ jobs:
         run: npm run security:audit
 
   lint:
+    needs: admission
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -94,6 +124,7 @@ jobs:
   # migration。把它塞進每個 PR 的 gate 是另一件事——成本和語意都不同，UAT 也不該
   # 是 per-PR gate——所以留給 harness 的正式驗收流程跑。
   e2e:
+    needs: admission
     name: Browser tests (Playwright)
     runs-on: ubuntu-latest
     # 與 package-lock.json 的 Playwright 1.63.0 一致；預裝瀏覽器、系統依賴及字型，
@@ -118,6 +149,7 @@ jobs:
         run: npm run e2e:mocked
 
   server-tests:
+    needs: admission
     name: Server coverage shard (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     strategy:
@@ -273,6 +305,7 @@ jobs:
           overwrite: true
 
   client-tests:
+    needs: admission
     name: Client coverage
     runs-on: ubuntu-latest
     steps:
@@ -396,7 +429,7 @@ jobs:
   test:
     name: Test (server + client, MySQL integration)
     if: always()
-    needs: [changes, regression, server-capacity, client-capacity, audit, lint, build, e2e]
+    needs: [admission, changes, regression, server-capacity, client-capacity, audit, lint, build, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -405,12 +438,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 26
+      - name: Require successful test admission
+        env:
+          ADMISSION_RESULT: ${{ needs.admission.result }}
+        run: test "$ADMISSION_RESULT" = success
+
       - name: Require all checks and the selected capacity result
         env:
           CI_RESULTS: ${{ toJSON(needs) }}
         run: node .github/scripts/sales-import-capacity.mjs check
 
   build:
+    needs: admission
     name: Build frontend
     runs-on: ubuntu-latest
     steps:
@@ -428,3 +467,16 @@ jobs:
 
       - name: Build frontend
         run: npm run build --workspace client
+
+  publish-admitted-result:
+    needs: test
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.admitted_pr != ''
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+      statuses: write
+    uses: ./.github/workflows/ci-pr-result.yml
+    with:
+      pr: ${{ inputs.admitted_pr }}
+      result: ${{ needs.test.result }}

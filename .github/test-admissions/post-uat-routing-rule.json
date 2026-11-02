@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "decision": "Sam, project manager chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f on 2026-11-02: all non-functional tests after UAT; new routine tests and workload growth need prior approval.",
+  "purpose": "Align the existing CI routing regression with deferred capacity execution, using synthetic Git revisions only.",
+  "data": "Same two commits after baseline and one renamed synthetic source file; no application data.",
+  "concurrency": "Existing single routing regression process.",
+  "repetitions": "Existing case registered once. No new registered case.",
+  "thresholds": "Ordinary events select no capacity. Manual approval must match the tested interval and case; missing approval/history fails.",
+  "trigger": "Existing lightweight CI routing check before application tests.",
+  "cost": "Sub-second synthetic Git and Node probes; no workload or new CI registration.",
+  "files": [
+    {
+      "path": ".github/scripts/sales-import-capacity.test.mjs",
+      "mode": "100644",
+      "blob": "d5f67c7cd7af776a33b50fd3bc53ad0f45680a20",
+      "kind": "functional",
+      "cases": [
+        "real PR and push diffs preserve rename paths; unavailable history blocks execution"
+      ]
+    }
+  ]
+}
