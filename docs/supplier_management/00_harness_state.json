@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 497,
+  "revision": 511,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,19 +9,19 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
-    "design": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
-    "plan": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
-    "code_commit": "041e932f4074a1f5df1bc641e5c06f4afcb1bb3a",
-    "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd157",
-    "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
-    "mode_entry_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849"
+    "design": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+    "plan": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+    "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+    "source_fingerprint": "5e33ec7a0b33166fc1fa9e3ae1d2aac6598c19f9bd135a1287e8129498edd123",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta4",
+    "default_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
+    "mode_entry_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd157 (claude/supplier-hd157-plan-revision, cut from main e64dfc74)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta4 (claude/supplier-technical-acceptance-4, cut from main 6d84ee45)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -2656,6 +2656,472 @@
         "TASK-051"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-DESIGN-HD158",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on design baseline 5003b391 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-129-DESIGN-HD157-PIN on 22865f96, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-129-DESIGN-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-PLAN-HD158",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-129-PLAN-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-129-PLAN-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-097-DESIGN-HD158",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-039"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "Re-affirmed unchanged on design baseline 5003b391 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-097-DESIGN-HD157-PIN on 22865f96, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-097-DESIGN-HD157-PIN and the records it supersedes."
+    },
+    {
+      "id": "APPROVAL-HD-104-DESIGN-HD158",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "Re-affirmed unchanged on design baseline 5003b391 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-104-DESIGN-HD157-PIN on 22865f96, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-104-DESIGN-HD157-PIN and the records it supersedes."
+    },
+    {
+      "id": "APPROVAL-HD-124-PLAN-HD158",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-124-PLAN-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-124-PLAN-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: supplier-uat-browser argv, env_keys, redaction keys",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-123-PLAN-HD158",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-123-PLAN-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-123-PLAN-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: runner env_keys, redaction keys, mysqldump probe, release min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-105-PLAN-HD158",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile env_keys, phase-001-server runner, min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-105-PLAN-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-105-PLAN-HD157-PIN and the records it supersedes."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE-HD158",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-113-SCOPE-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-113-SCOPE-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD158",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK-HD158",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-116-RISK-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-116-RISK-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE-HD158",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-117-SCOPE-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-117-SCOPE-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-118-SCOPE-HD158",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-118-SCOPE-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-118-SCOPE-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE-HD158",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-122-SCOPE-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-122-SCOPE-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-150-SCOPE-HD158",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 37069701 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-150-SCOPE-HD157-PIN on 8b31fcdd, which the HD-158 plan revision (01 NFR-004, 06 IMP-016) and the HD-159 A refresh of the consumed Purchasing pin stranded by moving both baselines; both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-150-SCOPE-HD157-PIN and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:22:10+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "scope": [
+        "supplier-management",
+        "server/scripts/smokeSupplierManagement.js",
+        "server/package.json",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-PLAN-HD158-R1",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-129-PLAN-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-129-PLAN-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-124-PLAN-HD158-R1",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-124-PLAN-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-124-PLAN-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: supplier-uat-browser argv, env_keys, redaction keys",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-123-PLAN-HD158-R1",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-123-PLAN-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-123-PLAN-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: runner env_keys, redaction keys, mysqldump probe, release min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-105-PLAN-HD158-R1",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile env_keys, phase-001-server runner, min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-105-PLAN-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-105-PLAN-HD158 and the records it supersedes."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE-HD158-R1",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-113-SCOPE-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-113-SCOPE-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD158-R1",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK-HD158-R1",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-116-RISK-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-116-RISK-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE-HD158-R1",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-117-SCOPE-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-117-SCOPE-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-118-SCOPE-HD158-R1",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-118-SCOPE-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-118-SCOPE-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE-HD158-R1",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-122-SCOPE-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-122-SCOPE-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-150-SCOPE-HD158-R1",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline cfb4af71 by HD-158 (Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-150-SCOPE-HD158 on 37069701, which the REV-141 fixes stranded within the same PR (07 UAT-044 and its §0 row, 06 §0 row: plan baseline only; the design baseline 5003b391 and the DESIGN approvals are unchanged); both are kept. What was approved is unchanged; the original decision is in APPROVAL-HD-150-SCOPE-HD158 and the records it supersedes.",
+      "recorded_at": "2026-10-30T14:38:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "code_commit": "6ae24da3dac1e7d6a4d0c17be3d8e8664b529fe5",
+      "scope": [
+        "supplier-management",
+        "server/scripts/smokeSupplierManagement.js",
+        "server/package.json",
+        "TASK-051"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -4286,6 +4752,54 @@
       "reviewer": "agent-skills:code-reviewer (the REV-139 reviewer), re-reviewing claude/supplier-hd157-plan-revision at 1227ae60 (git diff 0e2267a7..HEAD); supersedes REV-139's verdict",
       "reviewed_baseline": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
       "source_ref": "docs/supplier_management/implementation/142_rev_139_independent_review.md (follow-up verdict)",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-141",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (formal run on the HD-157 baseline, HD-158 plan revision, HD-159 pin refresh)",
+      "reviewer": "agent-skills:code-reviewer, a separate agent, reviewing claude/supplier-technical-acceptance-4 at e39bde67 (Supplier diff 6d84ee45..HEAD)",
+      "reviewed_baseline": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "docs/supplier_management/implementation/143_rev_141_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-142",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (REV-141 fixes)",
+      "reviewer": "agent-skills:code-reviewer (the REV-141 reviewer), re-reviewing claude/supplier-technical-acceptance-4 at f24bec92 (git diff e39bde67..HEAD); supersedes REV-141's verdict",
+      "reviewed_baseline": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "docs/supplier_management/implementation/143_rev_141_independent_review.md (follow-up verdict)",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-143",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (merge of main 41fb488a, HD-160 record)",
+      "reviewer": "agent-skills:code-reviewer (the REV-141 reviewer), reviewing local 7998c28f (git diff 6ff4f28b..HEAD) before the push",
+      "reviewed_baseline": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "docs/supplier_management/implementation/143_rev_141_independent_review.md (REV-143 section)",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-144",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (REV-143 fixes)",
+      "reviewer": "agent-skills:code-reviewer (the REV-141 reviewer), re-reviewing local f76e47e9 (git diff 7998c28f..HEAD); supersedes REV-143's verdict",
+      "reviewed_baseline": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "docs/supplier_management/implementation/143_rev_141_independent_review.md (REV-144 section)",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -7504,6 +8018,50 @@
       "source_ref": "supplierPerformanceVerdicts unit test 2/2 with 48 cases (REV-139 L4 added NFR-001 limit cases for load.every_general_operation_within_limits and online.p95_under_2s_during_import); a mutant dropping both NFR-001 limit checks made it red (backup, restore, cmp); npm run lint exit 0. The earlier developer-check observation is bound to plan d6e34580 and commit 2c32916e, which the provided-contract pin commit stranded (REV-139 L2); since then the runner scripts are unchanged; only the verdict module supplierPerformanceVerdicts.js (which the performance runner imports) and its unit test changed, adding a check that NFR-001's limit is 2,000 ms, which the benchmark already reported in that run (limitP95Ms 2000). The formal run after merge re-measures everything on plan 8b31fcdd.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-30T01:52:28+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-157 plan revision: NFR-005 for-SKU p95 3 s, production parts waived (PR #305) merged to main",
+      "code_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "PASS",
+      "source_ref": "PR #305 merged as 6d84ee454b72f4b3e43b2aa6eee2436e6e950716 at 2026-10-30T03:21:32Z on the Product Owner's word ('CI己通過'), with --match-head-commit 77d608b4, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40988675382), main was an ancestor of HEAD and the local, remote and PR heads were equal. Reviews REV-139 CHANGES_REQUESTED and REV-140 APPROVED; every REV-139 finding fixed before merge (report 142).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T03:21:32+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal run on the HD-157 baseline: 8 required suites at TECHNICAL and REGRESSION (HD-151 A suite set)",
+      "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "FAIL",
+      "source_ref": "16 run_check --execute runs, 2026-10-30 03:24:20-03:59:55Z, on 309aa9eb (code-identical to the mode entry commit 6d84ee45), all registered; throwaway mysqld 3450 with the three 16,384 digest settings and deadlock detection and printing ON. PASS at both stages: server-integration 735/735, security 735/735, bank-security 142/142, client-ui 208/208, resilience 3/3 (TC-130/131/132), recovery 1/1 (TC-133). release-operations BLOCKED at both stages only on TC-136 NOT_RUN (release gate); TC-134/135 PASS. supplier-performance TECHNICAL PASS (TC-085/101/128/129): TC-085 for_sku.p95_under_3s with limitP95Ms 3000, overall for-SKU p95 1,737 ms; TC-101 import 57.8 s, online during import worst list.missingFilter 1,443 ms, update 820 ms. supplier-performance REGRESSION FAIL: TC-085 PASS (for-SKU p95 1,818 ms, limit 3,000), TC-128/129 PASS, TC-101 FAIL on online.p95_under_2s_during_import only (update 2,286 ms, list.missingFilter 2,011 ms; import 63.5 s, exactly once, deadlocks 0). Registered as DEF-051.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T03:59:55+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-051 diagnosis under HD-158 A: old/new row-pick A/B, stopped by the Product Owner before any measurement (REPORT_ONLY, not formal evidence)",
+      "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "BLOCKED",
+      "source_ref": "status BLOCKED: stopped before any measurement, not a result. Planned: the performance runner, alternating main 6d84ee45 (new) and 8c31c94a (old, before PR #301; the only server/src difference is SupplierImportService.js), 3 runs each, outputs in the session scratchpad. Started 05:58:08Z; at 06:04:32Z the Product Owner said '停，唔好再跑' and the first run (new-1) was stopped by exact PID during TC-129 recall, before the load-during-import step. The runner's SIGTERM cleanup dropped its erp_t51_rh_* schema (none left). No measurement was produced; the detached worktree for 8c31c94a was removed. The table of earlier formal runs in DEF-051 is the only evidence for the step change.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T06:04:32+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-158 developer checks (IMPLEMENT): lint, Supplier server suite, the changed performance runner, verdict mutants; developer evidence, not formal",
+      "code_commit": "06bbbbaf35ed37d6aaf798bf1afb09fdc2ef54d8",
+      "spec_baseline": "3706970148af058e948f5060091211853d5bec4437838976e676f506e0054751",
+      "source_fingerprint": "62e5475bf4c23b77269c6de6ecbdf85b41f9576674de74856176907a376714a6",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450 (digest settings 16,384, deadlock detection and printing ON), 2026-10-30, on 043c2af8 (main merged in at 376bc9a5; code-identical to 06bbbbaf, which changes only the manifest's consumed Purchasing pin): npm run lint exit 0; Supplier server suite 735/735; runSupplierPerformanceAcceptance 06:18:08-06:29:21Z TC-085/101/128/129 PASS, deadlocks 0/0; the during-import load report carries nfr001 limitP95Ms 5000 (pass, worst list.missingFilter 1,514 ms) and the mixed load report 2000 (pass), so --general-limit-ms reaches the tool only for the during-import run; TC-101 online.p95_under_5s_during_import PASS, precheck plus execute 66.1 s. supplierPerformanceVerdicts unit test 2/2; mutants (cp backup, restore, cmp): dropping the 5 s limit check made it red (1 of 2), DURING_IMPORT_LIMIT_MS 2,000 made it red (2 of 2). An earlier start of these checks on 7f77a03f was stopped by exact PID during the server suite to merge main first (no result kept).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T06:29:21+00:00"
     }
   ],
   "pending_decisions": [
@@ -9593,6 +10151,44 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-30: 'C組全部本機己通過的案例就紀錄為通過，不用再找production like 環境再測了' (record every C case that passed locally as passed; no production-like re-test), then, after the remaining list and the risk were set out, '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (confirmed; revise the plan; TC-085 is not fixed; relax to 3 seconds). Scope: NFR-005 for-SKU p95 limit 3 s (NFR-001 stays 2 s); production parts of TC-128/130/132/133/134/135/006 and the production-like UI smoke waived, local results stand; TC-136 (release gate), UAT-044/045, business UAT, sign-offs and release decisions unchanged; the plan revision also carries the 07 amendments (HD-145 A, HD-146 A), REV-130 N3/N6 and the profile environment authorization; existing approvals are re-recorded on the new baselines, with no new risk acceptance. Shown to the Product Owner before the answer (REV-139 L1): in the reply listing what remains under the principle, that recording it needs a plan revision marking the production parts waived, 'with 14 approvals to be re-recorded', carried together with the 07 amendments, N3 and N6, and the residual risk that no one verifies performance, restore time, alerts and deployment order in a real environment before production; in the earlier TASK-051 C reply, that the plan revision would carry 07, N3, N6 and the environment authorization."
+    },
+    {
+      "id": "HD-158",
+      "impact": "MAJOR",
+      "question": "TC-101 failed at REGRESSION on the HD-157 baseline: online.p95_under_2s_during_import, update 2,286 ms and list.missingFilter 2,011 ms (TECHNICAL on the same code: 820 and 1,443 ms). Every formal run since PR #301 (DEF-049 fix) has list.missingFilter during import at 1,443-2,011 ms, against 392-580 ms in the four runs before it; the two missing-primary COUNT statements read the same rows but take about three times as long, and the import executes in 51-57 s instead of 66-77 s (as put to the Product Owner; corrected afterwards from the evidence: 66-115 s, the 114.6 s run being the 2026-10-28 first REGRESSION). Cause not proven (timing only). Route? (A) REPORT_ONLY diagnosis: old/new row-pick A/B under load-during-import, 3 runs each, plus variance on a quiet host. (B) Re-run REGRESSION supplier-performance on a quiet host and accept a pass (not recommended: picks a good result, the regression stays). (C) Accept as a known limitation: relax the during-import online p95 target (business decision). (D) Remediate now (cause unproven).",
+      "affected_ids": [
+        "DEF-051",
+        "TC-101",
+        "IMP-016",
+        "NFR-004",
+        "NFR-001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: 'A', then, after asking what the A/B tests and why, '停，唔好再跑' (stop; the A/B was stopped before any measurement), then 'TC-101 改要求放寬至5秒就好了' (relax TC-101's requirement to 5 s). Route C: during a 10,000-row import, online general operations' p95 limit is 5 s (NFR-004 and IMP-016; NFR-001's 2 s under normal mixed load and NFR-005's 3 s unchanged); no remedy; the step change after PR #301 stays unexplained and is recorded in DEF-051. The plan revision moves both baselines, so existing approvals are re-recorded on the new baselines with no new risk acceptance, and the Supplier provided pin (03 §11.5) would move, so Purchasing's pin target in issue #294 would move again; these consequences were set out to the Product Owner after the answer, not before. Implementation note: 03 §11.5 states no number for online p95 during an import ('並保持線上query p95'), so it was left unchanged and the provided pin stays e49ac37d, which Purchasing pinned at 668880a8; the 5 s target is in 01 NFR-004 and 06 IMP-016 (reported to the Product Owner before HD-159). DEF-051 closes when TC-101 passes against 5 s in the formal run on the HD-158 baseline. Follow-up (REV-141 L1): 03 §11.5, read with the 2 s bullet before it, can imply 2 s during an import; it is reworded with the next change that has to touch 03 anyway, so that Purchasing re-pins once. REV-141 L5: UAT-044 adds 匯入期間一般操作p95<5秒（HD-158）."
+    },
+    {
+      "id": "HD-159",
+      "impact": "MAJOR",
+      "question": "After merging main into the HD-158 branch, validate_traceability reports CONTRACT_DRIFT on the consumed Purchasing contract (supplier-consumer-contract, docs/purchasing_receiving_management/03_design_spec.md, pinned 5785e0a6). Purchasing 668880a8 changed two paragraphs, both about the Inventory provider's partial reversal ('inventory-purchase-provider/1.1候選' -> '1.1 ... 經APR-005批准'); nothing Supplier consumes. Route? (A) Refresh the pin as under HD-147 B. (B) Leave it and ask the Purchasing owner first (HD-158 waits).",
+      "affected_ids": [
+        "supplier-consumer-contract",
+        "00_module_manifest.json"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: 'A'. Pin 5785e0a6 -> 366abb1fed7ced7fbae79b6d1dfe42836f007f68e643a7839070a193812e45cf (commit 06bbbbaf); the move of both baselines is absorbed by the HD-158 approval re-record."
+    },
+    {
+      "id": "HD-160",
+      "impact": "MAJOR",
+      "question": "main 41fb488a (PR #310, merged 2026-10-30T07:24:07Z) adds AGENTS.md: adding any test case to routine CI, and any performance/capacity execution (local, or CI triggered by a push or PR), needs the Product Owner's prior approval. PR #309 meets it three ways. (1) server/test/supplierPerformanceVerdicts.test.js, auto-discovered by routine CI: 1 new case (a 10,000 ms limit must fail), 3 renamed, fixture limit 2,000 -> 5,000; pure unit test, about 0.1 s, every PR. (2) Merging main and pushing triggers one CI run (13 checks, including the existing Sales TC-042 mixed-load and shard-1 Sales capacity jobs; about 25-30 min); there is no alternative, because the CI config changed. (As put to the Product Owner; corrected afterwards (REV-143 M1): after PR #310 the CI has 14 jobs, and .github/scripts/sales-import-capacity.mjs on PR #309's 95 files returns required=true and fulfillment_required=true, so the push also runs the Fulfillment existing capacity job (14 scenarios, 100 lines / 5,000 members, 20 s transactions); shard 1 also always runs Sales import capacity TC-035 (100,000 rows) and the Fulfillment P1 browser flows. The corrected content is put to the Product Owner before the push.) (3) The post-merge formal run: 8 suites at TECHNICAL and REGRESSION on the scratch mysqld, about 40 min, supplier-performance at 100,000 Suppliers, 50 users for three 120 s loads, 200 recall queries and one 10,000-row import; needed to close DEF-051 and to give Technical Acceptance formal evidence on the HD-158 baseline. Earlier performance runs today (formal 03:24-04:00Z, A/B 05:58Z, developer 06:18-06:29Z) and the 6ff4f28b CI (from about 07:08Z) predate the rule.",
+      "affected_ids": [
+        "DEF-051",
+        "TC-101",
+        "server/test/supplierPerformanceVerdicts.test.js",
+        "PR #309"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: '1、2批准，3不用跑了，都己跑了幾次，再跑意義不大'. (1) approved: the one new case in supplierPerformanceVerdicts.test.js, for PR #309. (2) approved: one push of PR #309 with main merged in, and the CI it triggers. (3) declined: no formal run on the HD-158 baseline. Agent's reading (not the Product Owner's words), stated to him after his answer and not confirmed by him: the formal run on the HD-157 baseline (309aa9eb) stays the latest formal result; TC-101 is re-read against 5 s (worst 2,286 ms, error rate 0), not re-run; DEF-051 closes on the existing evidence. HD-160 declined only the run on the HD-158 baseline: Technical Acceptance still needs the required suites at TECHNICAL and REGRESSION on the then-current plan baseline (verify_gate TECHNICAL_ACCEPTANCE reports 16 REQUIRED_RUN_MISSING), which needs the Product Owner's prior approval under AGENTS.md when it is attempted (REV-143 M2, L2). (2) re-confirmed on the corrected content (14 CI jobs, including the Fulfillment existing capacity job with 14 scenarios, TC-042, shard-1 Sales capacity, TC-035 and the Fulfillment P1 browser flows): Product Owner, 2026-10-30, '批准，push吧'."
     }
   ],
   "external_actions": [
@@ -10163,6 +10759,30 @@
       "idempotency_key": "mode-change-491",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e64dfc74 (PR #304 merge) for the plan revision and runner changes. Step 1 (revision 490) re-entered READY_FOR_TESTING with the same authorization."
+    },
+    {
+      "id": "COMMENT-294-HD157",
+      "kind": "ISSUE_COMMENT",
+      "target": "crazysumsum/erp-app#294",
+      "idempotency_key": "supplier-purchasing-pin-hd157-comment-2026-10-30",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/issues/294#issuecomment-6514158767 posted 2026-10-30T03:22:12Z on the Product Owner's word ('#294 留言都做埋'), REV-139 M3: the pin target is now e49ac37d (03 at main 6d84ee45, equal to Supplier's provided pin); the only change since 2b81eb9a is commit 2c32916e, one line in 03 §11.5 (for-SKU p95 < 3 s, NFR-005, HD-157); no API, schema, projection, status or lock-order change; asked Purchasing to refresh or record keeping the old pin, and to say if it needs for-SKU tighter than 3 s."
+    },
+    {
+      "id": "MODE-CHANGE-498",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-498",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157): after the revision merged (PR #305, 'CI己通過'), back to TEST_AND_VERIFY for the formal run on the HD-157 baseline; entry commit 6d84ee454b72f4b3e43b2aa6eee2436e6e950716"
+    },
+    {
+      "id": "MODE-CHANGE-502",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-502",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了' (HD-158 C). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main 6d84ee45 (PR #305 merge) for the plan revision and the TC-101 verdict change. Step 1 (revision 501) re-entered READY_FOR_TESTING with the same authorization."
     }
   ],
   "evidence_files": [
@@ -10368,7 +10988,23 @@
     "evidence/20261029T040105-a05fb177b6e8/run.json",
     "evidence/20261029T040136-8192fee4677f/run.json",
     "evidence/20261029T040142-0d55c6f0c0f0/run.json",
-    "evidence/20261029T040149-baed2fb7b585/run.json"
+    "evidence/20261029T040149-baed2fb7b585/run.json",
+    "evidence/20261030T032421-002040bd2fd9/run.json",
+    "evidence/20261030T032656-34275715e091/run.json",
+    "evidence/20261030T032708-7195a5ce235a/run.json",
+    "evidence/20261030T032937-1f94f5848892/run.json",
+    "evidence/20261030T032943-c484462380ea/run.json",
+    "evidence/20261030T033013-cf861b6a86a3/run.json",
+    "evidence/20261030T033019-f3eb920f33b4/run.json",
+    "evidence/20261030T033026-b856fe2963d2/run.json",
+    "evidence/20261030T034152-08fd4a1f2f00/run.json",
+    "evidence/20261030T034429-8f5306e957ed/run.json",
+    "evidence/20261030T034443-a6489778b4f0/run.json",
+    "evidence/20261030T034723-8f82647fe185/run.json",
+    "evidence/20261030T034729-dca35ef45afa/run.json",
+    "evidence/20261030T034802-0c3c0f91d809/run.json",
+    "evidence/20261030T034810-14d1ccd1c16d/run.json",
+    "evidence/20261030T034819-b8b65bdb3861/run.json"
   ],
   "defects": [
     {
@@ -11212,7 +11848,7 @@
     {
       "id": "DEF-050",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TC-085",
         "SKU-008",
@@ -11222,9 +11858,32 @@
         "server/src/modules/supplier/SupplierAdminService.js:128",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "evidence/20261030T033026-b856fe2963d2/run.json (supplier-performance TECHNICAL on the HD-157 baseline: TC-085 PASS, for_sku.p95_under_3s with limitP95Ms 3000, for-SKU p95 1,737 ms)",
+        "evidence/20261030T034819-b8b65bdb3861/run.json (supplier-performance REGRESSION on the HD-157 baseline: TC-085 PASS, for-SKU p95 1,818 ms; the run FAILs on TC-101, which is DEF-051)",
+        "HD-157 (Product Owner, 2026-10-30): NFR-005 for-SKU p95 limit 3 s; no remedy; PR #305 merged as 6d84ee45"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-051",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-101",
+        "IMP-016",
+        "NFR-004",
+        "supplier-performance REGRESSION evidence/20261030T034819-b8b65bdb3861",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [
+        "HD-160 (Product Owner, 2026-10-30): no formal run on the HD-158 baseline",
+        "evidence/20261030T033026-b856fe2963d2/run.json and evidence/20261030T034819-b8b65bdb3861/run.json (HD-157 baseline; TC-101 online p95 during import worst 1,443 and 2,286 ms, under 5 s; the REGRESSION run.json records FAIL against 2 s, re-read against 5 s)",
+        "Every formal TC-101 run since 2026-10-28 had online p95 during the import under 5 s (testing/04_defect_register.md, DEF-051 table); the 2026-10-28 first REGRESSION run also failed on a create error rate of 2.06% (DEF-048, fixed), so the closure rests on the two HD-157-baseline runs (error rate 0)",
+        "HD-158 developer run on 043c2af8: TC-101 online.p95_under_5s_during_import PASS with limitP95Ms 5000 (developer evidence, not formal)"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #305 (HD-157): CI, merge on the Product Owner's word. After merge: (1) with the Product Owner's word, comment on issue #294 that Purchasing's pin target for supplier-public-provider-contracts is now e49ac37d and that 03 §11.5's for-SKU p95 is 3 s (HD-157) with no API change (REV-139 M3); (2) TEST_AND_VERIFY on the merged baseline: the 8 required suites at TECHNICAL and REGRESSION; DEF-050 closes if TC-085 passes against 3 s; then the Technical Acceptance report. REPORT_ONLY."
+  "next_safe_action": "PR #309 (HD-158 C, HD-159 A, HD-160): pushed once on the Product Owner's confirmation ('批准，push吧'); CI; merge on his word. After merge: record the merge; no formal run on the HD-158 baseline (HD-160 (3)). Technical Acceptance is blocked by TASK-051 group B, TC-136 (release gate) and the formal suites at TECHNICAL and REGRESSION on the then-current baseline, which need the Product Owner's prior approval (AGENTS.md). Follow-up: reword 03 §11.5 with the next change to 03 (REV-141 L1)."
 }

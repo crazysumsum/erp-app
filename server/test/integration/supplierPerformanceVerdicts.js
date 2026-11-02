@@ -7,6 +7,8 @@ import { checklist } from "./supplierAcceptanceRunner.js";
 export const LIMIT_MS = 2_000;
 // NFR-005（for-SKU 揀選器）：3 秒（HD-157，2026-10-30）。
 export const FOR_SKU_LIMIT_MS = 3_000;
+// 10,000 列匯入期間嘅線上一般操作（TC-101、IMP-016、NFR-004）：5 秒（HD-158，2026-10-30）。
+export const DURING_IMPORT_LIMIT_MS = 5_000;
 export const CANDIDATE_CAP = 3_000;
 // 資源上限（OPS-001、IMP-016「bounded」）：一個 app 嘅連線池（config/database.js 嘅 10）加 benchmark 自己嘅 admin 連線；
 // 匯入期間有三個 app process（負載、上載、worker）。RSS 以 1 GiB 為界。
@@ -95,8 +97,8 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
   tc101.check("import.exactly_once_and_counts_consistent", imported.report?.verification?.exactlyOnce === true
     && imported.report?.verification?.countsConsistent === true, imported.report?.verification);
   tc101.check("import.report_ok", imported.code === 0 && imported.report?.ok === true, { code: imported.code, error: imported.report?.error });
-  tc101.check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true
-    && during.report.nfr001.limitP95Ms === LIMIT_MS, during.report?.nfr001);
+  tc101.check("online.p95_under_5s_during_import", during.code === 0 && during.report?.nfr001?.pass === true
+    && during.report.nfr001.limitP95Ms === DURING_IMPORT_LIMIT_MS, during.report?.nfr001);
   // 匯入要喺負載嘅量度窗口入面（REV-111 M-4）：由上載開始，到執行完（上載＋預檢＋執行嘅時間），唔計之後嘅核對同匯出。
   const window = during.report?.window;
   const importStart = Date.parse(imported.report?.startedAt ?? "");

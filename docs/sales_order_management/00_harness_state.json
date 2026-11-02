@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1798,
+  "revision": 1801,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "22e70befb09166c87e99796cc3c8940571dc085dea2df861b2c6df1d2769b8c0",
     "plan": "fee4cd2aa7fa0fbfc0f7393c3e17458aec6cc9291faf8e7e7203df8350c085d8",
-    "code_commit": "8f6df63e48de983d5ea94fb220741d9ae9e34b6f",
-    "source_fingerprint": "e365f6f9958ad62d388ff8343bf8060390cfbafe794548ab7965c6c663e5febc",
+    "code_commit": "8bb47ef5b4b5f2de3d2404277be2a840025e401e",
+    "source_fingerprint": "cf84c700262baa05d6ef501428679c12525f99937ea49cf53778d8b9622302be",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7",
+    "default_commit": "41fb488af133053c95e2b8e878920b2a494349da",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -11645,6 +11645,29 @@
       "recorded_at": "2026-10-30T06:38:26.803783+00:00",
       "code_commit": "8f6df63e48de983d5ea94fb220741d9ae9e34b6f",
       "expires_at": null
+    },
+    {
+      "id": "APR-P4-DEC049-R2-CURRENT-PLAN",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "ActualdirectSamreply inthisSaleschat request_user_input_async call_16331e9c24774bf1810a3b286d2095bf: 批准 A：本候選 CI 批次及4個常規功能回歸（建議）. AnswersDEC049R2 exactproposal531a5c2e58b6971f94e9eefcdd4a4ad57024ea60e68ace69a8f4540e5e0e14b5: onecurrentcandidate CI588files/net64/14maincapacity160timedservicesamples12PreviewHTTP/2mainbrowser plus4newfunctional2pure2smallnative asregularCI; 4shards/concurrency1each/originalSLO/floors/report-onlyretention/no sharedroutingchange. Actualoldrun41002406686 costnotnewPASS; currentestimated25-50minwall/server80-160runner-min+othersnotceiling. OriginalC lowCPU/noDR/no50long/no300k/noqueryrebuild andactualperfFAILtimeoutstop remain. Preserveoriginalunansweredfd899proposal/reviews. R3 proposal70c6a123 andclosing2bcf2210 preparedbutNOTANSWEREDbythisR2reply; noinferapprovalforsecondpostmergepushmainCI, changedhead/manual/weekly/retryperformance. Beforeactualmerge, disclose/resolveoriginalpushmainautomaticsecondbatch afterconcretereviewablePR/Gates; do notchangeCIroutingorclaimthatfuturebatchapproved. Priorstandingcommit/PR/mergeauthorityretained butallapprovedgatesandnewcostboundaryapply. Derivedcurrentplan reference after exact2NA-IDrepair and authorizedfreshmain inheritance/commonPR310routing; same actualR2 ONE firstcandidateCI and4Salesnewfunctional/14existingcapacitypayload, no additionalattempt orpostmergeCI permission. Mainexistingordinarytestfiles inherited notSamnewownerapproval; report591truthfully. No oldapproval/hash rewritten or newhumanhashinspection claimed.",
+      "recorded_at": "2026-10-30T09:54:14.422598+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "fee4cd2aa7fa0fbfc0f7393c3e17458aec6cc9291faf8e7e7203df8350c085d8",
+      "code_commit": "8bb47ef5b4b5f2de3d2404277be2a840025e401e",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TASK-063",
+        "TASK-068",
+        "DEC-049",
+        ".github/workflows/ci.yml",
+        "server/test/fulfillmentArchiveContract.test.js",
+        "server/test/integration/fulfillmentArchiveGuards.integration.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -21220,6 +21243,17 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/developer48-performance-r1/summary.json; existingSam lowCPU/1m5m/separate25m/300kArchive/50JWT/originalSLO/noDR authority, 44qualifiednonperformance slots verifiedbyactual8currentstrict evidence_issues plusexactDEC045namedoriginalprovenance/unchangedrawassets/independentclosingreview; no fresh44 claim. Fouroriginalprofilecommands remain unchanged, no instrumentation or separation flags. Single ownedDBworkload and wholemeasuredwindows; anyactualbenchmarkfailure stopsSam, no repair/retest or following suite. Local actualpipeline needs no fictitious externalSTARTEDaction. Exactsource/Plan/runtime identity andrawproofs retained; no formalacceptance/currentCI/mergeclaim.; actual /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/developer48-performance-r1/summary.json SHAc062e1b0e60fe3ddf7209f794e73e110bceac7b117df2a203a720a84e416460b STOPPED_NOT_PASS 4/4.",
       "actor": "Codex /root",
       "observed_at": "2026-10-29T08:58:14.022507Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "P4 functional delivery contract adoption pending; verified human execution policy, no test/CI PASS claimed",
+      "status": "PENDING",
+      "code_commit": "8bb47ef5b4b5f2de3d2404277be2a840025e401e",
+      "spec_baseline": "fee4cd2aa7fa0fbfc0f7393c3e17458aec6cc9291faf8e7e7203df8350c085d8",
+      "source_fingerprint": "cf84c700262baa05d6ef501428679c12525f99937ea49cf53778d8b9622302be",
+      "source_ref": "Actual Sam PM human message 01a19a65-0902-74f1-b684-0fcb40f9f5e7 in turn 01a19a64-4fdf-73e0-85a7-49c5e15c3f39, thread 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, verified read_thread 2026-11-02. All NFR local/CI deferred until related functional UAT; functional implementation/regression/review/coverage/functional CI permit merge without UAT/NFR results. New regular cases or scale increases still require prior explicit Sam approval. Existing approvals/raw evidence preserved. This records the actual instruction, not a fresh hash-bound human approval.",
+      "actor": "Codex /root",
+      "observed_at": "2026-11-02T04:02:08.859158+00:00"
     }
   ],
   "pending_decisions": [
@@ -25711,8 +25745,16 @@
       "kind": "GIT_TARGET_INTEGRATION",
       "target": "41fb488af133053c95e2b8e878920b2a494349da",
       "idempotency_key": "p4-main41fb-integration",
+      "status": "CONFIRMED",
+      "source_ref": "ActualPMdelegationfrom01a0e71b-fccb-7c81-b9fe-ed817cc58e1f saysfollowofficialmergedPR310/main41fb commonCI; rootAGENTS/CLAUDEread. 68a8..41fb containsPurchasingpuremathsource/tests/docs pluscentralCIrouting/script/policy, no Salesruntime/migration changes. Preserve exact PMrouting and existing14scales/SLO, port only actualSamDEC047C previouslyapproved reportingJUnit/mergedLCOV retention; no extra cases/routingtool. No CIrunbeforecurrentcandidate selfcheck/review; originalonebatchR2 authority/stoprule remains.; actualmergecommit 8bb47ef5b4b5f2de3d2404277be2a840025e401e secondparent41fb,0conflicts, exactshared14job/aggregate/triggers retained plus originalreportingonly changes. No PR/push/CI. Post-policy Purchasing11purecases inheritedfromalreadymergedmain, no inventedSamownerapproval/no grandfatherclaim; sourcecount591, Salesnewcasecount4unchanged."
+    },
+    {
+      "id": "ACT-P4-MAINAAE9-INTEGRATION",
+      "kind": "GIT_TARGET_INTEGRATION",
+      "target": "aae9c74444299539a3a5e275f37a5730e88f3378",
+      "idempotency_key": "p4-mainaae9-integration",
       "status": "STARTED",
-      "source_ref": "ActualPMdelegationfrom01a0e71b-fccb-7c81-b9fe-ed817cc58e1f saysfollowofficialmergedPR310/main41fb commonCI; rootAGENTS/CLAUDEread. 68a8..41fb containsPurchasingpuremathsource/tests/docs pluscentralCIrouting/script/policy, no Salesruntime/migration changes. Preserve exact PMrouting and existing14scales/SLO, port only actualSamDEC047C previouslyapproved reportingJUnit/mergedLCOV retention; no extra cases/routingtool. No CIrunbeforecurrentcandidate selfcheck/review; originalonebatchR2 authority/stoprule remains."
+      "source_ref": "FreshfetchactualmainPR313 singlecatalogrelatedcapacity plusSupplierdocs/benchmarkverdict-onlydelta. ActualSamPMglobalmessage01a18bf7-a448-7981-b5ab-5c9b4f4499bf verifiedread_thread approves audited32relatedonly/ruleonPRandmain/no reducedcases/data/floors; officialAGENTS updated. OriginalC+R2onecandidate workload retained, no localnewcapacity. Merge latestsharedworkflowkeepingapprovedreports only. Zero-load selector mapping beforepush, coordinateP4knownnamespace withactualcommonfileowner viaHarnessref18, no parallelrouter/newcatalog/testcase."
     }
   ],
   "evidence_files": [
@@ -26614,7 +26656,15 @@
     "evidence/20261029T090204-75866e28d87a/run.json",
     "evidence/20261030T012617-f9faeb728482/run.json",
     "evidence/20261030T012630-562ebc78431c/run.json",
-    "evidence/20261030T012703-28fad11063de/run.json"
+    "evidence/20261030T012703-28fad11063de/run.json",
+    "evidence/20261030T063911-a8878d2381f9/run.json",
+    "evidence/20261030T064812-a29f2f660016/run.json",
+    "evidence/20261030T064821-36e92576b5ba/run.json",
+    "evidence/20261030T064823-b10dc66560bb/run.json",
+    "evidence/20261030T064829-36490259528f/run.json",
+    "evidence/20261030T064911-9e8dc45af973/run.json",
+    "evidence/20261030T095434-208b609d88a3/run.json",
+    "evidence/20261030T095459-5ceb8d849116/run.json"
   ],
   "defects": [
     {
@@ -27361,5 +27411,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Integrateofficialmain41fb sharedCI as instructedbyPM, preservecurrentowned37/19/C5 raw/private1000Archive manifests+alloriginalhistory andexistingoneURLassertfix. Resolveworkflowonlybycombiningexactnewsharedcapacity_pattern skip/defaultlane+explicitoriginaltestglob+approvedJUnit/reportretention, preserve14dedicatedjob/trigger/gates. Do not addtest/route/scale orrunCagain. Finishimmutabletargetimpactreview before CI; afterlocalcommit rebaselineactualsource andrerunoriginal26browser+lint only; allcurrentCIrequiredchecks/artifacts afterselfchecks. ExistingCsourcee365/fee/time staysoriginalwithqualifiedexactnonruntime bridge."
+  "next_safe_action": "Finish existing aae9 merge without push or workloads; integrate latest trusted admission baseline and independently reviewed three-file HD026 DB slice preserving P4 metrics. PM PR318 coordinates all pre-UAT NFR off. Record exact affected jobs/files before first push. Update functional merge contract/deferred owner list and current baseline/review; execute only authorized existing functional checks, coverage in admitted functional CI. Do not restart completed C/browser, reseed large data or run any NFR. Current CI/PR/merge not yet observed."
 }

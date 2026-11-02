@@ -109,7 +109,7 @@
         "id": "supplier-consumer-contract",
         "version": "design-spec",
         "source": "docs/purchasing_receiving_management/03_design_spec.md",
-        "sha256": "5785e0a6cb06fe8c5bedf472349e1b97f0c415ecec7c39c649de32eed9252b32",
+        "sha256": "366abb1fed7ced7fbae79b6d1dfe42836f007f68e643a7839070a193812e45cf",
         "regression_suites": [
           "supplier-server-integration"
         ]
