@@ -1,3 +1,4 @@
+import { readShipmentRecoveryActor } from "./shipmentRecoveryActor.js";
 import { assertFulfillmentTransaction } from "./FulfillmentTransactionService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { fulfillmentOperationHash } from "./fulfillmentOperationHash.js";
@@ -25,11 +26,12 @@ export class ShipmentFailureReconciliation {
  #inventory;
  #sales;
  #leaseMs;
- constructor({database,time,logger,inventory,sales,readAttempt,leaseMs=60000}){if(typeof readAttempt!=="function")throw new TypeError("Private actual-attempt reader required");Object.assign(this,{database,time,logger});this.#readAttempt=readAttempt;this.#inventory=inventory;this.#sales=sales;this.#leaseMs=leaseMs;}
+ #readRecovery;
+ constructor({database,time,logger,inventory,sales,readAttempt,leaseMs=60000,readRecovery=null}){if(typeof readAttempt!=="function")throw new TypeError("Private actual-attempt reader required");Object.assign(this,{database,time,logger});this.#readAttempt=readAttempt;this.#inventory=inventory;this.#sales=sales;this.#leaseMs=leaseMs;this.#readRecovery=readRecovery;}
  async #operation(tx,record,{admit=false}={}){
   const {request,actor}=record,[[row]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=?",[request.eventId]),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
   const now=Number(clock?.now_ms),expires=Number(row?.lease_expires_at);
-  if(!row||!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(expires)||expires<=now||admit&&expires-now<shipmentTransactionBudget(this.database)||row.status!=="IN_PROGRESS"||row.result_json!==null||row.completed_at!==null||row.public_error_code!==""||row.public_error_details!==null||row.next_attempt_at!==null||Number(row.is_document_archived)!==0||row.operation_type!=="SHIP"||row.target_type!=="SHIPMENT"||key(row.target_id)!==request.target.id||row.payload_hash!==digest(request)||key(row.initiated_by)!==key(actor.id)||row.correlation_id!==request.correlationId||row.lease_owner!==request.leaseOwner)conflict();return row;
+  if(!row||!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(expires)||(record.inspectExpired?expires>now:expires<=now)||admit&&expires-now<shipmentTransactionBudget(this.database)||row.status!=="IN_PROGRESS"||row.result_json!==null||row.completed_at!==null||row.public_error_code!==""||row.public_error_details!==null||(row.next_attempt_at!==null&&(!record.inspectExpired||!Number.isSafeInteger(Number(row.next_attempt_at))||Number(row.next_attempt_at)>now))||Number(row.is_document_archived)!==0||row.operation_type!=="SHIP"||row.target_type!=="SHIPMENT"||key(row.target_id)!==request.target.id||row.payload_hash!==digest(request)||key(row.initiated_by)!==key(actor.id)||row.correlation_id!==request.correlationId||row.lease_owner!==request.leaseOwner)conflict();return row;
  }
  async #assertLocalAbsence(tx,snapshot,record){
   const {request,actor}=record,{shipment,root,shipmentLines}=snapshot;
@@ -48,29 +50,18 @@ export class ShipmentFailureReconciliation {
  }
  async verifyReadInTransaction(tx,session,phase){
   assertFulfillmentTransaction(this.database,tx);const record=this.#sessions.get(session);
-  if(!record||record.tx!==tx||record.signal.aborted||record.attempt.signal?.aborted||record.phase!==phase||this.#readAttempt(record.token)!==record.attempt||getTransactionOutcome(record.attempt.tx)?.state!=="ROLLED_BACK")conflict();
+  if(!record||record.tx!==tx||record.signal.aborted||record.phase!==phase)conflict();
+  if(record.recoveryToken){if(!this.#readRecovery)conflict();await this.#readRecovery(tx,record.recoveryToken);}else{if(record.attempt.signal?.aborted||this.#readAttempt(record.token)!==record.attempt||getTransactionOutcome(record.attempt.tx)?.state!=="ROLLED_BACK")conflict();if(record.attempt.recoveryToken)await this.#readRecovery(tx,record.attempt.recoveryToken);}
   await this.#operation(tx,record);return record.source;
  }
- async finalize(token){
-  const attempt=this.#readAttempt(token),code=permanent.get(attempt?.errorCode)??null;
-  if(!attempt||!code||attempt.signal?.aborted||getTransactionOutcome(attempt.tx)?.state!=="ROLLED_BACK")return {state:"UNKNOWN"};
-  const request=attempt.request,actor=attempt.actor;
-  if(!actor||!Object.isFrozen(actor)||!Object.isFrozen(request)||this.database.context?.get()?.databaseTransaction)conflict();
-  const lease=await this.database.withTransaction(async tx=>{
-   assertFulfillmentTransaction(this.database,tx);
-   await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);assertShipmentLeaseBoundary(attempt,request,this.#leaseMs);await this.#operation(tx,{request,actor});
-   return readOrRenewShipmentLease(this.database,tx,request,this.#leaseMs);
-  },{isolationLevel:"READ COMMITTED",signal:attempt.signal}),entry=shipmentLeaseEntry(lease,attempt.signal);
-  try{return await this.database.withTransaction(async(tx,{signal})=>{
-   assertFulfillmentTransaction(this.database,tx);
-   const [locks]=await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);if(locks.length!==1)conflict();entry.locked();
-   const initial={request,actor};await this.#operation(tx,initial,{admit:true});
-   const currentActor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation");if(key(currentActor.id)!==key(actor.id))conflict();
-   const [history]=await tx.query("SELECT shipment_id,event_id,action,from_status,to_status,actor_user_id,version_after FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action='CONFIRM_START' LIMIT 2",[request.target.id,request.eventId]);
+ async #proveAbsence(tx,record){
+  const {request,actor}=record;
+  const [history]=await tx.query("SELECT shipment_id,event_id,action,from_status,to_status,actor_user_id,version_after FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action='CONFIRM_START' LIMIT 2",[request.target.id,request.eventId]);
    assertShipmentConfirmationHistory(history,{shipmentId:request.target.id,eventId:request.eventId,version:request.payload.version,actorId:actor.id});
    const before=assertShipmentConfirmationSnapshot(await readShipmentConfirmationSnapshot(tx,request.target.id),request.eventId);
    if(Number(before.shipment.version)!==request.payload.version+1||digest({...request,payload:shipmentConfirmationPayload(before.shipment,{eventId:request.eventId,version:request.payload.version})})!==digest(request))conflict();
-   const source=freezeShipmentIntent({fulfillmentId:key(before.root.id),shipmentId:request.target.id,salesOrderId:key(before.root.sales_order_id),customerId:key(before.root.customer_id),warehouseId:key(before.root.warehouse_id),eventId:request.eventId,actorId:key(actor.id),scopeHash:digest(request),correlationId:request.correlationId,inventoryRequestHash:attempt.inventoryRequestHash,salesRequestHash:attempt.salesRequestHash,pickedLines:pickedLines(before)}),session=Object.freeze({}),record={token,attempt,request,actor,tx,signal,source,phase:"inventory.prepare"};
+   const source=freezeShipmentIntent({fulfillmentId:key(before.root.id),shipmentId:request.target.id,salesOrderId:key(before.root.sales_order_id),customerId:key(before.root.customer_id),warehouseId:key(before.root.warehouse_id),eventId:request.eventId,actorId:key(actor.id),scopeHash:digest(request),correlationId:request.correlationId,inventoryRequestHash:record.attempt?.inventoryRequestHash??null,salesRequestHash:record.attempt?.salesRequestHash??null,pickedLines:pickedLines(before)}),session=Object.freeze({});
+   Object.assign(record,{tx,source,phase:"inventory.prepare"});
    this.#sessions.set(session,record);
    try{
     const inventoryRead=await this.#inventory.prepareShipmentIssueOutcomeReadInTransaction(tx,session);
@@ -80,12 +71,48 @@ export class ShipmentFailureReconciliation {
     record.phase="inventory.finish";const inventoryProof=await this.#inventory.readShipmentIssueOutcomeInTransaction(tx,inventoryRead);
     record.phase="inventory.verify";const inventory=await this.#inventory.verifyShipmentIssueOutcomeProofInTransaction(tx,session,inventoryProof);
     record.phase="sales.verify";const sales=await this.#sales.verifyShipmentOutcomeProofInTransaction(tx,session,salesProof);
-    if(inventory.state!=="ABSENT"||sales.state!=="ABSENT"){await this.logger?.error?.("shipment.reconciliation.unproven","Original Shipment owner outcome is not proven absent",{severity:inventory.state==="SUCCEEDED"||sales.state==="SUCCEEDED"?"critical":"error",code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE",correlationId:request.correlationId});return {state:"UNKNOWN"};}
+    if(inventory.state!=="ABSENT"||sales.state!=="ABSENT"){await this.logger?.error?.("shipment.reconciliation.unproven","Original Shipment owner outcome is not proven absent",{severity:inventory.state==="SUCCEEDED"||sales.state==="SUCCEEDED"?"critical":"error",code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE",correlationId:request.correlationId});return null;}
     await this.#assertLocalAbsence(tx,snapshot,record);
     shipmentIssuePayload(snapshot,inventory.facts);
     const activeClaims=snapshot.claims.filter(row=>BigInt(row.active_claimed_quantity)>0n),activeLines=new Set(activeClaims.map(row=>key(row.fulfillment_line_id))),sourceFacts={orderId:sales.sourceFacts.orderId,lines:sales.sourceFacts.lines.filter(line=>snapshot.lines.some(row=>activeLines.has(key(row.id))&&key(row.sales_order_line_id)===line.salesOrderLineId))};
     assertAllocationSourceFacts({header:snapshot.root,lines:snapshot.lines,claims:activeClaims},snapshot.allClaims,sourceFacts,inventory.facts.reservationFacts);
-    await this.#operation(tx,record);const finalActor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation");if(key(finalActor.id)!==source.actorId)conflict();
+    return {source,snapshot};
+   }finally{this.#sessions.delete(session);}
+ }
+ async inspectExpiredInTransaction(tx,token,eventId,signal){
+  assertFulfillmentTransaction(this.database,tx);if(!this.#readRecovery||!(signal instanceof AbortSignal)||signal.aborted)conflict();
+  await this.#readRecovery(tx,token);
+  const [[operation]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[eventId]);
+  if(!operation||operation.status!=="IN_PROGRESS"||operation.operation_type!=="SHIP"||operation.target_type!=="SHIPMENT"||operation.initiated_by===null)conflict();
+  const [[shipment]]=await tx.query("SELECT * FROM shipments WHERE id=?",[operation.target_id]);
+  if(!shipment||shipment.status!=="SHIPPING"||shipment.confirmation_event_id!==eventId||!Number.isSafeInteger(Number(shipment.version))||Number(shipment.version)<2)conflict();
+  const request=freezeShipmentIntent({eventId,operationType:"SHIP",target:{type:"SHIPMENT",id:key(operation.target_id)},payload:shipmentConfirmationPayload(shipment,{eventId,version:Number(shipment.version)-1}),leaseOwner:operation.lease_owner,correlationId:operation.correlation_id}),identity=await readShipmentRecoveryActor(this.database,tx,key(operation.initiated_by));
+  const record={request,actor:identity.actor,tx,signal,recoveryToken:token,inspectExpired:true};
+  await this.#operation(tx,record);
+  const proven=await this.#proveAbsence(tx,record);if(!proven)return {state:"UNKNOWN"};
+  await this.#readRecovery(tx,token);await this.#operation(tx,record);
+  const fresh=await readShipmentRecoveryActor(this.database,tx,key(operation.initiated_by));
+  return {state:"ABSENT",request,actor:fresh.actor,eligible:fresh.eligible,operationId:key(operation.id)};
+ }
+ async finalize(token){
+  const attempt=this.#readAttempt(token),code=permanent.get(attempt?.errorCode)??null;
+  if(!attempt||!code||attempt.signal?.aborted||getTransactionOutcome(attempt.tx)?.state!=="ROLLED_BACK")return {state:"UNKNOWN"};
+  const request=attempt.request,actor=attempt.actor;
+  if(!actor||!Object.isFrozen(actor)||!Object.isFrozen(request)||this.database.context?.get()?.databaseTransaction)conflict();
+  if(attempt.recoveryToken)await this.#readRecovery(null,attempt.recoveryToken);
+  const lease=await this.database.withTransaction(async tx=>{
+   assertFulfillmentTransaction(this.database,tx);if(attempt.recoveryToken)await this.#readRecovery(tx,attempt.recoveryToken);
+   await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);assertShipmentLeaseBoundary(attempt,request,this.#leaseMs);await this.#operation(tx,{request,actor});
+   return readOrRenewShipmentLease(this.database,tx,request,this.#leaseMs);
+  },{isolationLevel:"READ COMMITTED",signal:attempt.signal}),entry=shipmentLeaseEntry(lease,attempt.signal);
+  try{if(attempt.recoveryToken)await this.#readRecovery(null,attempt.recoveryToken);return await this.database.withTransaction(async(tx,{signal})=>{
+   assertFulfillmentTransaction(this.database,tx);if(attempt.recoveryToken)await this.#readRecovery(tx,attempt.recoveryToken);
+   const [locks]=await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);if(locks.length!==1)conflict();entry.locked();
+   const initial={request,actor};await this.#operation(tx,initial,{admit:true});
+   const currentActor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation");if(key(currentActor.id)!==key(actor.id))conflict();
+   const record={token,attempt,request,actor,tx,signal},proven=await this.#proveAbsence(tx,record);if(!proven)return {state:"UNKNOWN"};
+   const {source,snapshot}=proven;
+    if(attempt.recoveryToken)await this.#readRecovery(tx,attempt.recoveryToken);await this.#operation(tx,record);const finalActor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation");if(key(finalActor.id)!==source.actorId)conflict();
     const at=this.time.nowMs(),details={correlationId:request.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+request.eventId};
     const [changed]=await tx.execute("UPDATE shipments SET status='DRAFT',confirmation_event_id=NULL,version=version+1,updated_at=?,last_business_updated_at=?,updated_by=? WHERE id=? AND status='SHIPPING' AND version=? AND confirmation_event_id=?",[at,at,actor.id,request.target.id,snapshot.shipment.version,request.eventId]);if(changed.affectedRows!==1)conflict();
     const [[sequence]]=await tx.query("SELECT COALESCE(MAX(sequence_no),0)+1 AS next FROM shipment_status_history WHERE shipment_id=?",[request.target.id]);if(Number(sequence.next)>4294967295)conflict();
@@ -93,7 +120,6 @@ export class ShipmentFailureReconciliation {
     await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'FAILED',?,?,?,?,?,?)",[request.target.id,request.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({status:"DRAFT",version:Number(snapshot.shipment.version)+1,code,outcome:"FAILED"}),at]);
     const [failed]=await tx.execute("UPDATE fulfillment_operation_requests SET status='FAILED',result_json=NULL,public_error_code=?,public_error_details=?,lease_owner='',lease_expires_at=NULL,next_attempt_at=NULL,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS' AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND event_id=? AND payload_hash=? AND initiated_by=? AND correlation_id=? AND lease_owner=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)",[code,JSON.stringify(details),at,at,(await this.#operation(tx,record)).id,request.target.id,request.eventId,source.scopeHash,actor.id,request.correlationId,request.leaseOwner]);if(failed.affectedRows!==1)conflict();
     return {state:"FAILED",code,details};
-   }finally{this.#sessions.delete(session);}
   },{isolationLevel:"READ COMMITTED",signal:entry.signal});}finally{entry.close();}
  }
 }

@@ -33,7 +33,37 @@ export class ShipmentConfirmationService {
  #attempts=new WeakMap();
  #running=new WeakSet();
  #failure;
- constructor({database,time,logger,operationLeaseMs=60000}){Object.assign(this,{database,time,logger});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});const reconciliationVerifier=(tx,session,phase)=>this.#failure.verifyReadInTransaction(tx,session,phase);this.inventoryLookup=new InventoryLookupService({database,time,logger,reconciliationVerifier});this.inventory=this.inventoryLookup.fulfillment;this.sales=new SalesFulfillmentService({database,time,logger,inventoryFulfillment:this.inventory,reconciliationVerifier});this.items=new ItemLookupService({database,time,logger});this.#failure=new ShipmentFailureReconciliation({database,time,logger,inventory:this.inventoryLookup,sales:this.sales,leaseMs:this.operations.leaseMs,readAttempt:token=>this.#attempts.get(token)});}
+ #recoveryVerifier;
+ #recoveryStarts=new WeakMap();
+ constructor({database,time,logger,operationLeaseMs=60000,recoveryVerifier=null}){Object.assign(this,{database,time,logger});if(recoveryVerifier!==null&&typeof recoveryVerifier!=="function")throw new TypeError("Private Recovery verifier required");this.#recoveryVerifier=recoveryVerifier;this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});const reconciliationVerifier=(tx,session,phase)=>this.#failure.verifyReadInTransaction(tx,session,phase);this.inventoryLookup=new InventoryLookupService({database,time,logger,reconciliationVerifier});this.inventory=this.inventoryLookup.fulfillment;this.sales=new SalesFulfillmentService({database,time,logger,inventoryFulfillment:this.inventory,reconciliationVerifier});this.items=new ItemLookupService({database,time,logger});this.#failure=new ShipmentFailureReconciliation({database,time,logger,inventory:this.inventoryLookup,sales:this.sales,leaseMs:this.operations.leaseMs,readAttempt:token=>this.#attempts.get(token),readRecovery:recoveryVerifier});}
+ async #verifyRecovery(tx,started){
+  const token=this.#recoveryStarts.get(started);if(token){if(!this.#recoveryVerifier)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");await this.#recoveryVerifier(tx,token);}
+ }
+ async recoverExpiredConfirmation(eventId,token,{signal}={}){
+  if(!this.#recoveryVerifier||!(signal instanceof AbortSignal)||signal.aborted||this.database.context?.get()?.databaseTransaction)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+  await this.#recoveryVerifier(null,token);
+  const prepared=await this.database.withTransaction(async(tx,{signal:transactionSignal})=>{
+   await this.#recoveryVerifier(tx,token);
+   const inspection=await this.#failure.inspectExpiredInTransaction(tx,token,eventId,transactionSignal);
+   // Revoked identities cannot post. Their separately fenced local-only cleanup remains a distinct path.
+   if(inspection.state!=="ABSENT"||!inspection.eligible)return null;
+   const {request:original,actor,operationId}=inspection,request=freezeShipmentIntent({...original,leaseOwner:randomUUID()}),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),now=Number(clock?.now_ms);
+   if(!Number.isSafeInteger(now)||now<0)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+   await this.#recoveryVerifier(tx,token);
+   const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1,next_attempt_at=NULL,updated_at=? WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=?) AND attempt_count<10",[request.leaseOwner,now+this.operations.leaseMs,now,operationId,eventId,request.target.id,actor.id,digest(request),request.correlationId,original.leaseOwner,now]);
+   if(changed.affectedRows!==1)fail("CONCURRENT_OPERATION");
+   const started=Object.freeze(pending({operationId,eventId,correlationId:request.correlationId}));
+   this.#pendingRequests.set(started,request);this.#startedActors.set(started,actor);this.#recoveryStarts.set(started,token);this.#leaseBoundaries.set(started,Object.freeze({tx,request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:performance.now()}));
+   return {started,actor};
+  },{isolationLevel:"READ COMMITTED",signal});
+  if(!prepared)return {state:"UNKNOWN"};
+  const {started,actor}=prepared,context=this.database.context;
+  if(typeof context?.storage?.run!=="function")fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+  try{
+   const result=await context.storage.run({auth:{claims:{sub:String(actor.id),roles:[...actor.roles],permissions:[...actor.permissions]}},signal,databaseTransaction:null},()=>this.completeConfirmation(started,{signal}));
+   return {state:result.outcome==="SHIPPED"?"SUCCEEDED":"UNKNOWN"};
+  }finally{this.#recoveryStarts.delete(started);}
+ }
  async startConfirmation(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
   const intent=command(input);
@@ -79,18 +109,19 @@ export class ShipmentConfirmationService {
   if(callerSignal!==undefined&&!(callerSignal instanceof AbortSignal)||this.database.context?.get()?.databaseTransaction)throw new TypeError("New Shipment caller transaction required");
   if(this.#running.has(started))fail("CONCURRENT_OPERATION");this.#running.add(started);const token=Object.freeze({}),attempt={tx:null,operationLocked:false,knownLockedAtMono:null,inventoryRequestHash:null,inventoryCommand:null,salesIntent:null};let terminalReplay=false,entry;
   try{
+   await this.#verifyRecovery(null,started);
    const prepared=await this.database.withTransaction(async tx=>{
-    assertFulfillmentTransaction(this.database,tx);
+    assertFulfillmentTransaction(this.database,tx);await this.#verifyRecovery(tx,started);
     const [[current]]=await tx.query("SELECT id,status FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);
     if(current?.status==="IN_PROGRESS")assertShipmentLeaseBoundary(this.#leaseBoundaries.get(started),request,this.operations.leaseMs);
     const replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,{eventId:request.eventId,shipmentId:request.target.id,version:request.payload.version});
     return replay?{replay}:{lease:await readOrRenewShipmentLease(this.database,tx,request,this.operations.leaseMs)};
    },{isolationLevel:"READ COMMITTED",signal:callerSignal});
    if(prepared.replay){terminalReplay=true;return terminal(prepared.replay);}
-   entry=shipmentLeaseEntry(prepared.lease,callerSignal);
+   entry=shipmentLeaseEntry(prepared.lease,callerSignal);await this.#verifyRecovery(null,started);
    return await this.database.withTransaction(async(tx,{signal:transactionSignal})=>{
    attempt.tx=tx;
-   assertFulfillmentTransaction(this.database,tx);
+   assertFulfillmentTransaction(this.database,tx);await this.#verifyRecovery(tx,started);
    try{
    const [operationLocks]=await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);if(operationLocks.length!==1)fail("CONCURRENT_OPERATION");entry.locked();attempt.operationLocked=true;attempt.knownLockedAtMono=performance.now();
    const input={eventId:request.eventId,shipmentId:request.target.id,version:request.payload.version},replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,input);if(replay){terminalReplay=true;return terminal(replay);}
@@ -133,7 +164,7 @@ export class ShipmentConfirmationService {
     await tx.execute(`INSERT INTO ${table} (${parent},sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id,actor_label,occurred_at) VALUES (?,?,?,?,?,?,?,?,?,?)`,[id,sequence.next,from,to,action,request.eventId,version,actor.id,actor.username,at]);
    }
    for(const [type,id,version]of [["FULFILLMENT",snapshot.root.id,fulfillmentVersion],["SHIPMENT",snapshot.shipment.id,shipmentVersion]])await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES (?,?,'SHIP',?,?,?,?,?,?)",[type,id,request.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({shipmentId:request.target.id,fulfillmentId:String(snapshot.root.id),status:"SHIPPED",version,rowCount:projection.issues.length}),at]);
-   const output={id:request.target.id,number:snapshot.shipment.shipment_number,status:"SHIPPED",version:shipmentVersion};await this.operations.succeedInTransaction(tx,{request,result:output});
+   const output={id:request.target.id,number:snapshot.shipment.shipment_number,status:"SHIPPED",version:shipmentVersion};await this.#verifyRecovery(tx,started);await this.operations.succeedInTransaction(tx,{request,result:output});
    return {outcome:"SHIPPED",operationId:String(operation.id),eventId:request.eventId,correlationId:request.correlationId,result:output};
    }catch(error){if(attempt.operationLocked&&!transactionSignal.aborted&&shipmentPermanentFailureCode(error))attempt.knownLockedAtMono=performance.now();throw error;}
   },{isolationLevel:"READ COMMITTED",signal:entry.signal});
@@ -141,7 +172,7 @@ export class ShipmentConfirmationService {
    if(terminalReplay)throw error;
    const outcome=getTransactionOutcome(attempt.tx)?.state??null,boundary=Object.freeze({tx:attempt.tx,request,outcome,operationLocked:attempt.operationLocked,knownLockedAtMono:attempt.knownLockedAtMono});
    if(attempt.operationLocked&&outcome==="ROLLED_BACK")this.#leaseBoundaries.set(started,boundary);else if(attempt.tx)this.#leaseBoundaries.delete(started);
-   this.#attempts.set(token,Object.freeze({...boundary,signal:callerSignal,inventoryRequestHash:attempt.inventoryRequestHash,salesRequestHash:attempt.salesIntent?salesFulfillmentIntentHash(attempt.salesIntent):null,inventoryCommand:attempt.inventoryCommand,salesIntent:attempt.salesIntent,actor:this.#startedActors.get(started),error,errorCode:error?.code}));
+   this.#attempts.set(token,Object.freeze({...boundary,signal:callerSignal,recoveryToken:this.#recoveryStarts.get(started)??null,inventoryRequestHash:attempt.inventoryRequestHash,salesRequestHash:attempt.salesIntent?salesFulfillmentIntentHash(attempt.salesIntent):null,inventoryCommand:attempt.inventoryCommand,salesIntent:attempt.salesIntent,actor:this.#startedActors.get(started),error,errorCode:error?.code}));
    if(!shipmentPermanentFailureCode(error))throw error;
    let result;try{result=await this.#failure.finalize(token);}catch{await this.logger?.error?.("shipment.failure.unproven","Original Shipment failure could not be safely finalized",{code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE",correlationId:request.correlationId});}
    const details={correlationId:request.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+request.eventId};
