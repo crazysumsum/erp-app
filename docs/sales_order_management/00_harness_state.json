@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1811,
+  "revision": 1813,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "7630ff65432acabaef3a4718e1b6633f6bb086f8db7383f5e89db0fbe66b3279",
     "plan": "5e76aa7a1a15135292b5d299bf396ba30f5e874211ee5e68551f1dc6d083f905",
-    "code_commit": "9f3d68066e3474812c0287bcad1c5a5fecc874c2",
-    "source_fingerprint": "10c06418a6a2b7938648b49bd87fb6e95479349c022b2e67c15a926c937ff821",
+    "code_commit": "ad23f635a12013c2cfe4189ff38c5ad8496bcbeb",
+    "source_fingerprint": "26ad6c6f52426368cef31a98a89fb2cafe7286d0de5a22edfa5dcf7f1b81fde6",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "3cac7805ff440fcdc0c54e5e8ad6f51815cfbe70",
+    "default_commit": "b7886a85fa0f7991cf6430d75e2c126a63ea4fa3",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -17057,6 +17057,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-CURRENT-MAIN-ADMISSION-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p4_functional_delivery_review",
+      "reviewed_baseline": "7630ff65432acabaef3a4718e1b6633f6bb086f8db7383f5e89db0fbe66b3279",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/functional-delivery-20261102/p4-current-main-admission-review-r4.json SHAc182f8c11ecc5725af8ce2d276856f938e7d7be7a255af0a0ef4b6ed1250d12b; actualHEADad23, technicalreview only0C/H/M;11rawPASS/130draftpins verified. Later5modeltoolcases move is separatelyPMclassified manualpostUAT, not relabelled as reviewedatad23. DEC050/admin/currentCIstillpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -26280,8 +26292,8 @@
       "kind": "GIT_TARGET_INTEGRATION",
       "target": "b7886a85fa0f7991cf6430d75e2c126a63ea4fa3",
       "idempotency_key": "act-p4-mainb788-integration",
-      "status": "STARTED",
-      "source_ref": "ActualPM318 merged; freshfetchverified8centralCI/policy/receiptfiles only, noSalesruntime/data/profilechange. RetainP4reporter/PFS andknownnamespaceclassification, adoptglobalpostUATNFRoff. Existingloadsnotrerun; DEC050hashbindingstillpending. LocalunaffectedintegrationunderstandingGitpermission, no newhumanapproval or CI."
+      "status": "CONFIRMED",
+      "source_ref": "ActualPM318 merged; freshfetchverified8centralCI/policy/receiptfiles only, noSalesruntime/data/profilechange. RetainP4reporter/PFS andknownnamespaceclassification, adoptglobalpostUATNFRoff. Existingloadsnotrerun; DEC050hashbindingstillpending. LocalunaffectedintegrationunderstandingGitpermission, no newhumanapproval or CI.; Actual localmerge8centralfiles withno conflict; original11scope/coverage rules1323msPASS0FAIL0SKIP, noDB/NFR. AdmittedPR/main/schedule selector noNFR; onlypostUATmanualmainrelatedgrantcanselectexistingcatalog. P4 approvedreporter/PFS/knownPath retained. DEC050humanbindingpending; noP4push/CI."
     }
   ],
   "evidence_files": [
@@ -27938,5 +27950,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEC050exactbinding pendingdirectSam; auto_review rejected inferredR3HUMANapproval, commandnotrun/no workaround. No newapprovalcreatedbythischeckpoint. Original35DBfunctionalPASS, C5/browser26 identitypreserved. Completeindependentreview/admissionproposal and centralPR318integration; no pushbeforepreUATNFRdisabled/currentexactreceiptsapprovedbyindependentadministrator. AllNFRpostUAT, noDR/reseed/fullRecoveryclaim. CurrentCI/PR/mergepending."
+  "next_safe_action": "DEC050 currentD7630ff65/P5e76aa7a directSam binding pending; auto_review rejection kept/no inferredR3humanapproval. Centralmainb788 nowintegratedad23 withoriginal11functionalrulePASS. PM independentadministrator staticreview confirms prior130blobdraft; classify5capacitymodeltoolcases also manualpostUAT, movedwholefile/importonly preservingall5cases/asserts, syntaxlint/source-onlydiscovery590routinefilesPASS/noNFR. Save localmovecommit, refresh130blobdraft forindependentadmin. No P4push/PR/currentCI/merge yet. ResumeonlyactualDEC050reply, trustedadminreceiptactivation, currentfunctionalCI/coverage/finalreview; no NFR/DR/reseed/fullP2Recovery."
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {PHASE4_CAPACITY_BASELINE,lineCountForOrdinal,activeDatasetShape} from "../../../test-capacity/sales/phase4/datasetModel.js";
+import {PHASE4_CAPACITY_BASELINE,lineCountForOrdinal,activeDatasetShape} from "./datasetModel.js";
 test("DEV P4 dataset model uses Sam-approved one-million Active baseline; other dimensions unchanged",()=>{assert.deepEqual(PHASE4_CAPACITY_BASELINE,{activeHeaders:1000000,externalKeys:25000000,archiveCandidates:300000,archiveBatchSize:500,interactiveUsers:50});assert.equal(Object.isFrozen(PHASE4_CAPACITY_BASELINE),true);});
 test("DEV P4 thousand-order seed block independently has average5/P95of20/max100",()=>{const rows=Array.from({length:1000},(_,i)=>lineCountForOrdinal(i+1)).sort((a,b)=>a-b);assert.equal(rows.reduce((a,b)=>a+b),5000);assert.equal(rows[Math.ceil(rows.length*0.95)-1],20);assert.equal(rows.at(-1),100);assert.equal(rows.filter(n=>n===100).length,1);});
 test("DEV P4 full model has exactly1000000headers and5000000lines with no single-line shortcut",()=>{const shape=activeDatasetShape(1000000);assert.deepEqual(shape.byLineCount,{1:245000,5:695000,20:59000,100:1000});assert.equal(shape.headers,1000000);assert.equal(shape.lines,5000000);assert.equal(shape.averageLines,5);assert.equal(shape.p95Lines,20);});
