@@ -204,12 +204,23 @@
       "required_case_ids": [],
       "tool_probes": [
         {
-          "argv": ["mysql", "--version"],
+          "argv": [
+            "mysql",
+            "--version"
+          ],
           "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
         }
       ],
-      "side_effects": ["FILES", "ISOLATED_DATA"],
-      "env_keys": ["DB_NAME", "DB_SOCKET", "DB_INTEGRATION_TESTS", "INVENTORY_TASK025_TESTS"],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_TASK025_TESTS"
+      ],
       "redaction_env_keys": []
     },
     {
@@ -236,13 +247,40 @@
       "required_case_ids": [],
       "tool_probes": [
         {
-          "argv": ["mysql", "--version"],
+          "argv": [
+            "mysql",
+            "--version"
+          ],
           "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
         }
       ],
-      "side_effects": ["FILES", "ISOLATED_DATA"],
-      "env_keys": ["DB_NAME", "DB_SOCKET_PATH", "DB_USER", "DB_PASSWORD", "DB_INTEGRATION_TESTS", "INVENTORY_TASK025_API_TESTS", "SUPPLIER_BANK_ACTIVE_KEY_ID", "SUPPLIER_BANK_ENCRYPTION_KEYS", "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID", "SUPPLIER_BANK_LOOKUP_KEYS", "CUSTOMER_BANK_ACTIVE_KEY_ID", "CUSTOMER_BANK_ENCRYPTION_KEYS", "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID", "CUSTOMER_BANK_LOOKUP_KEYS"],
-      "redaction_env_keys": ["DB_PASSWORD", "SUPPLIER_BANK_ENCRYPTION_KEYS", "SUPPLIER_BANK_LOOKUP_KEYS", "CUSTOMER_BANK_ENCRYPTION_KEYS", "CUSTOMER_BANK_LOOKUP_KEYS"]
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_TASK025_API_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
     },
     {
       "id": "inventory-technical",
@@ -1003,10 +1041,22 @@
       "result_path": "inventory-task027-unit.xml",
       "min_tests": 12,
       "max_skipped": 0,
-      "stages": ["DEVELOPER"],
+      "stages": [
+        "DEVELOPER"
+      ],
       "required_case_ids": [],
-      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v26\\."}],
-      "side_effects": ["FILES"],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
       "env_keys": [],
       "redaction_env_keys": []
     },
@@ -1029,10 +1079,22 @@
       "result_path": "inventory-task028-unit.xml",
       "min_tests": 12,
       "max_skipped": 0,
-      "stages": ["DEVELOPER"],
+      "stages": [
+        "DEVELOPER"
+      ],
       "required_case_ids": [],
-      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v26\\."}],
-      "side_effects": ["FILES"],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
       "env_keys": [],
       "redaction_env_keys": []
     },
@@ -1228,6 +1290,1435 @@
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
+    },
+    {
+      "id": "inventory-task035-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task035-unit.xml",
+        "server/test/inventoryStocktakeMigration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task035-unit.xml",
+      "min_tests": 6,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task035-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task035-database.xml",
+        "server/test/integration/inventoryStocktakeMigrations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task035-database.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_MIGRATION_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task036-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task036-unit.xml",
+        "server/test/inventoryStocktakeService.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task036-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task036-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task036-database.xml",
+        "server/test/integration/inventoryStocktake.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task036-database.xml",
+      "min_tests": 18,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task037-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task037-unit.xml",
+        "server/test/inventoryStocktakeCounts.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task037-unit.xml",
+      "min_tests": 14,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task037-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task037-database.xml",
+        "server/test/integration/inventoryStocktakeCounts.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task037-database.xml",
+      "min_tests": 22,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_COUNTS_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task038-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task038-unit.xml",
+        "server/test/inventoryStocktakeFlow.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task038-unit.xml",
+      "min_tests": 24,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task038-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task038-database.xml",
+        "server/test/integration/inventoryStocktakeFlow.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task038-database.xml",
+      "min_tests": 34,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_FLOW_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task039-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task039-unit.xml",
+        "server/test/inventoryStocktakeApi.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task039-unit.xml",
+      "min_tests": 18,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task039-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task039-database.xml",
+        "server/test/integration/inventoryStocktakeQueries.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task039-database.xml",
+      "min_tests": 20,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_QUERY_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task039-api",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task039-api.xml",
+        "server/test/integration/inventoryStocktakeApi.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task039-api.xml",
+      "min_tests": 24,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "INVENTORY_STOCKTAKE_API_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task039-client",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryStocktakeService.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-task039-client.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task039-client.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task039-browser",
+      "kind": "UI",
+      "argv": [
+        "npx",
+        "--no-install",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/inventory-management/playwright.stocktake.config.js",
+        "inventory-stocktake-contract.spec.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task039-browser.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "VITE_API_BASE_URL",
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CLIENT_URL",
+        "INVENTORY_STOCKTAKE_API_ORIGIN",
+        "INVENTORY_STOCKTAKE_CLIENT_ORIGIN",
+        "INVENTORY_STOCKTAKE_BROWSER_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task040-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task040-unit.xml",
+        "server/test/inventoryStocktakeUiContract.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task040-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task040-api",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task040-api.xml",
+        "server/test/integration/inventoryStocktakeUiApi.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task040-api.xml",
+      "min_tests": 14,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "INVENTORY_STOCKTAKE_UI_API_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task040-client",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryStocktakes.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-task040-client.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task040-client.xml",
+      "min_tests": 24,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task040-browser",
+      "kind": "UI",
+      "argv": [
+        "npx",
+        "--no-install",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/inventory-management/playwright.stocktake-ui.config.js",
+        "inventory-stocktakes.spec.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task040-browser.xml",
+      "min_tests": 16,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "VITE_API_BASE_URL",
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CLIENT_URL",
+        "INVENTORY_STOCKTAKE_API_ORIGIN",
+        "INVENTORY_STOCKTAKE_CLIENT_ORIGIN",
+        "INVENTORY_STOCKTAKE_UI_BROWSER_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task040-topbar",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/framework/layout/AppTopbar.test.js",
+        "test/framework/layout/AppShell.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-task040-topbar.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task040-topbar.xml",
+      "min_tests": 15,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-safety",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-safety.xml",
+        "server/test/integration/inventoryStocktakeSafety.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-safety.xml",
+      "min_tests": 24,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "INVENTORY_STOCKTAKE_SAFETY_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task041-export-recovery-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-export-recovery-unit.xml",
+        "server/test/inventoryStocktakeExportRecovery.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-export-recovery-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-export-recovery-process",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-export-recovery-process.xml",
+        "server/test/integration/inventoryStocktakeExportRecovery.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-export-recovery-process.xml",
+      "min_tests": 18,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "INVENTORY_STOCKTAKE_EXPORT_RECOVERY_TESTS",
+        "TMPDIR"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task041-characterization",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-characterization.xml",
+        "server/test/performance/inventoryStocktakeCharacterization.performance.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 7200,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-characterization.xml",
+      "min_tests": 15,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "INVENTORY_STOCKTAKE_CHARACTERIZATION_TESTS",
+        "TMPDIR"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task041-resource-soak",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-resource-soak.xml",
+        "server/test/performance/inventoryStocktakeResourceSoak.performance.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2700,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-resource-soak.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "INVENTORY_STOCKTAKE_CHARACTERIZATION_TESTS",
+        "TMPDIR"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-task041-control-lock-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-control-lock-unit.xml",
+        "server/test/inventoryLockService.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-control-lock-unit.xml",
+      "min_tests": 18,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-post-lookup-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-post-lookup-unit.xml",
+        "server/test/inventoryStocktakePostLookup.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-post-lookup-unit.xml",
+      "min_tests": 14,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-post-batch-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-post-batch-unit.xml",
+        "server/test/inventoryStocktakePostBatch.test.js",
+        "server/test/inventoryAuditBatch.test.js",
+        "server/test/inventoryStocktakeObservationMapping.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-post-batch-unit.xml",
+      "min_tests": 34,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-post-batch-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-post-batch-database.xml",
+        "server/test/integration/inventoryStocktakePostBatch.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-post-batch-database.xml",
+      "min_tests": 18,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_POST_BATCH_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-profile-batch-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-profile-batch-unit.xml",
+        "server/test/inventoryStocktakeProfileBatch.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-profile-batch-unit.xml",
+      "min_tests": 14,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-profile-batch-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-profile-batch-database.xml",
+        "server/test/integration/inventoryStocktakeProfileBatch.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-profile-batch-database.xml",
+      "min_tests": 16,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_PROFILE_BATCH_TESTS"
+      ],
+      "redaction_env_keys": []
     },
     {
       "id": "inventory-purchase-receipt-unit",
@@ -1830,6 +3321,389 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
+    },
+    {
+      "id": "inventory-task041-main-compatibility-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-main-compatibility-unit.xml",
+        "server/test/inventoryStocktakeMainCompatibility.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-main-compatibility-unit.xml",
+      "min_tests": 10,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-provider-joint-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-provider-joint-database.xml",
+        "server/test/integration/inventoryStocktakeProviders.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-provider-joint-database.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_PROVIDER_JOINT_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-export-failure-audit-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-export-failure-audit-unit.xml",
+        "server/test/inventoryStocktakeExportAudit.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-export-failure-audit-unit.xml",
+      "min_tests": 16,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-export-failure-audit-api",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-export-failure-audit-api.xml",
+        "server/test/integration/inventoryStocktakeFailureAudit.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-export-failure-audit-api.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "inventory-task041-fail-fast-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-fail-fast-unit.xml",
+        "server/test/inventoryStocktakeFailFast.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-fail-fast-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-gate-binding-unit",
+      "kind": "UNIT",
+      "argv": [
+        "{python}",
+        "server/scripts/inventoryPhase005Gate.test.py",
+        "--report",
+        "{run_dir}/inventory-task041-gate-binding-unit.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "HARNESS_JSON",
+      "result_path": "inventory-task041-gate-binding-unit.json",
+      "min_tests": 80,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "{python}",
+            "--version"
+          ],
+          "version_pattern": "^Python 3\\.(?:1[0-9]|[2-9][0-9])\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-gate-binding-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "{python}",
+        "server/scripts/inventoryPhase005Gate.py",
+        "--native-preflight",
+        "--report-dir",
+        "{run_dir}"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-gate-binding-native.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_GATE_BINDING_TESTS",
+        "TMPDIR"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "inventory-task041-draft-lock-range-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-draft-lock-range-unit.xml",
+        "server/test/inventoryStocktakeDraftLockRange.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-draft-lock-range-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task041-draft-lock-range-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task041-draft-lock-range-database.xml",
+        "server/test/integration/inventoryStocktakeDraftLockRange.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task041-draft-lock-range-database.xml",
+      "min_tests": 14,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_STOCKTAKE_DRAFT_LOCK_RANGE_TESTS"
+      ],
+      "redaction_env_keys": []
     }
   ],
   "ci": {

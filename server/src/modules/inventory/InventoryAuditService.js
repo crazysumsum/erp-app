@@ -64,6 +64,45 @@ export class InventoryAuditService {
     return this.#record(connection, input, "SUCCEEDED");
   }
 
+  async recordSucceededBatch(connection, inputs) {
+    if (!connection || typeof connection.execute !== "function") {
+      throw new TypeError("Inventory audit requires a caller-owned transaction connection");
+    }
+    if (!Array.isArray(inputs) || inputs.length > 100) {
+      throw new TypeError("Inventory audit batch requires at most 100 inputs");
+    }
+    const rows = [];
+    for (let index = 0; index < inputs.length; index++) {
+      rows.push(this.#values(inputs[index], "SUCCEEDED"));
+    }
+    const rowBytes = rows.map((row) => row.reduce((bytes, value) =>
+      bytes + (typeof value === "string" ? Buffer.byteLength(value, "utf8") : 0), 0));
+    if (rowBytes.some((bytes) => bytes > 1_048_576)) {
+      throw new TypeError("Inventory audit row exceeds the string parameter budget");
+    }
+    for (let offset = 0; offset < rows.length;) {
+      let end = offset;
+      let bytes = 0;
+      while (end < rows.length && end - offset < 100 &&
+          (end - offset + 1) * 16 <= 3200 && bytes + rowBytes[end] <= 1_048_576) {
+        bytes += rowBytes[end++];
+      }
+      const batch = rows.slice(offset, end);
+      const [result] = await connection.execute(
+        `INSERT INTO inventory_audit_logs
+         (occurred_at, actor_user_id, actor_label, action, target_type, target_id,
+          target_label, outcome, reason_category, reason_text, before_summary,
+          after_summary, operation_request_id, request_id, correlation_id, ip)
+       VALUES ${batch.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ")}`,
+        batch.flat()
+      );
+      if (result?.affectedRows !== batch.length) {
+        throw new Error("Inventory audit batch did not persist every row");
+      }
+      offset = end;
+    }
+  }
+
   recordRejected(input) {
     return this.#recordIndependent(input, "REJECTED");
   }

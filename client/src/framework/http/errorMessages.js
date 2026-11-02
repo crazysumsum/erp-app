@@ -102,6 +102,8 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   BIN_INVALID: "庫位目前不可使用",
   BIN_WAREHOUSE_MISMATCH: "庫位不屬於指定倉庫",
   SKU_NOT_INVENTORY_TRACKED: "這個 SKU 沒有啟用庫存追蹤",
+  BARCODE_LOOKUP_INCONSISTENT: "條碼對應資料不一致，請聯絡管理員核對",
+  UOM_CONVERSION_INVALID: "SKU 基本單位資料不正確，請聯絡管理員核對",
   SERIAL_TRACKING_UNSUPPORTED: "目前不支援序號追蹤 SKU",
   LOT_REQUIRED: "這個 SKU 必須提供批次資料",
   EXPIRY_REQUIRED: "這個 SKU 必須提供有效日期",

@@ -38,7 +38,7 @@ async function handleLogout() {
 
     <!-- Phase 5 對既有版面唯一嘅改動（見 docs/user_management/design_spec.md §4.5）：
          顯示名稱由純文字＋獨立登出按鈕，改做一個下拉選單。 -->
-    <q-btn-dropdown flat no-caps :label="session.user?.displayName" icon="account_circle">
+    <q-btn-dropdown class="app-topbar__account" flat no-caps :label="session.user?.displayName" icon="account_circle">
       <q-list>
         <q-item v-close-popup clickable @click="goToProfile">
           <q-item-section avatar>
@@ -66,6 +66,27 @@ async function handleLogout() {
 </template>
 
 <style scoped>
+.app-topbar__account {
+  max-width: 50%;
+  min-width: 0;
+}
+
+.app-topbar__account :deep(.q-btn__content) {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.app-topbar__account :deep(.block) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-topbar__account :deep(.q-icon) {
+  flex-shrink: 0;
+}
+
 .app-topbar__brand-mark {
   width: 32px;
   height: 32px;

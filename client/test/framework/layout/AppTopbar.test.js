@@ -13,6 +13,7 @@ async function mountTopbar() {
     routes: [
       { path: "/", name: "home", component: { template: "<div />" } },
       { path: "/login", name: "login", component: { template: "<div />" } },
+      { path: "/profile", name: "profile", component: { template: "<div />" } },
       { path: "/password/change", name: "change-password", component: { template: "<div />" } }
     ]
   });
@@ -99,6 +100,76 @@ describe("AppTopbar", () => {
     const { wrapper, router } = await mountTopbar();
     await openMenuAndClick(wrapper, "登出");
 
+    expect(router.currentRoute.value.name).toBe("login");
+  });
+  it("ST040-H01 長名稱完整保留於原生 label 與開關選單的 accessible name", async () => {
+    const session = useSessionStore();
+    const name = "Synthetic Stocktake browser with a deliberately long complete name";
+    session.user = { id: 1, displayName: name, roles: [], permissions: [] };
+    const { wrapper } = await mountTopbar();
+    const button = wrapper.find(".q-btn-dropdown");
+    expect(wrapper.findComponent({ name: "QBtnDropdown" }).props("label")).toBe(name);
+    expect(button.find(".block").text()).toBe(name);
+    expect(button.attributes("aria-label")).toContain(name);
+    expect(button.attributes("aria-expanded")).toBe("false");
+    await button.trigger("click");
+    await flushPromises();
+    expect(button.attributes("aria-expanded")).toBe("true");
+    expect(button.attributes("aria-label")).toContain(name);
+    const controls = button.attributes("aria-controls");
+    expect(controls).toBeTruthy(); expect(document.getElementById(controls)).not.toBeNull();
+    await button.trigger("click"); await flushPromises();
+    expect(button.attributes("aria-expanded")).toBe("false");
+    expect(button.attributes("aria-label")).toContain(name);
+    expect(button.attributes("aria-controls")).toBeUndefined();
+  });
+
+  it("ST040-H02 Unicode 與字面 markup 保留為純文字，更新姓名不改 session", async () => {
+    const session = useSessionStore();
+    const name = "陳大文倉庫盤點操作員 <b>literal</b> 中文名稱";
+    session.user = { id: 1, displayName: name, roles: [], permissions: [] };
+    const { wrapper } = await mountTopbar();
+    expect(wrapper.find(".q-btn-dropdown .block").text()).toBe(name);
+    expect(wrapper.find(".q-btn-dropdown b").exists()).toBe(false);
+    expect(session.user.displayName).toBe(name);
+    session.user.displayName = "Sam";
+    await flushPromises();
+    expect(wrapper.find(".q-btn-dropdown .block").text()).toBe("Sam");
+    expect(wrapper.find(".q-btn-dropdown").attributes("aria-label")).toContain("Sam");
+    expect(session.user.displayName).toBe("Sam");
+  });
+
+  it("ST040-H03 長名稱仍可透過真實選單前往個人資料", async () => {
+    useSessionStore().user = { id: 1, displayName: "Synthetic Stocktake browser", roles: [], permissions: [] };
+    const { wrapper, router } = await mountTopbar();
+    await openMenuAndClick(wrapper, "個人資料");
+    expect(router.currentRoute.value.name).toBe("profile");
+  });
+
+  it("ST040-H04 長名稱仍可透過真實選單前往修改密碼", async () => {
+    useSessionStore().user = { id: 1, displayName: "Synthetic Stocktake browser", roles: [], permissions: [] };
+    const { wrapper, router } = await mountTopbar();
+    await openMenuAndClick(wrapper, "修改密碼");
+    expect(router.currentRoute.value.name).toBe("change-password");
+  });
+
+  it("ST040-H05 長名稱登出只呼叫一次既有 action 並前往登入", async () => {
+    const session = useSessionStore();
+    session.user = { id: 1, displayName: "Synthetic Stocktake browser", roles: [], permissions: [] };
+    session.logout = vi.fn().mockResolvedValue();
+    const { wrapper, router } = await mountTopbar();
+    await openMenuAndClick(wrapper, "登出");
+    expect(session.logout).toHaveBeenCalledOnce();
+    expect(router.currentRoute.value.name).toBe("login");
+  });
+
+  it("ST040-H06 長名稱的登出 action 拒絕仍走原有登入導航", async () => {
+    const session = useSessionStore();
+    session.user = { id: 1, displayName: "Synthetic Stocktake browser", roles: [], permissions: [] };
+    session.logout = vi.fn().mockRejectedValue(new Error("network"));
+    const { wrapper, router } = await mountTopbar();
+    await openMenuAndClick(wrapper, "登出");
+    expect(session.logout).toHaveBeenCalledOnce();
     expect(router.currentRoute.value.name).toBe("login");
   });
 });

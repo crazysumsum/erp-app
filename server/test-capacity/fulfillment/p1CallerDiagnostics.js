@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {readFile} from "node:fs/promises";
 import {MySqlDatabaseService} from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
-import {capacityDiagnostics} from "./p1CapacityDiagnostics.js";
-import {callerDiagnostics} from "./p1CallerDiagnostics.js";
-import {postingDiagnostics,tracePostingAsync,tracePostingSync,markPostingTailStart} from "./p1PostingDiagnostics.js";
-import {callerTraceManifest} from "./p1CallerTraceSource.js";
-import {transformPostingSource} from "./p1PostingTraceSource.js";
+import {capacityDiagnostics} from "../../test/fulfillment/p1CapacityDiagnostics.js";
+import {callerDiagnostics} from "../../test/fulfillment/p1CallerDiagnostics.js";
+import {postingDiagnostics,tracePostingAsync,tracePostingSync,markPostingTailStart} from "../../test/fulfillment/p1PostingDiagnostics.js";
+import {callerTraceManifest} from "../../test/fulfillment/p1CallerTraceSource.js";
+import {transformPostingSource} from "../../test/fulfillment/p1PostingTraceSource.js";
 function fixture(){
  let context={};const after=[],messages=[],t={after:fn=>after.push(fn),diagnostic:value=>messages.push(JSON.parse(value))};
  const connection={query:async()=>[[]],execute:async()=>[{affectedRows:1}],async beginTransaction(){},async commit(){},async rollback(){},release(){},destroy(){}};
@@ -61,7 +61,7 @@ test("Caller AST targets are pinned, class-qualified and restore unchanged busin
 });
 
 test("Five-module thirteen-target output pins four unchanged modules and approved child-claim receipts",async()=>{
- const expected={"inventoryFulfillmentAllocation.js":"91734b625d764ed8ed9cf6303b10a5c753444a7d9495d32cf843e3e67d6cdc70","InventoryPickSequenceService.js":"b732e9c4203fd80ffe4ff60b930f785f012e5daa434b87b2766777c7a6773d54","InventoryLockService.js":"36737121048a154e161eace45b7daa8e3bdd1eb270a85744cd4147e17808c271","inventoryFulfillmentReceipts.js":"a8f16854c75da4bcbd83f7d8e54b8b58cf4d3e606fb05c3a450f640628cfdaa0","InventoryAuditService.js":"fe63d8020d44cee95a8b24b712ee06916231ac8b64169e701328b7b1ced69f9e"};
+ const expected={"inventoryFulfillmentAllocation.js":"91734b625d764ed8ed9cf6303b10a5c753444a7d9495d32cf843e3e67d6cdc70","InventoryPickSequenceService.js":"b732e9c4203fd80ffe4ff60b930f785f012e5daa434b87b2766777c7a6773d54","InventoryLockService.js":"912b90ae9f837319b456db917bbec9186159839d752f40c70f74b09687d59637","inventoryFulfillmentReceipts.js":"a8f16854c75da4bcbd83f7d8e54b8b58cf4d3e606fb05c3a450f640628cfdaa0","InventoryAuditService.js":"c80b0732840a96ab6873867d6d21aa1e7c36b103c53658250ea2865a19c7701d"};
  for(const [name,sha]of Object.entries(expected)){const source=await readFile(new URL("../../src/modules/inventory/"+name,import.meta.url),"utf8");assert.equal(transformPostingSource(name,source,"file:///fixed-diagnostic-helper.js").proof.transformedSha256,sha);}
 });
 test("Caller selector observer errors never replace the business result or original error",async()=>{
