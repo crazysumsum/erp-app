@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "decision": "Sam actual message in project manager chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, read and verified2026-11-02: 同意，批准 Inventory 的 HD240 functional-v2 六檔工具修補。幫我直接通知 Inventory agent，完成准入核對後跑一次純功能 CI，coverage 及審查通過後安排合併 PR #311。非功能測試留到 UAT 後，新增常規案例或擴大測試規模仍要先取得我批准。 Exact tools/postimages and isolation candidate317f6048a4d94b32cdf707fe0e2d0a2d04719f3a8496e9e47930ebb0318070e9; reuse only independently verified original approvals for original cases and scales. Administrator must verify final blobs and actual prior decisions before external grant; no author self-grant.",
-  "purpose": "Admit only original approved functional contents and isolate unchanged manual NFR; independently verify actual Sam replies and exact artifact equivalence first.",
+  "decision": "Actual Sam direct question reply in Inventory chat, request_user_input_async call_a16aedf4521f40668b42e4dbe51c0dd0 HD241: A：批准精確修補，准入後一次必要純功能CI（建議）. Exact reviewed patch7c4fec4671a841954485ce4e085370d47ad8b547624342e33fbc9be18f40232c;40measurement-onlycasesmanualpostUAT+1existingproductionguardregular;0newcases/data/scales/threshold/product/filter/workflowchanges. Reuse actual prior approved unchanged contents; independent admission administrator must verify final blobs and register precise digest, not author self-grant. One necessary functional CI only, no automatic retry; existing conditional merge after currentCI/coverage/reviews/mainrules.",
+  "purpose": "Defer40 existing measurement-only tool cases until related UAT; preserve1 actual production absent/partial/timeout Stocktake guard plus all other functional transaction/auth/idempotency/audit/recovery cases; no threshold or coverage filter changes.",
   "data": "Original functional data and fixtures retained; original 100001-row/5 warehouse capacity fixtures moved to manual-only sources, never run in functional CI. No new or increased data.",
   "concurrency": "Original functional concurrency retained; no NFR workers in routine CI.",
-  "repetitions": "No new registered cases or repetition increases; original manual cases deferred to related post-UAT owner run.",
+  "repetitions": "Original10OM+12FF+9Caller+9Posting measurement-only cases moved intact to manual paths;1original Postingproductionguard remains routine. No new registered case or scale/repetition increase.",
   "thresholds": "Existing functionality, transaction/auth/recovery assertions, global92/83/90 and39floors preserved. 20 query cases=19 functional+1 manual;18 recovery=17 functional+1manual, not discarded or falsely marked original-full PASS.",
   "trigger": "Routine functional PR CI only after independent external receipt approval; manual files outside discovery, NFR only related post-UAT under Sam authority.",
   "cost": "No new job or case. Functional-only total duration not measured; prior mixed CI span20m13 is not a functional runtime promise. Peaks unknown.",
@@ -773,8 +773,8 @@
     },
     {
       "path": "server/test/inventoryStocktakeFailFast.test.js",
-      "mode": "100644",
-      "blob": "fe9133a491bf28cdca6b33f71cd90ed06613ff67",
+      "mode": null,
+      "blob": null,
       "kind": "functional",
       "cases": [
         "FF01 healthy Characterization retains fifteen ordered callbacks/options and normal abort is harmless",
@@ -857,8 +857,8 @@
     },
     {
       "path": "server/test/inventoryStocktakeObservationMapping.test.js",
-      "mode": "100644",
-      "blob": "d48a651fe7ce02296fe5445d9671546cd5240e3b",
+      "mode": null,
+      "blob": null,
       "kind": "functional",
       "cases": [
         "OM01 actual core identity reuses one mapping across new promise wrappers and maps replacement cores",
@@ -1067,8 +1067,8 @@
     },
     {
       "path": "server/test/fulfillment/p1CallerDiagnostics.test.js",
-      "mode": "100644",
-      "blob": "9c928ffab0158e1eb821cecb339bf9761a9042cb",
+      "mode": null,
+      "blob": null,
       "kind": "functional",
       "cases": [
         "Caller root selects actual RC phases, marks one successful provider return and excludes RR Inquiry",
@@ -1080,6 +1080,87 @@
         "Caller selector observer errors never replace the business result or original error",
         "Caller Inventory wrapper preserves synchronous throw and return identities",
         "Caller phase metadata getter failure is an observer failure and cannot suppress business work"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-observation-mapping.js",
+      "mode": "100644",
+      "blob": "2fd2c3e714d483e679a463ac93d936a4b24c6585",
+      "kind": "manual",
+      "cases": [
+        "OM01 actual core identity reuses one mapping across new promise wrappers and maps replacement cores",
+        "OM02 pool waiting consumes the original absolute five-second mapping budget",
+        "OM03 hanging mapping SQL times out and consumes its later rejection without a loan",
+        "OM04 lost and late matching ACK cannot unblock a timed-out loan or clear its latch",
+        "OM05 physical or mapping IPC rejection and an overdue send callback fail closed",
+        "OM06 wrong ACK fields and lost failure IPC permanently reject even an already mapped core",
+        "OM07 a raw loan arriving after the deadline is destroyed precisely and late raw rejection is consumed",
+        "OM08 physical identity precedes same-connection mapping and retained child history survives destruction",
+        "OM09 missing, non-positive, foreign, duplicate or uninstrumented SQL identities never fall back to native ID",
+        "OM10 a mapping result settling beyond the original cutoff cannot win against a delayed timeout callback"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-fail-fast.js",
+      "mode": "100644",
+      "blob": "4cd800a898ece44536312738ace7ea6c6ed79fdc",
+      "kind": "manual",
+      "cases": [
+        "FF01 healthy Characterization retains fifteen ordered callbacks/options and normal abort is harmless",
+        "FF02 real node:test assertion and runner timeout retain failure and skipped bodies under configured maxSkipped0",
+        "FF03 synchronous throw async rejection and pending runner cancel preserve first reason",
+        "FF04 expected test-injected faults whose oracle passes do not close registration",
+        "FF05 actual warmup producer stops after first unexpected error and retains both planned remainders",
+        "FF06 actual steady minute failure stops after waits and never manufactures a full steady pass",
+        "FF07 stopped pending refresh preparation cannot refresh or send and keeps intended identity",
+        "FF08 lane failure latches before rejection so a competing signer cannot win the next microtask",
+        "FF09 already dispatched real loopback responses preserve success or failure after stop without retry",
+        "FF10 original failure drain budget cannot restart after twelve seconds of intervening work",
+        "FF11 first producer failure survives later sampler failure and cleanup keeps truthful failed prefix",
+        "FF12 original callback bodies and all helper ranges outside the two approved functions stay byte-identical"
+      ]
+    },
+    {
+      "path": "server/test-capacity/fulfillment/p1CallerDiagnostics.js",
+      "mode": "100644",
+      "blob": "213ecae8786363a1b61ace07d76a5fc0cd831725",
+      "kind": "manual",
+      "cases": [
+        "Caller root selects actual RC phases, marks one successful provider return and excludes RR Inquiry",
+        "Failed provider does not create a post-return marker and retains original error identity",
+        "Marker wrong executor, duplicate and nonquiescent child cannot qualify a capture",
+        "Pending callback and span survive watchdog rejection as an explicit unqualified as-of snapshot",
+        "Caller AST targets are pinned, class-qualified and restore unchanged business code",
+        "Five-module thirteen-target output pins four unchanged modules and approved child-claim receipts",
+        "Caller selector observer errors never replace the business result or original error",
+        "Caller Inventory wrapper preserves synchronous throw and return identities",
+        "Caller phase metadata getter failure is an observer failure and cannot suppress business work"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1PostingDiagnostics.test.js",
+      "mode": "100644",
+      "blob": "a6c17d498033c4c78159e10521a071e95e0f6a3e",
+      "kind": "functional",
+      "cases": [
+        "Original native absent-Stocktake guard is classified without accepting partial schema or timeout"
+      ]
+    },
+    {
+      "path": "server/test-capacity/fulfillment/p1PostingDiagnostics.js",
+      "mode": "100644",
+      "blob": "ebc9557c995dd55618465d01ca0fbdd07776084e",
+      "kind": "manual",
+      "cases": [
+        "Posting parent identity comes from the actual executor WeakMap and captures its phase/20s",
+        "Posting SQL categories are fixed and never include SQL text or values",
+        "Posting observer retains exact executor receiver, args, values and restoration with nested timings",
+        "Posting observer preserves native synchronous throws and rejected error identity",
+        "Observer failure marks measurements invalid without masking results or business errors",
+        "Parallel child spans invalidate exclusive wall time and separate post contexts do not leak",
+        "Posting observation retains a bounded number of summaries with explicit omissions",
+        "Child spans overlapping parent SQL and unawaited work cannot qualify exclusive measurements",
+        "Diagnostic transform pins five modules, thirteen bodies and their business AST without SQL rewrites"
       ]
     }
   ]
