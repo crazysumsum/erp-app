@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decisions of 2026-11-02 in Claude Code session f804490c: TASK-011 schema and its seven migration integration cases (\"全部按你的建議執行\"), and HD-013 option A with the Supplier MIG-006 change made by this agent; recorded in docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md. Re-pins TASK-010's four inputs at the byte-identical blobs Sam approved for receipt purchasing-task010 (digest 40efa97a), which this receipt supersedes because one receipt must pin the changed module manifest",
-  "purpose": "Purchasing settings, sequence and PO tables enforce their FKs, composite FKs, CHECKs and uniques on real MySQL and rerun as no-ops; Business Master impact checks count Purchasing references instead of failing closed; Supplier MIG-006 excludes migrations that need Supplier tables; plus TASK-010's config and validation cases unchanged",
+  "decision": "Sam's explicit decision of 2026-11-02 in Claude Code session f804490c approving the TASK-012 schema proposal and its eight integration cases (\"全部按你的建議執行\"), including the Supplier MIG-006 detection change; recorded in docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md. Re-pins the other eight Purchasing inputs at the byte-identical blobs approved in receipt purchasing-task011 (digest e40f1bbe), which this receipt supersedes because one receipt must pin the changed MIG-006 test",
+  "purpose": "Purchasing operation requests and audit logs enforce idempotency, append-only history and frozen outcomes; confirmed POs, their lines and document numbers are protected by triggers; Supplier MIG-006 excludes migrations that need Supplier tables, including through triggers; plus the TASK-010 and TASK-011 cases unchanged",
   "data": "Integration: a few rows per case inside rolled-back transactions on months in 2099; the settings singleton restored in finally. Unit: in-memory fakes. No fixture files",
   "concurrency": "None",
   "repetitions": "1",
   "thresholds": "All cases pass",
   "trigger": "Routine correctness regression on every PR and push to main; integration cases in the existing MySQL jobs",
-  "cost": "Measured locally: purchasing migration integration file 141 ms; impact checker unit file under 0.2 s wall; Business Master and Supplier cases unchanged in cost. CI not measured. No new job and no capacity",
+  "cost": "Measured locally: operation/audit integration file about 0.2 s, purchasing migration integration file 141 ms, impact checker unit file under 0.2 s; Business Master and Supplier cases unchanged in cost. CI not measured. No new job and no capacity",
   "files": [
     {
       "path": "server/test/integration/purchasingMigrations.integration.test.js",
@@ -22,6 +22,22 @@
         "TASK-011 the ordering address must belong to the PO's Supplier, and deleted actors become NULL",
         "TASK-011 purchase order lines enforce UOM ownership, bounds, the receipt identity and decimal precision",
         "TASK-011 each migration creates exactly one table, so a failure points at one file"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingOperationAudit.integration.test.js",
+      "mode": "100644",
+      "blob": "67709e4dec8bd70bf924b61d71720ae698c01b40",
+      "kind": "functional",
+      "cases": [
+        "TASK-012 migrations create the operation, audit and trigger schema and rerun as no-ops",
+        "TASK-012 an operation is unique per document, line and event, and its identity is validated",
+        "TASK-012 an operation completes once, then its identity and outcome are frozen",
+        "TASK-012 audit rows are append-only, bounded, and keep working when an actor is deleted",
+        "TASK-012 a confirmed PO freezes its commercial fields but keeps lifecycle fields writable",
+        "TASK-012 lines of a non-DRAFT PO cannot be edited, added or removed, but projections can",
+        "TASK-012 document numbers only move forward and are never deleted",
+        "TASK-012 every PO and line column is classified once, triggers drift fails closed, and migrations only add"
       ]
     },
     {
@@ -49,7 +65,7 @@
     {
       "path": "server/test/integration/supplierMigrationAcceptance.integration.test.js",
       "mode": "100644",
-      "blob": "bc7b99c6086d1e48bbe82c77996d6327a81bad75",
+      "blob": "526330e0c78e22fcade0c9a252b556090da021e5",
       "kind": "functional",
       "cases": [
         "TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts"

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 17,
+  "revision": 18,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -37,7 +37,7 @@
     "TASK-009": "DONE",
     "TASK-010": "DONE",
     "TASK-011": "DONE",
-    "TASK-012": "PENDING",
+    "TASK-012": "DONE",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
@@ -261,6 +261,27 @@
         "server/test/business-master/http.integration.test.js",
         "server/test/integration/supplierMigrationAcceptance.integration.test.js",
         "Approved on 2026-11-02 with option A of the TASK-011 Business Master and Supplier MIG-006 decision; Sam asked for the Supplier test change to be made here"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-009",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md#apr-009--scope",
+      "recorded_at": "2026-11-02T17:05:27+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
+      "code_commit": null,
+      "scope": [
+        "TASK-012",
+        "server/database/migrations/0114_create_purchasing_operation_requests.js",
+        "server/database/migrations/0115_create_purchasing_audit_logs.js",
+        "server/database/migrations/0116_add_purchasing_immutability_triggers.js",
+        "server/test/integration/supplierMigrationAcceptance.integration.test.js",
+        "Approved on 2026-11-02 together with the TASK-012 schema proposal, including its three recommended additions"
       ],
       "expires_at": null
     }
@@ -510,6 +531,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#hd-013--business-master-and-supplier-mig-006"
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "TASK-012 against design 4.14-4.16: add triggers freezing purchasing_operation_requests identity and outcome (not in 4.16), reject adding or removing lines once the PO leaves DRAFT (4.16 only forbids editing them), and make document sequences forward-only with no DELETE (4.3 requires numbers never be reused but 4.16 lists no trigger)? Or implement only what 4.16 lists?",
+      "affected_ids": [
+        "TASK-012",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md#hd-014--schema-decisions"
     }
   ],
   "external_actions": [
@@ -596,5 +628,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-011 is DONE: migrations 0110-0113 (settings, sequences, purchase_orders, purchase_order_lines), the Purchasing Business Master impact checker, and a dependency-aware Supplier MIG-006. APR-001 through APR-008 valid on design 08a08a3ddebb / plan d1c00718d37a. Next startable task: TASK-012 (operation request, audit and immutability migrations), which needs schema sign-off and a CI admission receipt before it is written; Supplier MIG-006 excludes its tables transitively without further change, and any new table that references a Currency or Payment Term must be added to PurchasingBusinessMasterImpactChecker. HD-009..HD-013 to fold into the design at its next revision. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY; HD-006 blocks every gate."
+  "next_safe_action": "TASK-012 is DONE: migrations 0114-0116 (operation requests, audit logs, initial immutability triggers). Next startable task: TASK-013 (sequence, operation and audit services), which writes no schema. Its confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY; HD-006 blocks every gate."
 }

@@ -30,7 +30,9 @@ const isSupplierMigration = (name) => /supplier/u.test(name);
 
 /**
  * 其他模組要用 Supplier 表先建得成嘅 migration（例如 Purchasing 0112 FK suppliers），連同間接依賴佢哋嘅
- * （之後 GR 表 FK purchase_orders）。未有 Supplier 嘅部署唔會有呢啲模組，所以 MIG-006 嘅「之前」唔包佢哋。
+ * （0116 喺 purchase_orders 上面建 trigger、之後 GR 表 FK purchase_orders）。未有 Supplier 嘅部署唔會有呢啲模組，
+ * 所以 MIG-006 嘅「之前」唔包佢哋。用到一張未存在嘅表嘅寫法：FK、trigger 嘅 ON、ALTER TABLE、DML、FROM／JOIN，
+ * 同埋 JS 以字串傳表名（例如 ensureTriggers(connection, "purchase_orders", …)）。
  */
 async function requiresSupplier(migrations) {
   const created = (source) => [...source.matchAll(/CREATE TABLE(?: IF NOT EXISTS)?\s+`?(\w+)`?/gu)].map((match) => match[1]);
@@ -42,7 +44,8 @@ async function requiresSupplier(migrations) {
     grew = false;
     for (const [name, source] of sources) {
       if (isSupplierMigration(name) || dependents.has(name)) continue;
-      if ([...source.matchAll(/REFERENCES\s+`?(\w+)`?/gu)].some((match) => missing.has(match[1]))) {
+      const used = /(?:(?:REFERENCES|\bON|ALTER TABLE|INSERT INTO|\bUPDATE|DELETE FROM|\bFROM|\bJOIN)\s+`?(\w+)`?)|["'](\w+)["']/gu;
+      if ([...source.matchAll(used)].some((match) => missing.has(match[1] ?? match[2]))) {
         dependents.add(name);
         for (const table of created(source)) missing.add(table);
         grew = true;
