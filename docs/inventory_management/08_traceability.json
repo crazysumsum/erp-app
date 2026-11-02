@@ -1936,13 +1936,15 @@
         "NFR-014",
         "FR-082",
         "FR-116",
-        "FR-117"
+        "FR-117",
+        "FR-011"
       ],
       "design_ids": [
         "DES-007",
         "DES-010",
         "DES-006",
-        "DES-009"
+        "DES-009",
+        "DES-002"
       ],
       "task_ids": [
         "TASK-035",
@@ -1963,7 +1965,77 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "inventory-technical"
+        "inventory-developer",
+        "inventory-p2-database",
+        "inventory-p2-api",
+        "inventory-task026-unit",
+        "inventory-task026-database",
+        "inventory-p3-unit",
+        "inventory-p3-transfer-database",
+        "inventory-p3-movement-database",
+        "inventory-p3-api",
+        "inventory-p3-transfers-client",
+        "inventory-p3-movements-client",
+        "inventory-p3-adjustments-client",
+        "inventory-p3-server-coverage",
+        "inventory-p3-coverage-floors",
+        "inventory-p3-client-coverage",
+        "inventory-p3-dependency-audit",
+        "inventory-p3-browser",
+        "inventory-p3-browser-regression",
+        "inventory-task027-unit",
+        "inventory-task028-unit",
+        "inventory-p3-sales-compatibility",
+        "inventory-p3-customer-capacity",
+        "inventory-p3-core-capacity",
+        "inventory-task035-unit",
+        "inventory-task035-database",
+        "inventory-task036-unit",
+        "inventory-task036-database",
+        "inventory-task037-unit",
+        "inventory-task037-database",
+        "inventory-task038-unit",
+        "inventory-task038-database",
+        "inventory-task039-unit",
+        "inventory-task039-database",
+        "inventory-task039-api",
+        "inventory-task039-client",
+        "inventory-task039-browser",
+        "inventory-task040-unit",
+        "inventory-task040-api",
+        "inventory-task040-client",
+        "inventory-task040-browser",
+        "inventory-task040-topbar",
+        "inventory-task041-safety",
+        "inventory-task041-export-recovery-unit",
+        "inventory-task041-export-recovery-process",
+        "inventory-task041-characterization",
+        "inventory-task041-resource-soak",
+        "inventory-task041-control-lock-unit",
+        "inventory-task041-post-lookup-unit",
+        "inventory-task041-post-batch-unit",
+        "inventory-task041-post-batch-database",
+        "inventory-task041-profile-batch-unit",
+        "inventory-task041-profile-batch-database",
+        "inventory-purchase-receipt-unit",
+        "inventory-purchase-receipt-database",
+        "inventory-purchase-receipt-auth",
+        "inventory-purchase-contract",
+        "inventory-purchase-reversal-unit",
+        "inventory-purchase-reversal-database",
+        "inventory-purchase-reversal-auth",
+        "inventory-purchase-existing-receipt",
+        "inventory-purchase-existing-reservation",
+        "inventory-purchase-existing-lock",
+        "inventory-task041-main-compatibility-unit",
+        "inventory-task041-provider-joint-database",
+        "inventory-task041-export-failure-audit-unit",
+        "inventory-task041-export-failure-audit-api",
+        "inventory-task041-fail-fast-unit",
+        "inventory-task041-gate-binding-unit",
+        "inventory-task041-gate-binding-native",
+        "inventory-task041-draft-lock-range-unit",
+        "inventory-task041-draft-lock-range-database"
       ]
     },
     {
@@ -3450,16 +3522,28 @@
         "FR-100",
         "FR-101",
         "FR-102",
-        "FR-103"
+        "FR-103",
+        "FR-011",
+        "FR-116",
+        "FR-117",
+        "SEC-008",
+        "SEC-012",
+        "SEC-013"
       ],
       "design_ids": [
-        "DES-007"
+        "DES-007",
+        "DES-002",
+        "DES-009",
+        "DES-010"
       ],
       "depends_on": [
         "TASK-039"
       ],
       "technical_test_ids": [
-        "TC-008"
+        "TC-008",
+        "TC-003",
+        "TC-010",
+        "TC-001"
       ]
     },
     {
@@ -3475,16 +3559,33 @@
         "FR-099",
         "FR-100",
         "FR-101",
-        "FR-102"
+        "FR-102",
+        "FR-092",
+        "FR-103",
+        "SEC-008",
+        "SEC-012",
+        "SEC-013",
+        "NFR-001",
+        "NFR-003",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009"
       ],
       "design_ids": [
-        "DES-007"
+        "DES-007",
+        "DES-006",
+        "DES-009",
+        "DES-010"
       ],
       "depends_on": [
         "TASK-040"
       ],
       "technical_test_ids": [
-        "TC-008"
+        "TC-008",
+        "TC-001",
+        "TC-010"
       ]
     },
     {
@@ -3541,18 +3642,21 @@
         "NFR-007",
         "NFR-008",
         "NFR-009",
-        "NFR-010"
+        "NFR-010",
+        "FR-094"
       ],
       "design_ids": [
         "DES-008",
-        "DES-010"
+        "DES-010",
+        "DES-007"
       ],
       "depends_on": [
         "TASK-043"
       ],
       "technical_test_ids": [
         "TC-001",
-        "TC-009"
+        "TC-009",
+        "TC-008"
       ]
     },
     {
@@ -3567,18 +3671,21 @@
         "FR-109",
         "FR-110",
         "SEC-004",
-        "SEC-005"
+        "SEC-005",
+        "FR-094"
       ],
       "design_ids": [
         "DES-008",
-        "DES-010"
+        "DES-010",
+        "DES-007"
       ],
       "depends_on": [
         "TASK-044"
       ],
       "technical_test_ids": [
         "TC-001",
-        "TC-009"
+        "TC-009",
+        "TC-008"
       ]
     },
     {
@@ -4042,7 +4149,9 @@
         "TASK-048",
         "TASK-049",
         "TASK-050",
-        "TASK-051"
+        "TASK-051",
+        "TASK-040",
+        "TASK-041"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4119,7 +4228,8 @@
         "TASK-013",
         "TASK-016",
         "TASK-017",
-        "TASK-051"
+        "TASK-051",
+        "TASK-040"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4332,7 +4442,9 @@
         "TASK-039",
         "TASK-040",
         "TASK-041",
-        "TASK-051"
+        "TASK-051",
+        "TASK-044",
+        "TASK-045"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4395,7 +4507,9 @@
         "TASK-017",
         "TASK-039",
         "TASK-047",
-        "TASK-051"
+        "TASK-051",
+        "TASK-040",
+        "TASK-041"
       ],
       "mandatory": true,
       "blocking": true,

@@ -37,8 +37,15 @@ const NAME = Object.freeze({ type: "string", trim: true, minLength: 1, maxLength
 const OPTIONAL_NAME = Object.freeze({ type: ["string", "null"], trim: true, maxLength: 190 });
 
 export const SKU_LOOKUP_QUERY = Object.freeze({
-  type: "object", additionalProperties: false, required: ["code"],
-  properties: { code: { type: "string", minLength: 1, maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f]*$" } }
+  type: "object", additionalProperties: false,
+  oneOf: [
+    { type: "object", properties: { code: {} }, required: ["code"] },
+    { type: "object", properties: { barcode: {} }, required: ["barcode"] }
+  ],
+  properties: {
+    code: { type: "string", minLength: 1, maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f]*$" },
+    barcode: { type: "string", minLength: 1, maxLength: 190, pattern: "^[^\\p{Cc}]+$" }
+  }
 });
 export const SKU_LOOKUP_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,

@@ -1,0 +1,520 @@
+// HD233 approved small48+4 actual Harness/receipt runtime only; never full load.
+// Copy to a private .mjs; invoke with repository cwd and one whitelisted suite ID. No source edits while children run.
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { createHash, randomUUID } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
+
+const repo = process.cwd(), require = createRequire(path.join(repo, 'package.json'));
+const mysql = require('mysql2/promise'), mysqld = '/usr/local/mysql/bin/mysqld';
+const profileFile = 'docs/inventory_management/00_project_profile.json';
+// Pin only reviewed selection metadata; the shared profile is read, never rewritten.
+assert.equal(process.argv.length, 2);
+const suiteId = 'inventory-task041-gate-binding-native', minimum = 4, seconds = 600;
+const profile = JSON.parse(await fs.readFile(path.join(repo, profileFile), 'utf8'));
+const selectedSuite = profile.suites.find(value => value.id === suiteId);
+const testFile = 'server/test-support/inventoryPhase005GateNative.mjs.txt';
+assert.equal(selectedSuite.min_tests, minimum); assert.equal(selectedSuite.timeout_seconds, seconds);
+assert.equal(selectedSuite.max_skipped, 0); assert.equal(selectedSuite.result_adapter, 'JUNIT');
+assert.deepEqual(selectedSuite.argv, ['{python}','server/scripts/inventoryPhase005Gate.py','--native-preflight','--report-dir','{run_dir}']);
+assert.deepEqual(selectedSuite.env_keys, ['DB_NAME','DB_SOCKET_PATH','DB_USER','DB_PASSWORD','DB_INTEGRATION_TESTS','INVENTORY_GATE_BINDING_TESTS','TMPDIR']);
+const python = '/Users/sam/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12';
+const harness = '/Users/sam/.agents/skills/software-engineering-harness/scripts';
+const id = randomUUID().replaceAll('-', '').slice(0, 12);
+const output = path.join(repo, 'docs/inventory_management/evidence', 'task041-hd233-small-' + suiteId + '-' + id);
+await fs.mkdir(output, { mode: 0o700 });
+const rootPrefix = '/private/tmp/erp-inventory-task041-gate-binding-mysql-2670.';
+const root = await fs.mkdtemp(rootPrefix);
+await fs.chmod(root, 0o700);
+const schema = 'erp_inventory_gate_binding_' + id, socketPath = path.join(root, 'mysql.sock');
+assert.match(schema, /^erp_inventory_gate_binding_[a-f0-9]{12}$/u);
+assert.ok(root.startsWith(rootPrefix)); assert.match(root.slice(rootPrefix.length), /^[A-Za-z0-9]+$/u);
+const baseEnv = { ...Object.fromEntries(['PATH', 'LANG', 'TZ'].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])), PYTHONDONTWRITEBYTECODE:'1' };
+baseEnv.PATH='/usr/local/mysql/bin:'+(baseEnv.PATH??'');
+const values = { DB_NAME: schema, DB_SOCKET_PATH: socketPath, DB_USER: 'root', DB_PASSWORD: '',
+  DB_INTEGRATION_TESTS: '1', INVENTORY_GATE_BINDING_TESTS: '1', TMPDIR: root };
+for (const module of ['SUPPLIER','CUSTOMER']) {
+  values[module+'_BANK_ACTIVE_KEY_ID'] = 'synthetic-enc';
+  values[module+'_BANK_ENCRYPTION_KEYS'] = JSON.stringify({ 'synthetic-enc': Buffer.alloc(32,17).toString('base64') });
+  values[module+'_BANK_LOOKUP_ACTIVE_KEY_ID'] = 'synthetic-lookup';
+  values[module+'_BANK_LOOKUP_KEYS'] = JSON.stringify({ 'synthetic-lookup': Buffer.alloc(32,29).toString('base64') });
+} 
+const testEnv = { ...baseEnv, ...Object.fromEntries(selectedSuite.env_keys.map(key => [key, values[key]])) };
+// mysql tool probe is resolved from the actual installation, not an invented version.
+testEnv.PATH = '/usr/local/mysql/bin:' + (testEnv.PATH ?? '');
+const expandedArgv = selectedSuite.argv.map(arg => arg === '{python}' ? python : arg.replaceAll('{run_dir}', root));
+const testArgs = expandedArgv.slice(1), resultName = selectedSuite.result_path;
+const report = { kind: 'FROZEN_CANDIDATE_MINIMAL_GATE_BINDING_RUNTIME', formalGate: 'TYPED_RUN_REQUIRES_NORMAL_RUNTIME_CLEANUP', suiteId, selectedSuite, expandedArgv, status: 'IN_PROGRESS',
+  repo, root, schema, output, startedAt: new Date().toISOString(),
+  runtime: { executable: process.execPath, version: process.version, versions: process.versions, platform: process.platform, arch: process.arch },
+  testEnvironmentKeys: Object.keys(testEnv), syntheticKeysOnly: true, deadlinesMs: { initialize: 30000, startup: 10000, test: selectedSuite.timeout_seconds * 1000, end: 10000, term: 5000, kill: 5000 },
+  cleanup: 'PENDING', commands: [], processes: [] };
+const handles = [], processes = [], artifacts = new Set(), cleanupErrors = [];
+let leaseRecorded = false, innerMayBeRunning = false;
+let admin, adminStream, adminClosed = false, daemon, suite, primary, created = false, dropped = false, sqlTerminal = false, normalShutdown = false;
+const failure = error => ({ name: error.name, code: error.code ?? null, message: error.message, stack: error.stack });
+const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+async function hashes() {
+  const files = new Set(['server/test/inventoryStocktakeDraftLockRange.test.js','server/test/inventoryStocktakeService.test.js',testFile, profileFile, 'package.json', 'package-lock.json', 'server/package.json','server/test/performance/inventoryStocktakeCharacterization.performance.test.js','server/test/performance/inventoryStocktakeResourceSoak.performance.test.js']);
+  async function walk(relative) {
+    for (const entry of await fs.readdir(path.join(repo, relative), { withFileTypes: true })) {
+      const name = `${relative}/${entry.name}`;
+      if (entry.isDirectory()) await walk(name);
+      else if (entry.isFile()) files.add(name);
+    }
+  }
+  // Include shared authorization/configuration dependencies without approximating an import registry.
+  for (const directory of ['server/src', 'server/config', 'server/database/migrations', 'server/database/framework', 'server/test-support','server/scripts']) await walk(directory);
+  const result = Object.fromEntries(await Promise.all([...files].sort().map(async name => [name, sha256(await fs.readFile(path.join(repo, name)))])));
+  // Actual installed inputs for this run only; never a historical snapshot.
+  const installed = {};
+  async function installedTree(relative) {
+    let info; try { info = await fs.lstat(path.join(repo,relative)); }
+    catch(error) { if(error.code==='ENOENT') { installed[relative]={absent:true}; return; } throw error; }
+    if(info.isSymbolicLink()) {
+      const target=await fs.realpath(path.join(repo,relative));
+      assert.ok([path.join(repo,'client'),path.join(repo,'server')].includes(target),'Unreviewed installed symlink target');
+      installed[relative]={symlink:await fs.readlink(path.join(repo,relative)),realpath:target,workspaceSource:true};
+      const actual=path.relative(repo,target);await installedTree(actual+'/package.json');await installedTree(actual+'/src');return;
+    }
+    if(info.isDirectory()) { installed[relative]={directory:true}; for(const name of (await fs.readdir(path.join(repo,relative))).sort()) await installedTree(relative+'/'+name); }
+    else if(info.isFile()) installed[relative]={sha256:sha256(await fs.readFile(path.join(repo,relative))),executable:!!(info.mode&0o111)};
+    else throw new Error('Unsupported installed dependency input: '+relative);
+  }
+  // .bin links are not imported by these direct Node suites; record their link identities.
+  for(const base of ['node_modules','server/node_modules','client/node_modules']) {
+    async function packageTree(relative) {
+      let entries; try { entries=await fs.readdir(path.join(repo,relative),{withFileTypes:true}); }
+      catch(error) { if(error.code==='ENOENT') {installed[relative]={absent:true};return;} throw error; }
+      for(const entry of entries.sort((a,b)=>a.name.localeCompare(b.name))) {
+        const name=relative+'/'+entry.name;
+        if(entry.isSymbolicLink() && relative.endsWith('/.bin')) installed[name]={symlink:await fs.readlink(path.join(repo,name))};
+        else if(entry.isDirectory()) await packageTree(name);
+        else await installedTree(name);
+      }
+    }
+    await packageTree(base);
+  }
+  result.installedInputs = installed;
+  result.executedPython = sha256(await fs.readFile(python));
+  result.executedCoordinator = sha256(await fs.readFile(new URL(import.meta.url)));
+  result.executedNode = sha256(await fs.readFile(process.execPath));
+  result.executedMySQL = sha256(await fs.readFile(mysqld));
+  result.hd233Inputs = await captureExtraInputs(result);
+  return result;
+}
+let snapshotIndex = 0;
+async function treeManifest(directory, exclusions = []) {
+  const files = {}, seen = new Set();
+  async function visit(name) {
+    if (exclusions.some(excluded => name === excluded || name.startsWith(excluded + path.sep))) return;
+    const info = await fs.lstat(name);
+    if (info.isSymbolicLink()) {
+      const realpath = await fs.realpath(name), target = await fs.stat(realpath);
+      assert.ok([repo,path.dirname(path.dirname(python)),path.dirname(harness)].some(parent=>realpath===parent||realpath.startsWith(parent+path.sep)),'Unreviewed runtime symlink target');
+      files[name] = { symlink: await fs.readlink(name), realpath,
+        ...(target.isFile() ? { sha256: sha256(await fs.readFile(realpath)) } : { directory: true }) };
+      if (target.isDirectory()) await visit(realpath);
+    } else if (info.isDirectory()) {
+      const realpath = await fs.realpath(name);
+      const children = (await fs.readdir(name)).sort();
+      files[name] = { directory: true, children };
+      if (seen.has(realpath)) return; seen.add(realpath);
+      for (const child of children) await visit(path.join(name, child));
+    } else if (info.isFile()) files[name] = { sha256: sha256(await fs.readFile(name)), executable: !!(info.mode & 0o111) };
+    else throw new Error('Unsupported runtime input: ' + name);
+  }
+  await visit(directory); return files;
+}
+async function resolvedExecutable(name, searchPath = testEnv.PATH) {
+  const candidates = name.startsWith('/') ? [name] : searchPath.split(path.delimiter).map(directory => path.join(directory, name));
+  for (const candidate of candidates) {
+    try {
+      await fs.access(candidate, 1); const realpath = await fs.realpath(candidate);
+      return { path: candidate, realpath, sha256: sha256(await fs.readFile(realpath)), executable:!!((await fs.stat(realpath)).mode & 0o111),
+        symlink: (await fs.lstat(candidate)).isSymbolicLink() ? await fs.readlink(candidate) : null };
+    } catch (error) { if (!['ENOENT','EACCES','ENOTDIR'].includes(error.code)) throw error; }
+  }
+  throw new Error('Executable resolution unknown: '+name);
+}
+async function captureExtraInputs(result) {
+  const paths = {};
+  for (const name of ['node','mysql','git']) paths[name] = await resolvedExecutable(name);
+  paths.python = await resolvedExecutable(python);
+  assert.equal(paths.node.realpath, await fs.realpath(process.execPath));
+  const code = `import sys,json,os\nsys.dont_write_bytecode=True\nsys.path.insert(0,sys.argv[1])\nfrom pathlib import Path\nfrom harness_core import Context,fingerprint,git,file_sha\nr=Path(sys.argv[2]);c=Context(r/'docs/inventory_management',r);names=git(r,'ls-files','-z','--cached','--others','--exclude-standard').split('\\0');rows=[]\nfor name in sorted(set(names)-{''}):\n if name==c.manifest['docs_path'] or name.startswith(c.manifest['docs_path']+'/'):continue\n p=r/name\n if p.is_symlink():rows.append([name,'symlink',os.readlink(p)])\n elif p.is_file():rows.append([name,bool(p.stat().st_mode&0o111),file_sha(p)])\n elif not p.exists():rows.append([name,'deleted'])\n else:raise AssertionError('Unsupported input '+name)\nprint(json.dumps({'source_fingerprint':fingerprint(r,c.manifest['docs_path']),'records':rows,'python_prefix':sys.prefix,'python_path':sys.path,'import_origins':{name:getattr(module,'__file__',None) for name,module in sys.modules.items() if getattr(module,'__file__',None)}}))`;
+  const label = 'snapshot-source-' + snapshotIndex++;
+  const child = await launch(python, ['-B','-c',code,harness,repo], baseEnv, label);
+  assert.deepEqual(await bounded(child.exit,10000,'Source snapshot original10s budget'),{code:0,signal:null});await groupEnd(child);
+  const actual = JSON.parse(await fs.readFile(path.join(root,label+'.stdout.log'),'utf8'));
+  const harnessFiles = {};
+  for (const directory of [harness,path.join(harness,'../schemas')]) Object.assign(harnessFiles,await treeManifest(directory));
+  const importRoots = [];
+  for (const raw of [...actual.python_path, path.join(repo,'server/scripts')]) {
+    const absolute = path.resolve(raw || repo);
+    let resolved;
+    try { resolved = await fs.realpath(absolute); }
+    catch(error) { if(error.code==='ENOENT') { importRoots.push({path:absolute,absent:true});continue; } throw error; }
+    assert.ok([actual.python_prefix,harness,path.dirname(harness),repo].some(parent=>resolved===parent||resolved.startsWith(parent+path.sep)),'Unreviewed external Python import root');
+    importRoots.push({path:absolute,realpath:resolved});
+  }
+  // Repository Python lookup roots are captured excluding data-only module docs,
+  // Git metadata and installed Node trees already captured separately. No Gate
+  // Python command imports those module documents; the producer is pinned below.
+  const importFiles = await treeManifest(repo, [path.join(repo,'.git'),path.join(repo,'docs/inventory_management'),
+    path.join(repo,'node_modules'),path.join(repo,'server/node_modules'),path.join(repo,'client/node_modules')]);
+  const producer = path.join(repo,'docs/inventory_management/implementation/task041-hd233-small-runtime.mjs.txt');
+  assert.equal(sha256(await fs.readFile(producer)), result.executedCoordinator);
+  return { node: { installedInputs: result.installedInputs, executable: paths.node },
+    python: { prefix: actual.python_prefix, sysPath: actual.python_path, importRoots, importOrigins:actual.import_origins, importFiles,
+      files: await treeManifest(actual.python_prefix,[path.join(actual.python_prefix,'share'),path.join(actual.python_prefix,'lib/pkgconfig')]) },
+    mysql: { daemon: await resolvedExecutable(mysqld), client: paths.mysql },
+    harness: { root: harness, files: harnessFiles }, path: paths,
+    tools: { producer: { path: producer, sha256: result.executedCoordinator },
+      sourceMap: { source_fingerprint: actual.source_fingerprint, records: actual.records } } };
+}
+async function registerTyped(reference, digest) {
+  const code = `import sys,json,copy,hashlib,tempfile\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0,sys.argv[1])\nfrom harness_core import Context,inside,typed_json\nfrom state_tool import checkpoint\nr=Path(sys.argv[2]);c=Context(r/'docs/inventory_management',r);name=sys.argv[3];p=inside(c.module_dir,name,True);raw=typed_json(p,'evidence')\nassert name=='evidence/'+raw['run_id']+'/run.json' and hashlib.sha256(p.read_bytes()).hexdigest()==sys.argv[4]\nassert raw['suite_id'] in ('inventory-task041-gate-binding-unit','inventory-task041-gate-binding-native') and raw['stage']=='DEVELOPER'\ns=copy.deepcopy(c.state)\nif name not in s['evidence_files']:s['evidence_files'].append(name)\nwith tempfile.NamedTemporaryFile(mode='w',dir='/private/tmp',delete=False) as f:json.dump(s,f);tmp=Path(f.name)\ntry:\n result=checkpoint(c,tmp,c.state['revision']);assert result['status']=='RECORDED',result;print(json.dumps(result))\nfinally:tmp.unlink()`;
+  const child = await launch(python,['-B','-c',code,harness,repo,reference,digest],baseEnv,'register-typed-'+reference.split('/')[1]);
+  assert.deepEqual(await bounded(child.exit,10000,'OriginalCAS registration deadline'),{code:0,signal:null});await groupEnd(child);
+}
+async function publishReceiptReferences(filename, observationFile) {
+  const relative=path.relative(path.join(repo,'docs/inventory_management'),path.join(output,observationFile));
+  const digest=sha256(await fs.readFile(path.join(output,observationFile)));
+  for(const value of [report.unitEvidence?.typedEvidence,report.typedEvidence]) {
+    if(!value)continue;
+    assert.match(value.path,/^evidence\/[A-Za-z0-9T+-]+\/run\.json$/u);
+    const directory=path.dirname(path.join(repo,'docs/inventory_management',value.path));
+    const reference=await fs.open(path.join(directory,filename),'wx',0o600);
+    try{await reference.writeFile(JSON.stringify({path:relative,sha256:digest})+'\n');await reference.sync();}finally{await reference.close();}
+    const handle=await fs.open(directory,'r');try{await handle.sync();}finally{await handle.close();}
+  }
+}
+async function livePreflight() {
+  report.hashesAfter = await hashes(); report.sourceFreeze = 'MATCHED';
+  report.cleanupErrors = []; report.finishedAt = new Date().toISOString();
+  report.processes = processes.map(record => ({ label:record.label,pid:record.child.pid,settled:record.settled,groupTerminal:record.groupTerminal,result:record.result }));
+  report.terminal = {sqlTerminal:false,dropped:false,normalShutdown:false,observerSocketClosed:false};
+  await durableJson('live-observation.json',report);
+  await publishReceiptReferences('runtime-live-ref.json','live-observation.json');
+  const code = `import sys,json\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0,str(Path(sys.argv[1])/'server/scripts'))\nimport inventoryPhase005Gate as g\nr=Path(sys.argv[1]);value=g.collect_receipt_preflight(r,r/'docs/inventory_management',Path(sys.argv[2]),['inventory-task041-gate-binding-unit','inventory-task041-gate-binding-native'])\nprint(json.dumps(value))\nassert value['status']=='BLOCKED' and any(x['code']=='ACTUAL_RECIPE_PROOF_UNKNOWN' for x in value['issues']),value`;
+  const child=await launch(python,['-B','-c',code,repo,harness],baseEnv,'live-preflight');
+  assert.deepEqual(await bounded(child.exit,10000,'Live actual collector deadline'),{code:0,signal:null});await groupEnd(child);
+  report.livePreflight = JSON.parse(await fs.readFile(path.join(root,'live-preflight.stdout.log'),'utf8'));
+}
+
+async function bounded(work, ms, label) {
+  let timer;
+  try { return await Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label)), ms); })]); }
+  finally { clearTimeout(timer); }
+}
+async function launch(executable, args, env, label) {
+  const stdoutName = `${label}.stdout.log`, stderrName = `${label}.stderr.log`;
+  const stdout = await fs.open(path.join(root, stdoutName), 'wx', 0o600); handles.push(stdout); artifacts.add(stdoutName);
+  const stderr = await fs.open(path.join(root, stderrName), 'wx', 0o600); handles.push(stderr); artifacts.add(stderrName);
+  report.commands.push({ label, executable, args, cwd: repo, env });
+  // The runner may fork a test worker; its fresh process group is owned from spawn.
+  const child = spawn(executable, args, { cwd: repo, env, detached: true, stdio: ['ignore', stdout.fd, stderr.fd] });
+  const record = { label, child, settled: false, result: null, signals: [], groupTerminal: false }; processes.push(record);
+  record.exit = new Promise(resolve => {
+    child.once('error', error => { record.spawnError = failure(error); });
+    child.once('close', (code, signal) => { record.settled = true; record.result = { code, signal }; resolve(record.result); });
+  });
+  return record;
+}
+function groupGone(record) {
+  if (!record.child.pid) return record.settled;
+  assert.ok(Number.isSafeInteger(record.child.pid) && record.child.pid > 0);
+  try { process.kill(-record.child.pid, 0); return false; }
+  catch (error) {
+    if (error.code === 'ESRCH') return true;
+    record.groupError = failure(error); return false;
+  }
+}
+async function groupEnd(record) {
+  if (record.groupTerminal) return;
+  const deadline = performance.now() + 5000;
+  while (!groupGone(record)) {
+    assert.ok(performance.now() < deadline, `${record.label} process group disappearance unknown`);
+    await delay(25);
+  }
+  record.groupTerminal = true;
+}
+async function stop(record) {
+  if (record.groupTerminal) return; // A disappeared PGID is never owned again.
+  if (record.settled && groupGone(record)) { record.groupTerminal = true; return; }
+  cleanupErrors.push(`Normal child completion unproven: ${record.label}`);
+  for (const signal of ['SIGTERM', 'SIGKILL']) {
+    record.signals.push(signal);
+    try {
+      if (record.child.pid && !groupGone(record)) process.kill(-record.child.pid, signal);
+      await bounded(Promise.all([record.exit, groupEnd(record)]), 5000, `${record.label} ${signal} completion unknown`);
+    }
+    catch (error) { cleanupErrors.push(error.message); }
+    if (record.settled && record.groupTerminal) return;
+  }
+  record.child.unref();
+}
+async function connect(remainingMs) {
+  const db = await mysql.createConnection({ socketPath, user: 'root', connectTimeout: Math.min(500, remainingMs) });
+  const query = db.query.bind(db);
+  db.query = (sql, params = []) => query(typeof sql === 'string' ? { sql, timeout: 1000 } : sql, params).catch(error => {
+    if (error.code === 'PROTOCOL_SEQUENCE_TIMEOUT') db.destroy();
+    throw error;
+  });
+  return db;
+}
+async function terminal() {
+  const deadline = performance.now() + 10000;
+  do {
+    const remaining = Math.floor(deadline - performance.now());
+    assert.ok(remaining > 0, 'SQL terminal absolute deadline');
+    const [[state]] = await admin.query({ sql: `SELECT
+      (SELECT COUNT(*) FROM performance_schema.threads WHERE TYPE='FOREGROUND'
+        AND PROCESSLIST_ID IS NOT NULL AND PROCESSLIST_ID<>CONNECTION_ID()
+        AND NOT (NAME='thread/sql/event_scheduler' AND PROCESSLIST_USER='event_scheduler' AND PROCESSLIST_COMMAND='Daemon')
+        AND NOT (NAME='thread/sql/compress_gtid_table' AND PROCESSLIST_USER IS NULL AND PROCESSLIST_COMMAND='Daemon')) AS connections,
+      (SELECT COUNT(*) FROM information_schema.innodb_trx) AS transactions,
+      (SELECT COUNT(*) FROM performance_schema.data_locks WHERE OBJECT_SCHEMA=?) AS locks`, timeout: Math.min(1000, remaining) }, [schema]);
+    assert.ok(performance.now() < deadline, 'SQL terminal observation completed after deadline');
+    report.postTestSql = state;
+    if (Object.values(state).every(value => Number(value) === 0)) { sqlTerminal = true; return; }
+    await delay(25);
+  } while (performance.now() < deadline);
+  throw new Error('Independent post-child SQL connection/transaction/lock disappearance unproven');
+}
+async function stateRuntime(active) {
+  const stateCode = `import copy,json,sys,tempfile
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+from harness_core import Context
+from state_tool import checkpoint
+repo=Path(sys.argv[2]);ctx=Context(repo/'docs/inventory_management',repo);state=copy.deepcopy(ctx.state)
+active=sys.argv[3]=='true';root=sys.argv[4];schema=sys.argv[5];proof=sys.argv[6]
+assert state['status']=='IMPLEMENTING' and state['baseline']['source_fingerprint']
+if active:
+ assert set(state['runtime']['resources'])=={'workspace'}
+ state['runtime']={'instance_id':Path(root).name,'owner':'Codex TASK041 HD233 small48plus4 resource native '+Path(root).name,'resources':{'workspace':str(repo),'mysql-schema':schema,'web-port':'NOT_USED: direct native service suite, no HTTP listener','opening-file-root':root+'/opening'},'lease_ref':'Exclusive private mkdtemp root and owned daemon/schema; source frozen; '+proof}
+else:
+ assert state['runtime']['instance_id']==Path(root).name
+ state['runtime']={'instance_id':Path(root).name,'owner':'Codex TASK041','resources':{'workspace':str(repo)},'lease_ref':'Runtime stopped; inspect exact cleanup in '+proof}
+state['next_safe_action']='HD233 small48plus4 resource runtime '+('STARTED' if active else 'FINISHED')+'; typed suite run and separate runtime cleanup must both be inspected: '+proof
+with tempfile.NamedTemporaryFile(mode='w',dir='/private/tmp',delete=False) as f:json.dump(state,f);tmp=Path(f.name)
+try:
+ result=checkpoint(ctx,tmp,ctx.state['revision']);assert result['status']=='RECORDED',result
+finally:tmp.unlink()
+print(json.dumps(result))`;
+  const child = await launch(python,['-c',stateCode,harness,repo,String(active),root,schema,path.relative(repo,output)],baseEnv,active?'runtime-acquire':'runtime-release');
+  try {
+    assert.deepEqual(await bounded(child.exit,10000,'State checkpoint deadline'),{code:0,signal:null});
+    await groupEnd(child);
+  } finally { await stop(child); }
+}
+async function confirmNativeOwnership() {
+  assert.ok(suite?.settled && suite.signals.length === 0, 'No normal Harness completion: detached inner ownership UNKNOWN');
+  report.runnerResponse = JSON.parse(await fs.readFile(path.join(root,'harness-runner.stdout.log'),'utf8'));
+  const relative = report.runnerResponse.evidence_file;
+  assert.match(relative,/^evidence\/[A-Za-z0-9T+-]+\/run\.json$/u);
+  const formalPath = path.resolve(repo,'docs/inventory_management',relative);
+  assert.equal(await fs.realpath(formalPath),formalPath);
+  const typed = JSON.parse(await fs.readFile(formalPath,'utf8'));
+  assert.equal(typed.suite_id,suiteId);
+  await registerTyped(relative,sha256(await fs.readFile(formalPath)));
+  assert.ok(Number.isInteger(typed.exit_code) && typed.timed_out === false, 'Detached inner process termination UNKNOWN');
+  const nativePath=path.join(path.dirname(formalPath),'inventory-phase005-gate-native.json');
+  const native=JSON.parse(await fs.readFile(nativePath,'utf8'));
+  report.nativeOwnership={reportPath:path.relative(repo,nativePath),sha256:sha256(await fs.readFile(nativePath)),ownedStops:native.ownedStops};
+  assert.equal(native.cleanup,'CHILD_EXIT_AND_SQL_TERMINAL_CONFIRMED');
+  assert.equal(native.kind,'DEVELOPER_GATE_BINDING_RESOURCE_VERIFIER_PROBE');
+  assert.equal(native.ownedStops.length,1);assert.equal(native.ownedSql.workers.length,1);
+  const stop=native.ownedStops[0], worker=native.ownedSql.workers[0];
+  assert.equal(stop.pid,native.worker.pid);assert.equal(stop.nonce,native.nonce);assert.equal(stop.incarnation,native.incarnation);
+  assert.equal(worker.nonce,native.nonce);assert.equal(worker.incarnation,native.incarnation);
+  assert.deepEqual(native.worker.exit,stop.exit);assert.deepEqual(stop.exit,{code:0,signal:null});
+  const verifierCode = `import sys,json,hashlib\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0,str(Path(sys.argv[1])/'server/scripts'))\nimport inventoryPhase005Gate as g\np=Path(sys.argv[2]);text=p.read_text();report=json.loads(text);digest=hashlib.sha256(p.read_bytes()).hexdigest();name=p.relative_to(Path(sys.argv[1])).as_posix()\nreceipt={'native_report':{'path':name,'original_text':text,'sha256':digest,'raw':report}}\nobs={'nativeOwnership':{'reportPath':name,'sha256':digest,'ownedStops':report['ownedStops']}}\nissues=g._native_worker_issues(receipt,obs);print(json.dumps(issues));assert issues==[],issues`;
+  const verified=await launch(python,['-B','-c',verifierCode,repo,nativePath],baseEnv,'native-owned-receipt-verifier');
+  assert.deepEqual(await bounded(verified.exit,10000,'Native owner receipt original10s validation'),{code:0,signal:null});await groupEnd(verified);
+  report.nativeObservation={path:path.relative(repo,nativePath),sha256:report.nativeOwnership.sha256};
+  innerMayBeRunning = false;
+  return typed;
+}
+async function durableJson(name,value) {
+  const destination=path.join(output,name), temporary=destination+'.'+randomUUID()+'.tmp';
+  const handle=await fs.open(temporary,'wx',0o600);
+  try { await handle.writeFile(JSON.stringify(value,null,2)+'\n');await handle.sync(); }
+  finally { await handle.close(); }
+  await fs.rename(temporary,destination);
+  const directory=await fs.open(output,'r');try{await directory.sync();}finally{await directory.close();}
+}
+try {
+  report.coordinatorHash = sha256(await fs.readFile(new URL(import.meta.url)));
+  report.hashesBefore = await hashes();
+  await fs.mkdir(path.join(root,'opening'), {mode:0o700});
+  await stateRuntime(true); leaseRecorded = true;
+  report.mysqlBinaryHash = sha256(await fs.readFile(mysqld));
+  const init = await launch(mysqld, ['--no-defaults', '--initialize-insecure', '--basedir=/usr/local/mysql', `--datadir=${root}/data`], baseEnv, 'initialize');
+  assert.deepEqual(await bounded(init.exit, 30000, 'Initialize deadline'), { code: 0, signal: null });
+  await groupEnd(init);
+  artifacts.add('mysql.log');
+  daemon = await launch(mysqld, ['--no-defaults', '--basedir=/usr/local/mysql', `--datadir=${root}/data`,
+    `--socket=${socketPath}`, `--pid-file=${root}/mysql.pid`, `--log-error=${root}/mysql.log`, '--skip-networking', '--mysqlx=OFF'], baseEnv, 'daemon');
+  const ready = performance.now() + 10000;
+  while (!admin && performance.now() < ready && !daemon.settled) {
+    const remaining = Math.floor(ready - performance.now());
+    if (remaining <= 0) break;
+    try { admin = await connect(remaining); } catch { await delay(Math.min(25, Math.max(0, ready - performance.now()))); }
+  }
+  assert.ok(admin, 'Private MySQL startup failed');
+  adminStream = admin.connection.stream;
+  adminStream.once('close', () => { adminClosed = true; });
+  assert.ok(performance.now() < ready, 'Private MySQL startup completed after deadline');
+  const [[environment]] = await admin.query('SELECT VERSION() AS version,@@skip_networking AS isolated,@@socket AS socket,@@datadir AS datadir,CONNECTION_ID() AS observerId');
+  report.mysql = environment;
+  assert.equal(environment.version, '26.7.0'); assert.equal(Number(environment.isolated), 1);
+  assert.equal(environment.socket, socketPath); assert.equal(environment.datadir.replace(/\/$/u, ''), `${root}/data`);
+  await admin.query(`CREATE DATABASE ${schema}`); created = true;
+  assert.equal((await admin.query('SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=?', [schema]))[0].length, 0);
+  const unitSuite = profile.suites.find(value => value.id === 'inventory-task041-gate-binding-unit');
+  assert.equal(unitSuite.min_tests, 48); assert.equal(unitSuite.max_skipped, 0);
+  const unitArgs = [path.join(harness,'run_check.py'),'docs/inventory_management','--repo-root',repo,
+    '--suite',unitSuite.id,'--stage','DEVELOPER','--execute','--json'];
+  const unitChild = await launch(python, unitArgs, testEnv, 'unit-harness-runner');
+  const unitExit = await bounded(unitChild.exit, unitSuite.timeout_seconds * 1000 + 30000, 'Unit original deadline/bookkeeping');
+  await groupEnd(unitChild);
+  const unitResponse = JSON.parse(await fs.readFile(path.join(root,'unit-harness-runner.stdout.log'),'utf8'));
+  if(typeof unitResponse.evidence_file!=='string') {
+    throw Object.assign(new Error('Harness did not execute the unit suite: '+JSON.stringify(unitResponse)),{code:'HARNESS_NOT_EXECUTED',harnessResponse:unitResponse});
+  }
+  await registerTyped(unitResponse.evidence_file,sha256(await fs.readFile(path.resolve(repo,'docs/inventory_management',unitResponse.evidence_file))));
+  assert.equal(unitResponse.status, 'RECORDED');
+  assert.deepEqual(unitExit, {code:0,signal:null});
+  assert.equal(unitResponse.run_result, 'PASS');
+  assert.match(unitResponse.evidence_file, /^evidence\/[A-Za-z0-9T+-]+\/run\.json$/u);
+  const unitPath = path.resolve(repo,'docs/inventory_management',unitResponse.evidence_file);
+  assert.equal(await fs.realpath(unitPath), unitPath);
+  const unitRaw = JSON.parse(await fs.readFile(unitPath,'utf8'));
+  assert.deepEqual(unitRaw.counts,{total:48,passed:48,failed:0,skipped:0,not_run:0});
+  assert.equal(unitRaw.suite_id, unitSuite.id); assert.equal(unitRaw.result,'PASS');
+  assert.equal(unitRaw.code_unchanged,true); assert.equal(unitRaw.spec_unchanged,true);
+  report.unitEvidence = {selectedSuite:unitSuite, runnerExit:unitExit, runnerResponse:unitResponse,
+    expandedArgv:unitRaw.command, typedEvidence:{path:unitResponse.evidence_file,sha256:sha256(await fs.readFile(unitPath)),counts:unitRaw.counts}};
+  const runnerArgs = [path.join(harness,'run_check.py'),'docs/inventory_management','--repo-root',repo,
+    '--suite',suiteId,'--stage','DEVELOPER','--execute','--json'];
+  innerMayBeRunning = true; // Harness launches the actual Node suite in its own session.
+  suite = await launch(python, runnerArgs, testEnv, 'harness-runner');
+  // Profile timeout belongs to the unmodified runner. Extra 30s is coordinator bookkeeping only.
+  report.runnerExit = await bounded(suite.exit, selectedSuite.timeout_seconds * 1000 + 30000, 'Harness bookkeeping did not terminate after profile deadline');
+  await groupEnd(suite);
+  const typed = await confirmNativeOwnership();
+  assert.equal(report.runnerResponse.run_result,'PASS');
+  assert.equal(report.runnerResponse.status,'RECORDED');
+  const relative = report.runnerResponse.evidence_file;
+  const formalPath = path.resolve(repo,'docs/inventory_management',relative);
+  report.expandedArgv = typed.command;
+  assert.equal(typed.suite_id,suiteId); assert.equal(typed.result,'PASS');
+  assert.equal(typed.counts.failed,0);assert.equal(typed.counts.skipped,0);assert.equal(typed.counts.not_run,0);
+  assert.ok(typed.counts.passed>=minimum);assert.equal(typed.code_unchanged,true);assert.equal(typed.spec_unchanged,true);
+  report.typedEvidence = {path:relative,sha256:sha256(await fs.readFile(formalPath)),counts:typed.counts};
+  report.status = 'PASS_48_UNIT_4_NATIVE_PENDING_RUNTIME_CLEANUP';
+  await livePreflight();
+} catch (error) {
+  primary = error; report.status = 'FAIL'; report.error = failure(error);
+} finally {
+  // A timed-out child remains owned and is stopped before SQL teardown or source re-hashing.
+  for (const record of processes) if (record !== daemon) await stop(record);
+  if (innerMayBeRunning) {
+    try { await confirmNativeOwnership(); } catch (error) { cleanupErrors.push(error.message); }
+  }
+  if (innerMayBeRunning) cleanupErrors.push('Detached inner suite/worker terminal UNKNOWN: preserve schema, daemon, root and runtime lease');
+  if (!innerMayBeRunning && processes.filter(record => record !== daemon).every(record => record.settled && record.groupTerminal)) {
+    try { report.hashesAfter = await hashes(); assert.deepEqual(report.hashesAfter, report.hashesBefore, 'sources changed during native run'); report.sourceFreeze = 'MATCHED'; }
+    catch (error) { cleanupErrors.push(error.message); }
+    if (admin && !adminStream.destroyed) {
+      try { await terminal(); } catch (error) { cleanupErrors.push(error.message); }
+      if (created && sqlTerminal) {
+        try {
+          await admin.query(`DROP DATABASE ${schema}`);
+          assert.equal((await admin.query('SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME=?', [schema]))[0].length, 0);
+          dropped = true;
+        } catch (error) { cleanupErrors.push(error.message); }
+      }
+    }
+  }
+  if (!innerMayBeRunning && admin && !adminStream.destroyed) {
+    try { await admin.query('SHUTDOWN'); normalShutdown = true; }
+    catch (error) {
+      if (['PROTOCOL_CONNECTION_LOST', 'ECONNRESET'].includes(error.code)) normalShutdown = true;
+      else cleanupErrors.push(error.message);
+    }
+  }
+  if (!innerMayBeRunning && daemon) {
+    try { assert.deepEqual(await bounded(daemon.exit, 10000, 'Daemon shutdown deadline'), { code: 0, signal: null }); }
+    catch (error) { cleanupErrors.push(error.message); }
+  }
+  for (const record of processes) if (record !== daemon || !innerMayBeRunning) await stop(record);
+  if (innerMayBeRunning) daemon?.child.unref();
+  if (admin) {
+    try { if (!adminStream.destroyed) await bounded(admin.end(), 10000, 'Observer end deadline'); }
+    catch (error) { cleanupErrors.push(error.message); admin.destroy(); }
+    if (!adminClosed) {
+      try { await bounded(new Promise(resolve => { if (adminClosed) resolve(); else adminStream.once('close', resolve); }), 10000, 'Observer socket close deadline'); }
+      catch (error) { cleanupErrors.push(error.message); admin.destroy(); }
+    }
+  }
+  if (!innerMayBeRunning && leaseRecorded && processes.every(record => record.settled && record.groupTerminal)) {
+    try { await stateRuntime(false); } catch (error) { cleanupErrors.push('Runtime checkpoint: '+error.message); }
+  }
+  for (const handle of handles) try { await handle.close(); } catch (error) { cleanupErrors.push(error.message); }
+  report.artifacts = {};
+  for (const name of artifacts) {
+    try {
+      await fs.copyFile(path.join(root, name), path.join(output, name));
+      const copied = await fs.open(path.join(output,name),'r');
+      try { await copied.sync(); } finally { await copied.close(); }
+      report.artifacts[name] = sha256(await fs.readFile(path.join(output, name)));
+    } catch (error) { cleanupErrors.push(`${name}: ${error.message}`); }
+  }
+  // Generic runner owns native diagnostics outside the temporary runtime.
+  report.directSuiteArtifacts = {};
+  try {
+    for (const entry of await fs.readdir(output, { withFileTypes: true })) {
+      if (entry.isFile()) report.directSuiteArtifacts[entry.name] = sha256(await fs.readFile(path.join(output, entry.name)));
+    }
+  } catch (error) { cleanupErrors.push(`direct suite artifact retention: ${error.message}`); }
+  try { report.runnerResponse ??= JSON.parse(await fs.readFile(path.join(root,'harness-runner.stdout.log'),'utf8')); } catch {}
+  report.processes = processes.map(record => ({ label: record.label, pid: record.child.pid ?? null,
+    settled: record.settled, groupTerminal: record.groupTerminal, groupError: record.groupError ?? null,
+    result: record.result, spawnError: record.spawnError ?? null, signals: record.signals }));
+  report.terminal = { sqlTerminal, dropped, normalShutdown, observerSocketClosed: adminClosed, observerSocketDestroyed: adminStream?.destroyed ?? null };
+  const lifecycleKnown = created && dropped && sqlTerminal && normalShutdown && adminClosed && adminStream.destroyed &&
+    processes.every(record => record.settled && record.groupTerminal && !record.spawnError && record.signals.length === 0) && daemon?.result?.code === 0 && daemon?.result?.signal === null;
+  if (!lifecycleKnown) cleanupErrors.push('Complete normal lifecycle unproven; retain exact owned root');
+  if (cleanupErrors.length) report.status = 'FAIL';
+  report.cleanup = cleanupErrors.length ? 'UNKNOWN_OWN_ROOT_RETAINED' : 'EXACT_ROOT_READY_FOR_REMOVAL';
+  report.cleanupErrors = cleanupErrors;
+  report.finishedAt = new Date().toISOString();
+  // Evidence must be durable before deleting only this validated, unsymlinked mkdtemp root.
+  try {
+    await durableJson('pre-removal-observation.json',report);
+    if (!cleanupErrors.length) {
+      assert.equal(path.dirname(root), '/private/tmp');
+      assert.ok(root.startsWith(rootPrefix)); assert.match(root.slice(rootPrefix.length), /^[A-Za-z0-9]+$/u);
+      assert.equal(await fs.realpath(root), root); assert.equal((await fs.lstat(root)).isDirectory(), true);
+      await fs.rm(root, { recursive: true }); report.cleanup = 'OWN_SCHEMA_DROPPED_NORMAL_DAEMON_EXIT0_EXACT_ROOT_REMOVED';
+      await durableJson('observation.json',report);
+    }
+  } catch (error) {
+    cleanupErrors.push(error.message); report.status = 'FAIL'; report.reportOrRemovalError = failure(error);
+    report.cleanup = 'EVIDENCE_OR_ROOT_REMOVAL_FAILED';
+    try { await durableJson('observation.json',report); } catch {}
+  }
+  await durableJson('observation.json',report);
+  if(report.cleanup==='OWN_SCHEMA_DROPPED_NORMAL_DAEMON_EXIT0_EXACT_ROOT_REMOVED')await publishReceiptReferences('runtime-complete-ref.json','observation.json');
+  console.log(JSON.stringify({ output, root, status: report.status, cleanup: report.cleanup,
+    error: report.error ?? null, cleanupErrors, reportOrRemovalError: report.reportOrRemovalError ?? null }));
+}
+if (primary || report.status === 'FAIL') process.exitCode = 1;
+

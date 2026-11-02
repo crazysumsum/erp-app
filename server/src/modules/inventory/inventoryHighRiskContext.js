@@ -12,7 +12,8 @@ const issuedRequests = new WeakSet();
 const ROUTES = Object.freeze({
   "adjustment.post": "/api/v1/inventory/adjustments",
   "status_transfer.post": "/api/v1/inventory/status-transfers",
-  "movement.reverse": "/api/v1/inventory/movements/:id/reverse"
+  "movement.reverse": "/api/v1/inventory/movements/:id/reverse",
+  "stocktake.post": "/api/v1/inventory/stocktakes/:id/post"
 });
 
 function intent(command) {
@@ -21,9 +22,12 @@ function intent(command) {
     throw permissionStaleError();
   }
   const commandType = action === "adjustment.post" ? "ADJUSTMENT_POST"
-    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : "MOVEMENT_REVERSE";
+    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : action === "stocktake.post" ? "STOCKTAKE_POST" : "MOVEMENT_REVERSE";
+  const source = action === "stocktake.post" ? { ...command.source, lineId: command.source.lineId ?? "" } : command.source;
+  const payload = action === "stocktake.post" ? { ...command.payload,
+    ...(typeof command.payload.reason === "string" ? { reason: command.payload.reason.trim() } : {}) } : command.payload;
   return inventoryOperationHash({ commandType,
-    payload: { action, actor: command.actor, source: command.source, payload: command.payload, correlationId: command.correlationId } });
+    payload: { action, actor: command.actor, source, payload, correlationId: command.correlationId } });
 }
 
 function keyHash(value) {
@@ -102,12 +106,13 @@ export function issueInventoryHighRiskContext(req, command, options) {
       req.apiRoute?.authType !== "jwt-device-password" || !ROUTES[action] || req.apiRoute.path !== ROUTES[action] ||
       !Number.isSafeInteger(actorId) || actorId <= 0 || actorId !== command.actor.userId ||
       !Array.isArray(auth.claims.roles) || !Array.isArray(auth.claims.permissions)) throw permissionStaleError();
-  if (action === "movement.reverse") {
+  if (action === "movement.reverse" || action === "stocktake.post") {
     const params = req.input?.params;
+    const resourceId = action === "movement.reverse" ? command.payload.movementId : command.payload.stocktakeId;
     if (!params || typeof params !== "object" || Array.isArray(params) || Object.keys(params).length !== 1 ||
         typeof params.id !== "string" || !/^[1-9][0-9]*$/u.test(params.id) ||
-        !Number.isSafeInteger(command.payload.movementId) || command.payload.movementId <= 0 ||
-        params.id !== String(command.payload.movementId)) throw permissionStaleError();
+        !Number.isSafeInteger(resourceId) || resourceId <= 0 ||
+        params.id !== String(resourceId)) throw permissionStaleError();
   }
   assertPermissionsCurrent({ claimedRoles: command.actor.claimedRoles, claimedPermissions: command.actor.claimedPermissions,
     currentRoles: auth.claims.roles, currentPermissions: auth.claims.permissions });

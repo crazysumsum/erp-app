@@ -39,7 +39,7 @@ export const postingTraceManifest={
   }
  },
  "InventoryLockService.js": {
-  "sha256": "edd2eec39bfb3d51b17181833b89a4aa6aa37bc608a0840850abc78b7bbabb0b",
+  "sha256": "b86f75f576157dec8dc4ff1d263b86fa3ac957634e69d9830e11dfc73fa0e015",
   "targets": {
    "upsertAndLockBalances": {
     "label": "BALANCE_LOCK",
@@ -65,7 +65,7 @@ export const postingTraceManifest={
   }
  },
  "InventoryAuditService.js": {
-  "sha256": "0fba82466237a4eb8c5b15d9feb556c3aaaa8e1b1ee8bb447d61232da85febef",
+  "sha256": "e4cc9f51f1f9b14035ac0767113aa10cab2eb87b2c04e6ecf14cb502b5fa4535",
   "targets": {
    "values": {
     "label": "AUDIT_VALUES",

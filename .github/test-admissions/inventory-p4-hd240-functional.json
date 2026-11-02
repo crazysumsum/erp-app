@@ -1,0 +1,1167 @@
+{
+  "version": 1,
+  "decision": "Actual Sam direct question reply in Inventory chat, request_user_input_async call_a16aedf4521f40668b42e4dbe51c0dd0 HD241: A：批准精確修補，准入後一次必要純功能CI（建議）. Exact reviewed patch7c4fec4671a841954485ce4e085370d47ad8b547624342e33fbc9be18f40232c;40measurement-onlycasesmanualpostUAT+1existingproductionguardregular;0newcases/data/scales/threshold/product/filter/workflowchanges. Reuse actual prior approved unchanged contents; independent admission administrator must verify final blobs and register precise digest, not author self-grant. One necessary functional CI only, no automatic retry; existing conditional merge after currentCI/coverage/reviews/mainrules.",
+  "purpose": "Defer40 existing measurement-only tool cases until related UAT; preserve1 actual production absent/partial/timeout Stocktake guard plus all other functional transaction/auth/idempotency/audit/recovery cases; no threshold or coverage filter changes.",
+  "data": "Original functional data and fixtures retained; original 100001-row/5 warehouse capacity fixtures moved to manual-only sources, never run in functional CI. No new or increased data.",
+  "concurrency": "Original functional concurrency retained; no NFR workers in routine CI.",
+  "repetitions": "Original10OM+12FF+9Caller+9Posting measurement-only cases moved intact to manual paths;1original Postingproductionguard remains routine. No new registered case or scale/repetition increase.",
+  "thresholds": "Existing functionality, transaction/auth/recovery assertions, global92/83/90 and39floors preserved. 20 query cases=19 functional+1 manual;18 recovery=17 functional+1manual, not discarded or falsely marked original-full PASS.",
+  "trigger": "Routine functional PR CI only after independent external receipt approval; manual files outside discovery, NFR only related post-UAT under Sam authority.",
+  "cost": "No new job or case. Functional-only total duration not measured; prior mixed CI span20m13 is not a functional runtime promise. Peaks unknown.",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "blob": "76b34b4899eb315d7df1eaa0677d6fb35205ec10",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/framework/layout/AppTopbar.vue",
+      "mode": "100644",
+      "blob": "73b9b511fd418e6a281d2ed59cd864bbb0d427f2",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/framework/layout/AppTopbar.test.js",
+      "mode": "100644",
+      "blob": "e20f4c82437d1c55d94a2bcd20f2ea0b65db3e58",
+      "kind": "functional",
+      "cases": [
+        "左上角有公司「M」徽章同 appConfig.title，唔會再顯示舊嘅「ERP System」",
+        "下拉選單嘅標籤係當前登入用戶嘅 displayName",
+        "撳選單按鈕會 emit toggle-drawer",
+        "落拉選單揀「修改密碼」會轉去 change-password 頁",
+        "落拉選單揀「登出」會叫 session.logout() 再轉去登入頁",
+        "後端登出請求失敗都照樣轉去登入頁（本地 session 已經清咗）",
+        "ST040-H01 長名稱完整保留於原生 label 與開關選單的 accessible name",
+        "ST040-H02 Unicode 與字面 markup 保留為純文字，更新姓名不改 session",
+        "ST040-H03 長名稱仍可透過真實選單前往個人資料",
+        "ST040-H04 長名稱仍可透過真實選單前往修改密碼",
+        "ST040-H05 長名稱登出只呼叫一次既有 action 並前往登入",
+        "ST040-H06 長名稱的登出 action 拒絕仍走原有登入導航"
+      ]
+    },
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "1b51955b9083a9fe9e66385e9913f4ec41650ddb",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/00_project_profile.json",
+      "mode": "100644",
+      "blob": "74df2869c2ca71f39425ecfc3b96492d1d81c525",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "mode": "100644",
+      "blob": "2896ec2c5df0461b7d6bc7865beefee6a84cd54d",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "mode": "100644",
+      "blob": "fbe585c9354f3b6f11163f9b4222218f784d48ab",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/08_traceability.json",
+      "mode": "100644",
+      "blob": "e8a6cfdd43e9adcab5c448b9f3a67959778508e4",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/inventoryLockService.test.js",
+      "mode": "100644",
+      "blob": "4eeedc79b466c6ee24e923e17b7f6830557a8d93",
+      "kind": "functional",
+      "cases": [
+        "InventoryLockService deduplicates, sorts and acquires every lock stage in the fixed order",
+        "InventoryLockService requires a transaction executor and validates lock keys",
+        "InventoryLockService maps MySQL deadlocks and lock timeouts to CONCURRENT_OPERATION",
+        "TASK-018 post-Lot Balance lock maps an asynchronous timeout to CONCURRENT_OPERATION",
+        "InventoryLockService tolerates only the pre-Stocktake absence of semantic lock tables",
+        "InventoryLockService locks a Balance only after its Lot identity is known",
+        "ST041-LU07 empty Controls do not execute SQL or require a timestamp",
+        "ST041-LU08 Controls retain sorted deduplication at 999, 1000 and 1001 key boundaries",
+        "ST041-LU09 fifty thousand Controls use bounded SQL without lost or repeated keys",
+        "ST041-LU10 aggregate Control rows preserve DB identities, fields and complete ordering",
+        "ST041-LU11 a second Control INSERT failure stops all reads and preserves error policy",
+        "ST041-LU12 a second Control read failure never returns a partial result or enters later stages",
+        "ST041-LU13 empty and single Lot inputs retain caller-owned query and DB rows",
+        "ST041-LU14 tuple pairs retain exact deduplication and normalized parameter order",
+        "ST041-LU15 twenty-five thousand Lot pairs stay in one complete parameterized query",
+        "ST041-LU16 Lot strings preserve Unicode and byte boundary while invalid keys fail before SQL",
+        "ST041-LU17 Lot failures retain native mapping and stop every following lock stage",
+        "ST041-LU18 complete multi-stage calls preserve database row objects and lock classes"
+      ]
+    },
+    {
+      "path": "client/e2e/inventory-management/inventory-stocktake-contract.spec.js",
+      "mode": "100644",
+      "blob": "143a8b98c7f457e9e662088fd31b747a50854fc1",
+      "kind": "functional",
+      "cases": [
+        "ST039-B01 real UI login and client Draft Start Count Ready show PREVIEW then FROZEN",
+        "ST039-B02 actual browser nonextractable P-256 signer and password Post commit SQL changes",
+        "ST039-B03 password-only Cancel works without an approved device and rejects wrong password",
+        "ST039-B04 actual viewer denial, stale versions and incomplete Ready are safe errors",
+        "ST039-B05 client getBlob uses real filters, safe CSV cells and truthful truncation footer",
+        "ST039-B06 stable key/source with a fresh browser signature replays exact original receipt",
+        "ST039-B07 refresh restores actual session and current device/JWT revocation denies retries",
+        "ST039-B08 actual abort/empty query diagnostics and named Playwright CLI exercise live application"
+      ]
+    },
+    {
+      "path": "client/e2e/inventory-management/inventory-stocktakes.spec.js",
+      "mode": "100644",
+      "blob": "30330b6bba0bc23830a9d35babafbf486b95280d",
+      "kind": "functional",
+      "cases": [
+        "ST040-B01 actual menu/login and VIEW OP ADJ Item-only roles separate reads and actions",
+        "ST040-B02 incremental owned Bins and full paged Draft replacement preserve unseen scope/exclusivity",
+        "ST040-B03 real whole-scope Start creates snapshot/persistent locks only after commit",
+        "ST040-B04 blank zero notFound and change-back are disjoint real persisted counts and Audit versions",
+        "ST040-B05 actual 200-row pager and persistent dirty Count refuse navigation then reload committed page",
+        "ST040-B06 exact Code versus Barcode/Pack collision and Name q locate only without increment or write",
+        "ST040-B07 existing expired Lot/no Balance Add creates snapshot0 only, known identity and physical policy",
+        "ST040-B08 Ready uses global completion despite filtered rows and supports explicit empty 0/0",
+        "ST040-B09 real signed Post positive negative zero and wrong-password rollback retain whole effects",
+        "ST040-B10 real password-only Cancel supports Draft Counting Ready and revoked device/inactive scope history",
+        "ST040-B11 actual filtered CSV download preserves empty SCOPE escaped cells/footer and truncation/history",
+        "ST040-B12 dropped real Post response after verified commit resolves original without a duplicate Movement",
+        "ST040-B13 refresh unknown Count restores minimal QUERY_ONLY and never reconstructs a write",
+        "ST040-B14 real signed authority refresh and real logout actions exit dirty sending QUERY_ONLY without prompt",
+        "ST040-B15 real topbar/name/keyboard/navigation/logout and cleared responsive screens stay bounded",
+        "ST040-B16 actual named Playwright CLI uses wizard Count Ready export plus real topbar logout and diagnostics"
+      ]
+    },
+    {
+      "path": "client/e2e/inventory-management/playwright.stocktake-ui.config.js",
+      "mode": "100644",
+      "blob": "cc0878cc7014639b81d0f4da558ef362bd17b657",
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "client/e2e/inventory-management/playwright.stocktake.config.js",
+      "mode": "100644",
+      "blob": "e52a887964cbb7a989ab034bc6ae7fdc61f7763f",
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "client/test/pages/inventory/inventoryStocktakeService.test.js",
+      "mode": "100644",
+      "blob": "1f92fe4717d1265446dd6b82cf7adf5fe81cb58c",
+      "kind": "functional",
+      "cases": [
+        "ST039-C01 twelve public methods use only their exact routes and business payload",
+        "ST039-C02 only Post is signed; password-only Cancel retains the same explicit key",
+        "ST039-C03 list adapters preserve asOf and global/filtered summary instead of dropping metadata",
+        "ST039-C04 zero/notFound versions and Add's line-owned scalar remain unchanged",
+        "ST039-C05 CSV filters are encoded in an auth-based getBlob URL with no token or unsupported field",
+        "ST039-C06 AbortSignal reaches every relevant read, write and blob request",
+        "ST039-C07 safe errors and unknown outcomes propagate without replacing the original source/key",
+        "ST039-C08 all existing Inventory adapters retain signing and route conventions"
+      ]
+    },
+    {
+      "path": "client/test/pages/inventory/inventoryStocktakes.test.js",
+      "mode": "100644",
+      "blob": "711a828021c7cabe6ca76b1c4c9c10d36f74af33",
+      "kind": "functional",
+      "cases": [
+        "ST040-C19 freezes a single original body/source/key, records only minimal identity and refuses superseding",
+        "ST040-C20 never treats timeout/null then403 as rollback; retries only original intent after successful lookup",
+        "ST040-C20 reprepare holds exclusivity through deferred current refresh",
+        "ST040-C21 corrupt/quota/refresh/disposal blocks writes and old callbacks cannot clear a recovery reference",
+        "ST040-C22 rejects malformed/foreign/Add-child receipts and resolves only exact original by-source scalar",
+        "ST040-C22 rejects an array movementGroupId in direct and by-source receipts without clearing recovery",
+        "ST040-C12 explicit Barcode adapter preserves raw input and old Code signature",
+        "ST040-C23 export includes literal q and whitelist only, preserves Blob envelope and signal",
+        "ST040-C24 localized allowlisted errors discard object/English details instead of leaking or crashing FormPanel",
+        "ST040-C01 automatic Inventory view menu separates VIEW/operation/adjust/Item roles",
+        "ST040-C02 restores only allowlisted read URLs, rejects secret/tampered query without any write",
+        "ST040-C03 mounts unchanged DataTable; retired success/rejection/events never replace live rows or issue extra HTTP",
+        "ST040-C20 a Wizard 503 during reprepare retains the original rejected Count and its retry key",
+        "ST040-C20 Create without a selected Wizard cannot clear its rejected recovery during reprepare",
+        "ST040-C21 an original-result reload finishing after actor replacement cannot retire the new actor table",
+        "ST040-C09 removes Count pager before dirty editor, refuses voluntary URL navigation, auth exit always clears without prompt",
+        "ST040-C05 Draft scope is exclusive but not a stock lock; write retains source and full selected Bin IDs",
+        "ST040-C06 Start warns whole scope and does not optimistically acquire locks before a validated commit",
+        "ST040-C13 field discovery supports NULL/known same-SKU expired Lot only, never creates Lot or stock",
+        "ST040-C14 Add child receipt cannot replace parent header; current line query uses exact parent and dimensions",
+        "ST040-C15 renders truthful 0/0 and readonly Ready/Posted/Cancelled history without reopen",
+        "ST040-C16 Ready uses global uncounted, never the filtered subset",
+        "ST040-C17 Post requires valid reason and transient raw password, signed:true only and no secrets in recovery",
+        "ST040-C18 Cancel is password-only with 取消盤點 label; existing confirmation default remains 確認過帳",
+        "ST040-C03 retired list-row actions cannot select an old document for a replacement actor",
+        "ST040-C20 rejected Count recovery controls remain reachable inside the persistent editor",
+        "ST040-C03 retired row actions cannot open Count during the next page's pending read",
+        "ST040-C23 invalid pending filters never replace the committed displayed/CSV identity",
+        "ST040-C02 accepted same-document URL changes rebind line q/page and scope reads",
+        "ST040-C14 a failed current-line query cannot turn confirmed Add into an apparent failed submit",
+        "ST040-C09 filtered Count waits for current read then returns focus to stable filter",
+        "ST040-C09 explicit discard has one confirmation owner and reloads the committed Count page",
+        "ST040-C07 distinguishes blank, zero and explicit notFound with exactly one row per save",
+        "ST040-C08 rejects signed/fractional/unsafe/Pack quantity locally, always uses Base UOM",
+        "ST040-C10 uses frozen line version7, never parent workflow version2",
+        "ST040-C11 retains original input/version on409 and performs no automatic retry or merge",
+        "ST040-C04 reads every Draft scope page before replace and blocks partial/duplicate/drifting scope"
+      ]
+    },
+    {
+      "path": "docs/inventory_management/implementation/task041-hd233-small-runtime.mjs.txt",
+      "mode": "100644",
+      "blob": "99a95730efc31f7ad5aa66609fad527a6cc18ffb",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/implementation/task041-hd235-completion-manifest.json",
+      "mode": "100644",
+      "blob": "27a373dca58321d1eb75eb49af668e28388ee69b",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/implementation/task041-hd235-verification-runtime.mjs.txt",
+      "mode": "100644",
+      "blob": "5bab746797e71ac4319e72268f49e5842eb1e887",
+      "kind": "support"
+    },
+    {
+      "path": "docs/inventory_management/implementation/task041-hd239-main-integration-candidate.json",
+      "mode": "100644",
+      "blob": "68d57b2ab79974e2fb02f393ecc72f0c583ad7b2",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/evidence/20261030T093238-52ea32e0c5b7/run.json",
+      "mode": "100644",
+      "blob": "bb1cbaade5ff220930acf95a1f06d134c08c51d6",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/evidence/20261030T093238-52ea32e0c5b7/stdout.log",
+      "mode": "100644",
+      "blob": "74bb3bb0a125bc7a38b36dceeb23daeafc34b535",
+      "kind": "support"
+    },
+    {
+      "path": "server/scripts/inventoryPhase005CoverageEvidence.mjs",
+      "mode": "100644",
+      "blob": "190b5a15ec67cc01bbb5314563626726ca779e94",
+      "kind": "support"
+    },
+    {
+      "path": "server/scripts/inventoryPhase005Gate.py",
+      "mode": "100644",
+      "blob": "33d191cc1891da734fc64d84c74e530281043592",
+      "kind": "support"
+    },
+    {
+      "path": "server/scripts/inventoryPhase005Gate.test.py",
+      "mode": "100644",
+      "blob": "91e48c3118c0ce38bd99b38b19606530054eef7b",
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "server/test-support/inventoryPhase005GateNative.mjs.txt",
+      "mode": "100644",
+      "blob": "ec2254747a0b237ae5e5892d2d508489f75277ea",
+      "kind": "support"
+    },
+    {
+      "path": "server/test-support/inventoryStocktakeExportChild.js",
+      "mode": "100644",
+      "blob": "561dc330c945e222389c88cb587e951f9b9494ca",
+      "kind": "support"
+    },
+    {
+      "path": "server/test-support/inventoryStocktakePerformanceChild.js",
+      "mode": null,
+      "blob": null,
+      "kind": "support"
+    },
+    {
+      "path": "server/test-support/inventoryStocktakeSafetyChild.js",
+      "mode": "100644",
+      "blob": "d3d00c5a298c11b3fd2509cdd55518107cd9d3a9",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/integration/inventoryStocktake.integration.test.js",
+      "mode": "100644",
+      "blob": "9aa95a3bb8dbc53239a27387a25f73075f98ade3",
+      "kind": "functional",
+      "cases": [
+        "ST036-D01 real multi-Bin Draft persists without stock/lock/snapshot effects",
+        "ST036-D02 every unfinished scope owner conflicts but terminal history does not",
+        "ST036-D03 concurrent Draft creates have exactly one complete owner",
+        "ST036-D04 complete scope replacement conflict has no partial mutation",
+        "ST036-D05 scope removal and Draft cancel free membership while retaining terminal scope",
+        "ST036-D06 Draft does not block a genuine Receipt transaction",
+        "ST036-D07 multi-Bin Start snapshots all statuses, zero and Lot dimensions with NULL counts",
+        "ST036-D08 late inactive or wrong-Warehouse Bin rejects entire multi-Bin Start",
+        "ST036-D09 foreign active lock can never be acquired or released by Start",
+        "ST036-D10 competing same-version Starts have one snapshot and lock set",
+        "ST036-D11 committed scope/version replacement during Warehouse wait defeats stale discovery",
+        "ST036-D12 Receipt-first commit is included in Start snapshot after actual lock wait",
+        "ST036-D13 Start-first commit blocks Receipt with no second quantity or movement effect",
+        "ST036-D14 each intended mid-lock/snapshot/Audit/completion/commit failure rolls back wholly",
+        "ST036-D15 domain replay keeps original receipts and altered source payload conflicts",
+        "ST036-D16 revoked permission rejects new commands and successful replay without effects",
+        "ST036-D17 committed permission revocation during Warehouse wait defeats stale RR claims",
+        "ST036-D18 Draft cancel/replace version race retains history and cancel permits an inactive Bin"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeApi.integration.test.js",
+      "mode": "100644",
+      "blob": "ff56ff3a931c8add9ea635c6986ec8eb19e21a03",
+      "kind": "functional",
+      "cases": [
+        "ST039-A01 actual authentication rejects anonymous, tampered and expired JWT on all twelve routes",
+        "ST039-A02 view, operation and adjust remain separate permissions",
+        "ST039-A03 Draft scope replacement and exclusive planning never lock inventory",
+        "ST039-A04 Start owns persistent multi-Bucket snapshots",
+        "ST039-A05 zero, notFound and untouched values stay distinct and only line versions advance",
+        "ST039-A06 Add only references existing legal Lot, without creating stock or Lot",
+        "ST039-A07 Ready freezes complete counts and explicitly accepts empty scope inventory",
+        "ST039-A08 real password, JWT and approved P-256 device commit atomic Post",
+        "ST039-A09 actual password and cryptographic failures leave READY locks intact",
+        "ST039-A10 device-free operator password Cancel preserves all predecessor histories",
+        "ST039-A11 strict public input rejects spoofed authority, quantity and ambiguous URI",
+        "ST039-A12 HTTP cached receipt excludes credentials but detects changed business intent",
+        "ST039-A13 new HTTP keys replay original Count, Add and Post scalar results",
+        "ST039-A14 cached responses recheck actual role, JWT, device status and public key",
+        "ST039-A15 real Warehouse waits recheck committed permission revocation",
+        "ST039-A16 actual lock waits reject original JWT/session/signature expiry and client abort",
+        "ST039-A17 concurrent HTTP Count and Post/Cancel produce exactly one valid winner",
+        "ST039-A18 all public queries preserve projections, filters and read-only state",
+        "ST039-A19 actual HTTP CSV metadata, SUMMARY, cancellation and spreadsheet safety",
+        "ST039-A20 revocation during an actual file read discloses no subsequent chunk",
+        "ST039-A21 stale snapshot and a real second Audit SQL error roll back all Post legs",
+        "ST039-A22 synthetic credentials never enter domain fingerprints, Audit or HTTP cache",
+        "ST039-A23 response lost after commit resolves by source and retries original receipt",
+        "ST039-A24 existing signed Adjustment and Transfer routes remain functional at default startup"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeCounts.integration.test.js",
+      "mode": "100644",
+      "blob": "21aed091b07285f0821347f2a4c29f1c83ce4246",
+      "kind": "functional",
+      "cases": [
+        "ST037-D01 real zero, positive and notFound preserve distinct state and scalar Audit",
+        "ST037-D02 full100 safe-integer counts commit exactly100 scalar Audits and one receipt",
+        "ST037-D03 all invalid forms, limits and client overrides reject with no effects",
+        "ST037-D04 one stale version rolls back the entire valid-plus-stale batch",
+        "ST037-D05 valid-plus-foreign line rejects without horizontal ownership effects",
+        "ST037-D06 nonCOUNTING states reject both writes and retain owned lock history",
+        "ST037-D07 concurrent same-line versions have exactly one complete winner",
+        "ST037-D08 distinct-line concurrent saves retain both updates and workflow version",
+        "ST037-D09 real parser and source replay keep original count/add receipts after later edits",
+        "ST037-D10 actual Warehouse waits recheck committed permission revocation for save/add",
+        "ST037-D11 revoked actor blocks new writes and original successful receipt replay",
+        "ST037-D12 reached second-row/second-Audit/complete/commit faults rollback all prior effects",
+        "ST037-D13 none Bucket add is an uncounted zero snapshot with scalar line/parent binding",
+        "ST037-D14 registered batch and expired/low-life Lots accept every physical Status only",
+        "ST037-D15 unknown/wrong Lot, tracking, inactive and forged dates reject without invented IN",
+        "ST037-D16 actual Warehouse wait observes a newly inactive Item profile",
+        "ST037-D17 NULL-Lot and known-Lot add races commit one unique owned line each",
+        "ST037-D18 missing, released, foreign semantic owners and scope corruption reject both writes",
+        "ST037-D19 current root rejects committed READY state after actual Warehouse wait",
+        "ST037-D20 bounded progress pages and all filters exactly partition more than100 lines",
+        "ST037-D21 progress header, aggregate and page share one consistent read without writer locks",
+        "ST037-D22 unexpected existing Balance cannot become an invented zero snapshot"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeDraftLockRange.integration.test.js",
+      "mode": "100644",
+      "blob": "5ad97b7adde281f99874ecc531eeb4a9f8323bc2",
+      "kind": "functional",
+      "cases": [
+        "DL-D01 pinned original SQL exact scope INSERT1213 negative control",
+        "DL-D02 current product controlled same schedule commits both operations and full scopes",
+        "DL-D03 natural cross warehouse mixed history Create Start both commit",
+        "DL-D04 multiBin all scope inserts precede late active lock; full rollback",
+        "DL-D05 sameBin concurrent Create has one Draft winner no orphan",
+        "DL-D06 actual Warehouse wait Replace Create sees latest committed Draft scope",
+        "DL-D07 real sameBin Warehouse wait Start first and conflicting Create first",
+        "DL-D08 Draft permits Receipt; started locks block Receipt Issue and Move",
+        "DL-D09 stale initial auth rejected by prewrite current read; late revoker serializes",
+        "DL-D10 concurrent same source replay is original once; changed body conflicts",
+        "DL-D11 header secondscope latecheck Audit completion faults each roll back",
+        "DL-D12 inactive Warehouse Bin and mismatch reject complete transaction",
+        "DL-D13 foreign locks and all untouched tables survive failed create",
+        "DL-D14 independent transport closes and actual SQL transaction lock terminal"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeExportRecovery.integration.test.js",
+      "mode": "100644",
+      "blob": "5549cde29acc99f167fb388a4f62b9ea05f1a89d",
+      "kind": "functional",
+      "cases": [
+        "ST041-ED01 real application/JWT/SQL and native anonymous-before-data capability",
+        "ST041-ED02 abrupt exit after actual empty exclusive open leaves only owned empty metadata",
+        "ST041-ED03 abrupt exit after actual unlink preserves no named CSV",
+        "ST041-ED04 abrupt exit after actual empty-directory removal precedes first byte",
+        "ST041-ED05 abrupt exit after native header write leaves anonymous data and requires a new export",
+        "ST041-ED06 abrupt exit after one complete real 500-line batch leaves no successful old export",
+        "ST041-ED07 abrupt exit after actual SUMMARY write precedes delivery and successful Audit",
+        "ST041-ED08 actual parent HTTP client receives only first source chunk before abrupt streaming exit",
+        "ST041-ED09 independent worker B finishes while worker A actually generates and is killed",
+        "ST041-ED10 same-worker competing generation returns 503 without another reader or file",
+        "ST041-ED11 positive crash exit precedes releasing own metadata blocker and native SQL reclamation",
+        "ST041-ED12 committed role/view revocation after actual native read discloses zero subsequent bytes",
+        "ST041-ED13 real generation timer and HTTP abort settle initialization SQL and filesystem ownership",
+        "ST041-ED14 explicit unsupported unlink/rmdir injections fail closed and preserve legal Inventory reads",
+        "ST041-ED15 explicit first-write/footer disk errors remain safe500 and never truncated success",
+        "ST041-ED16 killed-worker empty cleanup preserves parent synthetic foreign sentinel and active worker",
+        "ST041-ED17 ten serial mixed lifecycles restore each observed FD socket SQL transaction and pathname baseline"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeFailureAudit.integration.test.js",
+      "mode": "100644",
+      "blob": "8a5bdd913162a4357715f9025fe50105e4beb5b9",
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeFlow.integration.test.js",
+      "mode": "100644",
+      "blob": "7387a164a45f676079024ac3bc83c2e0d93b26a0",
+      "kind": "functional",
+      "cases": [
+        "ST038-D01 Ready stores three counted forms and only workflow metadata/scalar Audit",
+        "ST038-D02 incomplete Ready rejects while an explicit empty scope is valid",
+        "ST038-D03 two real Ready requests wait and freeze exactly once",
+        "ST038-D04 Count/Ready both wait orders freeze latest count or reject late Count",
+        "ST038-D05 Add/Ready both wait orders never admit an untouched line into Ready",
+        "ST038-D06 real Ready later variance/header/Audit/completion/commit faults rollback",
+        "ST038-D07 Ready detects actual permission revocation committed during its Warehouse wait",
+        "ST038-D08 Cancel actual issuer denies forged auth/method/path/id/actor/changed intent and reuse",
+        "ST038-D09 Cancel Draft/Counting/Ready keeps scope/history and only owned locks even inactive",
+        "ST038-D10 Cancel missing/released owners reject; real composite FK rejects mismatched owner",
+        "ST038-D11 Cancel rechecks token/user/role/time during actual Warehouse waits",
+        "ST038-D12 Cancel/Cancel and Ready/Cancel actual races have one complete outcome",
+        "ST038-D13 Cancel second release/header/Audit/completion/commit faults leave all own locks",
+        "ST038-D14 Cancel source lookup/replay preserve original scalar and terminal/source conflicts",
+        "ST038-D15 Post issuer fixes route/action/id and rejects forged/mismatched/one-use contexts",
+        "ST038-D16 Post actual user/role/JWT/device/key revocation committed during Warehouse wait",
+        "ST038-D17 Post original signed time/session/JWT/abort cannot renew during waits",
+        "ST038-D18 mixed statuses and dimensions post one group with exact lines/Audits and release",
+        "ST038-D19 known expired/low-receipt-life physical gains in all three statuses do not alter Lot dates",
+        "ST038-D20 zero and added-absent-zero Post create no Balance/Control/Movement or line versions",
+        "ST038-D21 snapshot identity/quantity/version or a later Balance rejects and keeps READY/locks",
+        "ST038-D22 a real current Allocation floor rejects even with another Bucket gain",
+        "ST038-D23 current complete final reserved coverage can net gains but never increase uncovered",
+        "ST038-D24 none-Lot FIFO preserves/initializes/clears while Lot dates stay unchanged",
+        "ST038-D25 safe MAX quantity accepted in isolated SKU; unsafe and version ceilings rollback",
+        "ST038-D26 local date crossing during actual Warehouse wait rejects without effects",
+        "ST038-D27 Item-owned current Tracking/BaseUOM/Lot validation defeats stale discovery",
+        "ST038-D28 Post inactive/missing/released ownership rejects without foreign unlock",
+        "ST038-D29 second Balance/Movement/link/Audit/header/release/complete/commit faults rollback all",
+        "ST038-D30 two real Post requests with same workflowversion have one complete winner",
+        "ST038-D31 Post-first/Cancel-first actual waits have one terminal effect and no partial unlock",
+        "ST038-D32 Post real source replay after unrelated write is original, current-authorized, effect-free",
+        "ST038-D33 terminal Ready/Count/Add/Cancel/NewPost mutations reject, original Count replay survives",
+        "ST038-D34 100 nonzero plus100 zero functional transactions retain exact Movement/Audit/link absence"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "cb25f9094b04b0c318a758b2071410bb21bb9284",
+      "kind": "functional",
+      "cases": [
+        "MIG035-D01 creates four typed InnoDB tables and optional Movement FKs",
+        "MIG035-D02 rerun is a no-op preserving headers, scope, lines and lock history",
+        "MIG035-D03 enforces states, versions and all command operation uniqueness",
+        "MIG035-D04 business parent references restrict deletion and actors become NULL",
+        "MIG035-D05 scope rows enforce unique Bin membership and restrictive parents",
+        "MIG035-D06 only one active lock exists per Bin while released history can coexist",
+        "MIG035-D07 composite Lock owner rejects another header or Bin",
+        "MIG035-D08 composite Line owner rejects another header or Bin",
+        "MIG035-D09 NULL Lot cannot bypass dimension uniqueness; zero and uncounted stay distinct",
+        "MIG035-D10 Line SKU/Lot, Balance and Movement references reject nonexistent parents",
+        "MIG035-D11 optional Movement attachment resumes safely and immutable history is unchanged",
+        "MIG035-D12 incompatible existing metadata rejects before additional DDL"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakePostBatch.integration.test.js",
+      "mode": "100644",
+      "blob": "b363e9aff905f29cc6fc2345a13b072fb23b2a27",
+      "kind": "functional",
+      "cases": [
+        "ST041-DB01 100 changed rows retain single-row effects and complete exact own unlock",
+        "ST041-DB02 101 changed rows and SKUs cross both batch thresholds with complete owner mappings",
+        "ST041-DB03 201 changed rows complete all three bounded chunks in one real transaction",
+        "ST041-DB04 off-book NULL-Lot three-status balances retain snapshot FKs and FIFO anchors",
+        "ST041-DB05 legal expired and short-life gains preserve Lot dates but never grant AVAILABLE eligibility",
+        "ST041-DB06 outside-Bin AVAILABLE and same-SKU final gains cover Reserved while cross-SKU gains cannot",
+        "ST041-DB07 a real Allocation bucket floor rejects despite another bucket gain and fully rolls back",
+        "ST041-DB08 only the own test SESSION uses sparse AUTO_INCREMENT IDs and is exactly restored",
+        "ST041-DB09 second Balance CASE loses a real expected-version CAS and rolls back earlier chunks",
+        "ST041-DB10 second real Movement insert/read failures or missing/foreign readback roll back complete owners",
+        "ST041-DB11 second line CASE loses its real version predicate and rolls back Movement Balance and Audit",
+        "ST041-DB12 second Audit native SQL fault rolls back the earlier complete Audit chunk",
+        "ST041-DB13 fault after the real final header update restores READY and every original lock",
+        "ST041-DB14 fault midway through actual own unlock rolls back header and releases without touching foreign locks",
+        "ST041-DB15 actual role JWT-version and device revocations reject fresh Post and cached scalar replay",
+        "ST041-DB16 injected original clock and local-date crossings roll back after real batch SQL",
+        "ST041-DB17 same-intent replay returns the original scalar receipt without repeated versions Movement or Audit",
+        "ST041-DB18 large all-zero strong-auth Post and UTF8 summary boundaries retain exact native Audit values"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeProfileBatch.integration.test.js",
+      "mode": "100644",
+      "blob": "1fc186125413945ea4f7b9eaa8563f1fbaca67f4",
+      "kind": "functional",
+      "cases": [
+        "PBD01 100-SKU single reads and 101-SKU bulk Post retain complete native effects",
+        "PBD02 201 and 1001 unique SKUs deduplicate and sort bounded chunks on one native connection",
+        "PBD03 actual generic projection and original 13-key profiles agree for policies NULLs and multi-UOM",
+        "PBD04 native Item statuses tracking and serial flags preserve existing error priority",
+        "PBD05 explicitly anomalous Base rows retain first-SKU UOM errors within and across chunks",
+        "PBD06 first and second chunk missing SKU reject with no committed prior effects",
+        "PBD07 native SKU update wait resolves to newly inactive current read and full rollback",
+        "PBD08 native Item update wait reads committed archived Item and retains every owned lock",
+        "PBD09 second share query waits for native UOM mapping factor and Base removal updates",
+        "PBD10 UOM master current read preserves inactive policy and acquired shares block a real writer until terminal",
+        "PBD11 second native SKU and UOM SQL faults await rollback terminal and restore every business row",
+        "PBD12 real auth revocations and explicit proof clock expiry during native profile waits reject including replay",
+        "PBD13 native allocated floor whole-document Reserved and short-life eligibility retain original rollback codes",
+        "PBD14 all-zero 101+ unique SKU Post still validates profiles and strong auth and replays without effects",
+        "PBD15 later Movement Audit final header and own-unlock SQL faults rollback all prior chunks and foreign owners",
+        "PBD16 bounded real Item editor and Post races and native deadlock retain complete outcomes"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeProviders.integration.test.js",
+      "mode": "100644",
+      "blob": "0989d971972e5bf715cff3ac244303384c9c1a51",
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeQueries.integration.test.js",
+      "mode": "100644",
+      "blob": "c836420f3341839321c33c20ed32bb8c321f0567",
+      "kind": "functional",
+      "cases": [
+        "ST039-D01 real preview preserves zero/notFound/untouched NULL without stored variance or stock writes",
+        "ST039-D02 Ready/Posted and all Cancel predecessors distinguish frozen/preview/notStarted",
+        "ST039-D03 competing committed Count between header/summary/page cannot mix RR data",
+        "ST039-D04 SQL filter matrix and mixed-UOM summaries match independent line sets",
+        "ST039-D05 local created-date exact boundaries/list paging/EXISTS do not duplicate roots",
+        "ST039-D06 more than100 scopes remain paginated and current labels do not replace snapshots",
+        "ST039-D07 missing header/foreign Bin or Lot filters never cross stocktake ownership",
+        "ST039-D08 corrupt frozen/null/count marker/safe integer fails integrity even behind filters",
+        "ST039-D09 actual filtered CSV retains empty scope, NULL/notFound metadata and no stock effects",
+        "ST039-D10 committed Count and Ready between export batches remain one original RR snapshot",
+        "ST039-D12 real slow metadata/batch and current auth cutoff504; genuine SQL timeout stays failure",
+        "ST039-D13 real display text is UTF8/quoted/formula neutralized while negative quantity is numeric",
+        "ST039-D14 real bounded export Audit and forced actual SQL audit failure prohibit delivery",
+        "ST039-D15 committed user/role/token revocation during generation denies current authority outside RR",
+        "ST039-D16 current committed revocation or request abort stops real stream before further disclosure",
+        "ST039-D17 actual initializer/handshake/shutdown faults preserve errors, cleanup and recover slot",
+        "ST039-D18 real Cancel non-consuming preflight/current revocation/one consume retains flow contract",
+        "ST039-D19 Count/Add original scalar receipts retain line/parent versions through public queries",
+        "ST039-D20 unchanged migration rerun/domain replay/legacy count query remain real compatible"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeSafety.integration.test.js",
+      "mode": "100644",
+      "blob": "64dd60cf41f9d070769742a0d6c5b49154bb5b07",
+      "kind": "functional",
+      "cases": [
+        "ST041-S01 valid real HTTP Receipt rejects COUNTING/READY locked destination with no effects",
+        "ST041-S02 ordinary/Receiving/Customer Return native aliases keep fixed authority and caller rollback",
+        "ST041-S03 real HTTP Issue locks a later allocated Bucket and preserves entire Reservation",
+        "ST041-S04 ordinary and Fulfillment Issue entrypoints reach the same lock with distinct fixed callers",
+        "ST041-S05 Bin Move source lock rejects HTTP and caller-owned transaction without paired leg",
+        "ST041-S06 Bin Move destination lock protects existing and absent target Bucket",
+        "ST041-S07 whole Transfer Dispatch HTTP/native rejects a later locked source without partial transit",
+        "ST041-S08 whole Transfer Receive HTTP/native rejects later locked destination and no zero residue",
+        "ST041-S09 strong signed HTTP and native Adjustment IN/OUT respect active locks",
+        "ST041-S10 all six Status directions reject atomically under COUNTING and READY",
+        "ST041-S11 real server-derived paired Reversal retains safe rejection contract and no inverse legs",
+        "ST041-S12 original authorized reversible-writer replay stays identical after Start, new sources reject",
+        "ST041-S13 Start-first real processes make every current writer wait then reject persistent locks",
+        "ST041-S14 writer-first real waits produce Start snapshots including every committed final Bucket",
+        "ST041-S15 legitimate Draft create/replace and same-Draft Start races preserve exclusive ownership",
+        "ST041-S16 COUNTING locks survive actual process termination and fresh processes reject every writer",
+        "ST041-S17 READY frozen values survive fresh-process Post and Cancel with renewed native proof",
+        "ST041-S18 kill real Start before COMMIT proves no partial snapshot or persistent lock and retry once",
+        "ST041-S19 killed mid-Post after actual second Movement rolls all inventory and workflow back",
+        "ST041-S20 observed actual COMMIT with lost reply replays exact original scalar in fresh process",
+        "ST041-S21 kill Cancel after first real unlock retains entire own lockset and history",
+        "ST041-S22 actual Post/Post and both Post/Cancel orders serialize to one complete terminal winner",
+        "ST041-S23 foreign ownership and real-wait permission/device/JWT revocation cannot post or replay",
+        "ST041-S24 actual gain/loss/zero/notFound reconcile per Bucket/SKU/Warehouse, preserve commitments and Cancel"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryStocktakeUiApi.integration.test.js",
+      "mode": "100644",
+      "blob": "58c5f87d8173008dd708744953d6df6d760334ec",
+      "kind": "functional",
+      "cases": [
+        "ST040-A01 actual Inventory view allows Barcode without Item grant and rejects anonymous/Item-only",
+        "ST040-A02 known legal Lot without Balance can be looked up and added at snapshot0",
+        "ST040-A03 real raw-query strictness rejects malformed Barcode safely while valid bounds reach lookup",
+        "ST040-A04 colliding Code and Barcode resolve distinct explicit identities",
+        "ST040-A05 numeric scanner normalization and internal text preserve minimal Base response",
+        "ST040-A06 actual Inventory profile excludes inactive/serial/no-Base but not purchase/sale flags",
+        "ST040-A07 genuinely interrupted owned Item query yields private failure without business effect",
+        "ST040-A08 q matches literal Code/Unicode Name only inside selected Stocktake",
+        "ST040-A09 real200-row q pagination and multi-Bucket filters are stable and global counts distinct",
+        "ST040-A10 Counting q/CSV preserve untouched NULL, counted0,notFound and PREVIEW without variance writes",
+        "ST040-A11 Ready/Posted/Cancelled q history stays FROZEN and CSV keeps empty Bin scope",
+        "ST040-A12 actual q CSV file-read revocation stops all post-revoke bytes and cleans owned file",
+        "ST040-A13 actual Code/Barcode/q data reads do not mutate Balance/Movement/Operation/locks",
+        "ST040-A14 legacy Code and existing Stocktake scalar/permission/version contracts remain compatible"
+      ]
+    },
+    {
+      "path": "server/test/inventoryAuditBatch.test.js",
+      "mode": "100644",
+      "blob": "fd24d29237ff67b26c0e07598f1155e11acc130d",
+      "kind": "functional",
+      "cases": [
+        "AB01 batch accepts an empty array as undefined/no SQL and rejects invalid executor, non-array and over-100 inputs",
+        "AB02 one batch row preserves the original literal single SQL and all single parameters including nullable defaults",
+        "AB03 100 rows use ordered multi-VALUES binds and independently captured per-row timestamps on the same executor",
+        "AB04 batch shares single field validation and first-error order and validates all inputs before any SQL",
+        "AB05 batch uses the real scalar whitelist and exact 8192-byte boundary without nested, unknown or secret fields",
+        "AB06 UTF8 summaries force bounded sequential chunks without truncation, reordering or extra timestamp sampling",
+        "AB07 later SQL failure preserves error identity and every affectedRows mismatch rejects without independent audit or transaction",
+        "AB08 adding batch leaves original single, rejected, failed and safe fallback behavior intact"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeApi.test.js",
+      "mode": "100644",
+      "blob": "78c9c46919e3016259b89f630c04a2ef1468bf38",
+      "kind": "functional",
+      "cases": [
+        "ST039-U04 Cancel preflight checks do not consume; changed intent and current revocation fail closed",
+        "ST039-U06 public preview distinguishes numeric zero, notFound and untouched NULL without writes",
+        "ST039-U07 frozen and cancelled projections validate stored variance and never imply posted",
+        "ST039-U10 public header/summary/page use one unlocked RR snapshot with asOf and versions",
+        "ST039-U09 public summaries are safe line counts, never summed mixed-SKU quantities",
+        "ST039-U02 count input unions, versions, limits, IDs and foreign fields are strict without coercion",
+        "ST039-U03 canonical intent excludes credentials and rejects caller-owned security/stock fields",
+        "ST039-U08 variance/progress predicates are typed, parameterized and preserve filtered/global separation",
+        "ST039-U11 list paging/date validation uses EXISTS, bounds and one consistent read",
+        "ST039-U12 every CSV text cell is formula-safe and quoted while signed numeric quantities remain numbers",
+        "ST039-U13 CSV retains empty Bin scope, preview/null/notFound distinctions and explicit final summary",
+        "ST039-U14 keyset batches stay at most 500 and row-cap metadata never silently omits data",
+        "ST039-U15 half-remaining budget truncates deliberately; SQL/Audit faults and invalid deadline fail and clean up",
+        "ST039-U16 current authority is rechecked on generation/delivery; abort stops disclosure and removes owned files",
+        "ST039-U01 twelve route schemas compile and startup with fixed auth and default receive timeout",
+        "ST039-U05 ordinary cached replay locks current authority, sends once, and rejects post-wait token revocation",
+        "ST039-U17 unchanged domain scalar receipts, including Add line identity, are never reconstructed from current rows",
+        "ST039-U18 old Stocktake services and shared high-risk actions remain pinned and discoverable without collision"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeCounts.test.js",
+      "mode": "100644",
+      "blob": "453e19d425b4e1db5906bb1a7ee211367ec9174c",
+      "kind": "functional",
+      "cases": [
+        "ST037-U01 numeric zero and notFound persist distinct real scalar audit states and receipts",
+        "ST037-U02 invalid quantity, forms, fields, collection limits and duplicate lines reject before effects",
+        "ST037-U03 whole-batch stale or ceiling versions reject and valid maximum-safe count preserves workflow version",
+        "ST037-U04 counted and notFound replace each other without carrying stale flags or variance",
+        "ST037-U05 nonCOUNTING, foreign lines and absent or foreign semantic owners reject both writes",
+        "ST037-U06 current root read after discovery dominates and child locking remains after root",
+        "ST037-U07 real scalar Operation completion and replay retain original results after later changes",
+        "ST037-U08 fixed fresh permission is rechecked after waits and before successful replay",
+        "ST037-U09 real Audit, Operation completion, row and commit faults roll back every prior effect",
+        "ST037-U10 none and registered expired Lot add only uncounted zero snapshots with flattened line receipt",
+        "ST037-U11 Item tracking and immutable Lot rules reject unknown identity and forged fields",
+        "ST037-U12 duplicate count dimensions and an unexpected existing Balance are not invented as zero",
+        "ST037-U13 bounded progress pages and disjoint filters return exact totals without writes",
+        "ST037-U14 inquiry rejects unknown fields, filters and unsafe pages and returns truthful empty pages"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeDraftLockRange.test.js",
+      "mode": "100644",
+      "blob": "f35c8e5d2032f47c80b3ce2a36f52e0ad7135775",
+      "kind": "functional",
+      "cases": [
+        "DL-U01 invalid executor/scope/callback does no SQL",
+        "DL-U02 exact row order/dedup and callback once before active read",
+        "DL-U03 caller executor only; no transaction commit/connection API",
+        "DL-U04 callback error stops active read and preserves identity",
+        "DL-U05 active lock is rejected after draft callback",
+        "DL-U06 SQL failure mapping preserved without retry",
+        "DL-U07 unrelated SQL error is not swallowed",
+        "DL-U08 all scopes then active read then current auth then Audit/completion",
+        "DL-U09 late active lock rolls back header/all scopes/audit",
+        "DL-U10 auth failure after final read stops finish; business invalidity stops writes",
+        "DL-U11 second scope sentinel and finish faults roll back without masking errors",
+        "DL-U12 replay original scalar rechecks current auth without lock callback/write/finish"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeExportAudit.test.js",
+      "mode": "100644",
+      "blob": "7474c37e1ece77f732e58d4b458208380e81d5f3",
+      "kind": "functional",
+      "cases": [
+        "FAU01 success retains caller transaction; non-export generic audit and construction remain unchanged",
+        "FAU02 failure owns a live signal while original cancelled signal/context/claims remain untouched",
+        "FAU03 trusted scalar input is captured before awaiting and exact DOMAIN/ROUTE serialization is retained",
+        "FAU04 acquisition consumes original 5000ms; late cancelled acquisition invokes no Audit callback",
+        "FAU05 consumed BEGIN and INSERT time never renews original deadline or replaces export error",
+        "FAU06 indeterminate COMMIT remains false/quarantined, without retry or rollback claim",
+        "FAU07 late true cannot revise public false or reopen admission; late rejection is consumed",
+        "FAU08 same-primary factories share cap1 with no queue; distinct primary owners stay independent",
+        "FAU09 only before-deadline true frees slot; false settlement and a new facade cannot reset quarantine",
+        "FAU10 fallback logger consumes only the remaining original budget and cannot reset quarantine",
+        "FAU11 closed primary refuses without SQL or shutdown of borrowed resources",
+        "FAU12 live withTransaction is invoked synchronously for unchanged CS01 association",
+        "FAU13 DOMAIN and ROUTE remain separate identities, never request-wide deduplicated",
+        "FAU14 monotonic before-deadline success releases; completion at deadline remains false",
+        "FAU15 invalid serialization and failed diagnostics return false without unhandled rejection",
+        "FAU16 independent signal, no renewal, sticky false and late true have distinct mutation-sensitive oracles"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeExportRecovery.test.js",
+      "mode": "100644",
+      "blob": "054220992964558493ad62cbf29d5a18f34bc7a6",
+      "kind": "functional",
+      "cases": [
+        "ST041-EU01 original descriptor becomes anonymous before any CSV byte",
+        "ST041-EU02 changed directory identity preserves the replacement and sentinel",
+        "ST041-EU03 changed file inode and symlink preserve foreign data and entries",
+        "ST041-EU04 every owner, permission, type, empty and link prerequisite fails closed",
+        "ST041-EU05 unsupported unlink errno maps to safe 503 without fallback",
+        "ST041-EU06 post-unlink descriptor and pathname proof cannot be assumed",
+        "ST041-EU07 empty-directory removal rejects unsupported, changed and visible results",
+        "ST041-EU08 acquisition EIO retains error identity and closes acquired resources",
+        "ST041-EU09 EOF preserves full, zero-line, frozen and row-limit CSV contracts",
+        "ST041-EU10 abort and destroy await started I/O and never disclose late chunks",
+        "ST041-EU11 real I/O error objects remain failures with no later I/O",
+        "ST041-EU12 unlink, rmdir and metadata waits spend the original generation budget"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeFailFast.test.js",
+      "mode": null,
+      "blob": null,
+      "kind": "functional",
+      "cases": [
+        "FF01 healthy Characterization retains fifteen ordered callbacks/options and normal abort is harmless",
+        "FF02 real node:test assertion and runner timeout retain failure and skipped bodies under configured maxSkipped0",
+        "FF03 synchronous throw async rejection and pending runner cancel preserve first reason",
+        "FF04 expected test-injected faults whose oracle passes do not close registration",
+        "FF05 actual warmup producer stops after first unexpected error and retains both planned remainders",
+        "FF06 actual steady minute failure stops after waits and never manufactures a full steady pass",
+        "FF07 stopped pending refresh preparation cannot refresh or send and keeps intended identity",
+        "FF08 lane failure latches before rejection so a competing signer cannot win the next microtask",
+        "FF09 already dispatched real loopback responses preserve success or failure after stop without retry",
+        "FF10 original failure drain budget cannot restart after twelve seconds of intervening work",
+        "FF11 first producer failure survives later sampler failure and cleanup keeps truthful failed prefix",
+        "FF12 original callback bodies and all helper ranges outside the two approved functions stay byte-identical"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeFlow.test.js",
+      "mode": "100644",
+      "blob": "dbf8132b5f4373b0961feea12359c5cc0bb7b8d5",
+      "kind": "functional",
+      "cases": [
+        "ST038-U01 Ready freezes positive, zero and notFound signed variances without line-version or stock effects",
+        "ST038-U05 sealed Cancel rejects forged, altered and reused contexts",
+        "ST038-U06 Cancel actual current JWT, roles and time guard reject before effects",
+        "ST038-U07 Cancel preserves history and exact own locks even for inactive Warehouse/Bin",
+        "ST038-U08 Cancel foreign, missing, released or mismatched owners roll back without unlock",
+        "ST038-U09 Cancel current-auth original scalar replay does not release twice; terminal new intents reject",
+        "ST038-U02 Ready rejects the whole set for untouched or corrupt count forms",
+        "ST038-U03 workflow input, version ceilings, stale state and unsafe IDs reject with no effects",
+        "ST038-U04 Ready rechecks current authority and real source replay returns its original scalar",
+        "ST038-U10 Post proof rejects forged/cross-route/changed intent and one-use reuse",
+        "ST038-U11 Post current view/adjust/JWT/device/key remain mandatory",
+        "ST038-U12 mixed variances write one Operation/group and only nonzero line Movement/Audit",
+        "ST038-U13 existing expired and low-receipt-life Lots physical IN keeps dimensions/dates",
+        "ST038-U14 current Item and Lot rules reject serial/nontracked/inactive/wrong dimensions",
+        "ST038-U15 snapshot identity/quantity/version and added later Balance are integrity errors",
+        "ST038-U16 final perBucket allocation floor cannot be funded by another gain",
+        "ST038-U17 final atomic reserved coverage cannot worsen but net gain can offset loss",
+        "ST038-U18 zero/allzero lines have no stock/control/Movement/group creation but require proof and release",
+        "ST038-U19 noneLot FIFO preserves positive anchor, initializes zero-to-positive and clears at zero",
+        "ST038-U20 unsafe quantities, line/balance/workflow ceilings and date change reject atomically",
+        "ST038-U21 later Movement/Audit/release/complete/commit faults roll back all original READY data",
+        "ST038-U22 Post real stored scalar replay cannot duplicate stock/audit/unlock or accept altered source intent",
+        "ST038-U23 current workflow/owned scope dominates discovery; Ready audit/completion faults rollback",
+        "ST038-U24 legacy high-risk actions retain strict device proof and cross-action binding"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeMainCompatibility.test.js",
+      "mode": "100644",
+      "blob": "de816115048f2c0792f68edebf03bd90e02b5c69",
+      "kind": "functional",
+      "cases": [
+        "MC01 main scalar Audit preserves validation, exact values and independent rejection/failure paths",
+        "MC02 main createSucceededBatch requires the real active registry and preserves fixed 100-row caller-owned flushes",
+        "MC03 P4 recordSucceededBatch keeps 0/1/100 boundaries, original bytes/parameters and exact affectedRows proof",
+        "MC04 both batch APIs share scalar validation and the 500 Unicode-codepoint reason bound",
+        "MC05 later P4 SQL failure propagates unchanged without independent audit, transaction completion or later chunks",
+        "MC06 Code normalization uses one current Item result and one UOM read without a second profile snapshot",
+        "MC07 Barcode forwards the raw value to Item and preserves 190-codepoint/760-byte/control boundaries",
+        "MC08 exclusive raw lookup keys and malformed Item/UOM response projections fail closed",
+        "MC09 missing Base UOM or factor other than one is rejected and valid output is the minimal main projection",
+        "MC10 Inventory view permission and tracked/usable/serial decisions survive without Item writes or redundant share locks"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeMigration.test.js",
+      "mode": "100644",
+      "blob": "7b917a38ee3fd7dd3d0b1057724d487e3bb12554",
+      "kind": "functional",
+      "cases": [
+        "MIG035-U01 absent schema creates parents before children and attaches Movement FKs last",
+        "MIG035-U02 complete compatible schema is a no-op preserving all history",
+        "MIG035-U03 column type, nullability and actor drift reject before DDL",
+        "MIG035-U04 default and generated expression drift reject before DDL",
+        "MIG035-U05 indexes and enforced checks reject drift before DDL",
+        "MIG035-U06 FK parent, composite order, schema and delete rules reject before DDL"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeObservationMapping.test.js",
+      "mode": null,
+      "blob": null,
+      "kind": "functional",
+      "cases": [
+        "OM01 actual core identity reuses one mapping across new promise wrappers and maps replacement cores",
+        "OM02 pool waiting consumes the original absolute five-second mapping budget",
+        "OM03 hanging mapping SQL times out and consumes its later rejection without a loan",
+        "OM04 lost and late matching ACK cannot unblock a timed-out loan or clear its latch",
+        "OM05 physical or mapping IPC rejection and an overdue send callback fail closed",
+        "OM06 wrong ACK fields and lost failure IPC permanently reject even an already mapped core",
+        "OM07 a raw loan arriving after the deadline is destroyed precisely and late raw rejection is consumed",
+        "OM08 physical identity precedes same-connection mapping and retained child history survives destruction",
+        "OM09 missing, non-positive, foreign, duplicate or uninstrumented SQL identities never fall back to native ID",
+        "OM10 a mapping result settling beyond the original cutoff cannot win against a delayed timeout callback"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakePostBatch.test.js",
+      "mode": "100644",
+      "blob": "66f42d976a0ebc110f8327765380b107ad6f6cec",
+      "kind": "functional",
+      "cases": [
+        "ST041-PB01 100 changed legs retain the original single-row SQL, complete scalar receipt and replay",
+        "ST041-PB02 101 changed legs and SKUs cross both 100-row boundaries with one Audit per leg",
+        "ST041-PB03 201 mixed existing and off-book NULL-Lot three-status legs finish all three chunks",
+        "ST041-PB04 sparse IDs assigned in reverse line order map actual new Balance and Movement owners",
+        "ST041-PB05 large Post retains complete snapshot, scope pairing, duplicate and first business error checks",
+        "ST041-PB06 allocated stays a per-bucket floor despite another bucket gain in a large Post",
+        "ST041-PB07 final same-SKU Reserved includes off-book gains and outside-Bin AVAILABLE without cross-SKU cover",
+        "ST041-PB08 AVAILABLE preserves duplicate rows, safe integer errors, expiry/minimum-life exclusions and no FEFO reorder",
+        "ST041-PB09 second Balance CASE CAS short count rolls back earlier chunks and never retries",
+        "ST041-PB10 missing duplicate foreign or extra Movement and new Balance owner maps reject atomically",
+        "ST041-PB11 second line CASE CAS short count rolls back all Balance Movement line and Audit effects",
+        "ST041-PB12 second real Audit batch failure propagates unchanged and rolls back the complete Post",
+        "ST041-PB13 current revocation device time date boundaries and scalar replay retain original guards",
+        "ST041-PB14 large all-zero Post requires sealed authentication completes once and has no stock effects",
+        "ST041-PB15 each batch stays within 100 rows 3200 binds and 1MiB UTF8 strings without truncation",
+        "ST041-PB16 N=101 and N=1001 SQL cost is per chunk and a per-row mutation exceeds the oracle"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakePostLookup.test.js",
+      "mode": "100644",
+      "blob": "1671d9747296dec3e050480ffc765686db193bfc",
+      "kind": "functional",
+      "cases": [
+        "ST041-PU01 empty and all-zero Post preserve strong proof, scalar replay and own unlock without stock effects",
+        "ST041-PU02 complete Bin/SKU/NULL-Lot/status buckets keep original locked values and line order",
+        "ST041-PU03 zero/one/duplicate balance matches retain snapshot identity and count semantics",
+        "ST041-PU04 off-book gains use only registered Lots and roll back the second balance side effect",
+        "ST041-PU05 snapshot pins, bucket identity, versions and unsafe quantities reject before partial updates",
+        "ST041-PU06 scope id plus Bin and original row validation order determine the first error",
+        "ST041-PU07 allocated remains a per-bucket floor that another bucket gain cannot cover",
+        "ST041-PU08 final Reserved covers the whole same-SKU effect and excludes unsaleable stock with safe sums",
+        "ST041-PU09 Number-equivalent Control and Bin keys keep their first match and missing dependency errors",
+        "ST041-PU10 Number-equivalent Lot keys preserve first match, tracking and all original date rules",
+        "ST041-PU11 fresh current authorization gates scalar replay and command-local data never becomes a cache",
+        "ST041-PU12 exact SQL and parameter order, second Audit rollback and native error identity stay unchanged",
+        "ST041-PU13 actual Post reverse-key full dimensions meet the bounded key-read budget at N=100 and N=1000",
+        "ST041-PU14 all AVAILABLE returns count in the fixed-Bin budget, including excluded/outside/duplicate rows and error order"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeProfileBatch.test.js",
+      "mode": "100644",
+      "blob": "ee0d6b00b3e5652b6551eb7528aaeb26a0ca45bf",
+      "kind": "functional",
+      "cases": [
+        "ST041-PBU01 strategy uses unique SKU threshold including 100k rows with only 100 SKUs",
+        "ST041-PBU02 sorted deduplicated 101 201 1001 IDs use one same-tx real Item lookup in sequential chunks",
+        "ST041-PBU03 actual generic projection maps exactly to original real scalar 13-key profiles",
+        "ST041-PBU04 reversed real Item Map and missing IDs preserve ascending first business error",
+        "ST041-PBU05 invalid Base wins before later missing or serial within and across chunk boundaries",
+        "ST041-PBU06 original tracked serial usable precedence and Item inventory status purpose survive",
+        "ST041-PBU07 exact missing Base and factor errors retain first Base and permissive nonbase UOM semantics",
+        "ST041-PBU08 real bulk profiles preserve full mixed row effects allocated Reserved sale-life and safe sums",
+        "ST041-PBU09 second batch SKU SQL fault propagates unchanged atomically with no fallback or third batch",
+        "ST041-PBU10 second UOM fault and expiry during await retain original error and guard precedence",
+        "ST041-PBU11 later Balance Movement Audit and header faults roll back real earlier row effects",
+        "ST041-PBU12 large all-zero validates every profile and current auth while scalar replay has no new effects",
+        "ST041-PBU13 default real StocktakeService plus real ItemLookup query cost is two per 100 unique IDs",
+        "ST041-PBU14 exact pure projection excludes extra Item UOM fields and leaves generic input untouched"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeService.test.js",
+      "mode": "100644",
+      "blob": "0043d34028173da848f67c00bc01bff454172db7",
+      "kind": "functional",
+      "cases": [
+        "ST036-U01 creates multi-Bin exclusive Draft without quantity, lock or snapshot effects",
+        "ST036-U02 rejects empty, repeated, coerced IDs and caller-owned fields before writes",
+        "ST036-U03 fresh permission and fixed authorization are mandatory, including replay",
+        "ST036-U04 full Draft scope replacement retains the header and has no stock effect",
+        "ST036-U05 every other unfinished owner conflicts, self and terminal history do not",
+        "ST036-U06 stale versions and non-Draft mutations leave complete state unchanged",
+        "ST036-U07 Start keeps Bin-before-Balance-before-root-before-child lock order",
+        "ST036-U08 multi-Bin snapshot keeps zero/all statuses/no-Lot and leaves counts NULL without stock writes",
+        "ST036-U09 invalid Bin and foreign physical lock reject whole Start",
+        "ST036-U10 replay returns original scalar receipt without reading changed workflow",
+        "ST036-U11 Audit/completion and mid-Start failures roll back all business rows",
+        "ST036-U12 Draft cancel requires reason/version and preserves scope without releasing locks"
+      ]
+    },
+    {
+      "path": "server/test/inventoryStocktakeUiContract.test.js",
+      "mode": "100644",
+      "blob": "37da6da2d7ec7248f2ae73fa812cc8b4a458f06d",
+      "kind": "functional",
+      "cases": [
+        "ST040-U01 old Code keeps view policy, literal identity and minimum shape",
+        "ST040-U02 Barcode raw input rejects controls, blanks and oversize before Item lookup",
+        "ST040-U03 Barcode uses pinned numeric/internal normalization and rejects inconsistent matches",
+        "ST040-U04 Barcode profile does not need Balance, Item permission or purchase/sale qualification",
+        "ST040-U05 Barcode keeps Inventory unusable, serial and Base-UOM admission guards",
+        "ST040-U06 Stocktake q is literal, parameterized and correlated inside owned line predicates",
+        "ST040-U07 Stocktake q raw bounds reject coercion and remain lines/export-only",
+        "ST040-U08 filtered summaries keep disjoint scalar counts and uncounted/notFound preview",
+        "ST040-U09 text filtering stays inside at-most500 keyset candidates with stable ownership",
+        "ST040-U10 unchanged CSV generator uses identical q predicates, retains empty scope and truthful summary",
+        "ST040-U11 explicit Code and Barcode modes never fall back to the other identity",
+        "ST040-U12 missing Barcode is safe not-found; errors never fabricate a profile or escape executor"
+      ]
+    },
+    {
+      "path": "server/test/performance/inventoryStocktakeCharacterization.performance.test.js",
+      "mode": null,
+      "blob": null,
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "server/test/performance/inventoryStocktakeResourceSoak.performance.test.js",
+      "mode": null,
+      "blob": null,
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-characterization.js",
+      "mode": "100644",
+      "blob": "56e729b3866a515fc9c87cced0db8ca109a88404",
+      "kind": "manual",
+      "cases": [
+        "ST041-CP01 full migrated capacity fixture, measurement self-check and twenty real logins",
+        "ST041-CP09 native Control batches preserve fifty thousand rows and roll back later-batch failures",
+        "ST041-CP14 native observation abort, historical SQL terminal and real replacement connection",
+        "ST041-CP15 native short-lived connection mapping history, socket close and real replacement",
+        "ST041-CP02 six original real HTTP query families preserve exact results and existing p95 below two seconds",
+        "ST041-CP10 full-capacity native Lot plans and balanced OR versus tuple-IN comparison",
+        "ST041-CP11 native Lot tuple semantics, collation, ordered rows and owner rollback",
+        "ST041-CP12 native Lot waits, current reads, late keys, gap effects and owner rollback",
+        "ST041-${caseId} three complete real HTTP Stocktakes across ${bins} bins",
+        "ST041-CP06 all three full-scope rounds retain six query families and native SQL overlap in every phase",
+        "ST041-CP07 real 100000-line COUNTING CSV, anonymous resources and serial primary-pool-one compatibility",
+        "ST041-CP08 zero-variance real HTTP Post/replay and complete full-capacity reconciliation",
+        "ST041-CP13 fixed CPU fault, parent watchdog and exact owned recovery preserve complete Inventory state"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-resource-soak.js",
+      "mode": "100644",
+      "blob": "75bd0d89690ed97b65089234f591951c922208b5",
+      "kind": "manual",
+      "cases": [
+        "ST041-CS01 fresh full-capacity thirty-minute fixed-offer Stocktake resource soak"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/inventoryStocktakePerformanceChild.js",
+      "mode": "100644",
+      "blob": "3170b78aaea330852faeb7effa9c7b48b4547ceb",
+      "kind": "manual",
+      "cases": [
+        "Original Inventory full-capacity fixture and owned child; manual post-UAT only; no routine invocation"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-query-row-cap.js",
+      "mode": "100644",
+      "blob": "afb96b8e14cc9d1952d0e112a9b87cba211938d8",
+      "kind": "manual",
+      "cases": [
+        "ST039-D11 actual primarypool1 works; >500 keysets and delayed socket close block replacement503"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-export-recovery-row-cap.js",
+      "mode": "100644",
+      "blob": "847a81e27c0af502df713d07e00b7cbc76a6704b",
+      "kind": "manual",
+      "cases": [
+        "ST041-ED18 real pagination empty filtered PREVIEW FROZEN default row cap and legal TIME_LIMIT preserve CSV contract"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1PostingTraceSource.js",
+      "mode": "100644",
+      "blob": "639d4f3050df930adc4c2a3e30ed28a00d56cf5e",
+      "kind": "functional",
+      "cases": [
+        "Whole existing reviewed fixture/configuration and its original named functional families; no new registered cases"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1CallerDiagnostics.test.js",
+      "mode": null,
+      "blob": null,
+      "kind": "functional",
+      "cases": [
+        "Caller root selects actual RC phases, marks one successful provider return and excludes RR Inquiry",
+        "Failed provider does not create a post-return marker and retains original error identity",
+        "Marker wrong executor, duplicate and nonquiescent child cannot qualify a capture",
+        "Pending callback and span survive watchdog rejection as an explicit unqualified as-of snapshot",
+        "Caller AST targets are pinned, class-qualified and restore unchanged business code",
+        "Five-module thirteen-target output pins four unchanged modules and approved child-claim receipts",
+        "Caller selector observer errors never replace the business result or original error",
+        "Caller Inventory wrapper preserves synchronous throw and return identities",
+        "Caller phase metadata getter failure is an observer failure and cannot suppress business work"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-observation-mapping.js",
+      "mode": "100644",
+      "blob": "2fd2c3e714d483e679a463ac93d936a4b24c6585",
+      "kind": "manual",
+      "cases": [
+        "OM01 actual core identity reuses one mapping across new promise wrappers and maps replacement cores",
+        "OM02 pool waiting consumes the original absolute five-second mapping budget",
+        "OM03 hanging mapping SQL times out and consumes its later rejection without a loan",
+        "OM04 lost and late matching ACK cannot unblock a timed-out loan or clear its latch",
+        "OM05 physical or mapping IPC rejection and an overdue send callback fail closed",
+        "OM06 wrong ACK fields and lost failure IPC permanently reject even an already mapped core",
+        "OM07 a raw loan arriving after the deadline is destroyed precisely and late raw rejection is consumed",
+        "OM08 physical identity precedes same-connection mapping and retained child history survives destruction",
+        "OM09 missing, non-positive, foreign, duplicate or uninstrumented SQL identities never fall back to native ID",
+        "OM10 a mapping result settling beyond the original cutoff cannot win against a delayed timeout callback"
+      ]
+    },
+    {
+      "path": "server/test-capacity/inventory/stocktake-fail-fast.js",
+      "mode": "100644",
+      "blob": "4cd800a898ece44536312738ace7ea6c6ed79fdc",
+      "kind": "manual",
+      "cases": [
+        "FF01 healthy Characterization retains fifteen ordered callbacks/options and normal abort is harmless",
+        "FF02 real node:test assertion and runner timeout retain failure and skipped bodies under configured maxSkipped0",
+        "FF03 synchronous throw async rejection and pending runner cancel preserve first reason",
+        "FF04 expected test-injected faults whose oracle passes do not close registration",
+        "FF05 actual warmup producer stops after first unexpected error and retains both planned remainders",
+        "FF06 actual steady minute failure stops after waits and never manufactures a full steady pass",
+        "FF07 stopped pending refresh preparation cannot refresh or send and keeps intended identity",
+        "FF08 lane failure latches before rejection so a competing signer cannot win the next microtask",
+        "FF09 already dispatched real loopback responses preserve success or failure after stop without retry",
+        "FF10 original failure drain budget cannot restart after twelve seconds of intervening work",
+        "FF11 first producer failure survives later sampler failure and cleanup keeps truthful failed prefix",
+        "FF12 original callback bodies and all helper ranges outside the two approved functions stay byte-identical"
+      ]
+    },
+    {
+      "path": "server/test-capacity/fulfillment/p1CallerDiagnostics.js",
+      "mode": "100644",
+      "blob": "213ecae8786363a1b61ace07d76a5fc0cd831725",
+      "kind": "manual",
+      "cases": [
+        "Caller root selects actual RC phases, marks one successful provider return and excludes RR Inquiry",
+        "Failed provider does not create a post-return marker and retains original error identity",
+        "Marker wrong executor, duplicate and nonquiescent child cannot qualify a capture",
+        "Pending callback and span survive watchdog rejection as an explicit unqualified as-of snapshot",
+        "Caller AST targets are pinned, class-qualified and restore unchanged business code",
+        "Five-module thirteen-target output pins four unchanged modules and approved child-claim receipts",
+        "Caller selector observer errors never replace the business result or original error",
+        "Caller Inventory wrapper preserves synchronous throw and return identities",
+        "Caller phase metadata getter failure is an observer failure and cannot suppress business work"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1PostingDiagnostics.test.js",
+      "mode": "100644",
+      "blob": "a6c17d498033c4c78159e10521a071e95e0f6a3e",
+      "kind": "functional",
+      "cases": [
+        "Original native absent-Stocktake guard is classified without accepting partial schema or timeout"
+      ]
+    },
+    {
+      "path": "server/test-capacity/fulfillment/p1PostingDiagnostics.js",
+      "mode": "100644",
+      "blob": "ebc9557c995dd55618465d01ca0fbdd07776084e",
+      "kind": "manual",
+      "cases": [
+        "Posting parent identity comes from the actual executor WeakMap and captures its phase/20s",
+        "Posting SQL categories are fixed and never include SQL text or values",
+        "Posting observer retains exact executor receiver, args, values and restoration with nested timings",
+        "Posting observer preserves native synchronous throws and rejected error identity",
+        "Observer failure marks measurements invalid without masking results or business errors",
+        "Parallel child spans invalidate exclusive wall time and separate post contexts do not leak",
+        "Posting observation retains a bounded number of summaries with explicit omissions",
+        "Child spans overlapping parent SQL and unawaited work cannot qualify exclusive measurements",
+        "Diagnostic transform pins five modules, thirteen bodies and their business AST without SQL rewrites"
+      ]
+    }
+  ]
+}
