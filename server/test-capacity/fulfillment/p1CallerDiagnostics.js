@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {readFile} from "node:fs/promises";
 import {MySqlDatabaseService} from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
-import {capacityDiagnostics} from "./p1CapacityDiagnostics.js";
-import {callerDiagnostics} from "./p1CallerDiagnostics.js";
-import {postingDiagnostics,tracePostingAsync,tracePostingSync,markPostingTailStart} from "./p1PostingDiagnostics.js";
-import {callerTraceManifest} from "./p1CallerTraceSource.js";
-import {transformPostingSource} from "./p1PostingTraceSource.js";
+import {capacityDiagnostics} from "../../test/fulfillment/p1CapacityDiagnostics.js";
+import {callerDiagnostics} from "../../test/fulfillment/p1CallerDiagnostics.js";
+import {postingDiagnostics,tracePostingAsync,tracePostingSync,markPostingTailStart} from "../../test/fulfillment/p1PostingDiagnostics.js";
+import {callerTraceManifest} from "../../test/fulfillment/p1CallerTraceSource.js";
+import {transformPostingSource} from "../../test/fulfillment/p1PostingTraceSource.js";
 function fixture(){
  let context={};const after=[],messages=[],t={after:fn=>after.push(fn),diagnostic:value=>messages.push(JSON.parse(value))};
  const connection={query:async()=>[[]],execute:async()=>[{affectedRows:1}],async beginTransaction(){},async commit(){},async rollback(){},release(){},destroy(){}};
