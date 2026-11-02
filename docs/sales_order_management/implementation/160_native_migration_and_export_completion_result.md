@@ -3,6 +3,16 @@
 Status: scoped developer verification completed; full Phase verification remains in progress. This is neither formal Technical Acceptance nor UAT/release approval.
 
 
+
+Current functional publication checkpoint (2026-11-02): actual Sam DEC050 A
+confirmed; DESIGN7630ff65 and mechanical-reference PLAN452d1b1f verified by
+independent R5 d2d5fc22, all319 old approval objects preserved. PLAN_READY
+LOCAL_CHECKS_PASS. Main b7886a85 integrated, NFR routing disabled before UAT.
+Final130-input receipt920dae9c activated by the independent CI administrator;
+root read-only GitHub verification returned true. Current functional CI,
+coverage, final Phase review/task completion and merge are still pending;
+older snapshots below retain their original identities and are not fresh PASS.
+
 ## Current delivery order — Sam instruction verified 2026-11-02
 
 Sam's actual project-manager message `01a19a65-0902-74f1-b684-0fcb40f9f5e7`

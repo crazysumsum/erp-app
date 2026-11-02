@@ -1,0 +1,1592 @@
+{
+  "version": 1,
+  "decision": "Sam's actual DEC047R2 C (PM human01a18b64-3404-7fc2-8660-569b8f76099e), DEC048 direct call2d795b5eaa5d411ea157708aa58b0ca0, DEC049R2 direct call16331e9c24774bf1810a3b286d2095bf, HD026A actualFulfillment call1eabb1e0dd7e4a659c9a18fd64db8b17, global PM human01a19a65-0902-74f1-b684-0fcb40f9f5e7 allNFRpostUAT policy, and current direct DEC050A call61ba7634a0ef492cb894790afeebe046 binding. Reuse only these actual approved scopes; no new cases/scale/UAT approval. Independent administrator must verify actual decisions and exact whole blobs and activate the digest; this file cannot grant admission.",
+  "purpose": "Candidate functional correctness, permission, transaction atomicity, idempotency and failure recovery; four explicitly admitted schema regression additions. HD026 replaces existing rollback assertions; original other Sales cases/fixtures retained. Isolate unchanged250k Export/manual capacities from routine discovery; preserve original SLOs and deferred owner obligations.",
+  "data": "Existing reviewed small synthetic functional fixtures and necessary500/5000 page boundary regressions retained. No data/concurrency/sample increases. All catalogued and manual nonfunctional workloads retained unchanged but deferred until related functional UAT. Original1m/5m/25m data not rebuilt; noDR.",
+  "concurrency": "Original four server shards; one test worker per shard; existing small two-connection correctness races and Playwright workers1; no new job/worker/load.",
+  "repetitions": "One previously authorized current-candidate functional CI batch; no additional benchmark execution or automatic capacity retry. Existing actual valid evidence keeps original identity.",
+  "thresholds": "All original assertions and coverage floors92/83/90 and39per-file floors preserved. Four schema cases fromDEC049R2. FullExport original250000rows/twoSorts/30s and manual largeNFR retained forpostUAT; not a currentPASSclaim.",
+  "trigger": "Trusted admitted current-candidate functional CI using main PR318 central routine exclusions; all local/CI NFR only after related functional UAT with separate external per-case grant, no NFR execution authorized by this receipt.",
+  "cost": "Functional CI not measured on this candidate; originalDEC049R2 fullCI estimate25-50min included now-deferred NFR and is not a current-duration claim. Four schema regressions prior estimate5-30sec; existing35DBfakefunctional actual0.744sec without instrumentation. No unapproved load executed for estimation.",
+  "files": [
+    {
+      "path": ".github/scripts/sales-import-capacity.mjs",
+      "mode": "100644",
+      "blob": "007e2494f98c719cc578276bedaf6a50496c1408",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/sales-import-capacity.test.mjs",
+      "mode": "100644",
+      "blob": "7ee5b4f8827b6c83c5548e506f6d702a52fe454b",
+      "kind": "functional",
+      "cases": [
+        "scheduled/manual checks without a baseline never request capacity",
+        "Sales workload changes and actual shared dependencies select capacity",
+        "unrelated UI, prose and independent modules do not select Sales or Fulfillment",
+        "the fixed check accepts capacity PASS or explicitly inapplicable capacity",
+        "failure, cancellation, missing results and unexpected skips block the fixed check",
+        "real PR and push diffs preserve rename paths; unavailable history blocks execution"
+      ]
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "blob": "383e28aeaa84c1c9cd5599939aaeb1cf73336afb",
+      "kind": "support"
+    },
+    {
+      "path": "client/e2e/sales-order-management/sales-phase1.spec.js",
+      "mode": "100644",
+      "blob": "d45fdb2e59d62e8306b7a6fff9e45bebaff72a46",
+      "kind": "functional",
+      "cases": [
+        "TC-019 Manual Draft create validates input and focuses duplicate SKU/UOM",
+        "TC-019 Manual edit preserves stale inputs and replays one immutable uncertain intent",
+        "TC-019 Barcode, zero price and current master validation remain operable",
+        "TC-019 Issued quotation converts an edited complete Draft SO and links both directions",
+        "TC-019 Quotation read actions, validation and browser print reflect server state",
+        "TC-019 Active list retains exact filters and server pagination across refresh",
+        "TC-019 Viewer reads snapshots/current masters and cannot open Draft writes",
+        "TC-019 Mobile form/detail, dirty route guard and explicit missing Active result"
+      ]
+    },
+    {
+      "path": "client/src/framework/layout/AppTopbar.vue",
+      "mode": "100644",
+      "blob": "ad191e2d5ee1061a037eb8e89e48a293a1891fec",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesImportDetailPage.vue",
+      "mode": "100644",
+      "blob": "b709f74739305cb456f3569967a7488f5f06445c",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesImportExceptionsPage.vue",
+      "mode": "100644",
+      "blob": "1f9fa866fa86f15facb18f17c996a4ac2bbfd321",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesOrderDetailPage.vue",
+      "mode": "100644",
+      "blob": "1a088026ea2d3b390335f179d08170b08f1c12ab",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesOrdersPage.vue",
+      "mode": "100644",
+      "blob": "82d99dfabb6341cab206ced2358b9214e06b43e2",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesQuotationDetailPage.vue",
+      "mode": "100644",
+      "blob": "da6a58f6ba3cc4f433d84ce061820b4a710ca402",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesQuotationEditPage.vue",
+      "mode": "100644",
+      "blob": "4a8b0fe2e430a9d2d494c26c4c694b2a54da30f4",
+      "kind": "support"
+    },
+    {
+      "path": "docs/fulfillment_shipping_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "4e196d3d8a5d9831435760dc133504780448a262",
+      "kind": "support"
+    },
+    {
+      "path": "docs/sales_order_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "6ef4d72cab5ce98ba3a8bf60a72569538e4f747e",
+      "kind": "support"
+    },
+    {
+      "path": "docs/sales_order_management/00_project_profile.json",
+      "mode": "100644",
+      "blob": "e937b43779e5a837794cc6c8c951c31e1a9f92f4",
+      "kind": "support"
+    },
+    {
+      "path": "server/config/scheduler.js",
+      "mode": "100644",
+      "blob": "9847806200074770ec49f580d58ca0030f6e1ba1",
+      "kind": "support"
+    },
+    {
+      "path": "server/package.json",
+      "mode": "100644",
+      "blob": "6b05fd9036e2dbe1e8b5b92f438c5b81d55ad0c2",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/applicationFactory.test.js",
+      "mode": "100644",
+      "blob": "7dba41a5ae1a318d6ed51db32588acff5015005c",
+      "kind": "functional",
+      "cases": [
+        "application factory validates configuration before creating the MySQL database pool",
+        "application factory shuts down container services when setup fails",
+        "application factory builds a startable and stoppable API with injected resources",
+        "responses that short-circuit the request still carry CORS headers",
+        "the application factory does not itself require the scheduler",
+        "business handlers and auth strategies are auto-discovered from implementations",
+        "application creation fails and cleans up when an eager service cannot initialize",
+        "TC-007 application startup rejects invalid Sales config before creating the database pool"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentArchiveMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "9619d08340e4122e8a2549c8c50f5bd5f5629125",
+      "kind": "functional",
+      "cases": [
+        "P0 Audit/Export and all12 Archive mirrors rerun with exact column parity and only Sales batch FKs",
+        "P0 Audit rejects secret/unknown/nested payloads and is append-only",
+        "P0 Export persists safe owner-bound intent and refuses paths, unsafe filters and reassignment",
+        "P0 actual low-privilege DML account cannot mutate Audit or any12 mirrors and cannot alter/drop schema",
+        "P0 Export completion requires private basename/hash/expiry and terminal result is immutable",
+        "P0 partial Audit/Archive and exact Sales manifest foundation resume; weakened safe-JSON CHECK refuses",
+        "P0 all mirrors retain ordinary historical IDs/generated values and mandatory Warehouse/date indexes",
+        "DEC029 full real current Archive schema readiness reads only and never installs or repairs",
+        "DEC029 pre-owner schema is missing rather than an empty CLOSED owner",
+        "DEC029 full physical tables with a missing installed migration version refuse readiness",
+        "DEC029 missing ledger cannot be inferred from matching physical tables",
+        "DEC029 changed durable operation column type is incompatible rather than silently accepted",
+        "DEC029 missing immutable operation traversal index is incompatible without runtime auto-repair",
+        "DEC029 grouping-weakened operation progress CHECK cannot reuse a flat-token match",
+        "DEC029 missing immutable mirror protection is incompatible without restoring a trigger",
+        "DEC029 physical partial mirror installation is missing despite a complete ledger",
+        "DEC029 unavailable metadata executor never returns a ready result"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesImportPrecheck.integration.test.js",
+      "mode": "100644",
+      "blob": "89df4b86f45dbcb0f7f349aabe0ede6629280cdc",
+      "kind": "mixed",
+      "cases": [
+        "TC-035 owner precheck batches resolve actual DB collation and preserve missing/inactive without business writes",
+        "TC-035 real owner precheck batches isolate invalid sources and duplicate routing without SO or reservation effects",
+        "HD-014 Customer batch precheck cannot authorize intake after Customer block or credit hold",
+        "TC-035 configured persistence batches above100 classify bounded groups and release the next valid job",
+        "TC-035 real registered worker persists bounded partial precheck, resumes original children and has zero business effects",
+        "TC-035 registered worker refuses revoked actor and malformed whole file admits no child",
+        "TC-035 a revoked oldest uploader cannot starve the next authorized job",
+        "TC-035 lost ingestion COMMIT acknowledgement resumes exact persisted source events once",
+        "TC-035 actual Scheduler stop aborts child persistence and expired business claim resumes on a new registered worker",
+        "TC-035 provider failure and changed runtime signal preserve recoverable original children without invalidating peers",
+        "TC-035 bounded SQL chunks roll back the entire configured persistence batch and retry without child effects",
+        "TC-035 bounded errors roll back and committed replay preserves200-error sentinel with mixed existing/new groups",
+        "TC-035 real registered worker completes bounded50MiB/100000-row ingestion inside its unchanged30-second deadline",
+        "TC-036 actual Import read APIs paginate safe summaries and enforce child-parent ownership for view-only users",
+        "TC-039 native Import controls enforce CAS, event replay/races, rollback and fresh HTTP cache authorization",
+        "TC-037 native result stream neutralizes source/error cells and denies missing, symlink, traversal and purged artifacts",
+        "TC-037 actual HTTP result downloads safe CSV for view-only actor and reports purge410",
+        "TC-037 native lost control COMMIT acknowledgement replays original domain event once and mandatory precheck audit rolls back",
+        "TC-038 actual registered Intake converts CSV with import-only actor atomically, replays and resolves lost COMMIT acknowledgement",
+        "TC-038 lost Intake COMMIT acknowledgement reads original event and cannot create another order",
+        "TC-038 business failure leaves no partial Sales/Inventory/key/op and technical failure retries the original event",
+        "TC-038 required audit failure rolls back Intake and same-event technical retry succeeds",
+        "TC-038 real concurrent duplicate storm creates one SO and preserves source/channel separation and conflict warnings",
+        "TC-038 queued and cached Intake require fresh original import authority; source hash collision alerts and leaves no effects",
+        "TC-038 changed live running signal after Draft aborts all effects and a fresh run retains the original event",
+        "TC-038 Inventory contract mismatch after real reservations rolls back the full Intake aggregate",
+        "TC-038 original Job claim expiring after real confirmation rolls back every effect before commit",
+        "TC-038 server-verified synthetic Channel converts atomically and duplicate identity survives terminal replay",
+        "TC-038 registered processing worker bounds batches, isolates failed peers and publishes truthful private terminal CSV once",
+        "TC-038 processing publication refuses0755 root and batch without marking a completed Job",
+        "TC-038 technical processing deferral preserves original event and lets its peer succeed before retry",
+        "TC-038 actual processing worker resolves lost Intake COMMIT acknowledgement from original facts",
+        "TC-038 completed audit failure after atomic result rename remains recoverable without repeating source effects",
+        "TC-038 actual SIGKILL and explicit owned lease expiry recover original sources and partial result temporary",
+        "TC-038 processing summary accounts for duplicates discovered after confirmation from terminal child facts",
+        "TC-038 processing revocation between source commits halts remaining effects and cached completed facts until fresh authority returns",
+        "TC-038 actual Scheduler stop preserves the claimed remaining sources and fresh expired-claim recovery",
+        "TC-040 real canonical Channel admission uses trusted context, same-key immutable original event and actual shared worker",
+        "TC-040 Channel business validation persists safe exception while dependency failure and lost acknowledgement retry original admission",
+        "TC-040 raw canonical source above128KiB admits its small merged document with truthful normalized line count",
+        "TC-040 concurrent Channel admission converges and archived duplicate routing needs no mutable masters",
+        "TC-040 full stored JSON bytecount over128KiB creates a bounded validation exception rather than endless technical retries",
+        "TC-041 actual handler registry and HTTP reject public Channel intake and status routes",
+        "TC-035 actual CSV archived duplicate retains null Active order ID and archived result routing",
+        "TC-041 actual malformed precheck reaches terminal completion and becomes eligible for file retention",
+        "TC-038 same-currency Draft creation and update cannot invert the master and line-gap locks",
+        "TC-035 identifier controls cannot starve valid peers or the next registered worker job",
+        "TC-060 OBS-T05 native CSV classification, real cooldown retry and terminal reservation counters preserve once-only effects",
+        "TC-060 OBS-T06 native Channel early/persisted validation, replay and successful reservation sources remain distinct"
+      ],
+      "capacityIds": [
+        "audit-14"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "bf21ba5fbb8e9229393f7b24704aac2a02fce86a",
+      "kind": "functional",
+      "cases": [
+        "P0 Shipment migrations rerun with circular owner FK and resume missing triggers",
+        "P0 active Shipment unique permits a new draft after cancellation and forbids terminal Fulfillment reuse",
+        "P0 Reversal effective uniqueness, failed retry and terminal facts are guarded",
+        "P0 two real connections cannot create two effective Shipments or two effective Reversals",
+        "P0 Issue and Reversal details bind actual Inventory facts, reject drift and permit only one reversal pointer",
+        "P0 Shipment retains a fully short-picked zero line alongside a positive line",
+        "P0 Line Confirm snapshots can freeze under SHIPPING and cannot change after success",
+        "P0 optional Contact has an exact paired non-null positive version",
+        "P0 actual Issue under another durable confirmation event cannot project into the Shipment",
+        "P0 processing Shipment inputs and terminal snapshots are frozen while Confirm snapshots remain writable",
+        "P0 partial Shipment install resumes and rejects generated-expression or circular-FK drift",
+        "P0 circular Shipment pointer rejects another Fulfillment owner and a weakened FK definition"
+      ]
+    },
+    {
+      "path": "server/test/mysqlDatabaseFailureModes.test.js",
+      "mode": "100644",
+      "blob": "e0200f1b2c3bdb91e2575370b6c4368f088f81b6",
+      "kind": "functional",
+      "cases": [
+        "an unsupported isolation level is rejected before any SQL is issued",
+        "the four standard isolation levels are accepted and interpolated verbatim",
+        "a connection destroyed on abort is never released back to the pool",
+        "a destroy that itself fails is logged rather than swallowed",
+        "a transaction whose parent request is already aborted never begins",
+        "a rollback failure is logged and the original error still surfaces",
+        "an error thrown by the callback itself is wrapped, not leaked raw",
+        "an ApplicationError from the callback passes through unchanged",
+        "the service rejects malformed calls before touching the database",
+        "a query is refused when its signal is already aborted",
+        "the service refuses to be constructed without a pool or a context",
+        "shutdown closes the pool once and tolerates being called again"
+      ]
+    },
+    {
+      "path": "server/test/mysqlDatabaseService.test.js",
+      "mode": "100644",
+      "blob": "4389cf950356b987357ba818727d7261cd2fc4f4",
+      "kind": "functional",
+      "cases": [
+        "MySQL database service verifies connectivity during initialization",
+        "MySQL database service rejects an invalid initialization health result",
+        "MySQL database service applies query timeouts and parameterized execution",
+        "MySQL database service commits successful transactions and releases connections",
+        "MySQL database service rolls back failed transactions",
+        "transaction queries automatically inherit the transaction timeout signal",
+        "a commit slower than the deadline is cut off, and no rollback chases it",
+        "a commit that fits inside the deadline still commits normally",
+        "transaction abort destroys a connection with unfinished database work"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase1/SalesBusinessMasterImpactChecker.test.js",
+      "mode": "100644",
+      "blob": "e492a33df9c7ed0de2ece8fafb6bee71bfe097c2",
+      "kind": "functional",
+      "cases": [
+        "Sales impact classifies all persisted document statuses and exposes only aggregate counts",
+        "Sales impact empty installation is READY; absence and partial active/archive schemas stay distinct",
+        "TC-047 Sales impact counts immutable Archive as historical with bound Currency and Payment Term keys",
+        "TC-047 Sales Archive watermark tracks historical references and rejects nonterminal Archive facts",
+        "Sales impact validates keys, status and arithmetic; Payment Term uses bound IDs",
+        "Sales impact watermark changes when references or versions change and database errors fail closed"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase2/SalesBackorderJob.test.js",
+      "mode": "100644",
+      "blob": "9ec6533e063cdd45e4ad01267037f60533e1adca",
+      "kind": "functional",
+      "cases": [
+        "TC-027 Backorder registration binds fixed cluster job and live reserve-only principal; disabled/stopped/unregistered/aborted fail closed",
+        "TC-027 Manual wake uses the actual registered enabled Scheduler execute path and reports no immediate allocation promise"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase2/salesConfirmationHandlers.test.js",
+      "mode": "100644",
+      "blob": "28f9c11f08df9c935302cdf56dfe4c6e8c003663",
+      "kind": "functional",
+      "cases": [
+        "TC-022 confirm body preserves types and rejects authoritative/surplus fields",
+        "TC-022 confirm and by-event handlers declare exact namespace, write authorization and bounded response contracts",
+        "TC-022 confirm 202 sets Retry-After, retains original event, and fresh preflight precedes framework replay"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase3/SalesFileRetentionJob.test.js",
+      "mode": "100644",
+      "blob": "345199f78d8a003588cb3ac00a6bf7046cb213f7",
+      "kind": "functional",
+      "cases": [
+        "TC-041 retention refuses missing actual running signal before SQL or files",
+        "TC-041 retention deletes only owned source/result and clears payload without deleting structured facts",
+        "TC-041 retention preserves symlink target and marker on unsafe path",
+        "TC-041 retention tolerates missing artifacts after interrupted deletion",
+        "TC-041 expired DB lease preserves all files and payload"
+      ]
+    },
+    {
+      "path": "server/test/sales/salesConfig.test.js",
+      "mode": "100644",
+      "blob": "d4d21963aa48261c969223f8ea082e12d5dc8559",
+      "kind": "functional",
+      "cases": [
+        "TC-007 Sales deployment config rejects invalid limits and timeout relationships",
+        "TC-009 Sales error catalogue exposes stable codes and only safe field metadata",
+        "TC-035 import channel catalogue is deployment-owned, bounded, unique and defaults closed"
+      ]
+    },
+    {
+      "path": "server/test/serviceContainer.test.js",
+      "mode": "100644",
+      "blob": "3eb766bb55a0d1d9dcbbef8fdf16a765009fec55",
+      "kind": "functional",
+      "cases": [
+        "service container initializes singleton dependencies once and shuts down in reverse order",
+        "service container rejects missing and circular dependencies",
+        "service discovery finds the built-in public services",
+        "service discovery rejects duplicate service names",
+        "service container rolls initialized services back when startup fails",
+        "request and transient services remain isolated inside service scopes",
+        "service resolution automatically uses the active asynchronous request scope",
+        "${lifecycle} services initialized after scope shutdown are closed instead of tracked",
+        "singleton services reject request-scoped dependencies",
+        "production modules do not directly construct container-owned public services"
+      ]
+    },
+    {
+      "path": "client/e2e/sales-order-management/playwright.archive.config.js",
+      "mode": "100644",
+      "blob": "07c0530951afade9bc13a363c03d4324fe0019e2",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "client/e2e/sales-order-management/playwright.phase4.config.js",
+      "mode": "100644",
+      "blob": "300136c27d4c54ed6ddeca38af168e8fb5250052",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "client/e2e/sales-order-management/sales-archive.spec.js",
+      "mode": "100644",
+      "blob": "1e4f8ab10e98cd0229db556fc5136eaca8540fd2",
+      "kind": "functional",
+      "cases": [
+        "TC-050 real Archive empty and invalid date filters never send unbounded queries",
+        "TC-050 real Archive search detail audit refresh and Active navigation stay read-only",
+        "TC-050 real Archive shows an empty result separately from a transport failure and retries",
+        "TC-050 real Archive revoked audit permission fails closed",
+        "TC-050 real Archive responsive layouts and keyboard search",
+        "TC-050 retained Quotation target navigates to historical Archive and refreshes",
+        "TC-050 retained CSV detail and exceptions link to historical Archive"
+      ]
+    },
+    {
+      "path": "client/e2e/sales-order-management/sales-phase4.spec.js",
+      "mode": "100644",
+      "blob": "3b78525c2fe4ddee500b64742fafd6c1ae4bcf94",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Outstanding actual quantities, pagination and view-only actions",
+        "TC-044 exact number search persists after refresh",
+        "TC-044 empty result and keyboard reset",
+        "TC-044 Draft is excluded from Outstanding",
+        "TC-044 common mine binds the actual viewer identity",
+        "TC-044 Backorder filter applies on the server",
+        "TC-046 source, timeline and Audit are actual bounded safe detail",
+        "TC-044 missing Active ID has generic Archive link and no automatic probe",
+        "TC-046 Audit permission revocation gives actual403 and a retry state",
+        "TC-044 detail text is escaped and navigation reaches Outstanding",
+        "TC-044 inquiry responsive widths and keyboard action",
+        "TC-044 unauthorized direct inquiry redirects to login",
+        "TC-045 Active export snapshots real applied filters and downloads server CSV end-to-end",
+        "TC-045 Archive rejects unbounded/overlong range and exports only bounded Archive",
+        "TC-045 owner-only list and expired/failed states never offer download",
+        "TC-045 Export actual permission revocation has visible retry and no private data",
+        "TC-045 Export and Archive remain usable at320px through1440px",
+        "TC-045 cancelling a snapshot uses the newly applied Active filters",
+        "TC-045 leaving Jobs cancels actual scheduled polling"
+      ]
+    },
+    {
+      "path": "client/src/components/sales/SalesExportButton.vue",
+      "mode": "100644",
+      "blob": "d8c9664dafe4459038cdd1cdce8ec0760609b116",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/components/sales/SalesOrderSourcePanel.vue",
+      "mode": "100644",
+      "blob": "be1a20dd2e74025c9b24d3ff9397d122b3fb6497",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/components/sales/SalesOrderStatusTimeline.vue",
+      "mode": "100644",
+      "blob": "9fcaa8f92b44e2cc5b0de408820ea76f4e7d69fc",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/OutstandingSalesOrdersPage.vue",
+      "mode": "100644",
+      "blob": "75ea728d145a52a4217baee27159474fd846fabd",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesArchiveDetailPage.vue",
+      "mode": "100644",
+      "blob": "403241220f2b3ca7a34b37d1a10f6213d234919e",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesArchivePage.vue",
+      "mode": "100644",
+      "blob": "0c0e48744cecdb54bdb56a8f8699dc2033e9528a",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesExportJobsPage.vue",
+      "mode": "100644",
+      "blob": "7dda86d6c729c10239ace2464a7e776dc59d4d81",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/components/sales/phase4/inquiryPanels.test.js",
+      "mode": "100644",
+      "blob": "67f8c37122f5b5353062b843cbb83db162b3cbb2",
+      "kind": "functional",
+      "cases": [
+        "TC-044 source links the actual quotation and escapes external identity",
+        "TC-044 manual source has no invented import or quotation link",
+        "TC-046 timeline preserves safe reasons, actor, versions and truncation warning"
+      ]
+    },
+    {
+      "path": "client/test/pages/sales/phase4/archive.test.js",
+      "mode": "100644",
+      "blob": "4f5a108ad6cc7dd25404d9cab8d559b546cd156e",
+      "kind": "functional",
+      "cases": [
+        "TC-050 empty Archive filters never send a business query",
+        "TC-050 exact Archive search survives URL refresh and links to read-only detail",
+        "TC-050 inverted or oversized date ranges never send an Archive query",
+        "TC-050 Archive error remains an error rather than an empty result",
+        "TC-050 Archive detail uses escaped snapshots and no write actions even for managers",
+        "TC-050 Archive audit is requested on demand for exactly the displayed archived ID",
+        "TC-050 Archive detail errors offer retry and never become empty success",
+        "TC-050 stale actor response cannot refill the next actor's Archive detail",
+        "TC-050 failed Archive audit is announced and receives keyboard focus"
+      ]
+    },
+    {
+      "path": "client/test/pages/sales/phase4/archiveCsv.test.js",
+      "mode": "100644",
+      "blob": "43156ec0899ceb1874b143d6d69915dd07e67f1c",
+      "kind": "functional",
+      "cases": [
+        "TC-050 CSV ${path} links archived result to its historical target",
+        "TC-050 CSV ${path} preserves Active target routing",
+        "TC-050 CSV ${path} never invents a link for missing target identity"
+      ]
+    },
+    {
+      "path": "client/test/pages/sales/phase4/archiveQuotation.test.js",
+      "mode": "100644",
+      "blob": "18b9b2cc9b0a39d1eec85108b12c82fb9de307eb",
+      "kind": "functional",
+      "cases": [
+        "TC-050 archived Quotation conversion links only to Archive",
+        "TC-050 Active Quotation conversion keeps its Active target",
+        "TC-050 conversion result replay shows terminal Archive status and target"
+      ]
+    },
+    {
+      "path": "client/test/pages/sales/phase4/export.test.js",
+      "mode": "100644",
+      "blob": "a03022fb38949c2f2ac3f0d0e98ccab210b99d6a",
+      "kind": "functional",
+      "cases": [
+        "TC-045 Export navigation is view-only and owned empty state is explicit",
+        "TC-045 snapshot freezes displayed filters and retry uses the original event",
+        "TC-045 Archive blocks unbounded and overlong dates before submission",
+        "TC-045 polling aborts hidden/unmount and terminal states do not poll",
+        "TC-045 errors offer retry and failed job shows safe state without download",
+        "TC-045 cancelling an unsent snapshot takes the newly applied filters",
+        "TC-045 same-page actor switch aborts and clears an unresolved export",
+        "TC-045 definite rejection allows corrected filters after returning",
+        "TC-045 uncertain408 retains original Archive retry when current fields become unbounded",
+        "TC-045 stale actor response cannot refill the next actor's Jobs",
+        "TC-045 download410 displays expiry without constructing a local CSV",
+        "TC-045 malformed boolean cannot be silently changed to a different filter"
+      ]
+    },
+    {
+      "path": "client/test/pages/sales/phase4/inquiry.test.js",
+      "mode": "100644",
+      "blob": "24436e9e696872cb7baa655c136f175c7e602a0b",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Outstanding is view-only and uses dedicated summary endpoint and server pagination",
+        "TC-044 common mine view survives reload through URL state",
+        "TC-044 Outstanding has a usable empty state",
+        "TC-044 Outstanding errors offer retry",
+        "TC-044 Active 404 offers a generic Archive link without existence discovery",
+        "TC-044 permission errors do not suggest that an Archive record exists",
+        "TC-046 Audit is loaded on demand and always scoped to the displayed order"
+      ]
+    },
+    {
+      "path": "client/test/services/sales-phase4.test.js",
+      "mode": "100644",
+      "blob": "f263f1f33a97d0df9e90c8955f6e097aa9600082",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Outstanding preserves exact quantities, filters, page and cancellation",
+        "TC-046 Audit drops DataTable search and forwards only requested target/page fields",
+        "TC-045 Export service preserves snapshot/event and streams the server blob"
+      ]
+    },
+    {
+      "path": "docs/fulfillment_shipping_management/10_archive_prerequisite_contract.json",
+      "mode": "100644",
+      "blob": "6fa2c0f4c33236ebf3fbc06ded1a8c22330a88a2",
+      "kind": "support"
+    },
+    {
+      "path": "server/scripts/activateSalesObservations.js",
+      "mode": "100644",
+      "blob": "e48670bfb688bbc0c9059b3348e0a95332bfa67e",
+      "kind": "support"
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/archive.js",
+      "mode": "100644",
+      "blob": "2184083a37e8c4c0cab6588436e24b00defd0938",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/datasetModel.js",
+      "mode": "100644",
+      "blob": "71fb16c3d837a83b7be4877e1b4606a6e295624b",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/datasetModelChecks.capacity.js",
+      "mode": "100644",
+      "blob": "fdade71aab4fbc9daa69fae9c86e7d0585942875",
+      "kind": "manual",
+      "cases": [
+        "DEV P4 dataset model uses Sam-approved one-million Active baseline; other dimensions unchanged",
+        "DEV P4 thousand-order seed block independently has average5/P95of20/max100",
+        "DEV P4 full model has exactly1000000headers and5000000lines with no single-line shortcut",
+        "DEV P4 pilot and partial chunk planning use the same full model",
+        "DEV P4 empty/fractional/unsafe sizes cannot masquerade as a measured dataset"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/export.capacity.js",
+      "mode": "100644",
+      "blob": "38dff81c0033535898ec13a03c64f471dfcc4e78",
+      "kind": "manual",
+      "cases": [
+        "TC-045 Export completes its full 250000-row supported cap within the actual worker and transaction budgets"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/http.js",
+      "mode": "100644",
+      "blob": "defbad104527e4b1bab53548161b1afa04ef2d62",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/indexCapacity.js",
+      "mode": "100644",
+      "blob": "403352f929b2ca5daf418d2afd662de87e28bd82",
+      "kind": "manual",
+      "cases": [
+        "TC-053 DEC042 exact index count and identity samples",
+        "TC-053 DEC042 actual lookup plan uses unique composite index",
+        "TC-053 DEC042 initial and repeated exact reads: exact-read P95 <= original2s",
+        "TC-053 DEC042 unique constraint rejects duplicate and concurrent duplicate insertion"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/indexCapacityFull.capacity.js",
+      "mode": "100644",
+      "blob": "66a192ca8110c07a81658fbdb336a67b43274f49",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/merge.capacity.js",
+      "mode": "100644",
+      "blob": "5e833905c9a06ee1821ed98602edbc8965be0137",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/mixed.js",
+      "mode": "100644",
+      "blob": "dbdf8d3a5e041954fc2bc218f343493b0de15821",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/performance.capacity.js",
+      "mode": "100644",
+      "blob": "629046f53010c7e4624d687c34a43f28bde03358",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/queries.js",
+      "mode": "100644",
+      "blob": "40e20ed6bcddbba5decd287e7ab73a7602bc229b",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test-capacity/sales/phase4/reconcile.js",
+      "mode": "100644",
+      "blob": "fc2507b2642b4ed4b3a4aca9e7be308d9519e309",
+      "kind": "manual",
+      "cases": [
+        "Existing Sales P4 manual capacity dataset/fixture; not a routine registration; only after related functional UAT"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/archiveFactsFixture.js",
+      "mode": "100644",
+      "blob": "97b9efbe2729ea963fa23d4a71a2471fd3e4a232",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/shipmentFixture.js",
+      "mode": "100644",
+      "blob": "bbc5c22447f562190e9269c4e92fa38867cb77fa",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/fulfillmentArchiveContract.test.js",
+      "mode": "100644",
+      "blob": "1c8d7f36e2b16ec0e99fe4972634e5a5ec1f22b1",
+      "kind": "functional",
+      "cases": [
+        "approved Archive commands and complete twelve-table manifests validate without mutation",
+        "Archive identities never coerce numbers, leading zeros or unsafe decimal strings",
+        "Archive timestamps obey the approved epoch bounds without coercion",
+        "manifest requires every owner table count and hash even for an empty aggregate",
+        "Archive rejects mismatched identity, batch, cutoff or manifest version",
+        "unknown keys and payload identity claims cannot enter the participant contract",
+        "validation rejects accessors without executing payload code",
+        "HD019 forward schema keeps Archive DELETE ordinal1 while shifting INSERT/UPDATE guards",
+        "HD019 partial Archive installation permits only the pending DELETE guard, never missing current-history guards"
+      ]
+    },
+    {
+      "path": "server/test/fulfillmentArchiveParticipant.test.js",
+      "mode": "100644",
+      "blob": "a8ec08e5a637ddc121a2691c7078dff7ca1f2d92",
+      "kind": "functional",
+      "cases": [
+        "TC-048 canonical owner row hash is independent of object insertion order",
+        "TC-048 historical UTF-8 snapshot bytes affect the digest",
+        "TC-048 null and empty historical snapshot remain distinct",
+        "TC-048 safe integer values normalize to exact decimal strings",
+        "TC-048 unsafe numeric historical quantities are rejected before hashing",
+        "TC-048 malformed and out-of-range unsigned values cannot acquire a digest",
+        "TC-048 fixed-scale decimal normalization avoids floating-point conversion",
+        "TC-048 decimal overflow, excess scale and Number inputs are rejected",
+        "TC-048 canonical JSON sorts object keys while preserving exact quantity strings",
+        "TC-048 JSON array order is business data and changes the digest",
+        "TC-048 unsafe or non-finite JSON numbers fail closed",
+        "TC-048 DATE normalization rejects invalid dates and Date objects",
+        "TC-048 archive metadata never changes a business-row digest",
+        "TC-048 missing or unexpected business fields are rejected",
+        "TC-049 an empty owner table has the SHA256 empty digest",
+        "TC-049 table digest binds row identities and row content in numeric ID order",
+        "TC-049 unordered or duplicate row identities cannot produce a manifest",
+        "TC-048 finite fractional JSON values retain their value",
+        "owner hash catalogue matches all twelve formal P0 mirror business columns and types"
+      ]
+    },
+    {
+      "path": "server/test/fulfillmentOpenMatter.test.js",
+      "mode": "100644",
+      "blob": "fa6664c7e11fdf053d06afd9b15a1555f53915ec",
+      "kind": "functional",
+      "cases": [
+        "fully observed empty owner state has strict versioned CLOSED",
+        "TC-047 observed ${field} blocks with safe reason",
+        "inconsistent owner state takes precedence over OPEN",
+        "malformed and incomplete observations cannot imply CLOSED",
+        "all actual OPEN reasons are retained once in stable order",
+        "strict ID rejects ${orderId} before querying",
+        "unknown options/unsafe time reject before querying",
+        "transaction sibling rejects an unbound fabricated executor before SQL",
+        "lifecycle preserves numeric orderId ABI and validates every existing command key",
+        "Archive read cannot borrow an arbitrary outer RR snapshot or caller role as authority",
+        "Archive options accessors are rejected without executing caller code"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentArchiveGuards.integration.test.js",
+      "mode": "100644",
+      "blob": "e4490dd325e14ebf9e38fa2ee691f6531ca331f4",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentArchiveLocks.integration.test.js",
+      "mode": "100644",
+      "blob": "584e2d35d812fba0bba58296e39951d4cc90b8af",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentArchiveParticipant.integration.test.js",
+      "mode": "100644",
+      "blob": "93f64f01c4240c38888ea2da1ddab00727bcb433",
+      "kind": "functional",
+      "cases": [
+        "Archive participant rejects bad shape or absent actual private scope before SQL",
+        "DEC029 prepare manifests all12 real owner classes without mutation or Inventory writes",
+        "TC-048 DEC029 all12 copy/readback/route/delete and pointer clearing roll back on a late caller failure",
+        "DEC029 changed complete manifest refuses before owner writes",
+        "DEC029 late mirror insert failure restores every earlier mirror and active class",
+        "DEC029 private authorization lost after final owner delete still rolls back all owner effects",
+        "TC-049 DEC029 complete owner and Sales persisted facts replay without another write or Inventory effect",
+        "DEC029 non-null original Shipment DATE survives exact mirror hashing and native copy",
+        "DEC029 actual bound RR without the private authorizer cannot mutate despite correct scope",
+        "DEC029 unassigned in-progress business intent refuses owner Archive without writes",
+        "DEC029 native mirror readback rejects a valid-shaped wrong row hash before active deletion",
+        "DEC029 foreign-batch preexisting mirrors do not imply replay or permit overwrite",
+        "DEC029 participant copies and explicitly deletes504 mixed owner Audit rows across500 batches before caller rollback",
+        "DEC029 identical ${full?\"full\":\"partial\"} owner mirrors resume missing copy and cleanup without overwrite",
+        "TC-047 DEC029 locked ${table} exact owner retention cutoff is not eligible",
+        "DEC029 durable replay refuses residual polymorphic Active Audit behind archived roots",
+        "DEC029 foreign-order same original mirror ID is an Archive conflict preserving both scopes"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentArchiveRouting.integration.test.js",
+      "mode": "100644",
+      "blob": "5bc57703bf5b31dd7dd4e7d2756549072416c1a7",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentOpenMatter.integration.test.js",
+      "mode": "100644",
+      "blob": "f5123b9eda7e3df4b060b7e4d81d5dab1e7fb8ab",
+      "kind": "functional",
+      "cases": [
+        "TC-047 native missing owner schema never yields CLOSED",
+        "TC-047 real Open Matter, lifecycle and transaction contracts"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentOpenMatterCurrent.integration.test.js",
+      "mode": "100644",
+      "blob": "9fe2a1717d118e95175016b6edbd4c7027eff23c",
+      "kind": "functional",
+      "cases": [
+        "DEC029 pre-owner schema returns UNKNOWN rather than empty CLOSED",
+        "DEC029 current formal schema advisory and actual transaction refusal",
+        "DEC029 all12 real Inventory-backed terminal owner projections are observed read-only",
+        "DEC029 real Inventory-backed active Claim/Allocation and reversing Shipment remain OPEN",
+        "DEC029 mixed-target Audit pagination locks complete global primary IDs in ascending order",
+        "DEC029 non-null native Shipment DATE is observed without locale or Date coercion",
+        "DEC029 fixed lazy adapters use the actual executor but unavailable real job scope cannot authorize mutation"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+      "mode": "100644",
+      "blob": "eed914aac52a253221ddfdd9add22296dd7cf31d",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesArchiveApplication.integration.test.js",
+      "mode": "100644",
+      "blob": "e9e751a872d9d340c723d794f52c92d84bc38248",
+      "kind": "functional",
+      "cases": [
+        "P4 actual registered application Scheduler private Archive native18 state: ${mode}"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesArchiveHash.integration.test.js",
+      "mode": "100644",
+      "blob": "a4978c5802f3ad5c27562c6650741c5185856ac2",
+      "kind": "functional",
+      "cases": [
+        "Sales Archive hash uses real Sales contracts and survives mirror round trips"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesArchiveJoint.integration.test.js",
+      "mode": "100644",
+      "blob": "d321d800b56d6e9f92ce6fb76ae5d059ea286fdf",
+      "kind": "functional",
+      "cases": [
+        "TC-048 real18-class joint transaction ${stage} failure at ${table} preserves the complete aggregate"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesArchiveLocks.integration.test.js",
+      "mode": "100644",
+      "blob": "07c351d7414295f80927fb01195694212f47d9f7",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesArchiveMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "b01bbacf0629acfa9b18ab5e5f9d1f8e6372482c",
+      "kind": "functional",
+      "cases": [
+        "TC-048 Archive batch and manifest persistence reruns, preserves rows and owns permanent unique routes",
+        "TC-048 Archive batch rejects invalid states, unpaired leases and impossible counters",
+        "TC-048 all six Archive mirrors preserve every active column type, default and snapshot without AUTO_INCREMENT",
+        "TC-048 Archive preserves original IDs and historical master identities, and enforces archive aggregate FKs",
+        "TC-048 Archive Backorder accepts only terminal zero-outstanding rows with composite line ownership",
+        "TC-047 native BusinessMaster checker counts Archive history without mutable-master FKs",
+        "TC-048 Archive migration rejects column drift while preserving historical rows",
+        "TC-051 six nonempty Sales mirrors reject native UPDATE/DELETE for ${cohort} without an override",
+        "TC-051 exact partial immutable guards resume and rerun without historical row or trigger changes",
+        "TC-051 forward guard installer refuses ${mode} before any additional protection DDL",
+        "TC-051 parent FK, REPLACE and duplicate UPDATE cannot bypass immutable historical rows",
+        "TASK-059 developer registered Archive rejects ${mode} own immutable guards while Active remains readable",
+        "TASK-059 developer initialized worker rechecks newly introduced foreign guard drift",
+        "TC-049 registered worker ${mode} historical partial hash retries with exact unique counts",
+        "TC-049 registered multi-order settled rollback preserves a committed peer and resumes pending without double counts",
+        "TC-049 registered Archive enforces500 cap and resumes501 actual terminal Orders with full Sales hash evidence",
+        "TASK-063 developer full Fulfillment readiness avoids per-table metadata roundtrips",
+        "TASK-063 developer readiness rechecks new foreign trigger through the same executor",
+        "TASK-063 developer malformed batched metadata cannot acquire a different contract identity"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesArchiveTransaction.integration.test.js",
+      "mode": "100644",
+      "blob": "8dbb31a95c5e7a9ef537ea14a972772c6d80e7d5",
+      "kind": "functional",
+      "cases": [
+        "P4 real Sales and Fulfillment all18 table move commits and replays without Inventory effects",
+        "P4 late Sales manifest failure rolls back all18 classes and Inventory remains unchanged",
+        "P4 real Sales partial identical mirrors recover only complete Active source",
+        "P4 Sales conflicting immutable hash leaves all Active and owner bytes intact",
+        "P4 real CHANNEL routing moves atomically and durable replay refuses a reset route flag",
+        "P4 durable Sales manifest number must match immutable verified archived header",
+        "P4 real QUOTATION conversion archive routing is retained on exact replay",
+        "P4 Sales Audit501 extra rows copy and delete across500 boundaries and late rollback retains all",
+        "P4 Quotation conversion replay holding its row and Archive finish without a root/routing deadlock",
+        "P4 actual authorized Archive refuses ${readTimeMode} private current read time without caller timestamp fallback"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesBackorderOrderIndex.integration.test.js",
+      "mode": "100644",
+      "blob": "117ce09860a98c2167e3fd20fae45d26a840f529",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesExportMigration.integration.test.js",
+      "mode": "100644",
+      "blob": "dde5836aa3a3ef1d42688d55420ef46f4bc20da5",
+      "kind": "functional",
+      "cases": [
+        "TC-045 Export migration creates indexed persistence and reruns without changing rows",
+        "TC-045 Export persistence validates scope, states and paired leases",
+        "TC-045 Export filter JSON is object-only and bounded in UTF-8 bytes",
+        "TC-045 Export owner SET NULL preserves progress, file metadata and expiry",
+        "TC-045 Export migration rejects schema/index/check drift without rewriting facts",
+        "TC-045 old0087 export schema upgrades through the actual runner with original ledger and data unchanged",
+        "TC-045 incompatible old0087 schema fails closed without rewriting its old ledger or rows"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesFulfillmentOwnerJoint.integration.test.js",
+      "mode": "100644",
+      "blob": "e71261dbf21686a4edaa8aa29f6840f46b39a630",
+      "kind": "functional",
+      "cases": [
+        "actual Sales/Item/Inventory allocation then Shipment uses current Inventory CAS while retaining Sales last-sync provenance",
+        "real Inventory posting and all Sales effects roll back on a late Sales audit failure",
+        "overstated Inventory CAS and changed owner receipt cannot produce any joint effect",
+        "actual joint exact replay returns the original result after real reversal and preserves original reserve and consumed allocation",
+        "a version jump cannot conceal changed actual Inventory quantities",
+        "real reallocate, release and allocate again preserve quantities before a Shipment synchronizes Sales to the actual Inventory version",
+        "strict Sales CLAIM last-sync and real Inventory locked current-state projection remain distinct",
+        "real Reverse accepts a fresh reverse-only principal and consumed Reservation with historical inactive Item/SKU",
+        "real F2 neutral CAS and reverse-only historical advisory prepare the original F1 restore without granting proof authority",
+        "a real F2 release after advisory read makes Reverse reject stale CAS atomically; reprepare and persisted-command replay remain valid"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesMetrics.integration.test.js",
+      "mode": "100644",
+      "blob": "1fa7b5be1082a3cc18bc3c92ba1f94b0c965e8d6",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 developer queue gauges read a real confirmation intent without changing domain, job or lease rows",
+        "TASK-062 developer real registered instance metrics job publishes safe gauges and reports native dependency failure",
+        "TASK-062 developer Archive overdue observation follows the last due real window across month and year",
+        "TASK-062 developer synthetic standard-batch projections with absent or future start never become healthy zero",
+        "TASK-062 developer stale or future scheduler diagnostic rows cannot report current healthy recovery",
+        "TASK-062 developer a completed current Archive batch cannot mask an older unresolved batch",
+        "TASK-062 developer real MySql stats publisher seconds timestamp preserves fresh success and failure observations",
+        "TASK-062 developer real Active and Archive inquiry operations expose bounded complete observations",
+        "TASK-062 developer registered metrics publishes actual inquiry baseline window and lifetime without labels",
+        "TASK-062 developer registered query publication failure at ${failAt} retains the complete interval"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesOperationalObservations.integration.test.js",
+      "mode": "100644",
+      "blob": "b870ff619666e162dfe8cfc4ab7681c6029fee2c",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesPhase4.integration.test.js",
+      "mode": "100644",
+      "blob": "cb02d6f42b3e9affb179fdf77d45b475010cb12a",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Outstanding real HTTP excludes Draft and returns committed remaining quantity without row multiplication",
+        "TC-044 Outstanding scalar lookup preserves former EXISTS results for missing, zero and later qualifying lines",
+        "TC-044 common views filter current actor and finalized states with fresh authorization",
+        "TC-046 Audit real HTTP has bounded projection, filters and strict query validation",
+        "TC-046 operation lookup binds exact owner and original write permission without exposing recovery payload",
+        "TC-046 Import upload operation uses original import permission and a safe result identity",
+        "TC-045 actual durable Export scheduler publishes safe CSV and exact quantities",
+        "TC-050 bounded empty Archive export is read-only and never falls back to Active",
+        "TC-045 Export keyset spans pages without truncation or duplicate order headers",
+        "TC-045 Export row cap fails without publishing a truncated CSV",
+        "TC-045 Export rechecks current permission before reading or publishing",
+        "TC-045 Export reconciles an unknown publish commit without removing its completed file",
+        "TC-045 Export rejects unregistered workers before claiming a durable job",
+        "TC-045 Export abort removes attempt files and expired claim recovers through the scheduler",
+        "TC-045 Export stale claim cannot publish or overwrite a successor lease",
+        "TC-050 bounded nonempty Archive Export reads only complete immutable header and line projections",
+        "TC-045 Export HTTP create202/list/status/download enforces owner and fresh permission",
+        "TC-045 Export HTTP expired or unsafe private paths never stream another file",
+        "TC-045 Export HTTP required download Audit failure returns no CSV bytes",
+        "TC-045 Export retention expires files and orphan attempts while keeping durable jobs and one Audit",
+        "TC-045 Export retention refuses unsafe namespace, expired cluster lease and failed Audit before safe retry",
+        "TC-045 Export retention retries a rolled-back marker after physical deletion without losing jobs or duplicating Audit",
+        "TC-045 Export HTTP durable event replay survives transport cache removal and rejects changed payload/actor",
+        "TC-045 Export HTTP underlying concurrent event creates exactly one job without filter-hash dedupe",
+        "TC-045 Export HTTP lost create COMMIT acknowledgement resolves through its durable event",
+        "TC-050 actual Quotation source survives Archive and conversion replay without duplicate Order",
+        "TC-052 registered ${name} native failure isolates peer jobs and terminal Active HTTP commands",
+        "TASK-063 developer real ${lineCount}-line manual prototype reconciles Draft confirmation and cancellation"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesPoolWaitMetrics.integration.test.js",
+      "mode": "100644",
+      "blob": "28399c756eb482ef8b1277305cb01e3d12b4fef2",
+      "kind": "functional",
+      "cases": [
+        "native real queued acquire measures wait until connection admission without extra SQL",
+        "native real timeout releases late capacity and preserves503",
+        "native real abort returns late connection without losing original cancellation"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesReconciliation.integration.test.js",
+      "mode": "100644",
+      "blob": "0e96d5cdadf8120f1c710721aa4bfbc0a11c99c2",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 developer readonly reconciliation uses real Inventory truth for Draft and partial confirmation",
+        "TASK-062 developer actual registered Archive reconciles all eighteen mirrors and retains Inventory and permanent facts",
+        "TASK-062 developer actual Backorder stale cleanup between RR snapshot and root fence does not invent mismatch",
+        "TASK-062 developer permanent key reconciliation finds orphan/null/hash/wrong-store facts without repair",
+        "TASK-062 developer a concurrent native root CAS after the RR snapshot is inconclusive without repair"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/FulfillmentArchiveAdapter.test.js",
+      "mode": "100644",
+      "blob": "d25e41bb0a5cc3725e097b425967bd3b83bf5799",
+      "kind": "functional",
+      "cases": [
+        "formal adapters declare unique existing provider and participant names with no constructor Runtime resolution",
+        "OpenMatter adapter preserves the numeric lifecycle refusal and strict Archive input",
+        "Archive adapter cannot grant authority from service names, caller fields or fabricated executor"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/FulfillmentReadinessMetadata.test.js",
+      "mode": "100644",
+      "blob": "a820905c8ef5cea1fc7ce5633d4a92cd169ae88c",
+      "kind": "functional",
+      "cases": [
+        "readiness batches a known family once and preserves each table's rows",
+        "readiness metadata is fresh on each new probe with the same executor",
+        "unknown metadata SQL keeps its original LIMIT, aggregation and compound semantics",
+        "unknown table and argument shapes delegate without rewriting",
+        "readiness rejects malformed or unknown grouping identities",
+        "recognized trigger ordering projection retains ordinal and row order",
+        "CHECK metadata uses the bounded join plan and preserves each table's checks"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/InventorySalesObservation.test.js",
+      "mode": "100644",
+      "blob": "2b1ac6aac377efc5e2a6148c193865ef92904d1b",
+      "kind": "functional",
+      "cases": [
+        "OBS-F01 Sales metrics cannot borrow arbitrary or human transactions to read Inventory",
+        "OBS-F01 owner rejects unbounded, duplicate and invented-authority observation requests"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/InventorySalesObservationSnapshot.test.js",
+      "mode": "100644",
+      "blob": "e2321d91a83cebd690b1689334a99b9282826d94",
+      "kind": "functional",
+      "cases": [
+        "OBS-F02 genuine framework RR snapshot stays query-only and returns effective min-life, exact eligible-minus-reserved ATP",
+        "OBS-F02 unusable current Item/Base UOM cannot advertise stock that the real Backorder path rejects",
+        "OBS-F02 missing control/warehouse/lots are UNKNOWN and post-read authority revocation rejects the observation"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/PoolWaitMetrics.test.js",
+      "mode": "100644",
+      "blob": "af519d300ebfbb8e93c3cb8918f06bc1390c56a0",
+      "kind": "functional",
+      "cases": [
+        "real acquire boundary exposes in-flight and successful completed wait only",
+        "TC-052 timeout retains503 classification and returns the late connection exactly once",
+        "aborting an acquire preserves original reason and late capacity return",
+        "queue rejection preserves503 mapping with a fixed rejected metric",
+        "a synchronous driver rejection remains the same error object",
+        "histogram storage stays bounded and snapshots cannot mutate live observations"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveBatch.test.js",
+      "mode": "100644",
+      "blob": "c40473e12f955a6fdd9f48bd99f04a61bd66c485",
+      "kind": "functional",
+      "cases": [
+        "monthly Archive window and24 calendar month cutoff use HKT with leap-day clamping",
+        "unregistered Archive worker cannot discover or start a mutation transaction"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveHash.test.js",
+      "mode": "100644",
+      "blob": "02796ea9a26770d5383dc4aa8835792c414e1af8",
+      "kind": "functional",
+      "cases": [
+        "TC-048 history hash uses fixed business-column order with an independently fixed UTF-8 vector",
+        "TC-048 metadata is excluded while every original business value participates",
+        "TC-048 canonical integer strings and safe Numbers identify the same values",
+        "TC-048 exact decimal strings normalize declared scale without floating-point conversion",
+        "TC-048 missing/extra fields and unknown table identities fail before producing a hash",
+        "TC-048 unsafe identities and malformed integer representations fail closed",
+        "TC-048 nullable and empty snapshots remain distinct; no Unicode case normalization",
+        "TC-049 empty table digest is explicit and does not depend on metadata",
+        "TC-049 streamed table digest is ascending numeric ID plus original-row hash and LF",
+        "TC-049 duplicate or unordered IDs are rejected rather than silently sorted",
+        "TC-049 iterator failures propagate without returning a partial successful manifest",
+        "TC-048 exact six-table column catalog is immutable"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveInquiry.test.js",
+      "mode": "100644",
+      "blob": "9b4577c65e945bb2f485ac51bade5da395ad1c14",
+      "kind": "functional",
+      "cases": [
+        "TC-050 Archive query rejects empty/unbounded/partial/oversized dates before SQL",
+        "TC-050 all four Archive APIs are GET-only and require current sales.view",
+        "TC-050 Active External Key never falls through to Archive or Active business tables",
+        "TC-050 missing Archive detail and Audit never read Active or current masters",
+        "TC-050 batch metrics whitelist never exposes cursor/pending order IDs or leases",
+        "TC-050 Archive service rechecks revoked permissions before business queries"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveProtection.test.js",
+      "mode": "100644",
+      "blob": "b4f8486dac167d3363ab166c969a1ff6806d5da0",
+      "kind": "functional",
+      "cases": [
+        "TC-051 six fixed mirror contracts each have immutable UPDATE and DELETE guards without an override",
+        "TC-051 reserved trigger drift is rejected before legacy inspection or any protection DDL",
+        "TC-051 normalization never erases changed whitespace inside a quoted guard message",
+        "TC-051 absent base mirrors cannot be treated as complete protection or receive DDL"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveRouting.test.js",
+      "mode": "100644",
+      "blob": "cef8c1cdedc7f68041f2cd0403b6d16586e8631c",
+      "kind": "functional",
+      "cases": [
+        "TC-050 Quotation retained routing flag selects exactly one tier with no fallback",
+        "TC-050 missing selected Quotation target fails closed rather than repairing routing",
+        "TC-050 conversion operations preserve the safe four-field result for every valid Order state",
+        "TC-050 conversion schema distinguishes Archive target projection from strict safe operation summary"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveRuntime.test.js",
+      "mode": "100644",
+      "blob": "99b406958703592acaeb03fb1ea3b18ececd398f",
+      "kind": "functional",
+      "cases": [
+        "actual SalesJobs denies caller scopes and scheduler lookalikes without creating SQL authority",
+        "Archive caller with omitted signal is rejected before any metadata SQL"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesArchiveTransaction.test.js",
+      "mode": "100644",
+      "blob": "19ad80733e3e90090aa686e5d8e27412e6780caa",
+      "kind": "functional",
+      "cases": [
+        "Sales Archive cannot start a transaction or accept forged authority",
+        "Sales Archive validates own data scope before any SQL or authorizer"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesBackorderOrderIndex.test.js",
+      "mode": "100644",
+      "blob": "da577c89799062a60bfabd5ce4a7d31a08761f19",
+      "kind": "functional",
+      "cases": [
+        "DEF037 order index absence is distinguished from a compatible existing definition",
+        "DEF037 order index rejects missing, reversed and surplus key parts",
+        "DEF037 order index rejects unique, prefix, hidden, functional, descending and non-BTree alternatives",
+        "DEF037 native information-schema casing is normalized by explicit aliases"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesChannelObservationWiring.test.js",
+      "mode": "100644",
+      "blob": "c466a777ce49768ffdc39a4e9334901bb81e57ef",
+      "kind": "functional",
+      "cases": [
+        "OBS-T04 actual Channel entry records early validation and pre-admission dependency retry without SQL or false received/accepted records"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesConfirmationTerminalObservation.test.js",
+      "mode": "100644",
+      "blob": "22dbee551f337c5d3ada3dc36b58ca07de6c69ad",
+      "kind": "functional",
+      "cases": [
+        "OBS-D03 rollback then retry publishes one acknowledged fresh terminal duration including original intent wait; replay adds none",
+        "OBS-D03 unknown terminal commit publishes a fault, never a terminal sample; subsequent durable replay does not invent its completion clock"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesDomainObservations.test.js",
+      "mode": "100644",
+      "blob": "f06633df45f4f42b735f3cc8c88cd9bf6613a459",
+      "kind": "functional",
+      "cases": [
+        "OBS-D01 fixed duration counters preserve success, errors, transaction unknown and rollback without business labels",
+        "OBS-D01 Archive settled outcomes and delayed Confirmation terminal elapsed are recorded without invented clocks or dimensions"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesDomainWiring.test.js",
+      "mode": "100644",
+      "blob": "cf68375f02dcd7b6649f1a12497e9645cea5d5b3",
+      "kind": "functional",
+      "cases": [
+        "OBS-D02 create and convert observations include rejected validation/transaction work without extra SQL or logging",
+        "OBS-D02 central transaction mapping counts real unknown/deadlock/provider-contract errors without changing public codes"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesEngineMetrics.test.js",
+      "mode": "100644",
+      "blob": "60efb7dec11ba320468a972282a7bc4b551e3d2f",
+      "kind": "functional",
+      "cases": [
+        "OBS-E01 engine row count and table-lock picoseconds remain exact while row-lock time is instance-wide milliseconds",
+        "OBS-E01 missing permissions and malformed/overflowed sources are UNKNOWN rather than healthy zero",
+        "OBS-E02 exact Scheduler cancellation signal reaches every query; abort stops follow-up reads and preserves reason"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesExport.test.js",
+      "mode": "100644",
+      "blob": "4439b27f7708ec93d3d93bf450ae9708eeb2c068",
+      "kind": "functional",
+      "cases": [
+        "TC-045 Export accepts only the two approved stores and refuses client file/actor fields",
+        "TC-045 Export snapshots canonical filters without altering the initiating query",
+        "TC-050 Archive export rejects an empty or unrestricted search",
+        "TC-050 Archive export accepts each approved independent bound",
+        "TC-050 Archive export retains the 366-day maximum and calendar validation",
+        "TC-045 Export job uses only its fixed registered cluster lease and actual running signal",
+        "TC-045 Export Audit keeps only allowlisted hashes/counts and rejects payload fields"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesExportApi.test.js",
+      "mode": "100644",
+      "blob": "1d1293b6a98b449424e5db045d567b5dfc31af3b",
+      "kind": "functional",
+      "cases": [
+        "TC-045 Export job list accepts bounded pages and never accepts an owner override",
+        "TC-045 Export HTTP handlers use view permission and create always declares202",
+        "TC-045 Export contracts close filter and safe summary boundaries",
+        "TC-045 Export operation identity contains only id and cannot masquerade as a document"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesInquiry.test.js",
+      "mode": "100644",
+      "blob": "bf773ed1182d7f69e837267d57d2bd15b745d00a",
+      "kind": "functional",
+      "cases": [
+        "TC-046 Audit query rejects unknown filters and sort fragments",
+        "TC-046 Audit pagination and time bounds reject unsafe or inverted values",
+        "TC-044 common order views have an explicit allowlist",
+        "TC-046 Upload operation result exposes only its original safe Import identity",
+        "TC-046 Operation safe results reject unexpected fields, statuses and corrupt identities"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesIntakeRetryObservation.test.js",
+      "mode": "100644",
+      "blob": "cf1f7ea6fca9c60ccc3aca8b30218a2b7be0150e",
+      "kind": "functional",
+      "cases": [
+        "OBS-T07 actual worker second-attempt claim selects its persisted source and reaches business processing exactly once"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesMetrics.test.js",
+      "mode": "100644",
+      "blob": "0d65ad4ffc08c7f569f198391bb906aafb4b32e7",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 developer operational queues with observed healthy readings have no alert",
+        "TASK-062 developer CONFIRMING alert uses strictly more than five minutes and detects broken bindings",
+        "TASK-062 developer Intake queue and standard batch overdue signals are independent",
+        "TASK-062 developer Backorder success older than24h is overdue and missing history stays unknown",
+        "TASK-062 developer repeated recovery failures alert without exposing scheduler lastError",
+        "TASK-062 developer disabled Archive never reports missed window but integrity failures still alert",
+        "TASK-062 developer an unavailable Archive calendar window is unknown rather than healthy or overdue",
+        "TASK-062 developer operational alert context contains fixed safe numbers, no business dimensions",
+        "TASK-062 developer unsafe, negative or missing readings never become a zero healthy metric",
+        "TASK-062 developer incomplete scheduler history cannot prove24h without any cluster success",
+        "TASK-062 developer a pending queue with unknown age never reports healthy",
+        "TASK-062 developer absent recovery history is unknown rather than zero failures",
+        "TASK-062 developer a standard batch without trustworthy start time is unknown, not healthy"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesObservationActivationCommand.test.js",
+      "mode": "100644",
+      "blob": "925ac92c122c73f2c06ef5de7e549d0ed1d213f1",
+      "kind": "functional",
+      "cases": [
+        "OBS-A01 operator command requires explicit CAS epoch and trusted artifact attestation; never implicitly activates",
+        "OBS-A01 bounded owned private regular-file attestation rejects symlinks, shared permissions and invented/missing claims"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesObservationBaseline.test.js",
+      "mode": "100644",
+      "blob": "f0a071cbdae595af15d6b130cbeadf673a3d374c",
+      "kind": "functional",
+      "cases": [
+        "OBS-H03 runtime coverage binding uses source/config bytes and canonical policy rather than a supplied artifact label",
+        "OBS-H03 actual metrics cadence policy changes cannot reuse previous persisted continuity baseline"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesOperationalCoverageBinding.test.js",
+      "mode": "100644",
+      "blob": "d61e6e84fc05d3ce7fe1fd7d5686f9ebbf71eef8",
+      "kind": "functional",
+      "cases": [
+        "OBS-H03 a different same-protocol artifact cannot admit worker or reuse FIFO/provider continuity from retained epoch"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesOperationalMetricsWiring.test.js",
+      "mode": "100644",
+      "blob": "3eb7e979d3c462508072144dacaa08e9fe4c8c55",
+      "kind": "functional",
+      "cases": [
+        "OBS-M01 actual registered metrics invocation overrides legacy stats with complete activated no-success window and reports engine UNKNOWN honestly",
+        "OBS-M01 standalone, replaced registration and aborted calls cannot obtain the Inventory observation principal",
+        "OBS-M02 failed alert publication cannot discard newly observed transaction faults",
+        "OBS-M01 absent principal and omitted signal are rejected before any transaction/query admission",
+        "OBS-M01 real instance-job admission publishes running signal after report returns its first promise"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesOperationalObservations.test.js",
+      "mode": "100644",
+      "blob": "9610f22eb4f8870bf1ceaffc3c04381114e4779e",
+      "kind": "functional",
+      "cases": [
+        "OBS-F02 three qualified five-minute samples spanning10minutes activate a sampled-continuity warning",
+        "OBS-F02 repeated collection/retry inside one cadence cannot manufacture three samples",
+        "OBS-F02 changed oldest demand, no stock, unknown, backwards clock and sampling gap reset persistence",
+        "OBS-P01 elapsed time alone and invalid metadata never manufacture provider persistence",
+        "OBS-H02 inactive, incomplete, mismatched and pending histories remain UNKNOWN",
+        "OBS-H02 only complete activated24h window can establish no observed successful worker",
+        "OBS-F01 malformed or contradictory owner ATP metadata cannot become a positive FIFO observation",
+        "OBS-H02 same protocol but a different actual artifact cannot reuse an activated history epoch"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesOperationalWorkerWiring.test.js",
+      "mode": "100644",
+      "blob": "56bef4ad7525949b8523de4728afd3c8e5cc3abf",
+      "kind": "functional",
+      "cases": [
+        "OBS-W01 durable START precedes domain work and terminal success follows awaited completion log",
+        "OBS-W01 failed START prohibits domain work; deferred/domain failures are recorded before retry",
+        "OBS-W01 aborted execution and unknown terminal commit never forge success or overwrite a potentially committed success",
+        "OBS-W01 omitted signal on a stopped worker cannot enter observation transaction"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesPoolWaitDelivery.test.js",
+      "mode": "100644",
+      "blob": "90ae275dbed68d470c5c9b3c580cd651e45fd779",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 W10 actual SystemLogger writer outage cannot erase later observable capacity failure"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesPoolWaitPublication.test.js",
+      "mode": "100644",
+      "blob": "a1bdef2e6b2a16eec1b892789ea95c53b0d4a9fe",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 W09 publication failure at ${failAt} cannot discard timeout interval"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesPoolWaitWindow.test.js",
+      "mode": "100644",
+      "blob": "61bcdb8a6d66add934e0d9eab2795fb63c1eda33",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 W01 first pool sample is explicitly baseline, not healthy zero",
+        "TASK-062 W02 window deltas use known bucket rank and preserve snapshots",
+        "TASK-062 W03 reset/config/clock discontinuity does not produce negative or old-window data",
+        "TASK-062 W04 empty and overflow windows expose absence and censoring",
+        "TASK-062 W05 malformed snapshots fail closed with bounded safe output",
+        "TASK-062 W06 alerts use observed capacity/threshold counts, not ordinary cancellation"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesQueryObservations.test.js",
+      "mode": "100644",
+      "blob": "4eca5cb08e9d99b47fce92395692fcfa30cbb4c7",
+      "kind": "functional",
+      "cases": [
+        "TASK062 query observations have only six bounded operation labels and exact elapsed thresholds",
+        "TASK062 operation return values and original synchronous or asynchronous errors retain identity",
+        "TASK062 concurrent operation inFlight settles with no query or logging callbacks",
+        "TASK062 operation snapshots are detached and separate database roots never share samples",
+        "TASK062 baseline and empty observation windows expose unknown latency rather than zero health",
+        "TASK062 real window counts every error and computes exact slow rank without lifetime contamination",
+        "TASK062 overflow is censored and restart or non-increasing clocks cannot create a healthy window",
+        "TASK062 inconsistent counters or dynamic labels fail closed rather than publish healthy metrics"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesReconciliation.test.js",
+      "mode": "100644",
+      "blob": "fded8fee23a364bd999c3e5c457d2ec9e37b3f70",
+      "kind": "functional",
+      "cases": [
+        "TASK-062 developer consistent commitments accept Inventory allocation-only version advances",
+        "TASK-062 developer line demand equation detects a mismatch",
+        "TASK-062 developer mapping conservation detects a mismatch",
+        "TASK-062 developer Inventory truth is compared independently from mapping and line summaries",
+        "TASK-062 developer missing Inventory reservation is reported without invented zero truth",
+        "TASK-062 developer orphan outstanding Inventory membership cannot be hidden",
+        "TASK-062 developer Backorder quantity and header count are checked separately",
+        "TASK-062 developer Draft has no commitment equation until confirmation and may retain released Inventory history",
+        "TASK-062 developer stale Inventory version and wrong source line are mismatches",
+        "TASK-062 developer unsafe or negative quantities fail closed rather than round",
+        "TASK-062 developer safe output excludes all input payload and business names",
+        "TASK-062 developer unknown Order status never qualifies as consistent",
+        "TASK-062 developer even released unmapped Inventory history requires a valid version",
+        "TASK-062 developer matching quantities cannot hide a wrong Inventory SKU or Warehouse",
+        "TASK-062 developer equal quantities cannot hide invalid or mismatched Reservation status",
+        "TASK-062 developer line membership and Backorder ownership are reconciled",
+        "TASK-062 developer RELEASED/CANCELLED cannot describe fully consumed zero-release quantities",
+        "TASK-062 developer mapping last-synchronized Inventory version must remain positive"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesTransactionObservations.test.js",
+      "mode": "100644",
+      "blob": "04e02e52a575db62375d21fc4c6aee047ddf5ee4",
+      "kind": "functional",
+      "cases": [
+        "OBS-T01 only acknowledged committed reservation attempts contribute exact quantities; rollback/replay do not",
+        "OBS-T01 unknown commit cannot produce a false successful quantity sample and remains a separate fault/partial-coverage fact",
+        "OBS-T02 successful allocation latency ends after commit acknowledgement and invalid clocks stay unobserved",
+        "OBS-T03 fixed CSV/Channel committed state transitions and early Channel request outcomes stay distinct, bounded and private",
+        "OBS-T08 recovery propagation of the originating error is not a second physical fault, while a new recovery failure is counted"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/archiveApplicationChild.js",
+      "mode": "100644",
+      "blob": "86d1f8c99d87bf6bf2fb99fb32916c1811bc4cdd",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/archiveRoutingFixture.js",
+      "mode": "100644",
+      "blob": "de7cf0a4f19489a0da558a3afb4b0b729345879e",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/exportFixture.js",
+      "mode": "100644",
+      "blob": "1e80978e1e105323f36395db9c53aedc2c149380",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/fulfillmentArchiveFixtures.js",
+      "mode": "100644",
+      "blob": "deed11ae4c0a8799f8227f6bea0c50eaccd29431",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/fulfillmentOwnerFixtures.js",
+      "mode": "100644",
+      "blob": "daba2e2a8877391467162d2026e1cdfc168eca52",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/ownedArchiveExportFixture.js",
+      "mode": "100644",
+      "blob": "a3cf8b21a5ec4de2c7cdfc38e2d757efba693cc6",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/salesArchiveProtectionFixture.js",
+      "mode": "100644",
+      "blob": "3740dd57e36ea1bd7cc329cd30d62798f74d1b59",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/salesMetricsPublicationFixture.js",
+      "mode": "100644",
+      "blob": "1fa3eb61ee15cfe4077c117ba87cc9cf596526d2",
+      "kind": "functional",
+      "cases": [
+        "Existing small functional fixture/configuration shared by the listed Sales regressions; no new test registration"
+      ]
+    },
+    {
+      "path": "server/test/salesArchiveEligibility.test.js",
+      "mode": "100644",
+      "blob": "24f7c7dc6c59e3bace247f93531924eb424f5262",
+      "kind": "functional",
+      "cases": [
+        "TC-047 archive eligibility accepts finalized ${status} only with every observed predicate closed",
+        "archive eligibility rejects ${status}",
+        "archive retention is strict at cutoff plus ${delta} millisecond",
+        "archive retention uses last business update and ignores read/export/report timestamps",
+        "archive eligibility rejects ${field}",
+        "an observed OPEN Fulfillment blocks archive without returning owner-provided detail",
+        "missing/unknown/malformed Fulfillment remains ineligible: ${JSON.stringify(fulfillment)}",
+        "invalid ${field} (${String(value)}) fails closed",
+        "an unavailable local snapshot fails closed",
+        "all observed open reasons are retained in stable order"
+      ]
+    }
+  ]
+}
