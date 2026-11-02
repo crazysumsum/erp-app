@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-02 explicit implementation instruction in project manager chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f; bootstrap of CI admission only.",
+  "purpose": "Block unclassified or unapproved tests and workload changes before routine CI; retain existing capacity routing and all original quality gates.",
+  "data": "Git trees, blob identities and classification receipts. No new application cases or dataset.",
+  "concurrency": "One static admission per candidate. Existing application and capacity worker limits retained.",
+  "repetitions": "One admission per candidate; exact dispatched PR results are reusable.",
+  "thresholds": "Missing approval/classification blocks execution; existing test thresholds and coverage floors preserved.",
+  "trigger": "Trusted PR controller, main pushes, manual and scheduled CI. Capacity runs only on related paths.",
+  "cost": "Static checks before test jobs. First shared CI change selects the 48 existing capacity entries; prior complete candidate ran 28m10s. No new performance scale.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "blob": "92e4066dcb63631b33c15fb2d13858475a1d5966",
+      "kind": "support"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "blob": "c953ff0aa99f99a3eea3240edd0c6fa42281736e",
+      "kind": "support"
+    },
+    {
+      "path": ".github/workflows/pr-admission.yml",
+      "mode": "100644",
+      "blob": "c1c0ca67b17431fe7ebb00fe0cddbb113168acea",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/test-admission.mjs",
+      "mode": "100644",
+      "blob": "e17f26dc4a569ca37f1140fe2bb67081edfde7db",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/capacity-runner.mjs",
+      "mode": "100644",
+      "blob": "53f7d2c41b9f290ed44913304b653dd54e5e3dbb",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/sales-import-capacity.mjs",
+      "mode": "100644",
+      "blob": "b5840d1f6927f7566744585a555708c326999503",
+      "kind": "support"
+    },
+    {
+      "path": "client/vitest.capacity.config.js",
+      "mode": "100644",
+      "blob": "b87d048ea9fc8ffd75033937ac8123e4d47c91f8",
+      "kind": "support"
+    }
+  ]
+}
