@@ -12,7 +12,16 @@ Delivered on 2026-10-30 against main `68a8d00b` (design `d6103ad1`, plan `24a86a
 
 All arithmetic is decimal string in, scaled `BigInt` throughout, string or safe-integer out. Nothing passes through `Number` multiplication or division.
 
-## Assumptions taken — please confirm or correct
+## Owner decisions
+
+Confirmed by Sam on 2026-10-30, after PR #308 merged:
+
+- **HD-009 — amounts are emitted at the Currency scale** (assumption 1 below). HKD `"376.50"`, JPY `"377"`; storage stays `DECIMAL(25,4)`.
+- **HD-010 — amount overflow uses `PURCHASING_INPUT_INVALID` with `field: "lineAmount"` / `"totalAmount"`** (assumption 2 below).
+
+`03_design_spec.md` §2.8 and §5.7 are deliberately not edited for this: a design edit moves the design digest and strands every approval for a fourth time. Both answers are recorded in `00_harness_state.json` and pinned by `TC-002` tests; fold them into §2.8 and §5.7 at the next design revision.
+
+## Assumptions taken
 
 1. **Amounts are emitted at the Currency scale.** `lineAmount` returns `"376.50"` for HKD and `"377"` for JPY, not `"376.5000"`. §2.8 says "API 一律回固定 scale decimal string" without naming the scale. I read it as the Currency scale because a Line Amount is *defined* as rounded to that scale, and §2.8 requires API, CSV and print to share one formatter — printing HKD as `376.5000` would be wrong for users. DB storage is unaffected (`DECIMAL(25,4)` holds either). This is part of `purchasing-receiving-document-contract`, which `accounts-payable` and `reporting` consume, so it is worth a deliberate decision before `TASK-015` exposes it.
 2. **Amount overflow uses `PURCHASING_INPUT_INVALID` with `field: "lineAmount"` / `"totalAmount"`.** §5.7 has no code for it. It is reachable: a quantity under the Base cap times a price under `999999999999999.9999` can exceed `DECIMAL(25,4)`'s 21 integer digits. `PURCHASING_QUANTITY_INVALID` would point the client at a quantity field that is itself valid.
