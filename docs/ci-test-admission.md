@@ -1,7 +1,9 @@
 # Test admission before CI
 
-The initial approved tree is main at `aae9c74444299539a3a5e275f37a5730e88f3378`
-(PR #313). The gate compares the actual candidate Git tree with this fixed tree
+The approved baseline is the verified installation commit
+`942db2650a6c139ed38d33cc3228750a9d2b93a1`. It includes the trusted workflow
+and the same application cases as the audited main at PR #313. Its history
+must remain reachable from main; the installation PR uses a merge commit. The gate compares the actual candidate Git tree with this fixed tree
 for every event, including main, manual and scheduled runs. An unrelated push
 cannot turn a rejected change into an accepted baseline. Old reviewed files
 need no receipt. No database, package installation or test discovery runs in

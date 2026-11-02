@@ -7,9 +7,10 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// The audited main after PR #313. Compare whole trees, including scheduled/manual
+// The verified installation candidate includes the controller AND the PR #313
+// audited workloads. Comparing whole trees, including scheduled/manual
 // runs: a missed or failed run cannot grandfather an unapproved case on main.
-const baseline = "aae9c74444299539a3a5e275f37a5730e88f3378";
+const baseline = "942db2650a6c139ed38d33cc3228750a9d2b93a1";
 const receipts = ".github/test-admissions/";
 const git = (...args) => execFileSync("git", args, { maxBuffer: 64 * 1024 * 1024 });
 const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
