@@ -28,6 +28,8 @@ const scopes = {
   "fulfillment-client": /^client\/(?:package(?:-lock)?\.json|(?:vite|vitest)\.config\.js|config\/|src\/(?:components\/fulfillment\/|pages\/fulfillment\/|services\/fulfillment\.js|framework\/|stores\/session\.js|router\/|locales\/|i18n\/|styles\/))/u
 };
 
+export const capacityScopes = Object.keys(scopes);
+
 // Static imports supplement the dynamic module/provider scopes above. In particular,
 // shared CSV/decimal helpers and test fixtures must not depend on filename guesses.
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -52,6 +54,7 @@ function dependencyFiles(file, seen = new Set()) {
 function knownPath(file) {
   // These namespaces have an explicit owner or are independent test/document assets.
   if (/^(?:docs\/|\.github\/|server\/(?:test\/|test-support\/|scripts\/|database\/|src\/framework\/))/u.test(file)) return true;
+  if (file === "client/vitest.capacity.config.js") return true;
   if (/^client\/(?:test\/|e2e\/|public\/|config\/|src\/(?:pages|components|composables|framework|services|stores|css|assets)\/|(?:package(?:-lock)?\.json|(?:vite|vitest)\.config\.js|index\.html|src\/(?:App\.vue|main\.js))$)/u.test(file)) return true;
   if (/^server\/src\/services\/(?:auth|authorization|context|customerFile|customerImport|deviceBinding|filetype|fulfillment|idempotency|itemImport|itemMedia|logging|mysqldatabase|requestLimiter|salesJobs|scheduler|supplierImport|supplierMetrics|time|tokenRevocation)\//u.test(file)) return true;
   if (/^server\/src\/handlers\/(?:audit|business-master|catalog|customer(?:s|-[a-z-]+)|device|fulfillment(?:s|-queue)|inventory|item(?:s|-[a-z-]+)|permissions|roles|sales(?:-[a-z-]+)?|skus|supplier(?:s|-[a-z-]+)|users?)\//u.test(file) || file === "server/src/handlers/healthHandler.js") return true;
@@ -68,6 +71,7 @@ export function selectCapacity(files) {
     const dependencies = dependenciesByCase.get(entry.id);
     const hits = files.filter(file => runtime.test(file) || file === entry.file || scopes[entry.scope].test(file)
       || dependencies.has(file)
+      || (entry.group === "client" && file === "client/vitest.capacity.config.js")
       || (entry.group !== "client" && serverRuntime.test(file))
       || (nativeScopes.has(entry.scope) && integrationRuntime.test(file))
       || (entry.scope === "upload" && file === "server/src/index.js"));
@@ -116,7 +120,17 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     validateCatalog();
     const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
-    const files = changedFiles(process.env.GITHUB_EVENT_NAME, event);
+    let files;
+    if (process.env.GITHUB_EVENT_NAME === "workflow_dispatch" && event.inputs?.admitted_pr) {
+      const sha = process.env.GITHUB_SHA;
+      assert.match(sha, /^[a-f0-9]{40}$/u);
+      assert.match(event.inputs.admitted_pr, /^[1-9]\d*$/u);
+      assert.equal(process.env.GITHUB_REF, `refs/tags/ci-admitted/pr-${event.inputs.admitted_pr}/${sha}`);
+      const [base, head] = execFileSync("git", ["show", "-s", "--format=%P", sha], { encoding: "utf8" }).trim().split(" ");
+      files = changedFiles("pull_request", { pull_request: { base: { sha: base }, head: { sha: head } } });
+    } else {
+      files = changedFiles(process.env.GITHUB_EVENT_NAME, event);
+    }
     const selected = selectCapacity(files);
     const groups = [...new Set(selected.filter(c => c.group !== "client").map(c => c.group))].sort();
     const outputs = { server_required: groups.length > 0, client_required: selected.some(c => c.group === "client"),

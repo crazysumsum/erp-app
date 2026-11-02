@@ -1,0 +1,123 @@
+name: PR admission controller
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  admit:
+    if: github.event_name == 'pull_request_target' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: admit-pr-${{ github.event.number }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: write
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      # Only base-branch code runs with this token. The merge tree is fetched
+      # as Git objects, never checked out, installed, imported or executed.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Report pending on the PR head
+        run: gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state=pending -f context='Admitted PR CI' -f description='Checking the candidate before tests' --silent
+      - name: Inspect merge tree with trusted base policy and dispatch its immutable SHA
+        env:
+          CI_TEST_ADMISSION_DIGESTS: ${{ vars.CI_TEST_ADMISSION_DIGESTS }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "refs/pull/$PR/merge"
+          candidate=$(git rev-parse FETCH_HEAD)
+          test "$(git show -s --format=%P "$candidate")" = "$BASE_SHA $HEAD_SHA"
+          GITHUB_SHA="$candidate" node .github/scripts/test-admission.mjs --static-only
+          tag="ci-admitted/pr-$PR/$candidate"
+          # A branch can advance between approval and dispatch. Use the exact
+          # reviewed merge commit, including for fork PRs.
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --silent 2>/dev/null; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$tag" -f sha="$candidate" --silent
+          fi
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq .object.sha)" = "$candidate"
+          runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?event=workflow_dispatch&head_sha=$candidate&per_page=100")
+          existing=$(jq -c --arg tag "$tag" '[.workflow_runs[] | select(.head_branch == $tag)][0] // empty' <<< "$runs")
+          if [[ -n "$existing" ]]; then
+            state=$(jq -r 'if .status != "completed" then "pending" elif .conclusion == "success" then "success" else "failure" end' <<< "$existing")
+            url=$(jq -r .html_url <<< "$existing")
+            gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state="$state" -f context='Admitted PR CI' -f description='Reusing this exact admitted candidate run' -f target_url="$url" --silent
+            exit 0
+          fi
+          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$tag" -f admitted_pr="$PR"
+      - name: Block PR if admission or dispatch failed
+        if: failure() || cancelled()
+        run: gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state=failure -f context='Admitted PR CI' -f description='Test admission or dispatch failed' -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --silent
+
+  report:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.event == 'workflow_dispatch' && startsWith(github.event.workflow_run.head_branch, 'ci-admitted/pr-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      statuses: write
+      pull-requests: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.workflow_run.head_branch }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      RESULT: ${{ github.event.workflow_run.conclusion }}
+      RUN_URL: ${{ github.event.workflow_run.html_url }}
+    steps:
+      - name: Report the current immutable candidate result
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^ci-admitted/pr-([1-9][0-9]*)/([0-9a-f]{40})$ ]]
+          pr="${BASH_REMATCH[1]}"
+          test "${BASH_REMATCH[2]}" = "$SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq .object.sha)" = "$SHA"
+          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$SHA" --jq 'if (.parents|length)==2 then .parents[1].sha else error("Not a PR merge") end')
+          if [[ "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq .run_attempt)" != "$ATTEMPT" ]]; then exit 0; fi
+          current=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$pr" --jq '[.state,.head.sha,.merge_commit_sha] | @tsv')
+          if [[ "$current" != "$(printf 'open\t%s\t%s' "$head_sha" "$SHA")" ]]; then
+            echo "Candidate is no longer current; leaving the newer PR status alone."
+            exit 0
+          fi
+          state=failure
+          if [[ "$RESULT" == success ]]; then state=success; fi
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$head_sha" -f state="$state" -f context='Admitted PR CI' -f description="Candidate CI: $RESULT" -f target_url="$RUN_URL" --silent
+
+  cleanup:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.number }}
+    steps:
+      - name: Remove this closed PR's temporary candidate tags
+        run: |
+          set -euo pipefail
+          if [[ "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq .state)" != closed ]]; then exit 0; fi
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/ci-admitted/pr-$PR/" --jq '.[].ref')
+          while IFS= read -r ref; do
+            [[ "$ref" =~ ^refs/tags/ci-admitted/pr-$PR/[0-9a-f]{40}$ ]] || continue
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/${ref#refs/}" --silent
+          done <<< "$refs"
