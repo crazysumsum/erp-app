@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { readShipmentRecoveryActor } from "./shipmentRecoveryActor.js";
 import { assertFulfillmentTransaction } from "./FulfillmentTransactionService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
@@ -22,6 +23,7 @@ export function shipmentPermanentFailureCode(error){return permanent.get(error?.
 
 export class ShipmentFailureReconciliation {
  #sessions=new WeakMap();
+ #inspections=new WeakMap();
  #readAttempt;
  #inventory;
  #sales;
@@ -92,7 +94,35 @@ export class ShipmentFailureReconciliation {
   const proven=await this.#proveAbsence(tx,record);if(!proven)return {state:"UNKNOWN"};
   await this.#readRecovery(tx,token);await this.#operation(tx,record);
   const fresh=await readShipmentRecoveryActor(this.database,tx,key(operation.initiated_by));
-  return {state:"ABSENT",request,actor:fresh.actor,eligible:fresh.eligible,operationId:key(operation.id)};
+  const inspection=Object.freeze({state:"ABSENT",request,actor:fresh.actor,eligible:fresh.eligible,operationId:key(operation.id)});
+  this.#inspections.set(inspection,{record,proven});return inspection;
+ }
+ async #writeFailed(tx,record,{source,snapshot},code){
+  const {request,actor}=record;
+    const at=this.time.nowMs(),details={correlationId:request.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+request.eventId};
+    const [changed]=await tx.execute("UPDATE shipments SET status='DRAFT',confirmation_event_id=NULL,version=version+1,updated_at=?,last_business_updated_at=?,updated_by=? WHERE id=? AND status='SHIPPING' AND version=? AND confirmation_event_id=?",[at,at,actor.id,request.target.id,snapshot.shipment.version,request.eventId]);if(changed.affectedRows!==1)conflict();
+    const [[sequence]]=await tx.query("SELECT COALESCE(MAX(sequence_no),0)+1 AS next FROM shipment_status_history WHERE shipment_id=?",[request.target.id]);if(Number(sequence.next)>4294967295)conflict();
+    await tx.execute("INSERT INTO shipment_status_history (shipment_id,sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id,actor_label,reason,occurred_at) VALUES (?,?,'SHIPPING','DRAFT','CONFIRM_FAIL',?,?,?,?,?,?)",[request.target.id,sequence.next,request.eventId,Number(snapshot.shipment.version)+1,actor.id,actor.username,code,at]);
+    await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'FAILED',?,?,?,?,?,?)",[request.target.id,request.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({status:"DRAFT",version:Number(snapshot.shipment.version)+1,code,outcome:"FAILED"}),at]);
+    const [failed]=await tx.execute("UPDATE fulfillment_operation_requests SET status='FAILED',result_json=NULL,public_error_code=?,public_error_details=?,lease_owner='',lease_expires_at=NULL,next_attempt_at=NULL,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS' AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND event_id=? AND payload_hash=? AND initiated_by=? AND correlation_id=? AND lease_owner=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)",[code,JSON.stringify(details),at,at,(await this.#operation(tx,record)).id,request.target.id,request.eventId,source.scopeHash,actor.id,request.correlationId,request.leaseOwner]);if(failed.affectedRows!==1)conflict();
+    return {state:"FAILED",code,details};
+ }
+ async finalizeRevokedInTransaction(tx,token,inspection){
+  assertFulfillmentTransaction(this.database,tx);const proof=this.#inspections.get(inspection);
+  if(!proof||proof.record.tx!==tx||proof.record.recoveryToken!==token||proof.record.signal.aborted||!this.#readRecovery)conflict();
+  this.#inspections.delete(inspection);
+  const {record,proven}=proof,{request:original}=record;
+  await this.#readRecovery(tx,token);await this.#operation(tx,record);
+  const identity=await readShipmentRecoveryActor(this.database,tx,key(record.actor.id));if(identity.eligible)conflict();
+  const request=freezeShipmentIntent({...original,leaseOwner:randomUUID()}),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),now=Number(clock?.now_ms);
+  if(!Number.isSafeInteger(now)||now<0)conflict();
+  // Only the actual original expired nonce and complete same-transaction zero-effect proof permit this failure-only fence.
+  const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1,next_attempt_at=NULL,updated_at=? WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)) AND attempt_count<4294967295",[request.leaseOwner,now+this.#leaseMs,now,inspection.operationId,request.eventId,request.target.id,identity.actor.id,digest(request),request.correlationId,original.leaseOwner]);
+  if(changed.affectedRows!==1)conflict();
+  const fenced={...record,request,actor:identity.actor,inspectExpired:false};
+  await this.#readRecovery(tx,token);await this.#operation(tx,fenced,{admit:true});
+  const finalIdentity=await readShipmentRecoveryActor(this.database,tx,key(identity.actor.id));if(finalIdentity.eligible)conflict();
+  return this.#writeFailed(tx,fenced,proven,"FULFILLMENT_PERMISSION_DENIED");
  }
  async finalize(token){
   const attempt=this.#readAttempt(token),code=permanent.get(attempt?.errorCode)??null;
@@ -113,13 +143,7 @@ export class ShipmentFailureReconciliation {
    const record={token,attempt,request,actor,tx,signal},proven=await this.#proveAbsence(tx,record);if(!proven)return {state:"UNKNOWN"};
    const {source,snapshot}=proven;
     if(attempt.recoveryToken)await this.#readRecovery(tx,attempt.recoveryToken);await this.#operation(tx,record);const finalActor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation");if(key(finalActor.id)!==source.actorId)conflict();
-    const at=this.time.nowMs(),details={correlationId:request.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+request.eventId};
-    const [changed]=await tx.execute("UPDATE shipments SET status='DRAFT',confirmation_event_id=NULL,version=version+1,updated_at=?,last_business_updated_at=?,updated_by=? WHERE id=? AND status='SHIPPING' AND version=? AND confirmation_event_id=?",[at,at,actor.id,request.target.id,snapshot.shipment.version,request.eventId]);if(changed.affectedRows!==1)conflict();
-    const [[sequence]]=await tx.query("SELECT COALESCE(MAX(sequence_no),0)+1 AS next FROM shipment_status_history WHERE shipment_id=?",[request.target.id]);if(Number(sequence.next)>4294967295)conflict();
-    await tx.execute("INSERT INTO shipment_status_history (shipment_id,sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id,actor_label,reason,occurred_at) VALUES (?,?,'SHIPPING','DRAFT','CONFIRM_FAIL',?,?,?,?,?,?)",[request.target.id,sequence.next,request.eventId,Number(snapshot.shipment.version)+1,actor.id,actor.username,code,at]);
-    await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'FAILED',?,?,?,?,?,?)",[request.target.id,request.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({status:"DRAFT",version:Number(snapshot.shipment.version)+1,code,outcome:"FAILED"}),at]);
-    const [failed]=await tx.execute("UPDATE fulfillment_operation_requests SET status='FAILED',result_json=NULL,public_error_code=?,public_error_details=?,lease_owner='',lease_expires_at=NULL,next_attempt_at=NULL,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS' AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND event_id=? AND payload_hash=? AND initiated_by=? AND correlation_id=? AND lease_owner=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)",[code,JSON.stringify(details),at,at,(await this.#operation(tx,record)).id,request.target.id,request.eventId,source.scopeHash,actor.id,request.correlationId,request.leaseOwner]);if(failed.affectedRows!==1)conflict();
-    return {state:"FAILED",code,details};
+    return this.#writeFailed(tx,record,{source,snapshot},code);
   },{isolationLevel:"READ COMMITTED",signal:entry.signal});}finally{entry.close();}
  }
 }

@@ -45,18 +45,19 @@ export class ShipmentConfirmationService {
   const prepared=await this.database.withTransaction(async(tx,{signal:transactionSignal})=>{
    await this.#recoveryVerifier(tx,token);
    const inspection=await this.#failure.inspectExpiredInTransaction(tx,token,eventId,transactionSignal);
-   // Revoked identities cannot post. Their separately fenced local-only cleanup remains a distinct path.
-   if(inspection.state!=="ABSENT"||!inspection.eligible)return null;
+   if(inspection.state!=="ABSENT")return null;
+   if(!inspection.eligible)return {terminal:await this.#failure.finalizeRevokedInTransaction(tx,token,inspection)};
    const {request:original,actor,operationId}=inspection,request=freezeShipmentIntent({...original,leaseOwner:randomUUID()}),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),now=Number(clock?.now_ms);
    if(!Number.isSafeInteger(now)||now<0)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
    await this.#recoveryVerifier(tx,token);
-   const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1,next_attempt_at=NULL,updated_at=? WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=?) AND attempt_count<10",[request.leaseOwner,now+this.operations.leaseMs,now,operationId,eventId,request.target.id,actor.id,digest(request),request.correlationId,original.leaseOwner,now]);
+   const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1,next_attempt_at=NULL,updated_at=? WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)) AND attempt_count<10",[request.leaseOwner,now+this.operations.leaseMs,now,operationId,eventId,request.target.id,actor.id,digest(request),request.correlationId,original.leaseOwner]);
    if(changed.affectedRows!==1)fail("CONCURRENT_OPERATION");
    const started=Object.freeze(pending({operationId,eventId,correlationId:request.correlationId}));
    this.#pendingRequests.set(started,request);this.#startedActors.set(started,actor);this.#recoveryStarts.set(started,token);this.#leaseBoundaries.set(started,Object.freeze({tx,request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:performance.now()}));
    return {started,actor};
   },{isolationLevel:"READ COMMITTED",signal});
   if(!prepared)return {state:"UNKNOWN"};
+  if(prepared.terminal)return prepared.terminal;
   const {started,actor}=prepared,context=this.database.context;
   if(typeof context?.storage?.run!=="function")fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
   try{

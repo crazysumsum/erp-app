@@ -41,7 +41,7 @@ export class ShipmentConfirmationRecoveryJob extends BaseService {
   if(this.#active||!(signal instanceof AbortSignal)||signal.aborted)unavailable();
   // Reserve the existing bounded cluster-acquire TX/acquisition cost; never restart the Scheduler timeout.
   const token=Object.freeze({});this.#active=true;this.#invocations.set(token,{signal,owner:this.scheduler.owner,deadline:performance.now()+Math.min(120000,this.#job.timeoutMs)-shipmentTransactionBudget(this.database)-this.database.config.acquireTimeoutMs});
-  let processed=0,deferred=0;
+  let processed=0,failed=0,deferred=0;
   try{
    const context=this.database.context;if(typeof context?.storage?.run!=="function")unavailable();
    return await context.storage.run({signal,auth:null,databaseTransaction:null},async()=>{
@@ -52,12 +52,12 @@ export class ShipmentConfirmationRecoveryJob extends BaseService {
    },{isolationLevel:"READ COMMITTED",signal});
    for(const event of events){
     await this.#admit(token);
-    try{const result=await this.#confirmation.recoverExpiredConfirmation(event.event_id,token,{signal});if(result.state==="SUCCEEDED")processed++;else deferred++;}
+    try{const result=await this.#confirmation.recoverExpiredConfirmation(event.event_id,token,{signal});if(result.state==="SUCCEEDED"||result.state==="FAILED"){processed++;if(result.state==="FAILED")failed++;}else deferred++;}
     catch{deferred++;this.#runtime(token);}
    }
-   await this.logger.info("fulfillment.confirmation_recovery_completed","Shipment confirmation recovery batch completed",{processed,deferred});
+   await this.logger.info("fulfillment.confirmation_recovery_completed","Shipment confirmation recovery batch completed",{processed,failed,deferred});
    if(deferred)throw new Error("Shipment confirmation recovery remains pending");
-   return {processed,deferred};
+   return {processed,failed,deferred};
    });
   }finally{this.#invocations.delete(token);this.#active=false;}
  }
