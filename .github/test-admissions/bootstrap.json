@@ -1,7 +1,7 @@
 {
   "version": 1,
   "decision": "Sam's 2026-11-02 explicit implementation instruction in project manager chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f; bootstrap of CI admission only.",
-  "purpose": "Block unclassified or unapproved tests and workload changes before routine CI; retain existing capacity routing and all original quality gates.",
+  "purpose": "Block unapproved workloads before PR execution and reliably publish the existing Test aggregate on the admitted PR head. Includes the correction verified with the installation canary.",
   "data": "Git trees, blob identities and classification receipts. No new application cases or dataset.",
   "concurrency": "One static admission per candidate. Existing application and capacity worker limits retained.",
   "repetitions": "One admission per candidate; exact dispatched PR results are reusable.",
@@ -18,19 +18,19 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "blob": "c953ff0aa99f99a3eea3240edd0c6fa42281736e",
+      "blob": "ff4d891f7a6f91e1808c76b0b378df46d46b5e25",
       "kind": "support"
     },
     {
       "path": ".github/workflows/pr-admission.yml",
       "mode": "100644",
-      "blob": "c1c0ca67b17431fe7ebb00fe0cddbb113168acea",
+      "blob": "c9b6a589509a0da509cc3065995cd34d363b543b",
       "kind": "support"
     },
     {
       "path": ".github/scripts/test-admission.mjs",
       "mode": "100644",
-      "blob": "7c8a3fbff4482ec9eb73b535ba10ea339139231e",
+      "blob": "4b60d852c7ebce9ae53604475f24b8c4e74e8c10",
       "kind": "support"
     },
     {
@@ -49,6 +49,12 @@
       "path": "client/vitest.capacity.config.js",
       "mode": "100644",
       "blob": "b87d048ea9fc8ffd75033937ac8123e4d47c91f8",
+      "kind": "support"
+    },
+    {
+      "path": ".github/workflows/ci-pr-result.yml",
+      "mode": "100644",
+      "blob": "1d6aa97142e921c3a397c8cad00d1de36d037f08",
       "kind": "support"
     }
   ]
