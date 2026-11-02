@@ -102,3 +102,17 @@ Customer 不修改 Sales 產品程式、不退回會使 SELECT-only runtime 失�
 Sales 交付可驗證修復提交／PR及原100行重現、既有 TC-021、未放寬 TC-042、影響回歸的實測結果後，
 Customer 才整合最新 main、重跑完整覆蓋率與同一候選提交的 CI／獨立審查，再考慮 PR244 合併。
 通知或單一案例 PASS 本身不能關閉缺陷／解除阻塞；完整下游整合驗收另保持 BLOCKED。
+
+### Sales 接手紀錄（來源交接後）
+
+Sales已接手triage，本地對照 `sales-order-management:DEF-016` 與 `customer-management:DEF-033001`，HIGH/P1/OPEN。上述來源的「待Sales接手」為原交接時狀態；來源提交2d1e4956完整保留，未合併Customer分支。鎖定入口已位於既有Sales批准範圍；接手不授予新架構、Customer改動或測試豁免。先在既有Sales專用runtime加入100行barrier重現，再依根因提出最小實作修正；未有本地重現或修復結果之前，不宣告修復。
+
+Sales已核對來源診斷腳本、EXPLAIN診斷log及完整coverage log三項原SHA一致，並複製到P4私有證據目錄保留；mysql.log另保存當前shutdown追加後版本，明確不等同原快照。私有receipt為 `phase4-private/customer-def033001-received/receipt.json`，不提交原始log或憑證。上述fullcoverage數字屬Customer來源結果，並非Sales本次執行或對Sales零skip門檻的豁免。
+
+歷史P3合併及CI成功不被改寫，但目前Sales鎖路徑／混合負載資格須重新驗證。修復需100行barrier、原單行TC021、確認／Backorder／lifecycle相關鎖序及原完整TC042，保留原50users與各延遲／失敗門檻；另須依當前候選執行CI／獨立審查。Customer PR244仍BLOCKED；僅接手或單項綠燈不能解除。P4 DEC028的頁首批准與本缺陷處置互不替代。
+
+### Sales 本地修復重驗結果
+
+目前本地DEF016為RETEST，非CLOSED／waived。已在Sales原範圍修正共用lockSalesOrderLines：僅固定使用既有完整line-number唯一索引，保留原predicate／參數／FOR UPDATE／transaction／lock ranks，沒有migration或增加retry。原100行barrier先1FAIL後1PASS，EXPLAIN改為100完整唯一鍵等值範圍；確認／Backorder／lifecycle相關111PASS0FAIL0SKIP。
+
+原完整TC042檔2PASS0FAIL0SKIP：10,000單／50,000行、50使用者、4002前景操作全完成；P95119.992ms<3000，未排除失敗；三排程worker0failures／timeouts，六類對帳差異全0，原50MiB記憶體門檻通過。測試期間來源324a283d不變，最終lint與獨立修復覆核通過，詳見../implementation/102_def016_lock_remediation.md及私有rawSHA56588eb7。仍須整合候選的完整Phase／CI／審查；Customer PR244不得據此單獨解除阻塞，來源Customer缺陷不在本工作關閉。

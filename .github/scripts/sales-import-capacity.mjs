@@ -52,6 +52,10 @@ function dependencyFiles(file, seen = new Set()) {
 }
 
 function knownPath(file) {
+  // Known P4 local assets and disabled Archive adapters have no current catalog workload.
+  if (/^server\/test-capacity\/sales\/phase4\//u.test(file)
+      || /^server\/src\/handlers\/(?:archived-sales-orders|outstanding-sales-orders)\//u.test(file)
+      || file === "server/src/services/fulfillmentArchive/FulfillmentArchiveService.js") return true;
   // These namespaces have an explicit owner or are independent test/document assets.
   if (/^(?:docs\/|\.github\/|server\/(?:test\/|test-support\/|scripts\/|database\/|src\/framework\/))/u.test(file)) return true;
   if (file === "client/vitest.capacity.config.js") return true;

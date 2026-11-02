@@ -25,6 +25,17 @@ export default {
     const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize,q:filter??query.q}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
     return httpClient.get("/api/v1/sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
   },
+  listOutstanding({rowsPerPage,filter,signal,...query}={}) {
+    const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize,q:filter??query.q}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
+    return httpClient.get("/api/v1/outstanding-sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
+  },
+  listAudit({rowsPerPage,filter:_filter,signal,...query}={}) {
+    const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
+    return httpClient.get("/api/v1/sales-audit-logs",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
+  },
+  listArchivedOrders({rowsPerPage,filter:_filter,signal,...query}={}) {const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,v])=>v!==undefined&&v!==null&&v!==""));return httpClient.get("/api/v1/archived-sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));},
+  getArchivedOrder(id,{signal}={}) {return httpClient.get(`/api/v1/archived-sales-orders/${id}`,{signal});},
+  listArchivedAudit(id,{rowsPerPage,filter:_filter,signal,...query}={}) {const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,v])=>v!==undefined&&v!==null&&v!==""));return httpClient.get(`/api/v1/archived-sales-orders/${id}/audit`,{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));},
   createOrder(payload) { return write("/api/v1/sales-orders/create", payload); },
   updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); },
   confirmOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirm`,payload,{signal}); },
@@ -41,5 +52,9 @@ export default {
   confirmImport(id,payload,{signal}={}) {return write(`/api/v1/sales-imports/${id}/confirm`,payload,{signal});},
   cancelImport(id,payload,{signal}={}) {return write(`/api/v1/sales-imports/${id}/cancel`,payload,{signal});},
   downloadImportResult(id,{signal}={}) {return httpClient.getBlob(`/api/v1/sales-imports/${id}/result`,{signal});},
+  createExport(payload,{signal}={}) {return write("/api/v1/sales-exports/create",payload,{signal});},
+  listExports({page=1,rowsPerPage,pageSize=20,signal}={}) {return httpClient.get("/api/v1/sales-exports",{params:{page,pageSize:rowsPerPage??pageSize},signal});},
+  getExport(id,{signal}={}) {return httpClient.get(`/api/v1/sales-exports/${id}`,{signal});},
+  downloadExport(id,{signal}={}) {return httpClient.getBlob(`/api/v1/sales-exports/${id}/download`,{signal});},
   getOperation(eventId,{signal}={}) { return httpClient.get(`/api/v1/sales-operations/by-event/${eventId}`,{signal}); }
 };

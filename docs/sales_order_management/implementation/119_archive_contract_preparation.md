@@ -1,0 +1,27 @@
+# Archive contract preparation against formal P0
+
+Status: partial IMPLEMENT preparation under DEC-029 / HD008; not TASK-057/058/067 completion, full Phase approval or merge readiness. HD012 remains bounded lifecycle readiness NOWAIT; HD013 remains only WITHDRAW/CANCEL/CLOSE_REMAINING READ COMMITTED. Archive has no new isolation/locking exception.
+
+## Observed prerequisites
+
+A source-pinned private snapshot of observed Fulfillment P0 WIP, tested with synthetic nonce schemas in the Sales-owned isolated MySQL, confirmed two prerequisites (2 PASS, zero failure/skip): a real CREATE operation may remain IN_PROGRESS with NULL target and no sales_order_id routing column; copying a business-byte history mirror does not authorize Active history DELETE under current unconditional append-only triggers. This is a diagnostic of missing prerequisites, not a successful Archive operation. Its dummy mirror hash is not a complete or valid manifest. No P0 checkout/runtime, persistent Sales schema or applied migration was modified.
+
+Private snapshot manifest SHA256 8ca13f5741f6928189456dc42f61c948b4800694fafc34572efcf208b46eec4d; raw diagnostic log 62b73bedbf72c94c13bc295786741935ebab4f18d69a0200a40b479ee8f839b6. Private read-only reviewer analysis p4-archive-rr-contract-next-slice-r1-analysis.json SHA256 7f4fedb9d37257a059e1cbd5286822e4fc4c6436029e632310a9e7fe8817c776 identifies the same gaps plus pointer guards, current schema parity, trusted transaction capability and complete operation-before-domain fencing. It is engineering analysis, not human approval or execution proof.
+
+The existing approved contract10 already requires positive Sales order routing for business intents even when target_id is NULL, twelve immutable owner mirrors, same-transaction verified copying/deletion and private real service authority. Formal P0 delivers schema and minimal lifecycle provider only; Archive participant remains the explicitly authorized Sales P4 owner contribution. After actual P0 main integration, new forward protection/routing migrations must preserve applied migration bytes and unknown legacy intents must block Archive rather than receive guessed backfills. Old Sales prototype0091–0093 remain historical withdrawn installers, not formal schema authority.
+
+## This slice
+
+fulfillmentArchiveContract.js implements only exact-shape prepare/expectedManifest/archive command validation from approved contract10: canonical safe decimal IDs without coercion, epoch bounds, all twelve table counts/hashes, exact manifest order/batch/cutoff, archivedAt>=cutoff and no extra identity/authority payload fields. Accessors are rejected without execution. Validation grants no transaction capability and proves neither database eligibility nor persisted effect. No public handler, runtime registration, job, migration, production behavior or provider cutover is added. The future real participant must call these validators; this preparation is not an enabled participant.
+
+Developer sequence: new test RED (module absent), implementation GREEN; after final ID-length-before-regex correction, actual four-file native Node suite (contract, existing owner hash, Sales eligibility and Sales hash) 74 PASS / 0 FAIL / 0 SKIP, raw sales-archive-contract-r2.log SHA256 6b417afedcee8c42951b8249c96b460e94a3a86db7638ec76e4bbfedb37d159c. The owner hash suite still exercises the historical prototype catalogue, so its PASS is not formal P0 column parity. Scoped existing ESLint exit0. No database or browser is exercised by these pure tests. This backend-only slice does not qualify the earlier HD014 UI change or its required integrated Playwright flow.
+
+Source SHA256 51f9ffd587dc083c790a47875242ffcb67e5efd656071c9f5a4711a7a83e75a0; test SHA256 91f38a2792118c4882b51025b0db0847776cb0c3ffe2cb6be914318cb229691a. Raw private artifacts stay outside Git.
+
+## Remaining gates and next dependency
+
+Await formal P0 current native/coverage/CI/review/main, reconcile current main and Customer contract pin/old mode-entry history, then adopt formal schema and remove competing old installers/adapter. Implement forward routing/protection, trusted scheduler transaction scope and prepare-only participant before real single-order atomic copy/readback/routing/delete and recovery. The conditional default-RR operation-first/fresh-first-read solution needs actual two-connection SQL/native proof; it is not yet an implemented or qualified protocol. No Archive RC, late NOWAIT, bypass flag, trigger weakening, fake CLOSED provider, skipped case or Gate waiver is authorized here. All original P4 mandatory checks/capacity/real Playwright/current candidate CI/independent whole-phase review/standard MERGE_READY remain required before the already authorized direct main merge.
+
+## Separate source review
+
+Actual separate reviewer /root/def016_runtime_recovery_review approved this pure contract preparation source only, zero required findings. Private proof sales-archive-contract-r1-reviewer-proof.json SHA256 51dd1878bf24670749fe1c84863764cd404b604149e62bcf2b1002a0df82b9c6 binds exact final source/test/contract10, actual derived design/plan and r2 final-bytes execution. State1291 records this limited review and developer observation while retaining BLOCKED and all historical baselines/approvals/evidence. The initial checkpoint helper used an absent baseline key and exited before writing; the corrected installed Harness CAS recorded revision1291. No task was marked done and no formal acceptance or merge approval was inferred from the engineering review.

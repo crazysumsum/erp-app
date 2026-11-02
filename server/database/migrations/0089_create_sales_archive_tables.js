@@ -1,0 +1,216 @@
+import { createSalesTable, inspectSalesTable } from "./0070_create_sales_quotations.js";
+
+// Explicit mirrors of the immutable0073–0079 column contracts; master/Inventory identities are historical values.
+const CONTRACTS=[
+ {table:"sales_orders_archive",columns:{
+  "id":["bigint unsigned"],
+  "sales_order_number":["varchar(20)",false,null,"ascii_bin"],
+  "status":["varchar(30)",false,null,"ascii_bin"],
+  "source_type":["varchar(20)",false,null,"ascii_bin"],
+  "source_quotation_id":["bigint unsigned",true],
+  "source_intake_order_id":["bigint unsigned",true],
+  "external_order_key_id":["bigint unsigned",true],
+  "channel_code_snapshot":["varchar(50)",false,"","ascii_bin"],
+  "external_order_id_snapshot":["varchar(190)",false,""],
+  "customer_id":["bigint unsigned"],
+  "customer_code_snapshot":["varchar(100)"],
+  "customer_name_snapshot":["varchar(190)"],
+  "currency_code":["char(3)",false,null,"ascii_bin"],
+  "payment_term_id":["bigint unsigned",true],
+  "payment_term_code_snapshot":["varchar(50)",false,""],
+  "payment_term_name_snapshot":["varchar(190)",false,""],
+  "credit_status_snapshot":["varchar(20)",false,"NOT_CONFIGURED","ascii_bin"],
+  "credit_limit_snapshot":["decimal(19,4)",true],
+  "credit_currency_snapshot":["char(3)",true,null,"ascii_bin"],
+  "credit_policy_version_snapshot":["int unsigned",true],
+  "fulfillment_warehouse_id":["bigint unsigned"],
+  "warehouse_code_snapshot":["varchar(100)"],
+  "warehouse_name_snapshot":["varchar(190)"],
+  "order_date":["date"],
+  "requested_delivery_date":["date",true],
+  "customer_po_reference":["varchar(190)",false,""],
+  "notes":["varchar(2000)",false,""],
+  "line_count":["smallint unsigned"],
+  "total_amount":["decimal(19,4)"],
+  "has_backorder":["tinyint(1)",false,"0"],
+  "backorder_line_count":["smallint unsigned",false,"0"],
+  "version":["int unsigned",false,"1"],
+  "confirmation_event_id":["char(36)",true,null,"ascii_bin"],
+  "confirmed_at":["bigint unsigned",true],
+  "cancelled_at":["bigint unsigned",true],
+  "closed_at":["bigint unsigned",true],
+  "confirmed_by":["bigint unsigned",true],
+  "cancelled_by":["bigint unsigned",true],
+  "closed_by":["bigint unsigned",true],
+  "cancel_reason":["varchar(500)",false,""],
+  "close_reason":["varchar(500)",false,""],
+  "created_at":["bigint unsigned"],
+  "updated_at":["bigint unsigned"],
+  "last_business_updated_at":["bigint unsigned"],
+  "created_by":["bigint unsigned",true],
+  "updated_by":["bigint unsigned",true],
+  "archive_batch_id":["bigint unsigned"],
+  "archived_at":["bigint unsigned"],
+  "row_hash":["char(64)",false,null,"ascii_bin"]
+ },indexes:{"PRIMARY":[0,"id"],"uq_sales_ar_order_number":[0,"sales_order_number"],"idx_sales_ar_order_customer":[1,"customer_id,order_date,id"],"idx_sales_ar_order_status":[1,"status,order_date,id"],"idx_sales_ar_order_channel":[1,"channel_code_snapshot,order_date,id"],"idx_sales_ar_order_date":[1,"order_date,id"],"idx_sales_ar_order_batch":[1,"archive_batch_id,id"]},foreignKeys:{"archive_batch_id":["sales_archive_batches","id","RESTRICT"]},checks:{"chk_sales_ar_order_status":"status IN ('DRAFT','CONFIRMING','CONFIRMED','PARTIALLY_FULFILLED','COMPLETED','CANCELLED','CLOSED')","chk_sales_ar_order_source":"source_type IN ('MANUAL','QUOTATION','CSV','CHANNEL')","chk_sales_ar_order_dates":"requested_delivery_date >= order_date","chk_sales_ar_order_values":"line_count BETWEEN 1 AND 100 AND version >= 1 AND total_amount >= 0 AND has_backorder IN (0,1) AND backorder_line_count <= line_count"}},
+ {table:"sales_order_lines_archive",columns:{
+  "id":["bigint unsigned"],
+  "sales_order_id":["bigint unsigned"],
+  "line_no":["smallint unsigned"],
+  "sku_id":["bigint unsigned"],
+  "item_name_snapshot":["varchar(190)"],
+  "sku_code_snapshot":["varchar(190)"],
+  "sku_name_snapshot":["varchar(190)"],
+  "sku_uom_id":["bigint unsigned"],
+  "uom_code_snapshot":["varchar(100)"],
+  "uom_name_snapshot":["varchar(100)"],
+  "to_base_factor_snapshot":["int unsigned"],
+  "tracking_policy_snapshot":["varchar(30)",false,null,"ascii_bin"],
+  "minimum_sale_life_days_snapshot":["int unsigned",false,"0"],
+  "ordered_quantity":["decimal(20,6)"],
+  "ordered_base_quantity":["bigint unsigned"],
+  "unit_selling_price":["decimal(19,4)"],
+  "price_source":["varchar(20)",false,null,"ascii_bin"],
+  "line_amount":["decimal(19,4)"],
+  "reserved_outstanding_base_quantity":["bigint unsigned",false,"0"],
+  "backordered_base_quantity":["bigint unsigned",false,"0"],
+  "fulfilled_base_quantity":["bigint unsigned",false,"0"],
+  "cancelled_base_quantity":["bigint unsigned",false,"0"],
+  "line_note":["varchar(500)",false,""],
+  "version":["int unsigned",false,"1"],
+  "created_at":["bigint unsigned"],
+  "updated_at":["bigint unsigned"],
+  "archive_batch_id":["bigint unsigned"],
+  "archived_at":["bigint unsigned"],
+  "row_hash":["char(64)",false,null,"ascii_bin"]
+ },indexes:{"PRIMARY":[0,"id"],"uq_sales_ar_line_number":[0,"sales_order_id,line_no"],"uq_sales_ar_line_owner":[0,"id,sales_order_id"],"idx_sales_ar_line_sku":[1,"sku_id,sales_order_id,id"]},foreignKeys:{"sales_order_id":["sales_orders_archive","id","CASCADE"],"archive_batch_id":["sales_archive_batches","id","RESTRICT"]},checks:{"chk_sales_ar_order_line_values":"line_no BETWEEN 1 AND 100 AND to_base_factor_snapshot BETWEEN 1 AND 1000000 AND ordered_quantity > 0 AND ordered_base_quantity > 0 AND unit_selling_price >= 0 AND line_amount >= 0 AND version >= 1","chk_sales_ar_order_line_price":"price_source IN ('SUGGESTED','MANUAL','QUOTATION','IMPORT')","chk_sales_ar_order_line_projection":"reserved_outstanding_base_quantity + backordered_base_quantity + fulfilled_base_quantity + cancelled_base_quantity <= ordered_base_quantity"}},
+ {table:"sales_order_line_reservations_archive",columns:{
+  "id":["bigint unsigned"],
+  "sales_order_line_id":["bigint unsigned"],
+  "inventory_reservation_id":["bigint unsigned"],
+  "inventory_operation_id":["bigint unsigned"],
+  "source_event_id":["char(36)",false,null,"ascii_bin"],
+  "original_base_quantity":["bigint unsigned"],
+  "consumed_base_quantity":["bigint unsigned",false,"0"],
+  "released_base_quantity":["bigint unsigned",false,"0"],
+  "outstanding_base_quantity":["bigint unsigned"],
+  "status":["varchar(30)",false,null,"ascii_bin"],
+  "inventory_version":["int unsigned"],
+  "created_at":["bigint unsigned"],
+  "updated_at":["bigint unsigned"],
+  "archive_batch_id":["bigint unsigned"],
+  "archived_at":["bigint unsigned"],
+  "row_hash":["char(64)",false,null,"ascii_bin"]
+ },indexes:{"PRIMARY":[0,"id"],"uq_sales_ar_reservation":[0,"inventory_reservation_id"],"idx_sales_ar_mapping_line":[1,"sales_order_line_id,id"]},foreignKeys:{"sales_order_line_id":["sales_order_lines_archive","id","CASCADE"],"archive_batch_id":["sales_archive_batches","id","RESTRICT"]},checks:{"chk_sales_ar_mapping_quantities":"original_base_quantity > 0 AND original_base_quantity = consumed_base_quantity + released_base_quantity + outstanding_base_quantity","chk_sales_ar_mapping_status":"status IN ('ACTIVE','PARTIALLY_CONSUMED','CONSUMED','RELEASED','CANCELLED')","chk_sales_ar_mapping_version":"inventory_version > 0"}},
+ {table:"sales_backorder_entries_archive",columns:{
+  "id":["bigint unsigned"],
+  "sales_order_id":["bigint unsigned"],
+  "sales_order_line_id":["bigint unsigned"],
+  "line_no":["smallint unsigned"],
+  "warehouse_id":["bigint unsigned"],
+  "sku_id":["bigint unsigned"],
+  "outstanding_base_quantity":["bigint unsigned"],
+  "status":["varchar(20)",false,null,"ascii_bin"],
+  "priority_at":["bigint unsigned"],
+  "last_allocation_event_id":["char(36)",true,null,"ascii_bin"],
+  "next_attempt_at":["bigint unsigned"],
+  "last_attempt_at":["bigint unsigned",true],
+  "attempt_count":["int unsigned",false,"0"],
+  "last_error_code":["varchar(80)",false,"","ascii_bin"],
+  "version":["int unsigned",false,"1"],
+  "created_at":["bigint unsigned"],
+  "updated_at":["bigint unsigned"],
+  "archive_batch_id":["bigint unsigned"],
+  "archived_at":["bigint unsigned"],
+  "row_hash":["char(64)",false,null,"ascii_bin"]
+ },indexes:{"PRIMARY":[0,"id"],"uq_sales_ar_backorder_line":[0,"sales_order_line_id"],"idx_sales_ar_backorder_order":[1,"sales_order_id,id"]},foreignKeys:{"sales_order_line_id":["sales_order_lines_archive","id","CASCADE"],"sales_order_id":["sales_order_lines_archive","sales_order_id","CASCADE"],"archive_batch_id":["sales_archive_batches","id","RESTRICT"]},checks:{"chk_sales_ar_backorder_status":"status IN ('OPEN','FULFILLED','CANCELLED')","chk_sales_ar_backorder_quantity":"(status = 'OPEN') = (outstanding_base_quantity > 0)","chk_sales_ar_backorder_version":"version > 0 AND line_no BETWEEN 1 AND 100","chk_sales_ar_backorder_terminal":"status IN ('FULFILLED','CANCELLED') AND outstanding_base_quantity = 0"}},
+ {table:"sales_order_status_history_archive",columns:{
+  "id":["bigint unsigned"],
+  "sales_order_id":["bigint unsigned"],
+  "sequence_no":["int unsigned"],
+  "from_status":["varchar(30)",true,null,"ascii_bin"],
+  "to_status":["varchar(30)",false,null,"ascii_bin"],
+  "action":["varchar(50)",false,null,"ascii_bin"],
+  "reason":["varchar(500)",false,""],
+  "order_version_after":["int unsigned"],
+  "event_id":["char(36)",false,null,"ascii_bin"],
+  "actor_user_id":["bigint unsigned",true],
+  "actor_label":["varchar(190)"],
+  "occurred_at":["bigint unsigned"],
+  "archive_batch_id":["bigint unsigned"],
+  "archived_at":["bigint unsigned"],
+  "row_hash":["char(64)",false,null,"ascii_bin"]
+ },indexes:{"PRIMARY":[0,"id"],"uq_sales_ar_history_sequence":[0,"sales_order_id,sequence_no"]},foreignKeys:{"sales_order_id":["sales_orders_archive","id","CASCADE"],"archive_batch_id":["sales_archive_batches","id","RESTRICT"]},checks:{"chk_sales_ar_history_values":"sequence_no >= 1 AND order_version_after >= 1"}},
+ {table:"sales_audit_logs_archive",columns:{
+  "id":["bigint unsigned"],
+  "occurred_at":["bigint unsigned"],
+  "actor_user_id":["bigint unsigned",true],
+  "actor_label":["varchar(190)"],
+  "action":["varchar(80)",false,null,"ascii_bin"],
+  "target_type":["varchar(30)",false,null,"ascii_bin"],
+  "target_id":["bigint unsigned",true],
+  "target_number":["varchar(30)",false,""],
+  "outcome":["varchar(20)",false,null,"ascii_bin"],
+  "reason":["varchar(500)",false,""],
+  "details":["json",true],
+  "event_id":["char(36)",false,"","ascii_bin"],
+  "request_id":["varchar(64)",false,"","ascii_bin"],
+  "correlation_id":["varchar(64)",false,"","ascii_bin"],
+  "ip_address":["varchar(45)",false,"","ascii_bin"],
+  "archive_batch_id":["bigint unsigned"],
+  "archived_at":["bigint unsigned"],
+  "row_hash":["char(64)",false,null,"ascii_bin"]
+ },indexes:{"PRIMARY":[0,"id"],"idx_sales_ar_audit_target":[1,"target_type,target_id,occurred_at,id"]},foreignKeys:{"archive_batch_id":["sales_archive_batches","id","RESTRICT"]},checks:{"chk_sales_ar_audit_outcome":"outcome IN ('SUCCESS','FAILED','WARNING')","chk_sales_ar_audit_details":"LENGTH(CAST(details AS CHAR CHARSET utf8mb4)) <= 16384"}}
+];
+
+// Composite ownership prevents an archived queue row from pointing at a different order's line.
+async function inspectArchive(connection,contract) {
+ const present=await inspectSalesTable(connection,contract);
+ if(present&&contract.table==="sales_backorder_entries_archive") {
+  const [keys]=await connection.query(`SELECT constraint_name AS name,column_name AS field,ordinal_position AS position
+   FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND table_name=? AND referenced_table_name='sales_order_lines_archive' ORDER BY ordinal_position`,[contract.table]);
+  if(keys.length!==2||keys[0].name!==keys[1].name||keys[0].field!=="sales_order_line_id"||keys[1].field!=="sales_order_id"||Number(keys[0].position)!==1||Number(keys[1].position)!==2)throw new Error("Incompatible Sales Archive Backorder composite owner FK");
+ }
+ return present;
+}
+export async function inspectSalesArchiveSchemas(connection) {
+ const found=[];for(const contract of CONTRACTS)found.push(await inspectArchive(connection,contract));return found.every(Boolean);
+}
+export async function up(connection) {
+ await inspectSalesArchiveSchemas(connection);
+ for(const contract of CONTRACTS) {
+  if(contract.table!=="sales_backorder_entries_archive")await createSalesTable(connection,contract);
+  else if(!await inspectArchive(connection,contract))await connection.query(`CREATE TABLE IF NOT EXISTS sales_backorder_entries_archive (
+   id bigint unsigned NOT NULL,
+   sales_order_id bigint unsigned NOT NULL,
+   sales_order_line_id bigint unsigned NOT NULL,
+   line_no smallint unsigned NOT NULL,
+   warehouse_id bigint unsigned NOT NULL,
+   sku_id bigint unsigned NOT NULL,
+   outstanding_base_quantity bigint unsigned NOT NULL,
+   status varchar(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+   priority_at bigint unsigned NOT NULL,
+   last_allocation_event_id char(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+   next_attempt_at bigint unsigned NOT NULL,
+   last_attempt_at bigint unsigned NULL,
+   attempt_count int unsigned NOT NULL DEFAULT '0',
+   last_error_code varchar(80) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+   version int unsigned NOT NULL DEFAULT '1',
+   created_at bigint unsigned NOT NULL,
+   updated_at bigint unsigned NOT NULL,
+   archive_batch_id bigint unsigned NOT NULL,
+   archived_at bigint unsigned NOT NULL,
+   row_hash char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+   PRIMARY KEY (id),
+   UNIQUE KEY uq_sales_ar_backorder_line (sales_order_line_id),
+   KEY idx_sales_ar_backorder_order (sales_order_id,id),
+   CONSTRAINT fk_sales_arbo_owner FOREIGN KEY (sales_order_line_id,sales_order_id) REFERENCES sales_order_lines_archive (id,sales_order_id) ON DELETE CASCADE,
+   CONSTRAINT fk_sales_arbo_batch FOREIGN KEY (archive_batch_id) REFERENCES sales_archive_batches (id) ON DELETE RESTRICT,
+   CONSTRAINT chk_sales_ar_backorder_status CHECK (status IN ('OPEN','FULFILLED','CANCELLED')),
+   CONSTRAINT chk_sales_ar_backorder_quantity CHECK ((status = 'OPEN') = (outstanding_base_quantity > 0)),
+   CONSTRAINT chk_sales_ar_backorder_version CHECK (version > 0 AND line_no BETWEEN 1 AND 100),
+   CONSTRAINT chk_sales_ar_backorder_terminal CHECK (status IN ('FULFILLED','CANCELLED') AND outstanding_base_quantity = 0)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+ }
+ if(!await inspectSalesArchiveSchemas(connection))throw new Error("Sales Archive mirrors incomplete");
+}

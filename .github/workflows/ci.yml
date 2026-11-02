@@ -159,6 +159,7 @@ jobs:
     services: &mysql_services
       mysql:
         image: mysql:26.7.0
+        command: --performance-schema-digests-size=100000
         env:
           # MySQL 官方映像收到這三個變數會自動建庫、建帳號並把該資料庫的
           # 全部權限授予這個帳號——同 server/database/init.sql 手動做的事一樣，
@@ -256,7 +257,8 @@ jobs:
           } finally {await db.end();}
           NODE
           capacity_pattern="$(NODE_V8_COVERAGE= node .github/scripts/capacity-runner.mjs server-pattern)"
-          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern"
+          mkdir -p server/coverage/shard
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=coverage/shard/tests.xml '**/*.test.{js,mjs,cjs,ts,mts,cts}'
 
       - name: Record candidate and shard identity
         working-directory: server
@@ -347,7 +349,21 @@ jobs:
         env:
           COVERAGE_SHARD_ROOT: ${{ github.workspace }}/server/coverage/shards
           COVERAGE_SHARD_TOTAL: "4"
-        run: npm run test:coverage:merge --workspace server
+        run: |
+          set -o pipefail
+          npm run test:coverage:merge --workspace server | tee server/coverage/merged-report.log
+      - name: Retain current Sales merged coverage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sales-merged-coverage-evidence-${{ github.run_attempt }}
+          path: |
+            server/coverage/lcov.info
+            server/coverage/merged-report.log
+            server/scripts/checkCoverageFloors.js
+            server/package.json
+          if-no-files-found: error
+          retention-days: 1
 
   server-capacity:
     name: Related server capacity (${{ matrix.group }})

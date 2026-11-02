@@ -23,7 +23,8 @@
       "client/src/services/shipment.js",
       "client/src/pages/fulfillment/**",
       "client/src/components/fulfillment/**",
-      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/fulfillmentArchive/**"
     ],
     "test_paths": [
       "server/test/fulfillment/**",
@@ -54,6 +55,10 @@
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
       "server/test/integration/userManagement.integration.test.js",
+      "server/test/fulfillmentArchive*.test.js",
+      "server/test/fulfillmentOpenMatter*.test.js",
+      "server/test/integration/fulfillmentArchive*.integration.test.js",
+      "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
       "server/test/inventoryReallocationChildClaims.test.js",
       "server/test/integration/inventoryReallocationChildClaims.integration.test.js"
     ],
@@ -83,7 +88,8 @@
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
       "client/e2e/fulfillment-shipping-management/**",
-      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -147,7 +153,12 @@
       "docs/supplier_management/**",
       "docs/business_master/**"
     ],
-    "schema_paths": [],
+    "schema_paths": [
+      "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+      "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js"
+    ],
     "shared_resources": [
       "global-migration-sequence",
       "authorization-permission-catalogue",
@@ -169,11 +180,20 @@
         "id": "fulfillment-shipment-and-reversal-contract",
         "version": "P1-HD024-A-readonly-selected-prefix-preview/fourth2MiB-adopted; exact source/runtime/fullP1 gates pending",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "861939c3d799e9e8b76dbbab25e92eb6f04a6727d4d04fb8545e536de3546cf0",
+        "sha256": "651bbaf6db1102e4d10a1a82ad3f08a7e44ab6c3ecde51eb3aa0d58d3661c7fe",
         "consumers": [
           "sales-order-management",
           "inventory-management",
           "invoicing-accounts-receivable-management"
+        ]
+      },
+      {
+        "id": "fulfillment-sales-archive-prerequisite",
+        "version": "1-APPROVED-ARCHIVE-CONTRACT",
+        "source": "docs/fulfillment_shipping_management/10_archive_prerequisite_contract.json",
+        "sha256": "c95d1ae04317f2e62090c4818203cade6c9248a09c32956efa20408c868b4db0",
+        "consumers": [
+          "sales-order-management"
         ]
       }
     ],
@@ -183,7 +203,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
+        "sha256": "d01749fc2421ac3e524dce38b932301779d762a0df5f7f1a4d1cbbf41563f1b1",
         "regression_suites": [
           "fulfillment-technical"
         ]

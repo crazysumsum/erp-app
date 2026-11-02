@@ -43,7 +43,21 @@
       "server/src/handlers/sales-import-templates/**",
       "server/src/modules/customer/CustomerLookupService.js",
       "server/config/api.js",
-      "server/src/framework/middleware/bodyReceiveTimeout.js"
+      "server/src/framework/middleware/bodyReceiveTimeout.js",
+      "server/src/handlers/outstanding-sales-orders/**",
+      "server/src/handlers/sales-audit-logs/**",
+      "server/src/handlers/sales-archive-batches/**",
+      "server/src/services/salesJobs/jobs/SalesExportJob.js",
+      "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+      "docs/runbooks/sales-order-management.md",
+      "client/src/framework/layout/AppTopbar.vue",
+      "server/src/modules/fulfillment/**",
+      "server/src/services/fulfillmentArchive/**",
+      "server/src/modules/inventory/InventoryLookupService.js",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/scripts/activateSalesObservations.js",
+      ".github/scripts/sales-import-capacity.mjs"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -87,7 +101,23 @@
       "server/test/idempotencyService.test.js",
       "server/test/integration/itemRecoveryAcceptance.integration.test.js",
       "server/test/sales/phase3/**",
-      "server/test-support/salesProcessingCrashChild.js"
+      "server/test-support/salesProcessingCrashChild.js",
+      "server/test-capacity/sales/phase4/**",
+      "server/test/salesArchiveEligibility.test.js",
+      "server/test/fulfillmentArchive*.test.js",
+      "server/test/fulfillmentOpenMatter*.test.js",
+      "server/test/integration/fulfillmentArchive*.integration.test.js",
+      "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+      "server/test/integration/salesArchiveJoint.integration.test.js",
+      "server/test/fulfillment/archiveFactsFixture.js",
+      "server/test/fulfillment/shipmentFixture.js",
+      "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+      "server/test/integration/shipmentMigrations.integration.test.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/fulfillmentPendingClaims.integration.test.js",
+      ".github/scripts/sales-import-capacity.test.mjs",
+      "server/test/mysqlDatabaseFailureModes.test.js",
+      "server/test/mysqlDatabaseService.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -171,7 +201,49 @@
       "docs/items_management/03_design_spec.md",
       "server/config/api.js",
       "server/src/framework/middleware/bodyReceiveTimeout.js",
-      "server/test-support/salesProcessingCrashChild.js"
+      "server/test-support/salesProcessingCrashChild.js",
+      "server/src/handlers/outstanding-sales-orders/**",
+      "server/src/handlers/sales-audit-logs/**",
+      "server/src/handlers/sales-archive-batches/**",
+      "server/src/services/salesJobs/jobs/SalesExportJob.js",
+      "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+      "docs/runbooks/sales-order-management.md",
+      "server/database/migrations/*_create_sales_export_jobs.js",
+      "server/database/migrations/*_create_sales_archive_batches.js",
+      "server/database/migrations/*_create_sales_archive_tables.js",
+      "server/database/migrations/*_protect_sales_archive_immutability.js",
+      "server/test-capacity/sales/phase4/**",
+      "client/src/framework/layout/AppTopbar.vue",
+      "server/src/modules/fulfillment/**",
+      "server/src/services/fulfillmentArchive/**",
+      "server/test/salesArchiveEligibility.test.js",
+      "server/test/fulfillmentArchive*.test.js",
+      "server/test/fulfillmentOpenMatter*.test.js",
+      "server/test/integration/fulfillmentArchive*.integration.test.js",
+      "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+      "server/test/integration/salesArchiveJoint.integration.test.js",
+      "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+      "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+      "docs/fulfillment_shipping_management/**",
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js",
+      "server/test/fulfillment/archiveFactsFixture.js",
+      "server/test/fulfillment/shipmentFixture.js",
+      "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+      "server/test/integration/shipmentMigrations.integration.test.js",
+      "server/src/modules/inventory/InventoryLookupService.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/fulfillmentPendingClaims.integration.test.js",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/database/migrations/*_create_sales_operational_observations.js",
+      "server/scripts/activateSalesObservations.js",
+      "server/database/migrations/*_add_sales_backorder_order_index.js",
+      ".github/scripts/sales-import-capacity.mjs",
+      ".github/scripts/sales-import-capacity.test.mjs",
+      "server/test/mysqlDatabaseFailureModes.test.js",
+      "server/test/mysqlDatabaseService.test.js",
+      ".github/test-admissions/sales-p4-functional.json"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -244,7 +316,25 @@
       "server/database/migrations/*_create_sales_import_jobs.js",
       "server/database/migrations/*_create_sales_intake_orders.js",
       "server/database/migrations/*_create_sales_intake_errors.js",
-      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+      "server/database/migrations/*_create_sales_export_jobs.js",
+      "server/database/migrations/*_create_sales_archive_batches.js",
+      "server/database/migrations/*_create_sales_archive_tables.js",
+      "server/database/migrations/*_protect_sales_archive_immutability.js",
+      "server/src/services/fulfillmentArchive/**",
+      "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+      "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/database/migrations/*_create_sales_operational_observations.js",
+      "server/scripts/activateSalesObservations.js",
+      "server/database/migrations/*_add_sales_backorder_order_index.js",
+      ".github/scripts/sales-import-capacity.mjs",
+      ".github/scripts/sales-import-capacity.test.mjs",
+      "server/test/mysqlDatabaseFailureModes.test.js",
+      "server/test/mysqlDatabaseService.test.js",
+      ".github/test-admissions/sales-p4-functional.json"
     ],
     "forbidden_paths": [
       ".env",
@@ -273,7 +363,14 @@
       "server/database/migrations/*_create_sales_import_jobs.js",
       "server/database/migrations/*_create_sales_intake_orders.js",
       "server/database/migrations/*_create_sales_intake_errors.js",
-      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+      "server/database/migrations/*_create_sales_export_jobs.js",
+      "server/database/migrations/*_create_sales_archive_batches.js",
+      "server/database/migrations/*_create_sales_archive_tables.js",
+      "server/database/migrations/*_protect_sales_archive_immutability.js",
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js",
+      "server/database/migrations/*_create_sales_operational_observations.js",
+      "server/database/migrations/*_add_sales_backorder_order_index.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -294,7 +391,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "HD018-A-scoped-candidate-source-proof-implementation; HD011-A last-sync/current-CAS retained; DEC037 TC032-only10s owner documentation integrated; exact closing review/full P1 gates pending; no Customer2.2 or proposed Purchasing/P4 contract adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
+        "sha256": "d01749fc2421ac3e524dce38b932301779d762a0df5f7f1a4d1cbbf41563f1b1",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -316,7 +413,7 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "postmerge-Customer-HD013-document-pin; Sales snapshot/credit/provider contracts unchanged; Customer timing waiver not adopted; P3 implementation qualified at750 and merged193; current main not reexecuted; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
+        "version": "observed-main-P0-integration; unchanged Sales single-Customer runtime2.1; no Customer waiver or pending2.2/shared-lock adoption",
         "source": "docs/customer_management/03_design_spec.md",
         "sha256": "7b56997a4f33d64793739faa888c1a8d882015892750cce59532d9818ab53972",
         "regression_suites": [
@@ -326,7 +423,7 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending; HD018 mechanical current-main pin only, unchanged Sales methods; Item committed-receipt addition not adopted as Sales behavior; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
+        "version": "observed-main-P0-additive-Fulfillment-profile; exact unchanged existing Item/Sales methods",
         "source": "server/src/modules/item/ItemLookupService.js",
         "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
@@ -336,7 +433,7 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-sales-foundation-0067-source-only; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
+        "version": "observed-main-P0-and-Purchasing-additions; all four existing Sales permissions unchanged",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
         "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
@@ -352,6 +449,43 @@
         "regression_suites": [
           "sales-technical"
         ]
+      },
+      {
+        "id": "fulfillment-sales-archive-prerequisite",
+        "version": "1-APPROVED-ARCHIVE-CONTRACT",
+        "source": "docs/fulfillment_shipping_management/10_archive_prerequisite_contract.json",
+        "sha256": "c95d1ae04317f2e62090c4818203cade6c9248a09c32956efa20408c868b4db0",
+        "module_id": "fulfillment-shipping-management",
+        "regression_suites": [
+          "sales-fulfillment-schema-native",
+          "sales-fulfillment-openmatter-unit",
+          "sales-fulfillment-openmatter-native",
+          "sales-fulfillment-participant-unit",
+          "sales-fulfillment-participant-native",
+          "sales-archive-joint-native"
+        ]
+      },
+      {
+        "id": "framework-connection-wait-observations",
+        "module_id": "framework",
+        "version": "1-readonly-bounded-cumulative-metrics; HD026 terminal outcome/quarantined live rollback integration; acquire metrics unchanged",
+        "source": "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "sha256": "15819bc9f80278c8d30df77ea22752b651028d86dbea52c2f1e6631dc3fe6d6b",
+        "regression_suites": [
+          "sales-phase005-unit",
+          "sales-phase005-native"
+        ]
+      },
+      {
+        "module_id": "inventory-management",
+        "id": "inventory-readonly-sales-observation",
+        "version": "1-DEC043-Sam-approved; actual registered metrics/owned query-only RR/bounded500; no reservation authority",
+        "source": "server/src/modules/inventory/InventoryReservationService.js",
+        "sha256": "d8d22ce092ca571154316349c74308e875130f5e7750f13e1c86570f9bef8bae",
+        "regression_suites": [
+          "sales-phase005-observations-unit",
+          "sales-phase005-observations-native"
+        ]
       }
     ],
     "data_ownership": {
@@ -366,7 +500,9 @@
         "Sales external order keys",
         "Sales export jobs",
         "Sales audit logs",
-        "Sales archive batches and archive mirrors"
+        "Sales archive batches and archive mirrors",
+        "Sales operational job-run evidence (sales_operational_job_runs)",
+        "Sales operational coverage and sampled alert state (sales_operational_alert_state)"
       ],
       "read_only": [
         "Customer master data, default currency, payment term and credit state",
@@ -409,7 +545,18 @@
       "sales-technical"
     ],
     "regression": [
-      "sales-technical"
+      "sales-technical",
+      "sales-fulfillment-schema-native",
+      "sales-fulfillment-openmatter-unit",
+      "sales-fulfillment-openmatter-native",
+      "sales-fulfillment-participant-unit",
+      "sales-fulfillment-participant-native",
+      "sales-archive-joint-native",
+      "sales-fulfillment-pending-provider-native",
+      "sales-phase005-unit",
+      "sales-phase005-native",
+      "sales-phase005-observations-unit",
+      "sales-phase005-observations-native"
     ],
     "uat": []
   },

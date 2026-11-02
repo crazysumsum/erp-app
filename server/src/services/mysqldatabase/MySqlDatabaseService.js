@@ -9,6 +9,24 @@ const ISOLATION_LEVELS = new Set([
 ]);
 
 const ACTIVE_TRANSACTIONS = new WeakMap();
+const CONNECTION_WAITS = new WeakMap();
+const WAIT_BOUNDS_MS = Object.freeze([1, 5, 10, 25, 50, 100, 250, 500, 1000, 5000, 10000, 30000]);
+
+function connectionWaits(executor) {
+  let metrics = CONNECTION_WAITS.get(executor);
+  if (!metrics) {
+    metrics = { inFlight: 0, observations: 0, durationSumMs: 0, maxDurationMs: 0, aboveThreshold: 0,
+      outcomes: { acquired: 0, timeout: 0, aborted: 0, rejected: 0 }, buckets: Array(WAIT_BOUNDS_MS.length + 1).fill(0) };
+    CONNECTION_WAITS.set(executor, metrics);
+  }
+  return metrics;
+}
+
+const TRANSACTION_OUTCOMES = new WeakMap();
+
+export function getTransactionOutcome(executor) {
+  return TRANSACTION_OUTCOMES.get(executor) || null;
+}
 
 export function getActiveTransactionIsolation(executor) {
   const active = ACTIVE_TRANSACTIONS.get(executor);
@@ -288,31 +306,59 @@ class MySqlDatabaseExecutor {
    * 設 200ms 的查詢，它們在 5708ms「成功」，那 200ms 從頭到尾沒有作用過。
    */
   async acquireConnection(signal) {
-    const pending = this.pool.getConnection();
-    let timer = null;
-    const expired = new Promise((_, reject) => {
-      timer = setTimeout(() => {
-        reject(
-          new MySqlDatabaseOperationError(
-            "Timed out waiting for a MySQL connection",
-            { code: "DATABASE_CONNECTION_TIMEOUT" }
-          )
-        );
-      }, this.config.acquireTimeoutMs);
-      timer.unref?.();
-    });
-
+    const metrics = connectionWaits(this);
+    const startedAt = process.hrtime.bigint();
+    let outcome = "rejected";
+    metrics.inFlight += 1;
     try {
-      return await raceWithSignal(Promise.race([pending, expired]), signal);
-    } catch (error) {
-      // 我們不等了，但這個等待者還在 mysql2 的隊列裡。將來輪到它時一定要把
-      // 連線還回去，否則每一次 acquire 逾時就永久少一條連線——池子會一路縮到
-      // 零，而症狀只是「越來越慢」。
-      void pending.then((connection) => connection.release()).catch(() => {});
-      throw poolRejection(error);
+      const pending = this.pool.getConnection();
+      let timer = null;
+      let expiredWaiting = false;
+      const expired = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          expiredWaiting = true;
+          reject(
+            new MySqlDatabaseOperationError(
+              "Timed out waiting for a MySQL connection",
+              { code: "DATABASE_CONNECTION_TIMEOUT" }
+            )
+          );
+        }, this.config.acquireTimeoutMs);
+        timer.unref?.();
+      });
+
+      try {
+        const connection = await raceWithSignal(Promise.race([pending, expired]), signal);
+        outcome = "acquired";
+        return connection;
+      } catch (error) {
+        outcome = expiredWaiting ? "timeout" : signal?.aborted ? "aborted" : "rejected";
+        // 我們不等了，但這個等待者還在 mysql2 的隊列裡。將來輪到它時一定要把
+        // 連線還回去，否則每一次 acquire 逾時就永久少一條連線——池子會一路縮到
+        // 零，而症狀只是「越來越慢」。
+        void pending.then((connection) => connection.release()).catch(() => {});
+        throw poolRejection(error);
+      } finally {
+        clearTimeout(timer);
+      }
     } finally {
-      clearTimeout(timer);
+      const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+      metrics.inFlight -= 1;
+      metrics.observations += 1;
+      metrics.durationSumMs += elapsedMs;
+      metrics.maxDurationMs = Math.max(metrics.maxDurationMs, elapsedMs);
+      metrics.outcomes[outcome] += 1;
+      const bucket = WAIT_BOUNDS_MS.findIndex(bound => elapsedMs <= bound);
+      metrics.buckets[bucket < 0 ? WAIT_BOUNDS_MS.length : bucket] += 1;
+      if (elapsedMs > Number(this.config.acquireTimeoutMs)) metrics.aboveThreshold += 1;
     }
+  }
+
+  getConnectionWaitMetrics() {
+    const metrics = connectionWaits(this);
+    const configured = Number(this.config.acquireTimeoutMs);
+    return { ...metrics, outcomes: { ...metrics.outcomes }, buckets: [...metrics.buckets],
+      boundsMs: [...WAIT_BOUNDS_MS, null], thresholdMs: Number.isFinite(configured) && configured > 0 ? configured : null };
   }
 }
 
@@ -451,6 +497,8 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
     const onParentAbort = () => controller.abort(parentSignal.reason);
     let transactionStarted = false;
     let connectionDestroyed = false;
+    let connectionQuarantined = false;
+    let transactionOutcome = "INDETERMINATE";
     // COMMIT 送出去之後，交易的結果就不再是這一側能斷定的了。這個旗標同時
     // 擋掉「commit 失敗後再 rollback」，並決定錯誤要不要報成 indeterminate。
     let commitAttempted = false;
@@ -523,19 +571,34 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       commitAttempted = true;
       await raceWithSignal(connection.commit(), controller.signal);
       transactionStarted = false;
+      transactionOutcome = "COMMITTED";
       return result;
     } catch (error) {
       ACTIVE_TRANSACTIONS.delete(transaction);
       // COMMIT 一旦送出去就不能再 rollback：伺服器可能已經提交了。在一條剛剛
       // commit 失敗的連線上再送 rollback，好一點是 no-op，差一點是第二次卡死。
       if (transactionStarted && !commitAttempted && !connectionDestroyed) {
+        const rollbackWasAborted = controller.signal.aborted;
         try {
           await raceWithSignal(connection.rollback(), controller.signal);
+          transactionOutcome = "ROLLED_BACK";
         } catch (rollbackError) {
+          if (!rollbackWasAborted) {
+            connectionQuarantined = true;
+            onTransactionAbort();
+          }
           void this.logger?.error?.("database.transaction.rollback_failed", "Database rollback failed", {
             requestId: context?.requestId || null,
             error: { name: rollbackError.name, message: rollbackError.message }
           });
+          // An already-aborted session follows its existing abort cleanup. An
+          // attempted live rollback that fails must never return to the pool.
+          if (!rollbackWasAborted) {
+            throw new MySqlDatabaseOperationError(
+              "MySQL database transaction rollback did not complete; its outcome is unknown",
+              { code: "DATABASE_TRANSACTION_INDETERMINATE", cause: error }
+            );
+          }
         }
       }
 
@@ -568,12 +631,13 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       });
     } finally {
       ACTIVE_TRANSACTIONS.delete(transaction);
+      TRANSACTION_OUTCOMES.set(transaction, Object.freeze({ state: transactionOutcome }));
       clearTimeout(timer);
       controller.signal.removeEventListener("abort", onTransactionAbort);
       parentSignal?.removeEventListener?.("abort", onParentAbort);
       this.updateContext({ databaseTransaction: previousTransaction });
 
-      if (!connectionDestroyed) {
+      if (!connectionDestroyed && !connectionQuarantined) {
         connection.release();
       }
     }

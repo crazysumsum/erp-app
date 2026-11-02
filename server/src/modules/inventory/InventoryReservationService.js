@@ -1,3 +1,4 @@
+import {getActiveTransactionIsolation} from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { createHash } from "node:crypto";
 
 import { assertActorFresh } from "../authorization/directoryLookups.js";
@@ -184,22 +185,64 @@ function allocationReleaseFromSummary(summary, lines) {
 }
 
 export class InventoryReservationService {
-  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, authorizeSalesIntake, audit, operations, locks, fulfillment } = {}) {
+  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, authorizeSalesIntake, authorizeSalesObservation, audit, operations, locks, fulfillment } = {}) {
     if (!database || typeof database.withTransaction !== "function" || !time ||
         typeof time.nowMs !== "function" || typeof time.fileDate !== "function" ||
         typeof authorize !== "function") {
       throw new TypeError("InventoryReservationService requires database, time and authorization services");
     }
     this.database = database;
+    this.logger = logger;
     this.time = time;
     this.itemLookup = itemLookup ?? new ItemLookupService({ database, logger, time });
     this.authorize = authorize;
     this.authorizeSalesBackorder = authorizeSalesBackorder;
     this.authorizeSalesIntake = authorizeSalesIntake;
+    this.authorizeSalesObservation = authorizeSalesObservation;
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
     this.operations = operations ?? new InventoryOperationService();
     this.locks = locks ?? new InventoryLockService();
     this.fulfillment = fulfillment ?? new InventoryFulfillmentService({database,logger,time,itemLookup:this.itemLookup,audit:this.audit,operations:this.operations,locks:this.locks});
+  }
+
+  async readSalesAvailabilityForObservationInTransaction(transaction, command) {
+    if(!command||typeof command!=="object"||Array.isArray(command)||Object.keys(command).sort().join(",")!=="demands,observedAtMs,version"||command.version!=="1"||!Number.isSafeInteger(command.observedAtMs)||command.observedAtMs<0||!Array.isArray(command.demands)||command.demands.length<1||command.demands.length>500)throw inventoryError("INVENTORY_INPUT_INVALID");
+    const seen=new Set(),demands=command.demands.map(value=>{
+      if(!value||Object.keys(value).sort().join(",")!=="minimumSaleLifeDays,skuId,sourceLineId,warehouseId")throw inventoryError("INVENTORY_INPUT_INVALID");
+      const row={warehouseId:positiveId(value.warehouseId,"warehouseId"),skuId:positiveId(value.skuId,"skuId"),sourceLineId:positiveId(value.sourceLineId,"sourceLineId"),minimumSaleLifeDays:nonNegativeInteger(value.minimumSaleLifeDays,"minimumSaleLifeDays")};
+      if(seen.has(row.sourceLineId))throw inventoryError("INVENTORY_INPUT_INVALID");seen.add(row.sourceLineId);return row;
+    });
+    const principal=await this.authorizeSalesObservation?.(transaction);
+    const authorized=value=>value&&typeof value.leaseOwner==="string"&&value.leaseOwner&&value.signal?.aborted===false&&this.database.context?.get()?.databaseTransaction===transaction&&getActiveTransactionIsolation(transaction)==="REPEATABLE READ";
+    if(!authorized(principal))throw inventoryError("PERMISSION_STALE");
+    const [[clock]]=await transaction.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
+    if(!Number.isSafeInteger(Number(clock.now_ms))||Number(clock.now_ms)<command.observedAtMs||Number(clock.now_ms)-command.observedAtMs>30000)throw inventoryError("PERMISSION_STALE");
+    const unknown=(row,reason,effective=row.minimumSaleLifeDays)=>({warehouseId:row.warehouseId,skuId:row.skuId,sourceLineId:row.sourceLineId,status:"UNKNOWN",observedAtMs:command.observedAtMs,effectiveMinimumSaleLifeDays:effective,eligibleOnHandBaseQuantity:null,reservedBaseQuantity:null,availableToPromiseBaseQuantity:null,reasonCodes:[reason]});
+    const profiles=new Map(),lookup=new ItemLookupService({database:transaction,time:this.time,logger:this.logger}),ids=[...new Set(demands.map(row=>row.skuId))];
+    let profileFailure=false;
+    try{for(let first=0;first<ids.length;first+=100){const batch=await lookup.findManyForSale(ids.slice(first,first+100),{atMs:command.observedAtMs});if(!(batch instanceof Map))throw Error("Invalid Item observation");for(const [id,value]of batch)profiles.set(id,value);}}
+    catch{principal.signal.throwIfAborted();profileFailure=true;}
+    const supported=row=>{const p=profiles.get(row.skuId),bases=p?.uoms?.filter(uom=>uom.isBase===true);return !profileFailure&&p?.usable===true&&bases?.length===1&&bases[0].status==="active"&&bases[0].toBaseFactor===1&&p.inventoryTracked===true&&["none","batch","batch_expiry"].includes(p.trackingPolicy)&&(p.minimumSaleLifeDays===null||Number.isSafeInteger(p.minimumSaleLifeDays)&&p.minimumSaleLifeDays>=0&&p.minimumSaleLifeDays<=36500);};
+    const life=row=>Math.max(row.minimumSaleLifeDays,profiles.get(row.skuId)?.minimumSaleLifeDays??0),date=this.time.fileDate(this.time.at(command.observedAtMs)),derived=demands.map(()=>"SELECT ? AS source_line_id,? AS warehouse_id,? AS sku_id,? AS cutoff").join(" UNION ALL ");
+    const [rows]=await transaction.query(`SELECT d.source_line_id,d.warehouse_id,d.sku_id,w.status AS warehouse_status,c.reserved_quantity,
+      COALESCE(SUM(CASE WHEN l.expiry_date IS NULL OR l.expiry_date>=d.cutoff THEN b.on_hand_quantity ELSE 0 END),0) AS eligible_on_hand,
+      COALESCE(SUM(b.lot_id IS NOT NULL AND l.id IS NULL),0) AS missing_lots
+      FROM (${derived}) d LEFT JOIN inventory_warehouses w ON w.id=d.warehouse_id
+      LEFT JOIN inventory_stock_controls c ON c.warehouse_id=d.warehouse_id AND c.sku_id=d.sku_id
+      LEFT JOIN inventory_stock_balances b ON b.warehouse_id=d.warehouse_id AND b.sku_id=d.sku_id AND b.stock_status='AVAILABLE'
+      LEFT JOIN inventory_lots l ON l.id=b.lot_id
+      GROUP BY d.source_line_id,d.warehouse_id,d.sku_id,w.status,c.reserved_quantity`,demands.flatMap(row=>[row.sourceLineId,row.warehouseId,row.skuId,cutoffDate(date,supported(row)?life(row):row.minimumSaleLifeDays)]));
+    const byLine=new Map(rows.map(row=>[Number(row.source_line_id),row]));if(rows.length!==demands.length||byLine.size!==demands.length)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    const items=demands.map(row=>{
+      if(!supported(row))return unknown(row,profileFailure||!profiles.has(row.skuId)?"ITEM_PROFILE_UNAVAILABLE":"SKU_UNSUPPORTED");
+      const state=byLine.get(row.sourceLineId),effective=life(row);if(Number(state.warehouse_id)!==row.warehouseId||Number(state.sku_id)!==row.skuId||Number(state.missing_lots)!==0)return unknown(row,"DEPENDENCY_UNAVAILABLE",effective);
+      if(state.warehouse_status!=="ACTIVE")return unknown(row,"WAREHOUSE_UNAVAILABLE",effective);
+      if(state.reserved_quantity===null)return unknown(row,"STOCK_CONTROL_UNAVAILABLE",effective);
+      try{const availability=calculateInventoryAvailability({eligibleOnHand:safeQuantity(state.eligible_on_hand,"eligibleOnHand"),reserved:safeQuantity(state.reserved_quantity,"reserved")});return {warehouseId:row.warehouseId,skuId:row.skuId,sourceLineId:row.sourceLineId,status:availability.atp>0?"AVAILABLE":"NO_STOCK",observedAtMs:command.observedAtMs,effectiveMinimumSaleLifeDays:effective,eligibleOnHandBaseQuantity:String(availability.eligibleOnHand),reservedBaseQuantity:String(availability.reserved),availableToPromiseBaseQuantity:String(availability.atp),reasonCodes:availability.atp>0?[]:["NO_ELIGIBLE_ATP"]};}
+      catch{return unknown(row,"DEPENDENCY_UNAVAILABLE",effective);}
+    });
+    const fresh=await this.authorizeSalesObservation?.(transaction);if(!authorized(fresh)||fresh.signal!==principal.signal||fresh.leaseOwner!==principal.leaseOwner)throw inventoryError("PERMISSION_STALE");
+    return {version:"1",items};
   }
 
   claimFulfillmentBatchInTransaction(tx,input) { return this.fulfillment.claimFulfillmentBatchInTransaction(tx,input); }

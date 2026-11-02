@@ -1,0 +1,74 @@
+import {createHash,randomUUID} from "node:crypto";
+import {advanceSalesOperationalSignal,salesBackorderHistory,SALES_OBSERVATION_PROTOCOL,validSalesAvailabilityObservation} from "./salesOperationalObservations.js";
+const DAY=86400000,globalKey=createHash("sha256").update("sales.operational.coverage").digest("hex");
+const key=value=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const integer=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<0)throw new Error("Invalid Sales operational observation");return n;};
+const uuid=value=>typeof value==="string"&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value);
+const unavailable=()=>{throw new Error("Sales operational observation unavailable");};
+export class SalesOperationalObservationService{
+ constructor({database,authorizeBackorder,authorizeMetrics,authorizeActivation,baselineHash}={}){this.database=database;this.authorizeBackorder=authorizeBackorder;this.authorizeMetrics=authorizeMetrics;this.authorizeActivation=authorizeActivation;this.baselineHash=baselineHash;}
+ async #transaction(signal,work,{independent=false}={}){
+  const context=this.database.context;if(!context?.storage?.run||!context.get||!independent&&context.get()?.databaseTransaction)unavailable();
+  return context.storage.run({...context.get(),auth:null,databaseTransaction:null,signal},()=>this.database.withTransaction(work,{signal,isolationLevel:"REPEATABLE READ",timeoutMs:30000}));
+ }
+ async #clock(tx){const [[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms,UNIX_TIMESTAMP() AS now_seconds");return {nowMs:integer(clock.now_ms),nowSeconds:integer(clock.now_seconds)};}
+ async #coverage(tx,lock=false){const [[row]]=await tx.query("SELECT * FROM sales_operational_alert_state WHERE signal_type='COVERAGE' AND scope_key=?"+(lock?" FOR UPDATE":""),[globalKey]);if(!row||row.protocol_version!==SALES_OBSERVATION_PROTOCOL)unavailable();return row;}
+ async #principal(authorize,signal){const principal=await authorize?.();if(!principal||principal.signal!==signal||signal?.aborted!==false||typeof principal.leaseOwner!=="string"||!principal.leaseOwner||principal.leaseOwner.length>190)unavailable();return principal;}
+ async #backorderLease(tx,signal){const principal=await this.#principal(this.authorizeBackorder,signal),[[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.backorderAllocate' FOR UPDATE"),clock=await this.#clock(tx),fresh=await this.#principal(this.authorizeBackorder,signal);if(fresh.leaseOwner!==principal.leaseOwner||lease?.owner!==principal.leaseOwner||integer(lease.expires_at)<=clock.nowSeconds)unavailable();return {...clock,leaseOwner:principal.leaseOwner};}
+ async beginBackorderRun({signal}={}){
+  if(typeof this.baselineHash!=="string"||!/^[a-f0-9]{64}$/u.test(this.baselineHash))unavailable();const runId=randomUUID();return this.#transaction(signal,async tx=>{const owner=await this.#backorderLease(tx,signal),coverage=await this.#coverage(tx);if(coverage.state==="ACTIVE"&&coverage.identity_hash!==this.baselineHash)unavailable();const epoch=coverage.state==="ACTIVE"&&uuid(coverage.coverage_epoch)&&coverage.first_seen_at!==null&&integer(coverage.first_seen_at)<=owner.nowMs?coverage.coverage_epoch:null;
+   await tx.execute("INSERT INTO sales_operational_job_runs(run_id,job_name,protocol_version,baseline_hash,coverage_epoch,lease_owner,started_at,outcome)VALUES(?,'sales.backorderAllocate',?,?,?,?,?,'RUNNING')",[runId,SALES_OBSERVATION_PROTOCOL,this.baselineHash,epoch,owner.leaseOwner,owner.nowMs]);return {runId,epoch,baselineHash:this.baselineHash,leaseOwner:owner.leaseOwner,startedAt:owner.nowMs};
+  });
+ }
+ async finishBackorderRun(run,outcome,{signal}={}){
+  if(!uuid(run?.runId)||!["SUCCEEDED","FAILED","TIMED_OUT"].includes(outcome))unavailable();
+  return this.#transaction(signal,async tx=>{const owner=await this.#backorderLease(tx,signal),[[row]]=await tx.query("SELECT * FROM sales_operational_job_runs WHERE run_id=? FOR UPDATE",[run.runId]);
+   if(!row||row.protocol_version!==SALES_OBSERVATION_PROTOCOL||row.baseline_hash!==this.baselineHash||run.baselineHash!==this.baselineHash||row.lease_owner!==owner.leaseOwner||row.lease_owner!==run.leaseOwner||row.coverage_epoch!==run.epoch||integer(row.started_at)!==run.startedAt)unavailable();
+   if(row.outcome!=="RUNNING"){if(row.outcome!==outcome||row.finished_at===null)unavailable();return {outcome:row.outcome,finishedAt:integer(row.finished_at),replay:true};}
+   if(owner.nowMs<run.startedAt)unavailable();const [result]=await tx.execute("UPDATE sales_operational_job_runs SET outcome=?,finished_at=? WHERE run_id=? AND outcome='RUNNING'",[outcome,owner.nowMs,run.runId]);if(result.affectedRows!==1)unavailable();return {outcome,finishedAt:owner.nowMs,replay:false};
+  });
+ }
+ async activate({expectedEpoch,attestation,signal}={}){
+  if(await this.authorizeActivation?.(attestation)!==true||!attestation||Object.keys(attestation).sort().join(",")!=="allWorkersInstrumented,baselineHash,oldWorkersDrained,protocolVersion"||attestation.protocolVersion!==SALES_OBSERVATION_PROTOCOL||attestation.baselineHash!==this.baselineHash||attestation.allWorkersInstrumented!==true||attestation.oldWorkersDrained!==true||!/^[a-f0-9]{64}$/u.test(attestation.baselineHash)||expectedEpoch!==null&&!uuid(expectedEpoch))unavailable();
+  return this.#transaction(signal,async tx=>{const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.backorderAllocate' FOR UPDATE"),clock=await this.#clock(tx);if(lease&&integer(lease.expires_at)>clock.nowSeconds)throw new Error("Backorder workers must be drained before coverage activation");const row=await this.#coverage(tx,true);if(row.coverage_epoch!==expectedEpoch)throw new Error("Sales observation activation version conflict");
+   const epoch=randomUUID(),[written]=await tx.execute("UPDATE sales_operational_alert_state SET coverage_epoch=?,identity_hash=?,first_seen_at=?,last_sample_at=?,last_seen_at=?,sample_count=0,state='ACTIVE',version=version+1 WHERE signal_type='COVERAGE' AND scope_key=? AND version=?",[epoch,attestation.baselineHash,clock.nowMs,clock.nowMs,clock.nowMs,globalKey,row.version]);if(written.affectedRows!==1)unavailable();return {epoch,activatedAt:clock.nowMs,protocolVersion:SALES_OBSERVATION_PROTOCOL,baselineHash:attestation.baselineHash};
+  });
+ }
+ async #history(tx,coverage,nowMs){
+  const activation=coverage.state==="ACTIVE"&&uuid(coverage.coverage_epoch)&&coverage.first_seen_at!==null?{epoch:coverage.coverage_epoch,version:coverage.protocol_version,atMs:integer(coverage.first_seen_at),baselineHash:coverage.identity_hash}:null;
+  let lastSuccessAt=null,pending=0;if(activation){const [[history]]=await tx.query("SELECT COALESCE(SUM(outcome='RUNNING' OR protocol_version<>? OR baseline_hash<>? OR job_name<>'sales.backorderAllocate' OR outcome NOT IN ('RUNNING','SUCCEEDED','FAILED','TIMED_OUT') OR started_at<? OR started_at>? OR (outcome<>'RUNNING' AND (finished_at IS NULL OR finished_at<started_at OR finished_at>?))),0) AS pending,MAX(CASE WHEN outcome='SUCCEEDED' THEN finished_at ELSE NULL END) AS last_success_at FROM sales_operational_job_runs WHERE coverage_epoch=?",[SALES_OBSERVATION_PROTOCOL,this.baselineHash,activation.atMs,nowMs,nowMs,activation.epoch]);pending=integer(history.pending);lastSuccessAt=history.last_success_at===null?null:integer(history.last_success_at);}
+  return salesBackorderHistory({nowMs,activation,protocolVersion:SALES_OBSERVATION_PROTOCOL,baselineHash:this.baselineHash,pending,lastSuccessAt});
+ }
+ async #saveSignals(signal,type,entries,epoch){
+  if(entries.length===0)return[];const sorted=[...entries].sort((a,b)=>a.scopeKey.localeCompare(b.scopeKey));if(new Set(sorted.map(row=>row.scopeKey)).size!==sorted.length)unavailable();
+  return this.#transaction(signal,async tx=>{
+   await this.#principal(this.authorizeMetrics,signal);const coverage=await this.#coverage(tx,true);if(coverage.coverage_epoch!==epoch||coverage.state==="ACTIVE"&&coverage.identity_hash!==this.baselineHash)unavailable();
+   for(const entry of sorted)await tx.execute("INSERT INTO sales_operational_alert_state(signal_type,scope_key,last_seen_at,state)VALUES(?,?,0,'UNKNOWN') ON DUPLICATE KEY UPDATE scope_key=scope_key",[type,entry.scopeKey]);
+   const [rows]=await tx.query(`SELECT * FROM sales_operational_alert_state WHERE signal_type=? AND scope_key IN (${sorted.map(()=>"?").join(",")}) ORDER BY scope_key FOR UPDATE`,[type,...sorted.map(row=>row.scopeKey)]);if(rows.length!==sorted.length)unavailable();const byKey=new Map(rows.map(row=>[row.scope_key,row])),states=[];
+   for(const entry of sorted){const previous=byKey.get(entry.scopeKey);if(previous.protocol_version!==SALES_OBSERVATION_PROTOCOL)unavailable();if(entry.atMs<integer(previous.last_seen_at)){states.push({status:"UNKNOWN",active:false,samples:0,sampledSpanMs:0});continue;}const prior=previous.coverage_epoch!==epoch?null:{identityHash:previous.identity_hash,status:previous.state,firstSeenAt:previous.first_seen_at===null?null:integer(previous.first_seen_at),lastSeenAt:integer(previous.last_seen_at),lastSampleAt:previous.last_sample_at===null?null:integer(previous.last_sample_at),samples:integer(previous.sample_count)};
+    const state=advanceSalesOperationalSignal(prior,{atMs:entry.atMs,status:entry.status,identityHash:entry.identityHash});const [written]=await tx.execute("UPDATE sales_operational_alert_state SET identity_hash=?,coverage_epoch=?,first_seen_at=?,last_seen_at=?,last_sample_at=?,sample_count=?,state=?,version=version+1 WHERE signal_type=? AND scope_key=? AND version=?",[state.identityHash,epoch,state.firstSeenAt,state.lastSeenAt,state.lastSampleAt,state.samples,state.status,type,entry.scopeKey,previous.version]);if(written.affectedRows!==1)unavailable();states.push(state);
+   }
+   await this.#principal(this.authorizeMetrics,signal);return states;
+  },{independent:true});
+ }
+ async collect({signal,readAvailability,providerUnknown}={}){
+  await this.#principal(this.authorizeMetrics,signal);if(typeof this.baselineHash!=="string"||!/^[a-f0-9]{64}$/u.test(this.baselineHash))unavailable();if(typeof readAvailability!=="function"||typeof providerUnknown!=="boolean")unavailable();
+  const observed=await this.#transaction(signal,async tx=>{
+   const clock=await this.#clock(tx),coverage=await this.#coverage(tx),history=await this.#history(tx,coverage,clock.nowMs),fifo={coverage:"COMPLETE",observedScopes:0,unknownScopes:0,active:0};if(coverage.state==="ACTIVE"&&coverage.identity_hash!==this.baselineHash)unavailable();let cursor=null;
+   for(;;){
+    signal.throwIfAborted();const [scopes]=await tx.query(`SELECT DISTINCT warehouse_id,sku_id FROM sales_backorder_entries FORCE INDEX(idx_sales_backorder_fifo) WHERE status='OPEN'${cursor?" AND (warehouse_id,sku_id)>(?,?)":""} ORDER BY warehouse_id,sku_id LIMIT 500`,cursor??[]);if(!scopes.length)break;
+    const derived=scopes.map(()=>"SELECT ? AS warehouse_id,? AS sku_id").join(" UNION ALL "),[heads]=await tx.query(`SELECT q.*,l.minimum_sale_life_days_snapshot FROM (${derived}) d JOIN sales_backorder_entries q ON q.id=(SELECT h.id FROM sales_backorder_entries h WHERE h.status='OPEN' AND h.warehouse_id=d.warehouse_id AND h.sku_id=d.sku_id ORDER BY h.priority_at,h.sales_order_id,h.line_no,h.id LIMIT 1) JOIN sales_order_lines l ON l.id=q.sales_order_line_id ORDER BY q.warehouse_id,q.sku_id`,scopes.flatMap(row=>[row.warehouse_id,row.sku_id]));if(heads.length!==scopes.length)unavailable();
+    let availability;try{availability=await readAvailability(tx,heads.map(row=>({warehouseId:integer(row.warehouse_id),skuId:integer(row.sku_id),sourceLineId:integer(row.sales_order_line_id),minimumSaleLifeDays:integer(row.minimum_sale_life_days_snapshot)})),clock.nowMs);}catch{signal.throwIfAborted();availability=null;}
+    const valid=availability?.version==="1"&&Array.isArray(availability.items)&&availability.items.length===heads.length&&new Set(availability.items.map(row=>row.sourceLineId)).size===heads.length,byLine=valid?new Map(availability.items.map(row=>[row.sourceLineId,row])):new Map();
+    const entries=heads.map(row=>{const value=byLine.get(integer(row.sales_order_line_id)),matching=validSalesAvailabilityObservation(value,row,clock.nowMs);const status=!matching||value.status==="UNKNOWN"?"UNKNOWN":value.status==="AVAILABLE"?"POSITIVE":"CLEAR";fifo.observedScopes++;return {scopeKey:key([String(row.warehouse_id),String(row.sku_id)]),identityHash:key([this.baselineHash,String(row.sales_order_line_id),String(row.priority_at),String(row.outstanding_base_quantity),row.last_allocation_event_id,value?.effectiveMinimumSaleLifeDays??null]),status,atMs:clock.nowMs};});
+    const states=await this.#saveSignals(signal,"FIFO_STOCK",entries,coverage.coverage_epoch);fifo.active+=states.filter(row=>row.active).length;fifo.unknownScopes+=states.filter(row=>row.status==="UNKNOWN").length;cursor=[scopes.at(-1).warehouse_id,scopes.at(-1).sku_id];
+   }
+   await this.#transaction(signal,async write=>{await this.#principal(this.authorizeMetrics,signal);const current=await this.#coverage(write,true);if(current.coverage_epoch!==coverage.coverage_epoch||current.state==="ACTIVE"&&current.identity_hash!==this.baselineHash)unavailable();for(;;){signal.throwIfAborted();const [changed]=await write.execute("UPDATE sales_operational_alert_state SET first_seen_at=NULL,last_sample_at=NULL,sample_count=0,state='UNKNOWN',last_seen_at=?,version=version+1 WHERE signal_type='FIFO_STOCK' AND state='POSITIVE' AND last_seen_at<? ORDER BY scope_key LIMIT 500",[clock.nowMs,clock.nowMs]);if(changed.affectedRows<500)break;}},{independent:true});
+   if(fifo.unknownScopes)fifo.coverage="UNKNOWN";
+   const [provider]=await this.#saveSignals(signal,"ARCHIVE_PROVIDER",[{scopeKey:globalKey,identityHash:key(["ARCHIVE_PROVIDER",SALES_OBSERVATION_PROTOCOL,this.baselineHash]),status:providerUnknown?"POSITIVE":"CLEAR",atMs:clock.nowMs}],coverage.coverage_epoch);
+   return {version:"1",observedAtMs:clock.nowMs,history,fifo,providerUnknown:{active:provider.active,samples:provider.samples,sampledSpanMs:provider.sampledSpanMs},interpretation:"Three qualified five-minute samples spanning at least10minutes; no claim about unobserved between-sample state"};
+  });
+  await this.#transaction(signal,async tx=>{await this.#principal(this.authorizeMetrics,signal);const clock=await this.#clock(tx);await tx.execute("DELETE FROM sales_operational_job_runs WHERE finished_at<? ORDER BY finished_at,run_id LIMIT 500",[clock.nowMs-7*DAY]);await tx.execute("DELETE FROM sales_operational_alert_state WHERE signal_type<>'COVERAGE' AND last_seen_at<? ORDER BY signal_type,last_seen_at,scope_key LIMIT 500",[clock.nowMs-7*DAY]);});
+  return observed;
+ }
+}

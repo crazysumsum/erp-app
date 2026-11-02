@@ -2236,6 +2236,14 @@ client/src/composables/sales/
 
 測試報告記錄 hardware、Node/MySQL版本、pool size、buffer pool、資料分佈、warm/cold cache及 explain plan。不能只以空 DB或全部相同一行訂單宣稱達標。
 
+#### 11.7.1 DEC-044 — Active Backorder 的訂單查找索引
+
+Sam 已批准 `implementation/159_backorder_order_index_decision.md`：在既有 `sales_backorder_entries` 增加非唯一、visible、ascending BTree `idx_sales_backorder_order(sales_order_id,id)`，以獨立 forward migration 交付，不改舊0079。Lifecycle、Archive、readonly reconciliation 的原 order predicates、orphan diagnostics、PRIMARY-only queue lock、HD012及三條 HD013 RC 交易維持原樣；Archive mirror 已有 order-leading index，不新增 mirror index或Table。
+
+Migration 先檢查原完整 Backorder schema，對新增索引明確區分 absent／exact-compatible／incompatible；metadata欄位使用 explicit lowercase aliases，拒絕 wrong order／unique／prefix／expression／invisible／descending／非BTree，不 drop或自動修補。需新增時在同一connection snapshot並確認identity，建立 session DDL threads1、parallel read threads1及MDL wait10s，實際ALTER使用600s migration budget，驗證索引後恢復原session。控制未能建立則不進DDL；受控階段失敗毀棄session，先觀察真實index及migration ledger後才決定重試，DDL可能已提交不可假裝交易rollback。這不是business10s或容量SLO放寬，也不代表整個mysqld只有兩個threads；不修改global或執行productionDDL。
+
+原48 mandatory developer suites及全部容量/CI/review Gate保留。既有Phase005 unit收新增metadata案例，既有native suite增加2案並把minimum18提高為20：owned native idempotence/schema/row/session/unknown-DDL-ledger檢查，及原predicate physicalplan/獨立oracle/1與100line/cancel replay/reconciliation/actualArchive回歸；原有全部assertion及零skip保留。實際index bytes、buildtime及full1m資料的queryplan/rows-examined須有證據，提案中的估算不作PASS。正式60個TC與UAT定義不因工程案例alias增加或改號；本輪仍不做DR。
+
 ### 11.8 Backup、Restore、Archive及 reconciliation
 
 - 備份 Active＋Archive＋External Keys＋Operations；在隔離 DB restore。
@@ -2353,6 +2361,25 @@ Alerts：
 - Backorder Job 24小時未成功執行，或存在庫存但最早 Backorder長期未配。
 - Archive 本月窗口後24小時仍未完成、hash conflict、provider unknown持續。
 - Active query P95／DB pool wait持續超門檻。
+
+### 12.4.1 DEC-043 — 有來源界線的營運觀測
+
+Sam 已批准 `implementation/157_task062_operational_signals_decision.md` 的限定方向。只新增 Sales 自有 `sales_operational_job_runs`、`sales_operational_alert_state`；不是 business Operation/Audit、新 logging 平台或 Inventory 寫入介面。
+
+- 已取得真實 cluster lease 的 Backorder invocation，先以獨立交易提交 RUNNING，再執行原 batch。START 不能提交就不進業務處理，沿既有 Scheduler retry；其他交易沒有這個前置條件。工作完成及既有完成 log 呼叫返回後才記 SUCCEEDED；業務／deferred 失敗記 FAILED。取消撤銷原 principal 後保留 RUNNING／UNKNOWN，不以另一個未取消的 transaction 偽造 TIMED_OUT。終態提交結果未知時不覆寫可能已持久化的成功。
+- Coverage 預設 INACTIVE／UNKNOWN。受控本機 activation CLI 只接受本 OS 使用者持有、無群組／其他權限、非 symlink／多重 hardlink 的小型 attestation，以及明確 expected epoch CAS；營運人員另證明所有 contributing workers 皆為本版且舊 workers 已 drained。以真實 DB clock 建新 epoch，不回填24小時。觀測 components 的實際 source bytes、Sales/time-zone policy、Backorder/metrics job override 綁定本機 baseline；版本或設定不匹配不可沿用舊歷史／告警樣本。沒有本次 production activation 授權。
+- 只有匹配的啟用界線已跨至少24小時、沒有缺失／未完成／錯版本／無效時間 facts，才可判定該 activated window 的成功歷史；嚴格超過24小時沒有成功才 overdue。近期一筆成功不證明完整歷史。重啟不能重新製造舊證明，保留的舊 epoch／未完成證據不被改寫為 PASS。
+- Inventory owner 新增 readonly Sales observation v1：每次1～500個 warehouse/SKU/sourceLine/minimum-life demands，實際 registered metrics invocation、同一自有 query-only RR transaction 及 live signal 受 owner 前後驗證；不能借 human/Fulfillment permission、以 reserve probe、或由 Sales 查 Inventory business tables。採現行可用 Item／active Base UOM、tracking/min-life 與 AVAILABLE balances 減去 stock-control reserved 的 owner ATP；來源不完整／不可用為 UNKNOWN，數量為 null，不能補零。
+- FIFO 依現行 oldest ordering 分頁、每批不超過500；同一 oldest identity／版本與正 ATP 的三次 qualified5分鐘樣本、跨至少10分鐘，才產生 sampled stock-present warning。Qualification 間隔至少270秒、相鄰觀測 gap 最多330秒，以容許排程偏差；重複早取樣不能湊足10分鐘。變更 head／可用性／版本、負／未知結果或採樣中斷會重設。provider UNKNOWN 亦用相同三次／10分鐘規則；只表示連續合格樣本，不保證兩樣本之間狀態不變。
+- Instance metrics job 對 business tables 只讀；以分開的 Sales operational transactions CAS 寫樣本及有界清理。已完成 run 保留7日、每輪最多清理500，過期 non-coverage signal state 每輪500；未完成 run 保留作 UNKNOWN／鑑證，不會只為清理或解除告警而刪除。故不是整個 operational history 的固定總量上限；部署前須以實際 run/worker/scope 數及資料／索引 bytes 評估容量，監控 unresolved backlog，舊資料 disposition 另依 owner 維護程序。
+- Engine rows-examined 來自已驗證開啟且未 overflow 的 native performance_schema、目前 schema 中匹配 Sales-table 的 statement digest 累計；table-lock ps 與 MySQL instance-wide InnoDB row-lock ms/waits 分開標示。不是每張 Order 的 row wait，也不是 query window／P95；reset/truncation/window coverage 無法證明時保持 UNKNOWN，不清空 instrumentation 或補權限湊 PASS。
+- Create/convert 的固定 cohort 記完整 service request（含驗證／交易／replay/error）；fresh manual/recovery Confirmation 只在已確認提交的終態，記原 intent created_at 到 commit acknowledgement 的時間。Rollback／unknown commit 不計作終態完成，另外保留 transaction fault；durable replay 不新增虛構完成時鐘。Archive 每次 settled candidate 的 outer call（含未知結果重讀）只記一次 outcome/duration。所有 counters/histograms 皆固定 labels／固定儲存格、process lifetime、delivery UNKNOWN；無 SQL／payload／business dimensions，無額外 business-request SQL／逐筆 log。
+
+- Reservation attempt quantities 在驗證過的 provider response 暫存三個 exact base totals，只有外層交易確認提交才累加；CONFIRMATION cohort 包含 manual/recovery/Intake，BACKORDER cohort 包含每次 fresh outstanding attempt。Replay／rollback 不增加，unknown commit 不補成功量，另外列 monitored-wrapper unknown/fault 與 partial coverage。重複請求同一 outstanding quantity 仍是多次 attempts，不當作 unique demand／淨 backlog。
+- 成功補配僅在 quantity>0 且確認提交後記 priority_at 到 acknowledgement 的 wall-clock 差；未成功／rollback／unknown 不計成功耗時，負值／無效 clock 列 unobserved。跨主機時須核對時鐘，不能把這個 process-lifetime wall-time histogram 冒稱已校時、完整 delivery 或正式 latency SLO。
+- Intake 固定 CSV／CHANNEL 兩類 received、accepted（完成來源驗證，尚非業務成功）、invalid、duplicate、succeeded、failed、retried 計數，依真實 fresh-row／classification／terminal／prior-attempt>0 claim 的外層 acknowledgement 累加。Channel submission request outcome 另列 accepted／duplicate／invalid／retry／error，涵蓋 pre-DB early validation 及 dependency retry；同一來源重送的 request counter 不是第二個 record。直接 Backorder／Archive／precheck／processing 交易亦觀測固定 fault；已知 originating error 只傳播不重複計數，新 recovery engine fault 另計。
+
+保留本輪1m Active／5m明細、獨立25m keys、300k Archive／500 batch／600秒、50users，以及原 SLO／coverage／memory／CI／review Gates。DEC-040 不做本輪 DR；原正式規格保留，未執行不列 PASS。
 
 ### 12.5 File、data retention 與 runbooks
 
@@ -2825,6 +2852,17 @@ Configuration validation, deployment order, feature disablement and forward-fix 
 
 ## DES-019 — Production-like data generation and measurable query/command/batch capacity gates.
 
+### DEC-047 R2 C — approved P4 developer merge boundary (2026-10-30)
+
+Actual Sam userMessage `01a18b64-3404-7fc2-8660-569b8f76099e` in project-manager chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, verified from the actual thread: 「按方案C通知 Sales agent 推進」; DEC047 R2 proposal SHA `67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e`.
+
+For this P4 merge only, execute `sales-phase005-merge-capacity`: original1m Active/5m details shape; remaining12 Active query classes100samples×2 with original2s P95; quiet two real500-order Archive invocations with10 foreground readers; complete selected1000-order18-class counts/canonical hashes/amounts/manifests and unchanged Inventory; Archive3 query classes100×2 with original3s exact/5s range and invalid-range checks; read-only operational-table footprint. Reuse the already measured Outstanding200 with its original source/time and explicit impact assessment, never repeat or retag it. Keep25m independent-index evidence, no data rebuild or DR.
+
+One current-candidate CI supplies both existing required CI and the full server coverage obligation (92/83/90 plus39 per-file floors) through actual four-shard JUnit/raw-V8/merged-LCOV/checker evidence and provider/synthetic-candidate/tree identities. Preserve generic missing-local-command/metadata outputs and explicitly disposition them using this named human decision plus final independent review; no fake local PASS or installed Harness edit. Newly merged main5feb adds64 net server test files, expected588; its additional14 Fulfillment capacity scenarios remain **DEC049 PENDING** until Sam explicitly authorizes that extension. Reporting-only patch does not authorize execution.
+
+Full50-user sustained mixed load,10k end-to-end Import with5Exports/Archive contention, complete300k drain, long Archive-only foreground cohort>=100 and large Archive query capacity are **NOT RUN / PRELAUNCH** for this merge. Original formal requirements, TC053/054/055 definitions, test implementations and SLOs remain mandatory for their formal/prelaunch stage. These deferred checks block enabling Archive, not this approved developer merge boundary. `server/config/scheduler.js` keeps `sales.archive.enabled=false`. Report actual bounded foreground sample count/P95 without claiming the deferred long cohort or full NFR004/005. A newly observed performance FAIL/timeout stops further performance repair/retest for Sam; no automatically enlarged load. Low CPU, original business/permission/transaction rules and all other gates remain.
+
+
 ### Decision
 
 Production-like data generation and measurable query/command/batch capacity gates.
@@ -2855,3 +2893,23 @@ Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4
 ### DEC-022 — Confirmation 202 replay header
 
 TASK031 actual HTTP regression proves the framework cache replays status/body but drops the original Retry-After. The confirm route declares optional idempotency.retryAfterSeconds=2. IdempotencyService validates a positive safe integer at startup and emits Retry-After only for replayed202 of a declaring route; absent declarations and200 responses retain original behavior. No response-header copying, schema/store changes, additional side effects, bypass of fresh actor authorization or change to command event identity. This is a reviewed supplemental shared-file scope correction, pending direct human adoption; complete P2 gates/thresholds and historical decisions remain unchanged.
+
+## DEC-029 — Formal Fulfillment Archive prerequisite contribution
+
+Sam approved proposal107 SHA83cffc9f in the actual current chat. Fulfillment retains ownership of its real canonical persistence and two providers; Sales calls the named OpenMatter/ArchiveParticipant interfaces only. The machine contract is docs/fulfillment_shipping_management/10_archive_prerequisite_contract.json. Add a transaction-aware OpenMatter sibling to recheck on the existing Sales-root-locked connection. Missing/partial/inconsistent schema is UNKNOWN; absence never implies CLOSED for Archive. Lifecycle uses the installed formal provider and preserves Sales→Fulfillment→Inventory lock order.
+
+Deliver owner schema,12 mirrors/operations routing, full counts/hash/immutable/rollback participant and real Sales coordinator jointly in the complete P4 PR. Only the named shared provider contribution is governed by this Sales IMPLEMENT execution unit; original Fulfillment business phases/tasks/acceptance are not declared complete. Owner canonical records/pins freeze before Sales final source verification; changes after freeze require genuine new fingerprint qualification. No partial P4 merge or test/capacity/coverage/acceptance waiver. Production deployment remains separately controlled.
+
+
+## DEC-041 — Sam批准的本輪容量驗證調整
+
+本輪IMPLEMENT容量驗證使用500萬Active／2500萬行（平均5、P95 20、max100），取代本輪730萬／3650萬測試規模；原每日1萬與24月production容量規劃及功能／provider contract不變，不把較小測試外推成730萬已PASS。其他25m永久鍵／300k月候選／50users與原效能門檻保留；本輪DR依DEC040不執行。只允許隔離合成初始化builder的session關binlog；正式負載須全新default pool且session/global logging=1，保留正式測量日誌與完整reconcile；無prod／全域log關閉或歷史證據清除。
+
+
+## DEC-042 — 本輪100萬Active與獨立外部鍵索引測試
+
+Sam直接批准「同意，將外部鍵測試拆成小型業務正確性測試與獨立2500萬筆索引容量測試，不再建立全部歷史訂單。再下降為100萬Active、500萬明細，不做災難還原，低CPU推進，所有剩餘Gate通過後直接合併到main。」
+
+本輪容量使用1mActive/5mlines（平均5/P95 20/max100不變），取代本輪5m/25m規模。25m外部鍵改在專用隔離schema以原表欄位/索引/型別/CHECK建立index-only基準，target IDs明確只是合成索引值，不宣稱實際業務路由、全歷史關聯或25m訂單。不得以此替代小型真實業務整合測試：同key重送/不同payload/並發唯一性與rollback/Active及Archive路由都需保留原測試。取消為25mindex-only資料建立全部歷史訂單的要求。
+
+300k月度封存候選/500batch/50使用者/其餘原latency、memory、coverage、CI、review門檻不變；本輪DR依DEC040不執行，不列PASS。Archive容量本身仍測原查詢及300k候選，不將index-only資料冒充其資料。全production7.3m原始規劃保留，本輪1m結果不宣稱7.3m已PASS。初始化專用sessions可不記binlog，正式量測必須新預設連線session/global=1；不PURGE/RESET既存證據、不採用未通過的OPTIMIZE。建立資料採有界chunk、固定checkpoint、私有runtime、低CPU；磁碟入場保留100GiB。

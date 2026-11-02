@@ -26,11 +26,11 @@ END`]
 });
 export function cancelledAllocationSchema(base){
  if(base.table!=="fulfillment_allocations"||base.checks.chk_ful_allocation_quantity!==LEGACY_ALLOCATION_QUANTITY_CHECK)throw new TypeError("Exact0095 Allocation baseline required");
- return {...base,checks:{...base.checks,chk_ful_allocation_quantity:CANCELLED_ALLOCATION_QUANTITY_CHECK},triggers:{...Object.fromEntries(Object.entries(base.triggers).map(([name,definition])=>[name,[...definition,2]])),...Object.fromEntries(Object.entries(CANCELLED_ALLOCATION_GUARDS).map(([name,definition])=>[name,[...definition,1]]))}};
+ return {...base,checks:{...base.checks,chk_ful_allocation_quantity:CANCELLED_ALLOCATION_QUANTITY_CHECK},triggers:{...Object.fromEntries(Object.entries(base.triggers).map(([name,definition])=>[name,[definition[0],definition[1],(definition[2]??1)+(["INSERT","UPDATE"].includes(definition[0])?1:0)]])),...Object.fromEntries(Object.entries(CANCELLED_ALLOCATION_GUARDS).map(([name,definition])=>[name,[...definition,1]]))}};
 }
-export function recognizeCancelledAllocationSchema(base,checks,triggers,normalize){
+export function recognizeCancelledAllocationSchema(base,checks,triggers,normalize,{allowMissingTriggers=false}={}){
  if(base.table!=="fulfillment_allocations"||base.checks.chk_ful_allocation_quantity!==LEGACY_ALLOCATION_QUANTITY_CHECK)return null;
  const next=cancelledAllocationSchema(base);
- if(checks.length!==Object.keys(next.checks).length||checks.some(row=>!next.checks[row.name]||row.enforced!=="YES"||normalize(row.clause)!==normalize(next.checks[row.name]))||triggers.length!==Object.keys(next.triggers).length||triggers.some(row=>!next.triggers[row.name]||row.event!==next.triggers[row.name][0]||row.timing!=="BEFORE"||Number(row.ordinal)!==next.triggers[row.name][2]||normalize(row.statement)!==normalize(next.triggers[row.name][1])))return null;
+ if(checks.length!==Object.keys(next.checks).length||checks.some(row=>!next.checks[row.name]||row.enforced!=="YES"||normalize(row.clause)!==normalize(next.checks[row.name]))||Object.keys(next.triggers).some(name=>!triggers.some(row=>row.name===name)&&!(allowMissingTriggers&&name==="trg_archive_fulfillment_allocations_delete"))||triggers.some(row=>!next.triggers[row.name]||row.event!==next.triggers[row.name][0]||row.timing!=="BEFORE"||Number(row.ordinal)!==next.triggers[row.name][2]||normalize(row.statement)!==normalize(next.triggers[row.name][1])))return null;
  return next;
 }

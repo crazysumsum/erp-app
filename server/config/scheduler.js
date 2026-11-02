@@ -49,6 +49,8 @@ const schedulerConfig = {
   // 依工作名稱覆寫。部署時要調整頻率或關掉某件工作，不必改程式碼。
   // 可覆寫的欄位：enabled、intervalMs、timeoutMs。
   jobs: {
+    // Enable only after the approved Archive dry-run and deployment readiness checks.
+    "sales.archive": { enabled: false },
     // "report.monthly": { enabled: false },
 
     // JWT 撤銷的刷新間隔。調大它等於延後撤銷生效的時間，所以啟動時會與

@@ -226,6 +226,7 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: []
     },
     { name: "fulfillmentOpenMatter", lifecycle: "singleton", dependencies: ["mysqldatabase"] },
+    { name: "fulfillmentArchive", lifecycle: "singleton", dependencies: ["mysqldatabase", "time"] },
     {
       // 共享 store 需要注入 mysqldatabase——那正是它必須是 service 的原因。
       name: "idempotency",
@@ -305,12 +306,22 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["mysqldatabase", "time", "logging"]
     },
     {
+      name: "job.salesArchive",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
+    },
+    {
       name: "job.salesBackorderAllocation",
       lifecycle: "singleton",
       dependencies: ["scheduler", "salesJobs"]
     },
     {
       name: "job.salesConfirmationRecovery",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
+    },
+    {
+      name: "job.salesExport",
       lifecycle: "singleton",
       dependencies: ["scheduler", "salesJobs"]
     },
@@ -343,6 +354,11 @@ test("service discovery finds the built-in public services", async () => {
       name: "job.schedulerStatsFlush",
       lifecycle: "singleton",
       dependencies: ["scheduler", "logging", "mysqldatabase"]
+    },
+    {
+      name: "job.salesMetrics",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "time", "logging"]
     },
     {
       // Supplier import 執行（T42）。冇 cluster scope：互斥靠 supplier_import_jobs 自己嘅

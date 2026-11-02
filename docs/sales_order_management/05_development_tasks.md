@@ -1372,7 +1372,7 @@ External Key schema creation 依 DEC-015 提案前移至 TASK-013，以滿足 Sa
 
 **目標：** 交付高容量下的Outstanding／Audit／Export查詢、可恢復月度Archive、Reconciliation及完整發布證據。
 
-**完成結果：** 24個月約730萬Active headers及長期External Keys下常用查詢達標；合資格SO可原子搬至同一MySQL的唯讀Archive並可查詢／匯出；第一階段不永久purge。
+**完成結果：** 本輪100萬Active headers測試dataset及長期External Keys下常用查詢達標；合資格SO可原子搬至同一MySQL的唯讀Archive並可查詢／匯出；第一階段不永久purge。
 
 ### Task P4-T01：建立Export persistence
 
@@ -1671,7 +1671,7 @@ External Key schema creation 依 DEC-015 提案前移至 TASK-013，以滿足 Sa
 **Files likely touched：** 容量generator、performance report、restore／archive integration test、release checklist及必要coverage floor更新。
 
 **Acceptance criteria：**
-- [ ] 730萬Active headers下常用query P95≤2秒；Archive exact≤3秒、Customer＋366日≤5秒。
+- [ ] 100萬Active headers下常用query P95≤2秒；Archive exact≤3秒、Customer＋366日≤5秒。
 - [ ] 2,500萬External Keys exact dedupe／routing走unique hash index；月度30萬candidates不造成長transaction lock。
 - [ ] 隔離DB restore後counts／amounts／hashes一致，重播event／source不重複，全部AC 1～53有PASS證據或已批准豁免。
 
@@ -3767,6 +3767,10 @@ Commit：`feat: add read-only sales archive experience`。
 
 預計變更範圍：`SalesReconciliationService.js`、`server/test/salesReconciliationService.test.js`、logging／metrics配置、`docs/runbooks/sales-order-management.md`及一個job stats test。
 
+DEC-043 補充範圍：單一 `*_create_sales_operational_observations.js` migration／兩張 Sales operational tables、guarded `server/scripts/activateSalesObservations.js`、Sales-owned ledger／sample-state／engine source／domain counters、既有 runtime／metrics job 與 create/convert/confirm/Archive 接線、`InventoryReservationService.js` readonly owner method、對應 pure/native cases 與 runbook。只補原 Design12.4 訊號；不改 Phase／FIFO／reservation／其餘交易規則，不改 shared logger/framework。新增持久化與 Backorder START prerequisite 依 Sam DEC-043 已批准；原 M 檔案估算不代表此補充 scope 上限。
+
+新增強制 developer 套件 `sales-phase005-observations-unit`（15個明列檔案、至少42 cases、零 skip）及 `sales-phase005-observations-native`（明列原生入口、至少7 cases、零 skip）。`OBS-*` 是 TASK-062／TC-060 developer 風險案例別名，不是新增正式 TC/UAT 或 formal PASS。原套件／門檻全部保留；原生案例及真實 runbook、實際 table bytes／backlog 容量、完整覆核未完成前 TASK-062 不標 DONE。詳 `implementation/158_task062_operational_observation_cases.md`。
+
 依賴：P4-T05、P4-T10。
 
 規格追溯：FR-INQ-009～012、FR-ARC-018～020、Requirement §13.4；Design §7.11、§12.3–12.5。
@@ -3787,6 +3791,19 @@ Commit：`feat: reconcile and observe sales order processing`。
 
 ## TASK-063 — 完成容量、Restore、Regression及Release Gate
 
+### DEC-047 R2 C — approved P4 developer merge boundary (2026-10-30)
+
+Actual Sam userMessage `01a18b64-3404-7fc2-8660-569b8f76099e` in project-manager chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, verified from the actual thread: 「按方案C通知 Sales agent 推進」; DEC047 R2 proposal SHA `67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e`.
+
+For this P4 merge only, execute `sales-phase005-merge-capacity`: original1m Active/5m details shape; remaining12 Active query classes100samples×2 with original2s P95; quiet two real500-order Archive invocations with10 foreground readers; complete selected1000-order18-class counts/canonical hashes/amounts/manifests and unchanged Inventory; Archive3 query classes100×2 with original3s exact/5s range and invalid-range checks; read-only operational-table footprint. Reuse the already measured Outstanding200 with its original source/time and explicit impact assessment, never repeat or retag it. Keep25m independent-index evidence, no data rebuild or DR.
+
+One current-candidate CI supplies both existing required CI and the full server coverage obligation (92/83/90 plus39 per-file floors) through actual four-shard JUnit/raw-V8/merged-LCOV/checker evidence and provider/synthetic-candidate/tree identities. Preserve generic missing-local-command/metadata outputs and explicitly disposition them using this named human decision plus final independent review; no fake local PASS or installed Harness edit. Newly merged main5feb adds64 net server test files, expected588; its additional14 Fulfillment capacity scenarios remain **DEC049 PENDING** until Sam explicitly authorizes that extension. Reporting-only patch does not authorize execution.
+
+Full50-user sustained mixed load,10k end-to-end Import with5Exports/Archive contention, complete300k drain, long Archive-only foreground cohort>=100 and large Archive query capacity are **NOT RUN / PRELAUNCH** for this merge. Original formal requirements, TC053/054/055 definitions, test implementations and SLOs remain mandatory for their formal/prelaunch stage. These deferred checks block enabling Archive, not this approved developer merge boundary. `server/config/scheduler.js` keeps `sales.archive.enabled=false`. Report actual bounded foreground sample count/P95 without claiming the deferred long cohort or full NFR004/005. A newly observed performance FAIL/timeout stops further performance repair/retest for Sam; no automatically enlarged load. Low CPU, original business/permission/transaction rules and all other gates remain.
+
+
+> DEC-040（Sam：全規模容量測試是在做什麼，詳細解釋步驟；災難還原測試不用做）：本輪P4 developer交付免執行完整備份集、隔離還原、RTO及RPO驗證（TC-056～059／sales-phase005-restore），不以未執行作PASS。下列歷史Restore條件依此批准例外處理；容量TC-053～055、Archive資料完整性、原生回歸、CI、獨立覆核及其他Gate仍保留。正式需求／未來TechnicalAcceptance規格及產品備份能力不變，不宣稱已驗證RTO/RPO。
+
 ### Goal
 
 以production-like dataset完成效能、備份復原、安全回歸及發布證據。 （Legacy identity：`P4-T14`；規模估算：M（3–5個主要檔案）。）
@@ -3795,13 +3812,15 @@ Commit：`feat: reconcile and observe sales order processing`。
 
 預計變更範圍：容量generator、performance report、restore／archive integration test、release checklist及必要coverage floor更新。
 
+DEC-044 已批准的P4補充：僅加 `*_add_sales_backorder_order_index.js` 的既有active Backorder order+id非唯一索引，不改原reader／孤兒資料檢查／鎖定／業務規則。Task033既有行為在P4回歸；原48套件完整保留，原Phase005 native新增2案與minimum18→20，sameconnection DDL1/read1/MDL10/DDL600執行控制、metadata／ledger未知結果核對及實際index容量／queryplan證據必須完成。這是新增migration budget，原business query10s／性能SLO／coverage／memory不變，歷史DR規格仍依本輪不執行決策保留。
+
 依賴：P4-T01～P4-T13。
 
 規格追溯：KPI-01～09、NFR-PERF-001～008、AC 1～53；Design §11.7–11.8、§13.3。
 
 ### Acceptance criteria
 
-- [ ] 730萬Active headers下常用query P95≤2秒；Archive exact≤3秒、Customer＋366日≤5秒。
+- [ ] 100萬Active headers下常用query P95≤2秒；Archive exact≤3秒、Customer＋366日≤5秒。
 - [ ] 2,500萬External Keys exact dedupe／routing走unique hash index；月度30萬candidates不造成長transaction lock。
 - [ ] 隔離DB restore後counts／amounts／hashes一致，重播event／source不重複，全部AC 1～53有PASS證據或已批准豁免。
 
@@ -3825,3 +3844,182 @@ Shared writes are limited to the eight semantic Sales migration names in the man
 P1 handler destinations follow Design §9.3: six exact Sales Order/lookup files in server/src/handlers/sales (manifest lists each), plus the existing sales-quotations scope. TASK-021 runtime and expiry job follow Design §9.2/§12.2 under server/src/services/salesJobs with two exact manifest paths; no framework scheduler rewrite. The environment authorization reference is explicitly PENDING DEC-015. NFR-014/015 retain their reasons and use prospective approval ID APR-PHASE1-UATNA-DEC015; only an actual human decision may create that approval record.
 
 DEC-015 also proposes one explicit dependency correction: move only External Key parent table creation from TASK-038/P3-T01 into TASK-013/P1-T02, matching Design §4.22 and preserving the required RESTRICT FK from initial Sales Order creation. TASK-038 consumes and verifies the existing schema; all CSV/Channel APIs, intake, claims/dedupe and formal acceptance remain in P3. No staged weakening or omitted FK is authorized.
+
+
+## DEC-029 — Approved dependency delivery tasks
+
+Original001–063 and all39 developer contracts remain. Owner contribution is scoped by proposal107 and contract10; new suites are additional mandatory checks. No original fullFulfillmentPhase/acceptance claim.
+
+## TASK-064 — Formal dependency scope and integrated baseline
+
+### Goal
+
+Review owner contracts, exact human scope and baseline bindings; integrate fresh main preserving both histories and all evidence; resolve migration numbering collision without altering applied schema bytes/old ledgers; verify unmodified planning/boundary gates.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-056. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Review owner contracts, exact human scope and baseline bindings; integrate fresh main preserving both histories and all evidence; resolve migration numbering collision without altering applied schema bytes/old ledgers; verify unmodified planning/boundary gates. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-065 — Fulfillment canonical persistence and archive mirrors
+
+### Goal
+
+Forward-only real owner schema with all designed columns/FKs/constraints, operations routing and12 mirrors; fresh/upgrade/rerun/partial-install/native constraint tests; no shadow schema.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-064. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Forward-only real owner schema with all designed columns/FKs/constraints, operations routing and12 mirrors; fresh/upgrade/rerun/partial-install/native constraint tests; no shadow schema. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-066 — Formal Open Matter and lifecycle provider
+
+### Goal
+
+Real bounded CLOSED/OPEN/UNKNOWN queries, current schema/parity/version verification, native EXPLAIN and transaction lock/race tests; installed lifecycle service never uses absent-provider fallback.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-065. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Real bounded CLOSED/OPEN/UNKNOWN queries, current schema/parity/version verification, native EXPLAIN and transaction lock/race tests; installed lifecycle service never uses absent-provider fallback. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-067 — Formal caller-transaction Archive participant
+
+### Goal
+
+Trusted Sales coordinator identity and real transaction fixture ABI; canonical hash/count/readback/immutable/copy-delete ordering, conflict/rollback/unknown outcome; no dependency on already-DONE058.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-065, TASK-066. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Trusted Sales coordinator identity and real transaction fixture ABI; canonical hash/count/readback/immutable/copy-delete ordering, conflict/rollback/unknown outcome; no dependency on already-DONE058. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-068 — Joint Sales and owner Archive integration
+
+### Goal
+
+Real Sales coordinator and owner participant on same connection/transaction; no mocks as final integration proof; rollback/recovery/no-other-aggregate mutation; full joint P4 merge only.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-058, TASK-067. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Real Sales coordinator and owner participant on same connection/transaction; no mocks as final integration proof; rollback/recovery/no-other-aggregate mutation; full joint P4 merge only. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+
+## DEC-041 — 本輪容量測試規模
+
+Sam直接指定本輪Active500萬張／明細2500萬行；平均5、P95 20、上限100不變。2500萬永久External Keys、30萬封存候選、50使用者、原latency／匯入／coverage／CI／審查門檻保留；DEC040本輪不做DR仍適用。原production每日1萬／24月730萬規劃不刪除，但本輪500萬結果不能聲稱已測730萬。初始化僅自有合成builder session sql_log_bin=0，global及正式量測保持1；builder pool關閉後才可新process/defaultpool量測。不purge／reset既存證據日誌；保留正式量測完整binlog並預留空間。
+
+
+## DEC-042 — 本輪100萬Active與獨立外部鍵索引測試
+
+Sam直接批准「同意，將外部鍵測試拆成小型業務正確性測試與獨立2500萬筆索引容量測試，不再建立全部歷史訂單。再下降為100萬Active、500萬明細，不做災難還原，低CPU推進，所有剩餘Gate通過後直接合併到main。」
+
+本輪容量使用1mActive/5mlines（平均5/P95 20/max100不變），取代本輪5m/25m規模。25m外部鍵改在專用隔離schema以原表欄位/索引/型別/CHECK建立index-only基準，target IDs明確只是合成索引值，不宣稱實際業務路由、全歷史關聯或25m訂單。不得以此替代小型真實業務整合測試：同key重送/不同payload/並發唯一性與rollback/Active及Archive路由都需保留原測試。取消為25mindex-only資料建立全部歷史訂單的要求。
+
+300k月度封存候選/500batch/50使用者/其餘原latency、memory、coverage、CI、review門檻不變；本輪DR依DEC040不執行，不列PASS。Archive容量本身仍測原查詢及300k候選，不將index-only資料冒充其資料。全production7.3m原始規劃保留，本輪1m結果不宣稱7.3m已PASS。初始化專用sessions可不記binlog，正式量測必須新預設連線session/global=1；不PURGE/RESET既存證據、不採用未通過的OPTIMIZE。建立資料採有界chunk、固定checkpoint、私有runtime、低CPU；磁碟入場保留100GiB。
+
+
+## Current delivery order — Sam instruction verified 2026-11-02
+
+Sam's actual project-manager message `01a19a65-0902-74f1-b684-0fcb40f9f5e7`
+in chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f` supersedes the earlier
+pre-merge nonfunctional execution timing: complete feature implementation,
+affected correctness/permission/transaction/idempotency/failure-recovery regression,
+required independent review, unchanged coverage floors and current functional CI;
+then merge under the existing authorization. Functional UAT and all nonfunctional
+execution remain separate subsequent work. Do not execute any nonfunctional suite
+locally or in CI before its related functional UAT, even under an older approval.
+No case, dataset, threshold or owner obligation is deleted or marked PASS by this
+timing change. Existing actual results retain their original source/time identity.
+
+Post-UAT owner: Sales module owner, with Fulfillment owner for joint paths and
+the project CI coordinator for admission/routing. Retain the exact profile entries
+`sales-phase003-performance`, `sales-phase004-performance`,
+`sales-phase005-merge-capacity`, `sales-phase005-index-capacity` and the original
+full `sales-phase005-performance` workload for impact-scoped post-UAT selection.
+Retain the original large mixed/50-user/10k-import+5-export, 300k Archive drain,
+large Archive query and long-reader cohorts and every original SLO; no DR per
+Sam's explicit earlier instruction. No dataset rebuild or automatic NFR rerun.
+Archive remains disabled by default pending its previously specified activation
+conditions. Operational history remains UNKNOWN until actual coverage exists.
+The functional merge does not assert UAT, NFR acceptance or production readiness.
+
+The shared HD026 DB component is limited to commit `731e3864`: terminal outcome
+metadata plus live rollback-failure quarantine/unknown result, preserving the P4
+connection-wait metrics, normal transaction isolation, pool behavior and deadlines.
+Its two existing test files retain their case registrations and fault scale.
+Sam's HD026 A reply `call_1eabb1e0dd7e4a659c9a18fd64db8b17` was verified in the
+Fulfillment owner chat. Full P2 Recovery and new owner readers are not imported.
+
+Central CI admission must accept exact reviewed test/config/helper/runner blobs.
+Feature agents do not approve their own receipts or edit admission variables.
+Before publication, integrate the coordinator's UAT-first workflow change:
+the earlier workflow would select `server-capacity` and `client-capacity` on the
+shared DB, package, workflow and classifier changes. Those workloads must remain
+deferred rather than reported as successful. DEC049 R2's four new schema cases
+and HD026's existing assertion replacements retain their actual Sam approvals;
+no further case or workload increase is authorized by this record.
+
+
+### Pre-UAT execution guard for retained mixed-file profiles
+
+The 44 retained profile references are historical verification contracts, not
+permission to execute all 44 whole-file commands now. Five contain existing
+catalogued NFR in mixed files: `sales-foundation-developer`,
+`sales-phase002-native`, `sales-phase004-unit`, `sales-phase004-native`, and
+`sales-fulfillment-pending-provider-native`. Do not invoke these unfiltered
+commands before related functional UAT. Reuse valid named historical evidence
+with its actual baseline/applicability, and use the admitted current functional
+CI with the single catalog's exact routine exclusions. Deferred cases are not
+PASS; unchanged coverage floors and functional assertions still apply.
+
+The existing TC-045 full250000 Header/250000 Line Export case, both sorts and
+every assertion including the original30s deadline, is moved unchanged to
+`server/test-capacity/sales/phase4/export.capacity.js`. Its dedicated large-data
+generation stays in that manual post-UAT case. Shared `exportFixture` creates
+only the original small fixture, on an explicit call; it registers no case and
+does not build data on import. No catalog addition or workload execution is made
+in this functional candidate. The exact case-byte and routine-discovery proofs
+are recorded in the private functional-delivery receipt; the original execution
+results remain unchanged. The source case has moved, not been deleted.
+
+Retained501/5005 boundary cases verify exact500/5000 pagination, batch resume,
+whole-aggregate rollback, fencing and ordering. Their durations are diagnostics,
+not NFR latency/memory thresholds; independent review confirms they remain
+functional correctness regressions. No new registration or larger dataset.

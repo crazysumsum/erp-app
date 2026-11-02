@@ -61,7 +61,7 @@ function reload(){dialog.value=false;intent.value=null;uncertain.value=false;loa
    <template #body-cell-quantity="{row}"><q-td class="text-right">{{ row.quantity }} {{ row.uomCode }}</q-td></template>
    <template #body-cell-lineNote="{row}"><EllipsisCell :text="row.lineNote" /></template>
   </DataTable>
-  <template v-if="document.conversion"><p class="q-mt-md">唯一目標訂單：<router-link :to="`/sales/orders/${document.conversion.salesOrderId}`">{{ document.conversion.salesOrderNumber }}</router-link></p><QuotationDifferencePanel :difference="document.conversion.differenceSummary" /></template>
+  <template v-if="document.conversion"><p class="q-mt-md">唯一目標訂單：<router-link :to="`/sales/${document.conversion.isArchived?'archive':'orders'}/${document.conversion.salesOrderId}`">{{ document.conversion.salesOrderNumber }}</router-link><q-badge v-if="document.conversion.isArchived" class="q-ml-sm" label="歷史唯讀" /></p><QuotationDifferencePanel :difference="document.conversion.differenceSummary" /></template>
  </template>
  <q-dialog v-model="dialog" :persistent="busy || uncertain"><q-card><q-card-section><h2 class="text-h6 q-ma-none">{{ action==='issue'?'發出報價':'取消報價' }}</h2><p>{{ document?.number }}；{{ document?.currencyCode }} {{ document?.totalAmount }}</p><p v-if="action==='issue'">發出後明細會凍結。報價不會保留庫存。</p>
   <FormPanel :on-submit="mutate" v-slot="{submitting}"><q-input v-if="action==='cancel'" v-model="reason" label="取消原因 *" type="textarea" maxlength="500" :disable="uncertain || submitting" :rules="[value=>[...value.trim()].length>=5 || '最少五個字元']" outlined dense />

@@ -24,7 +24,12 @@ export async function inspectFulfillmentTable(tx,c,{allowMissingTriggers=false}=
   if(Object.keys(c.foreignKeys).some(name=>!groups.has(name)))fail(c.table,"missing foreign key");
   const [checks]=await tx.query(`SELECT tc.constraint_name AS name,tc.enforced AS enforced,cc.check_clause AS clause FROM information_schema.table_constraints tc JOIN information_schema.check_constraints cc ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name WHERE tc.constraint_schema=DATABASE() AND tc.table_name=? AND tc.constraint_type='CHECK'`,[c.table]);
   const [triggers]=await tx.query("SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,action_order AS ordinal,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?",[c.table]);
-  c=recognizeCancelledAllocationSchema(c,checks,triggers,normalize)??c;
+  if(c.table==="fulfillment_allocations"&&!Object.hasOwn(c.triggers??{},"trg_archive_fulfillment_allocations_delete")&&triggers.some(row=>row.name==="trg_archive_fulfillment_allocations_delete")){
+    // Late0104 upgrades must recognize the exact installed0106 guard without cycling0095 module initialization.
+    const {FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE}=await import("./fulfillmentArchiveProtectionSchema.js"),{contract}=FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE.find(row=>row.base.table===c.table);
+    c={...c,triggers:{...c.triggers,trg_archive_fulfillment_allocations_delete:[...contract.triggers.trg_archive_fulfillment_allocations_delete,1]}};
+  }
+  c=recognizeCancelledAllocationSchema(c,checks,triggers,normalize,{allowMissingTriggers})??c;
   if(checks.length!==Object.keys(c.checks).length||checks.some(r=>!c.checks[r.name]||r.enforced!=="YES"||normalize(r.clause)!==normalize(c.checks[r.name])))fail(c.table,"checks");
   for(const r of triggers){const e=c.triggers?.[r.name];if(!e||r.event!==e[0]||r.timing!=="BEFORE"||(e[2]!==undefined&&Number(r.ordinal)!==e[2])||normalize(r.statement)!==normalize(e[1]))fail(c.table,`trigger ${r.name}`);}
   if(!allowMissingTriggers&&Object.keys(c.triggers??{}).some(name=>!triggers.some(r=>r.name===name)))fail(c.table,"missing trigger");

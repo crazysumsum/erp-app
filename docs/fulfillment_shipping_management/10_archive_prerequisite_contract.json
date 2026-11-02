@@ -1,0 +1,258 @@
+{
+  "id": "fulfillment-sales-archive-prerequisite",
+  "version": "1",
+  "owner": "fulfillment-shipping-management",
+  "execution_unit": "sales-order-management:PHASE-005",
+  "authorization": "DEC-029 exact proposal107",
+  "state": "APPROVED_CONTRACT_IMPLEMENTATION_REQUIRES_REAL_EVIDENCE",
+  "services": {
+    "fulfillmentOpenMatter": {
+      "class": "FulfillmentOpenMatterService",
+      "methods": [
+        "getOrderArchiveStatus(orderId,{atMs})",
+        "getOrderArchiveStatusInTransaction(tx,{orderId,atMs})",
+        "assertSalesLifecycleAllowedInTransaction(tx,command)"
+      ],
+      "result": "types.openMatterResult",
+      "unknown": [
+        "missing/partial/version-mismatched schema",
+        "unavailable provider or query",
+        "inconsistent owner data"
+      ],
+      "open": [
+        "nonterminal fulfillment/shipment/reversal",
+        "active reservation claim",
+        "outstanding allocation",
+        "IN_PROGRESS operation"
+      ],
+      "input": {
+        "getOrderArchiveStatus": "orderId:id, options exact {atMs:epochMs}",
+        "getOrderArchiveStatusInTransaction": "tx:actual existing caller transaction, command exact {orderId:id,atMs:epochMs}",
+        "assertSalesLifecycleAllowedInTransaction": "Existing Sales lifecycle command orderId is a positive safe integer; validate before converting to canonical decimal id, preserving the already implemented consumer contract. No string/number coercion of other fields."
+      }
+    },
+    "fulfillmentArchiveParticipant": {
+      "class": "FulfillmentArchiveParticipant",
+      "methods": [
+        "prepareOrderInTransaction(tx,{orderId,archiveBatchId,cutoffMs})->expectedManifest",
+        "archiveOrderInTransaction(tx,command)"
+      ],
+      "command": "types.archiveCommand (exact shape); authority is internal callback, absent from payload",
+      "result": "types.archiveResult",
+      "no_own_transaction_or_http": true
+    }
+  },
+  "lock_order": [
+    "Sales roots/lines/mappings",
+    "Fulfillment roots/children by IDs",
+    "Inventory if needed"
+  ],
+  "persistence": {
+    "active_tables": [
+      "fulfillments",
+      "fulfillment_lines",
+      "fulfillment_line_reservation_claims",
+      "fulfillment_allocations",
+      "fulfillment_status_history",
+      "shipments",
+      "shipment_lines",
+      "shipment_issue_details",
+      "shipment_status_history",
+      "shipment_reversals",
+      "shipment_reversal_details",
+      "fulfillment_audit_logs"
+    ],
+    "retained_operations": "fulfillment_operation_requests.is_document_archived",
+    "archive": "12 full original-ID/column mirrors plus archive_batch_id FK, archived_at, row_hash; immutable",
+    "operationOrderRouting": "fulfillment_operation_requests.sales_order_id is nullable only for target_type=EXPORT. CHECK requires target_type IN (FULFILLMENT,SHIPMENT) to have a positive non-null sales_order_id even when target_id is NULL; EXPORT must have null sales_order_id and is a read-only job intent. index(sales_order_id,status,id) bounds order-scoped business intents. No FK to deletable Active SO. Existing is_document_archived routes retained operation results; Archive does not treat EXPORT as an unknown order-scoped writer or infer business CLOSED from it. Future owner business writers populate authoritative Sales identity under Sales root locks."
+  },
+  "transaction": "Use actual caller transaction; recheck, copy/readback counts+hash, route and delete as one atomic effect; no active delete before verification; same outcome replay vs conflicting manifest rejection.",
+  "limits": [
+    "No fulfillment create/allocate/pick/ship/reverse HTTP/UI writer activation",
+    "Original45 owner tasks/12 formal TC/120 UAT remain obligations",
+    "No production deployment authority",
+    "Original Sales39 plus new owner developer suites, complete P4/currentCI/realreview/unchangedGate required"
+  ],
+  "types": {
+    "id": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$",
+      "maximumDecimal": "9007199254740991",
+      "coercion": false
+    },
+    "epochMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8640000000000000,
+      "coercion": false
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "tableCounts": {
+      "type": "object",
+      "requiredExactKeys": [
+        "fulfillments",
+        "fulfillment_lines",
+        "fulfillment_line_reservation_claims",
+        "fulfillment_allocations",
+        "fulfillment_status_history",
+        "shipments",
+        "shipment_lines",
+        "shipment_issue_details",
+        "shipment_status_history",
+        "shipment_reversals",
+        "shipment_reversal_details",
+        "fulfillment_audit_logs"
+      ],
+      "additionalProperties": false,
+      "values": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      }
+    },
+    "hashSummary": {
+      "type": "object",
+      "requiredExactKeys": [
+        "fulfillments",
+        "fulfillment_lines",
+        "fulfillment_line_reservation_claims",
+        "fulfillment_allocations",
+        "fulfillment_status_history",
+        "shipments",
+        "shipment_lines",
+        "shipment_issue_details",
+        "shipment_status_history",
+        "shipment_reversals",
+        "shipment_reversal_details",
+        "fulfillment_audit_logs"
+      ],
+      "additionalProperties": false,
+      "values": "hash"
+    },
+    "expectedManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": {
+        "version": {
+          "const": "1"
+        },
+        "orderId": "id",
+        "archiveBatchId": "id",
+        "cutoffMs": "epochMs",
+        "tableCounts": "tableCounts",
+        "hashSummary": "hashSummary"
+      }
+    },
+    "archiveCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": {
+        "orderId": "id",
+        "archiveBatchId": "id",
+        "cutoffMs": "epochMs",
+        "archivedAtMs": "epochMs",
+        "expectedManifest": "expectedManifest"
+      },
+      "invariants": [
+        "archivedAtMs>=cutoffMs",
+        "manifest orderId/batch/cutoff exactly equal command",
+        "no actor/permission/serviceName/identity authority keys"
+      ]
+    },
+    "prepareCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": {
+        "orderId": "id",
+        "archiveBatchId": "id",
+        "cutoffMs": "epochMs"
+      }
+    },
+    "archiveResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": {
+        "version": {
+          "const": "1"
+        },
+        "orderId": "id",
+        "archiveBatchId": "id",
+        "outcome": {
+          "enum": [
+            "ARCHIVED",
+            "REPLAYED"
+          ]
+        },
+        "tableCounts": "tableCounts",
+        "hashSummary": "hashSummary",
+        "routing": {
+          "const": {
+            "isDocumentArchived": true
+          }
+        }
+      }
+    },
+    "openMatterResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": {
+        "version": {
+          "const": "1"
+        },
+        "status": {
+          "enum": [
+            "CLOSED",
+            "OPEN",
+            "UNKNOWN"
+          ]
+        },
+        "reasonCodes": "unique array of allowlisted codes"
+      },
+      "invariants": [
+        "CLOSED requires empty reasonCodes",
+        "OPEN/UNKNOWN require at least one corresponding safe reason code"
+      ]
+    }
+  },
+  "reasonCodes": {
+    "OPEN": [
+      "FULFILLMENT_NONTERMINAL",
+      "SHIPMENT_NONTERMINAL",
+      "REVERSAL_IN_PROGRESS",
+      "CLAIM_ACTIVE",
+      "ALLOCATION_OUTSTANDING",
+      "OPERATION_IN_PROGRESS"
+    ],
+    "UNKNOWN": [
+      "SCHEMA_MISSING",
+      "SCHEMA_INCOMPATIBLE",
+      "SCHEMA_VERSION_UNAVAILABLE",
+      "PROVIDER_UNAVAILABLE",
+      "OWNER_STATE_INCONSISTENT"
+    ]
+  },
+  "authority": {
+    "archive": "SalesJobRuntimeService owns a private WeakMap of currently executing actual transaction executors bound to its live archive scheduler lease, orderId, archiveBatchId and cutoffMs. Only its actual archive coordinator callback enters/exits this scope with try/finally. The fulfillmentArchive adapter resolves the real salesJobs singleton and injects a fixed read-only authorization callback to the participant; callback verifies the same tx object and exact scope/live principal. No token/role/identity from command can grant authority. No publicly callable grant/register method or exported bearer token.",
+    "transaction": "Archive methods require both tx.query function and successful trusted authorization callback with same tx; reject absent/out-of-scope executor. Provider never BEGIN/COMMIT/acquire another connection. Lifecycle/transaction-aware OpenMatter requires the actual caller executor verified against the database service current request-context databaseTransaction; native fixtures use the real withTransaction executor/context, not a fabricated query object.",
+    "lockPrerequisite": "Caller acquires Sales root/lines/mappings first; provider never acquires Sales locks in reverse. prepare locks owner roots/children by ascending IDs, verifies closed state and returns real observed hashes. archive rechecks same locked state/expected manifest, then copy/readback/delete. All holds remain in caller transaction.",
+    "schedulerContext": "SalesJobRuntimeService adds the existing context service dependency and enters context.storage.run with a controlled async job scope (databaseTransaction:null, current job signal/deadline/startedAt, no claimed human auth) before database.withTransaction. The actual MySqlDatabaseService then binds the actual transaction object in that scope; provider checks equality. No framework modification. Non-transactional OpenMatter getOrderArchiveStatus similarly establishes its own controlled read context before its own read transaction if no current context exists; the transaction-aware sibling never opens another transaction/context/connection."
+  },
+  "hashAlgorithm": {
+    "version": "1",
+    "row": "SHA256 UTF-8 JSON.stringify(array of [columnName,normalizedValue] pairs in exact canonical owner schema column order). Include original id and generated business values; exclude archive_batch_id/archived_at/row_hash only.",
+    "canonicalColumns": "Explicit immutable arrays in server/src/modules/fulfillment/fulfillmentArchiveSchema.js, reviewed against every field of owner Design4.3-4.15. Full native column/constraint parity is required; no SELECT-star-derived runtime order.",
+    "normalization": "NULL stays null; BIGINT/INT/boolean identities and quantities canonical decimal strings without leading zero (zero allowed quantities), DECIMAL uses declared scale without floating-point conversion, DATE is YYYY-MM-DD, text is exact UTF-8, JSON recursively sorts object keys preserving array order and values and rejects non-finite/unsafe numeric values. No implicit locale/date-time conversion.",
+    "table": "SHA256 of ascending numeric original-id rows joined as id:row_hash followed by LF for each row; empty table SHA256 of empty bytes. No archive metadata in row digest. All12 tableCounts/hashSummary keys required even when zero."
+  },
+  "failureSemantics": {
+    "badShapeOrType": "TypeError before query/mutation; exact allowed keys and safe bounds; no coercion",
+    "badAuthority": "FULFILLMENT_ARCHIVE_FORBIDDEN before mutation",
+    "openOrUnknown": "OpenMatter returns strict OPEN/UNKNOWN safe result; participant throws FULFILLMENT_ARCHIVE_NOT_ELIGIBLE (no writes) and caller rolls back",
+    "manifestOrExistingRowMismatch": "ARCHIVE_DATA_CONFLICT; no overwrite/update of immutable archive rows; caller rolls back all Sales/owner effects",
+    "technicalFailure": "Propagate safe dependency failure to coordinator; no swallowing into success; actual whole transaction rollback or durable unknown-commit recovery",
+    "replay": "Same order/batch/complete original12 table counts/hashes and persistent routing/manifest must prove same effect. No active rows plus complete matching archive yields REPLAYED. Existing same-ID rows may only be reused after exact same batch/hash and complete manifest validation; partial/different evidence never implies success. Different batch/hash is conflict, not repair."
+  }
+}

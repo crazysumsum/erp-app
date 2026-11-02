@@ -77,7 +77,7 @@ Fields: `ID | Title | Type/Priority | Traceability | Preconditions/Data | Steps/
 
 | ID | Title | Type / Priority | Traceability | Preconditions / Data | Steps / Trigger | Expected / Acceptance | Cleanup | Auto | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| TC-044 | Active views/filter/exact routing | API/DB/P0 | FR-018–021,109–113,120; DES-016; TASK-052,053 | mixed states/sources, 7.3m dataset | query/filter/sort/page | correct stable results; exact index path; Active not silently unioned | retain perf DB | YES | PLANNED | — |
+| TC-044 | Active views/filter/exact routing | API/DB/P0 | FR-018–021,109–113,120; DES-016; TASK-052,053 | mixed states/sources, 1m dataset | query/filter/sort/page | correct stable results; exact index path; Active not silently unioned | retain perf DB | YES | PLANNED | — |
 | TC-045 | Export scope/formula/owner/expiry | SECURITY/INTEGRATION/P0 | FR-114–117,135–136; SEC-007/012/014; DES-016; TASK-054–056 | scoped users, text risk, expired job | create/download as owner/other | filter/scope exact; safe CSV; other denied; expired 410 | purge files | YES | PLANNED | — |
 | TC-046 | History/audit/snapshot immutability | DB/SECURITY/P0 | FR-016,041,060,075,118–120,126,133; SEC-011; DES-014; TASK-052,062 | completed actions/archive rows | application/direct mutation attempt | append-only/immutable; all actor/time/outcome/correlation present | rollback | YES | PLANNED | — |
 | TC-047 | Archive eligibility/cutoff/open matter | INTEGRATION/P0 | FR-121–125,140; DES-003,017; TASK-057 | final/open/backorder/UNKNOWN and 24m boundaries | candidate/recheck | only eligible moved; read-only queries do not change business date; UNKNOWN skipped | rollback | YES | PLANNED | — |
@@ -86,7 +86,7 @@ Fields: `ID | Title | Type/Priority | Traceability | Preconditions/Data | Steps/
 | TC-050 | Active/Archive/external-key routing | INTEGRATION/P0 | FR-133–136; DES-007,016,017; TASK-060,061 | manual/quotation/CSV/channel archived orders | exact/source/link lookup | exactly one tier/resource found; explicit archive label; no duplicate/false 404 | rollback | YES | PLANNED | — |
 | TC-051 | Archive immutability/no purge | SECURITY/P0 | FR-132–140; NFR-016; SEC-011; DES-008,017; TASK-059–061 | archive rows <7y and old | UI/API/direct mutation/purge discovery | read/export only; no automatic or user purge; data unchanged | rollback | YES | PLANNED | — |
 | TC-052 | Job failure isolation/backpressure | RECOVERY/P0 | FR-130–138; NFR-008–011; DES-015; TASK-054,059,062 | failing import/export/backorder/archive jobs | fail one while Active commands run | failure visible/retryable; other jobs/Active functions continue; bounded resources | clear jobs | PARTIAL | PLANNED | — |
-| TC-053 | 7.3m Active query performance | PERFORMANCE/P1 | NFR-001/002/007; DES-019; TASK-063 | production-like distribution and indexes | mixed exact/common workload | p95 <=2s with correct rows/plans and no empty-data shortcut | retain perf DB | PARTIAL | PLANNED | — |
+| TC-053 | 1m Active query performance | PERFORMANCE/P1 | NFR-001/002/007; DES-019; TASK-063 | production-like distribution and indexes | mixed exact/common workload | p95 <=2s with correct rows/plans and no empty-data shortcut | retain perf DB | PARTIAL | PLANNED | — |
 | TC-054 | Archive query and monthly batch performance | PERFORMANCE/P1 | NFR-006/008; DES-017,019; TASK-059,063 | archive scale, 300k candidates, batch500 | query/archive with foreground load | exact <=3s/range <=5s; no long-lock/SLO breach | retain perf DB | PARTIAL | PLANNED | — |
 | TC-055 | Mixed 50-user capacity | PERFORMANCE/P1 | NFR-003–005/008; DES-019; TASK-063 | 50 users plus all jobs | sustained workload | all stated latency/batch targets, no pool/thread/disk starvation | stop load | PARTIAL | PLANNED | — |
 | TC-056 | Backup set completeness | HA_DR/P0 | FR-138–140; NFR-016; DES-020; TASK-062,063 | Active/Archive/keys/operations/files/config | produce backup/manifests | every required store/version/key identified and restorable | secure/delete test copy | PARTIAL | PLANNED | — |
@@ -1102,7 +1102,7 @@ reset env。只移除本案例自己建立的合成資料及 runtime 資源，�
 
 ### Preconditions and data
 
-mixed states/sources, 7.3m dataset。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+mixed states/sources, 1m dataset。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
 
 ### Steps
 
@@ -1305,7 +1305,11 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 
 clear jobs。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
 
-## TC-053 — 7.3m Active query performance
+### P4 developer merge evidence timing — DEC047C
+
+Sam approved the bounded developer merge boundary recorded in DES019/TASK063. The developer5-case `merge.capacity.js` does not execute or mark formal TC053/054/055 PASS. Full50-user mixed/10k Import+5Export/300k Archive/longforeground/largeArchive capacity remain NOT RUN and required before Archive activation. All formal mandatory/blocking/applicability flags below remain unchanged; DR is excluded under the earlier direct Sam decision. Actual current CI may satisfy the named fullcoverage developer obligation only with raw/provider provenance and final independent disposition, not a fabricated local run.
+
+## TC-053 — 1m Active query performance
 
 ### Preconditions and data
 
@@ -1488,3 +1492,104 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 ### Cleanup
 
 reset env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+
+## DEC-040 — 本輪P4 developer災難還原測試免執行
+
+Sam直接指示「災難還原測試不用做」。本輪IMPLEMENT/P4 developer Gate不要求執行TC-056～059對應完整備份集、隔離還原、RTO/RPO；保留其正式定義及歷史required flags供未來正式驗證，未執行不列PASS，不虛構恢復能力。只從PHASE-005 developer_suites移除sales-phase005-restore；Profile保留原command/4case/零skip門檻，未執行不以skip湊數。TC-053～055規模／負載／門檻與Archive copy/hash/atomicity/routing/reconciliation全部不變，其他回歸/coverage/CI/審查保留。產品備份設定／正式資料及已存在證據不變。
+
+
+## DEC-041 — 本輪容量測試規模
+
+Sam直接指定本輪Active500萬張／明細2500萬行；平均5、P95 20、上限100不變。2500萬永久External Keys、30萬封存候選、50使用者、原latency／匯入／coverage／CI／審查門檻保留；DEC040本輪不做DR仍適用。原production每日1萬／24月730萬規劃不刪除，但本輪500萬結果不能聲稱已測730萬。初始化僅自有合成builder session sql_log_bin=0，global及正式量測保持1；builder pool關閉後才可新process/defaultpool量測。不purge／reset既存證據日誌；保留正式量測完整binlog並預留空間。
+
+
+## DEC-042 — 本輪100萬Active與獨立外部鍵索引測試
+
+Sam直接批准「同意，將外部鍵測試拆成小型業務正確性測試與獨立2500萬筆索引容量測試，不再建立全部歷史訂單。再下降為100萬Active、500萬明細，不做災難還原，低CPU推進，所有剩餘Gate通過後直接合併到main。」
+
+本輪容量使用1mActive/5mlines（平均5/P95 20/max100不變），取代本輪5m/25m規模。25m外部鍵改在專用隔離schema以原表欄位/索引/型別/CHECK建立index-only基準，target IDs明確只是合成索引值，不宣稱實際業務路由、全歷史關聯或25m訂單。不得以此替代小型真實業務整合測試：同key重送/不同payload/並發唯一性與rollback/Active及Archive路由都需保留原測試。取消為25mindex-only資料建立全部歷史訂單的要求。
+
+300k月度封存候選/500batch/50使用者/其餘原latency、memory、coverage、CI、review門檻不變；本輪DR依DEC040不執行，不列PASS。Archive容量本身仍測原查詢及300k候選，不將index-only資料冒充其資料。全production7.3m原始規劃保留，本輪1m結果不宣稱7.3m已PASS。初始化專用sessions可不記binlog，正式量測必須新預設連線session/global=1；不PURGE/RESET既存證據、不採用未通過的OPTIMIZE。建立資料採有界chunk、固定checkpoint、私有runtime、低CPU；磁碟入場保留100GiB。
+
+
+DEC042 execution binding: mandatory developer suite sales-phase005-index-capacity underTC-053 uses indexCapacityFull.capacity.js, which forces25000000index rows andrequires4actualJUnitcases/zeroFAIL/SKIP;100000pilot cannot satisfy thissuite. Count/uniqueplan/240exactread samples atoriginal2sP95/duplicateconcurrency are index-only evidence, not businessrelationship/smallbusinessrouting acceptance. TC-054monthly300k andTC-05550userworkload remain separate required.
+
+
+## DEC-043 — TASK-062 developer observation contracts
+
+本輪追加兩個強制 developer contracts：`sales-phase005-observations-unit`（≥42 cases）、`sales-phase005-observations-native`（≥7 cases），全部零 failure／skip。具體 OBS engineering aliases 及界線見 `implementation/158_task062_operational_observation_cases.md`，追溯原 DES-014／TASK-062／TC-060；不改既有60個正式 TC 定義、required flags 或 UAT。受控 timestamp projections 只驗證邏輯，不宣稱真實經過24小時／10分鐘或 production coverage。原生／完整容量、CI、整個 Phase Gates 仍須於最終產品基準實測。
+
+### DEC-044 developer-only regression supplement
+
+原 `sales-phase005-native` 額外執行 `salesBackorderOrderIndex.integration.test.js` 的2項工程案例（TC-029／TC-054 aliases），minimum18→20、零skip，原48套件及所有原案例不減少。DEF037-N1驗證forward index的原完整schema相容、資料不變、idempotence、exact metadata／錯shape拒絕、實際同連線DDL1/read1/MDL10與恢復、已完成DDL但ack丟失時session由產品丟棄／ledger尚缺，觀察index與ledger後以正常migration CLI完成紀錄。DEF037-N2用真producer建立1／100明細，原exact及order+id predicates的索引plan與獨立結果oracle、取消重送、readonly reconciliation及真Archive worker。全量資料建好後另留queryplan／rows-examined與index bytes／buildtime實證；沒有原始實測不宣稱SLO PASS。既有unknown、orphan、Archive hash等原回歸不刪改。這些不是新增正式TC定義／Technical Acceptance結果；原60TC／UAT及本輪不做DR規則保留。
+
+
+## Current delivery order — Sam instruction verified 2026-11-02
+
+Sam's actual project-manager message `01a19a65-0902-74f1-b684-0fcb40f9f5e7`
+in chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f` supersedes the earlier
+pre-merge nonfunctional execution timing: complete feature implementation,
+affected correctness/permission/transaction/idempotency/failure-recovery regression,
+required independent review, unchanged coverage floors and current functional CI;
+then merge under the existing authorization. Functional UAT and all nonfunctional
+execution remain separate subsequent work. Do not execute any nonfunctional suite
+locally or in CI before its related functional UAT, even under an older approval.
+No case, dataset, threshold or owner obligation is deleted or marked PASS by this
+timing change. Existing actual results retain their original source/time identity.
+
+Post-UAT owner: Sales module owner, with Fulfillment owner for joint paths and
+the project CI coordinator for admission/routing. Retain the exact profile entries
+`sales-phase003-performance`, `sales-phase004-performance`,
+`sales-phase005-merge-capacity`, `sales-phase005-index-capacity` and the original
+full `sales-phase005-performance` workload for impact-scoped post-UAT selection.
+Retain the original large mixed/50-user/10k-import+5-export, 300k Archive drain,
+large Archive query and long-reader cohorts and every original SLO; no DR per
+Sam's explicit earlier instruction. No dataset rebuild or automatic NFR rerun.
+Archive remains disabled by default pending its previously specified activation
+conditions. Operational history remains UNKNOWN until actual coverage exists.
+The functional merge does not assert UAT, NFR acceptance or production readiness.
+
+The shared HD026 DB component is limited to commit `731e3864`: terminal outcome
+metadata plus live rollback-failure quarantine/unknown result, preserving the P4
+connection-wait metrics, normal transaction isolation, pool behavior and deadlines.
+Its two existing test files retain their case registrations and fault scale.
+Sam's HD026 A reply `call_1eabb1e0dd7e4a659c9a18fd64db8b17` was verified in the
+Fulfillment owner chat. Full P2 Recovery and new owner readers are not imported.
+
+Central CI admission must accept exact reviewed test/config/helper/runner blobs.
+Feature agents do not approve their own receipts or edit admission variables.
+Before publication, integrate the coordinator's UAT-first workflow change:
+the earlier workflow would select `server-capacity` and `client-capacity` on the
+shared DB, package, workflow and classifier changes. Those workloads must remain
+deferred rather than reported as successful. DEC049 R2's four new schema cases
+and HD026's existing assertion replacements retain their actual Sam approvals;
+no further case or workload increase is authorized by this record.
+
+
+### Pre-UAT execution guard for retained mixed-file profiles
+
+The 44 retained profile references are historical verification contracts, not
+permission to execute all 44 whole-file commands now. Five contain existing
+catalogued NFR in mixed files: `sales-foundation-developer`,
+`sales-phase002-native`, `sales-phase004-unit`, `sales-phase004-native`, and
+`sales-fulfillment-pending-provider-native`. Do not invoke these unfiltered
+commands before related functional UAT. Reuse valid named historical evidence
+with its actual baseline/applicability, and use the admitted current functional
+CI with the single catalog's exact routine exclusions. Deferred cases are not
+PASS; unchanged coverage floors and functional assertions still apply.
+
+The existing TC-045 full250000 Header/250000 Line Export case, both sorts and
+every assertion including the original30s deadline, is moved unchanged to
+`server/test-capacity/sales/phase4/export.capacity.js`. Its dedicated large-data
+generation stays in that manual post-UAT case. Shared `exportFixture` creates
+only the original small fixture, on an explicit call; it registers no case and
+does not build data on import. No catalog addition or workload execution is made
+in this functional candidate. The exact case-byte and routine-discovery proofs
+are recorded in the private functional-delivery receipt; the original execution
+results remain unchanged. The source case has moved, not been deleted.
+
+Retained501/5005 boundary cases verify exact500/5000 pagination, batch resume,
+whole-aggregate rollback, fencing and ordering. Their durations are diagnostics,
+not NFR latency/memory thresholds; independent review confirms they remain
+functional correctness regressions. No new registration or larger dataset.

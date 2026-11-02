@@ -13,6 +13,8 @@ test("scheduled/manual checks without a baseline never request capacity", () => 
   assert.deepEqual(selectCapacity([]), []);
   assert.throws(() => changedFiles("unknown", {}));
   assert.throws(() => selectCapacity(["unknown-file"]), /Unmapped change/u);
+  for (const file of ["server/test-capacity/sales/phase5/http.js", "server/src/handlers/unclassified-orders/list.js",
+    "server/src/services/fulfillmentArchive/UnknownAdapter.js"]) assert.throws(() => selectCapacity([file]), /Unmapped change/u);
 });
 
 test("Sales workload changes and actual shared dependencies select capacity", () => {
@@ -44,6 +46,24 @@ test("unrelated UI, prose and independent modules do not select Sales or Fulfill
   ]);
   assert.ok(selected.every(c => c.group === "supplier"));
   assert.deepEqual(selectCapacity(["docs/sales_order_management/00_project_profile.json"]), []);
+  for (const file of [
+    "server/src/handlers/archived-sales-orders/archivedSalesOrderHandlers.js",
+    "server/src/handlers/archived-sales-orders/archivedSalesOrderSchemas.js",
+    "server/src/handlers/outstanding-sales-orders/listOutstandingSalesOrdersHandler.js",
+    "server/src/services/fulfillmentArchive/FulfillmentArchiveService.js",
+    "server/test-capacity/sales/phase4/archive.js",
+    "server/test-capacity/sales/phase4/datasetModel.js",
+    "server/test-capacity/sales/phase4/http.js",
+    "server/test-capacity/sales/phase4/indexCapacity.js",
+    "server/test-capacity/sales/phase4/indexCapacityFull.capacity.js",
+    "server/test-capacity/sales/phase4/merge.capacity.js",
+    "server/test-capacity/sales/phase4/mixed.js",
+    "server/test-capacity/sales/phase4/performance.capacity.js",
+    "server/test-capacity/sales/phase4/queries.js",
+    "server/test-capacity/sales/phase4/reconcile.js"
+]) assert.deepEqual(selectCapacity([file]), [], file);
+  assert.ok(selectCapacity(["server/src/services/salesJobs/SalesJobRuntimeService.js"]).some(c => c.group === "sales"));
+  assert.equal(selectCapacity([".github/scripts/sales-import-capacity.mjs"]).length, 48);
 });
 
 const successful = required => ({
