@@ -1,0 +1,120 @@
+# TASK-010 — Purchasing Config and Shared Input Validation
+
+Built on 2026-10-30 from main `1f5ea721`. Composite baselines moved `design d6103ad1 → 600d9d58`, `plan 24a86ab4 → 5b8a282f`; the only manifest change is two shared files added to `approval_required_paths`.
+
+| File | Contents |
+| --- | --- |
+| `server/config/purchasing.js` | The §12.1 settings, env-overridable like every other module config |
+| `server/src/modules/purchasing/normalizePurchasingConfig.js` | Positive safe integers; each setting may only be lowered from its §12.1 value (lookback days capped at 366); unknown settings rejected, including `transactionTimeoutMs` (HD-011); frozen result |
+| `server/src/modules/purchasing/purchasingValidation.js` | `positiveId`, `eventId`, `localDate`, `reason`, `notes`, `reference`, `onlyFields`, `requireItems` |
+| `server/src/framework/configuration/applicationConfiguration.js` | +4 lines: the `purchasing` section is validated at startup |
+| `server/test/configuration.test.js` | `purchasing` added to the expected-section list |
+| `server/test/purchasing/purchasingConfig.test.js`, `purchasingValidation.test.js` | 10 new cases (3 + 7) |
+
+## APR-006 — startup wiring
+
+Sam chose option A on 2026-10-30: wire the Purchasing config into startup validation in this task rather than deferring it. That touches two shared files outside the module's write paths, so both were added to `approval_required_paths` and approved as `APR-006`; `APR-001`–`APR-005` were re-confirmed on the new digests. The wiring follows the Fulfillment (`eb44ea5b`) and Sales precedent.
+
+Verified end to end through `validateApplicationConfiguration(defaultConfigurationSource())`, the call `createApplication.js:423` makes at startup:
+
+| Environment | Result |
+| --- | --- |
+| defaults | starts, `maxPurchaseOrderLines` 100 |
+| `PURCHASING_MAX_PURCHASE_ORDER_LINES=500` | refused: `ConfigurationError`, purchasing section |
+| `PURCHASING_MAX_PURCHASE_ORDER_LINES=` (empty) | refused |
+| `REQUEST_TIMEOUT_MS=5000` | refused by the **database** section, not Purchasing — the case CI caught (below) |
+| **wiring line removed**, PO lines 500 | **starts with no purchasing section** — negative control: the refusal comes from this wiring |
+
+The first probe of that negative control was itself wrong: it read `c.purchasing.maxPurchaseOrderLines`, so a missing section threw inside the probe and was reported as "refused". Fixed to distinguish the two outcomes before the result was trusted.
+
+## HD-011 — no Purchasing transaction timeout
+
+The first push of this branch failed CI shard 2/4 in `databasePoolPressure.test.js` — "the database must give up before the route timeout does". That case sets `requestTimeoutMs` to 5000 to provoke the database cross-section error; the Purchasing section, holding §12.1's `transactionTimeoutMs: 30000` with an in-section `≤ requestTimeoutMs` check, failed first and the expected database error never appeared.
+
+The test failure exposed a design defect, not only a test interaction:
+
+- `applicationConfiguration.js` already enforces, as a cross-section check and strictly, that `database.acquireTimeoutMs + database.transactionTimeoutMs < application.requestTimeoutMs`. Its comment records that the factory default was once `5000 + 30000 > 30000`, so a transaction could still hold its connection after the route had answered 504.
+- `MySqlDatabaseService.withTransaction` lets a per-call `timeoutMs` replace that default without a cap. §12.1's `30000`, passed per call, reproduces the fixed defect; the `≤` check let it through.
+- No HTTP path in the codebase passes its own transaction timeout; only `SalesIntakeWorker`, a background worker, does.
+
+**Sam chose on 2026-10-30 to drop the setting.** Purchasing HTTP transactions use `database.transactionTimeoutMs` (default 20000), already guarded by the correct check. The wiring is back to the Fulfillment pattern — `normalizePurchasingConfig(source?.purchasing)`, four lines — and the `configuration.test.js` multiple-sections case is unchanged from main. Configuring `transactionTimeoutMs` is rejected as an unsupported setting, which pins the decision. Rejected alternative: keep the setting at a 20000 default with a new cross-section check, which would have grown the shared-file change and added a second knob to keep consistent with the database's.
+
+**This also records a verification gap of mine.** I ran the full server suite before wiring `applicationConfiguration.js`, and after wiring re-ran only `configuration.test.js` and the Purchasing files. A change to the shared startup path needs the full suite after the last edit. The suite has since been run after the fix, and with CI's bank key-ring variables set locally: 4,260 tests, 0 failures (1,312 MySQL-backed tests skipped locally). Those variables also make the two startup-path files that fail locally for lack of them — `applicationFactory.test.js`, `shutdownResources.test.js` — pass 12/12, so the "7 known environment failures" were not hiding anything.
+
+## REV-004 — review of the scope change
+
+`method: HUMAN`, author the TASK-010 implementation agent, reviewer Sam. It covers the one change between `d6103ad1` and `600d9d58`: the two `approval_required_paths` entries. `REV-003` stays as the review of `d6103ad1`.
+
+## Decisions taken in the code
+
+- Quantity scale, Unit Price scale and the 6-digit document sequence are **not** config. §12.1 lists them in the example object, but the same section says PO/GR format and similar rules are domain constants not overridable by environment, and they are bound to DB column precision. They stay in `purchasingConstants.js`; configuring them is rejected as an unsupported setting.
+- `eventId` accepts only lowercase RFC 9562 UUIDs, a subset of what the Inventory provider accepts. Uppercase is rejected, not normalized, because `Idempotency-Key` must equal `eventId` exactly; a client using `crypto.randomUUID()` always passes (asserted over 1,000 samples).
+- Text is measured in code points; lone surrogates and control characters other than tab/LF/CR are rejected, and single-line references reject those three as well (SEC-013). Validation errors carry only `{ field }`, never the submitted value (SEC-014).
+- `onlyFields` is an allowlist, not a denylist: client totals, snapshots, factors, base quantities, status and warning flags are rejected because they are not listed.
+
+## Deviations from the plan text
+
+- `normalizePurchasingConfig.js` is not in `TASK-010`'s file list; every module keeps its normalizer in its own file and the configuration loader imports it from there.
+- §10.2 lists CSV formula neutralization and stable column order under `purchasingValidation.test.js`; both belong to `TASK-039`.
+
+## Verification
+
+- 10/10 new cases pass; `configuration.test.js` 9/9; `databasePoolPressure.test.js` passes.
+- **Mutation sweep 21/21 RED** after the HD-011 change (the three transaction-bound mutants removed with the setting; one added for `transactionTimeoutMs` being accepted again), between a GREEN baseline and a GREEN restore, skips counted as failures.
+- Lint exit 0. Full local server suite with CI's key-ring variables: 4,260 tests, 0 failures.
+- `validate_traceability.py` STRUCTURE_PASS; `PLAN_READY` BLOCKED on HD-006 only.
+
+## CI admission — pending
+
+Sam's rule of 2026-10-30 (`AGENTS.md`, merged in #310 after this branch was cut) requires explicit approval before any test case enters routine CI, including through an automatically discovered glob or a PR's own CI run. This branch was therefore not pushed until the decision below.
+
+**Decision — Sam approved option A on 2026-10-30.** Approved scope:
+
+| | |
+| --- | --- |
+| Cases | All 11 new cases: `purchasingConfig.test.js` (4) and `purchasingValidation.test.js` (7), including the 1,000-sample `crypto.randomUUID()` loop. After HD-011 one config case was removed with the setting, so **10** are admitted — a subset of the approved scope |
+| Existing cases | `configuration.test.js`: `purchasing` added to its expected-section lists, required by the APR-006 wiring; no new case. After HD-011 only the first list changes |
+| Data / concurrency | In-memory only; no database, network or concurrency; one repetition; threshold all pass |
+| Trigger | Every PR and push to main, through the server suite's automatic discovery |
+| Measured cost | About 0.12 s wall per file locally, almost all Node startup; CI speed not measured, estimated under 1 s per job |
+
+Rejected alternatives: B (reduce the UUID loop to 100, saving milliseconds) and C (keep the cases out of CI, leaving the validators every later write handler relies on without regression protection).
+
+## CI admission gate — 2026-11-02
+
+Between the first CI run of this PR and its merge, main gained the static test admission gate (#315) and impact-scoped capacity selection (#313). The CI run on `fed097ea` was cancelled at Sam's request while he changed CI. Under the new procedure (`docs/ci-test-admission.md`) every changed test input needs a receipt binding its exact Git mode and blob, and the approval administrator must publish the receipt's SHA-256 in `CI_TEST_ADMISSION_DIGESTS` before PR tests are dispatched. A feature agent cannot grant that.
+
+Simulated locally with the active digests (read-only), the gate rejected this PR for five unapproved inputs: the two new test files, `configuration.test.js`, `server/config/purchasing.js` (imported by a test) and this module's manifest (referenced document data). Application files need no receipt.
+
+**Sam's decisions on 2026-11-02 — "全部按你的建議執行":**
+
+1. **Receipt location**: this module may write its own receipts, `.github/test-admissions/purchasing-*.json`, added to `allowed_write_paths`. The file grants nothing; publishing its digest is the control. Rejected alternative: an approval-required path with a SCOPE approval per receipt. This moved the baselines `design 600d9d58 → 84b5a22e`, `plan 5b8a282f → 61dff2ac`; `APR-001`–`APR-006` were re-confirmed.
+2. **Receipt content**, re-confirmed for the exact blobs in `.github/test-admissions/purchasing-task010.json`: 10 new cases (3 config, 7 validation), the one affected `configuration.test.js` case, and the two support inputs. This narrows the 2026-10-30 approval of 11 cases after HD-011.
+3. **Capacity execution for this push**: 38 of the 48 existing catalogued capacity cases — Fulfillment 25, Sales 5, Supplier 5, Customer 2, framework 1 — as computed by `selectCapacity` on this PR's diff, not described from memory. `applicationConfiguration.js` alone selects all 38; the Purchasing config and module files alone select 22. No new workload. Duration estimated at 20–25 minutes from the 28 m 10 s bootstrap figure for all 48; not measured.
+
+The receipt was validated before the request on a throwaway branch: without its digest the gate rejects it; with a simulated digest the static gate accepts 6 reviewed inputs and the full gate passes catalog routing with 0 capacity references.
+
+**Acknowledged.** The two pushes of this PR on 2026-10-30 triggered the Fulfillment capacity job (14 scenarios) and Sales TC-042 without Sam's prior capacity approval. I treated them as the existing #310 trigger, but the rule then in force already covered "CI triggered indirectly by a push or PR".
+
+## REV-005 — review of the receipt path
+
+`method: HUMAN`, author the TASK-010 implementation agent, reviewer Sam. It covers the one change between `600d9d58` and `84b5a22e`: the receipt pattern added to `allowed_write_paths`.
+
+## Digest publication — owner exception, 2026-11-02
+
+`AGENTS.md` forbids a feature agent from modifying admission variables or approving its own receipt, and I declined when first asked. Sam then instructed: "我作為project owner 批準你這次跳過要求幫我加" — a one-time project-owner exception for this receipt only. It does not extend to any other receipt or variable change.
+
+Executed by reading the variable immediately before writing and appending, never replacing:
+
+| | Values |
+| --- | --- |
+| Before | `2c5660d2…`, `abf2c153…` (2 values; the old `bootstrap.json` grant `cf8254d4…` had already been replaced by its owner when #318 changed `bootstrap.json`) |
+| After | the same two plus `40efa97a4f925b6653f52c65828532a454e5bca5e926c5bf3e8f855199bfa867` |
+
+Verified after writing: every previous value preserved, the new digest present, no other value added. With the real variable the gate then passed for this branch after merging #318: `Test admission passed … 12 reviewed inputs; 0 capacity references`.
+
+## Capacity deferred by #318
+
+#318 (`AGENTS.md`, `sales-import-capacity.mjs`) made routine PRs, main pushes and schedules functional only; capacity now runs only after the feature's UAT, on main, by explicit dispatch with an external grant. For an admitted PR dispatch `changedFiles` returns no files, so **this push runs no capacity**. Sam's approval of 38 cases for this push is therefore unused.
+
+For the post-UAT handoff: `selectCapacity` on this PR's diff still identifies 38 existing catalogued cases — Fulfillment 25, Sales 5, Supplier 5, Customer 2, framework 1 — because `applicationConfiguration.js` is shared startup runtime. They belong to those modules' owners; this task adds no non-functional workload of its own.

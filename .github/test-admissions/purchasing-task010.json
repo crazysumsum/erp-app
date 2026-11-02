@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-02 (\"全部按你的建議執行\", Claude Code session f804490c) re-confirming his 2026-10-30 option-A approval of TASK-010 routine-CI cases for these exact blobs, narrowed by HD-011 from 11 to 10 new cases; recorded in docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md",
+  "purpose": "Purchasing config fails startup on invalid values; shared input validators reject unsafe IDs, dates, event IDs, text and client-supplied projections without echoing the submitted value",
+  "data": "In-memory literals only; largest loop 1000 crypto.randomUUID() samples; no database, network or fixture files",
+  "concurrency": "None",
+  "repetitions": "1",
+  "thresholds": "All cases pass",
+  "trigger": "Routine correctness regression on every PR and push to main",
+  "cost": "Measured about 0.12 s wall per new file locally, mostly Node startup; CI not measured, estimated under 1 s per job; no new job",
+  "files": [
+    {
+      "path": "server/test/purchasing/purchasingConfig.test.js",
+      "mode": "100644",
+      "blob": "812c57f53d21f92cda5463d62c583cde2e2dfe8a",
+      "kind": "functional",
+      "cases": [
+        "TASK-010 the defaults are the §12.1 values and the result is frozen",
+        "TASK-010 every setting must be a positive safe integer within its limit",
+        "TASK-010 unknown settings and schema-bound constants cannot be configured"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingValidation.test.js",
+      "mode": "100644",
+      "blob": "8759061ef14f898845f427ecc4f2c27c7e0e8ad6",
+      "kind": "functional",
+      "cases": [
+        "TASK-010 IDs are positive safe integers",
+        "TASK-010 eventId is a canonical lowercase UUID the Inventory provider will accept",
+        "TASK-010 dates are real calendar days in YYYY-MM-DD",
+        "TASK-010 reason is trimmed to 5..500 characters; notes and references are bounded free text",
+        "TASK-010 objects are allowlisted, so client totals, snapshots and status never get through",
+        "TASK-010 line and detail arrays need at least one item and respect the configured cap",
+        "TASK-010 errors carry a stable code and a field name, never the submitted value"
+      ]
+    },
+    {
+      "path": "server/test/configuration.test.js",
+      "mode": "100644",
+      "blob": "8e04431c6fb165ddddca9e34efad6e9434b6e17c",
+      "kind": "functional",
+      "cases": [
+        "global configuration validation normalizes every configuration section"
+      ]
+    },
+    {
+      "path": "server/config/purchasing.js",
+      "mode": "100644",
+      "blob": "8c5661b6140cc260b4a49827e04b70fdb3b36210",
+      "kind": "support"
+    },
+    {
+      "path": "docs/purchasing_receiving_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "92d7cf645a33ba87ff6988091ec16527a119d1ea",
+      "kind": "support"
+    }
+  ]
+}

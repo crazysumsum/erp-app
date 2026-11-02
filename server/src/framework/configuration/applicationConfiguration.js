@@ -10,6 +10,7 @@ import fulfillmentConfig from "../../../config/fulfillment.js";
 import idempotencyConfig from "../../../config/idempotency.js";
 import inventoryConfig from "../../../config/inventory.js";
 import itemConfig from "../../../config/item.js";
+import purchasingConfig from "../../../config/purchasing.js";
 import jwtConfig from "../../../config/jwt.js";
 import loggingConfig from "../../../config/logging.js";
 import requestConfig from "../../../config/request.js";
@@ -30,6 +31,7 @@ import { normalizeIdempotencyConfig } from "../../services/idempotency/normalize
 import { normalizeInventoryConfig } from "../../modules/inventory/normalizeInventoryConfig.js";
 import { normalizeFulfillmentConfig } from "../../modules/fulfillment/normalizeFulfillmentConfig.js";
 import { normalizeItemConfig } from "../../modules/item/normalizeItemConfig.js";
+import { normalizePurchasingConfig } from "../../modules/purchasing/normalizePurchasingConfig.js";
 import { normalizeSalesConfig } from "../../modules/sales/normalizeSalesConfig.js";
 import { normalizeCustomerConfig } from "../../modules/customer/normalizeCustomerConfig.js";
 import { normalizeJwtConfig } from "./normalizeJwtConfig.js";
@@ -54,6 +56,7 @@ export function defaultConfigurationSource() {
     item: itemConfig,
     jwt: jwtConfig,
     logging: loggingConfig,
+    purchasing: purchasingConfig,
     request: requestConfig,
     requestLimiter: requestLimiterConfig,
     scheduler: schedulerConfig,
@@ -114,6 +117,7 @@ export function validateApplicationConfiguration(
   validateSection("item", () => normalizeItemConfig(source?.item));
   validateSection("jwt", () => normalizeJwtConfig(source?.jwt));
   validateSection("logging", () => normalizeLoggingConfig(source?.logging));
+  validateSection("purchasing", () => normalizePurchasingConfig(source?.purchasing));
   validateSection("request", () =>
     normalizeRequestConfig(source?.request, { environment })
   );
