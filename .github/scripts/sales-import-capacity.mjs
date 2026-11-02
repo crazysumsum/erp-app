@@ -24,7 +24,7 @@ const scopes = {
   "sales-import": /^server\/(?:src\/(?:modules\/(?:sales\/|customer\/|item\/|inventory\/|businessMaster\/)|handlers\/sales(?:-[a-z-]+)?\/|services\/salesJobs\/)|config\/(?:sales|customer|item|inventory)\.js|test\/sales\/phase[123]\/)/u,
   "sales-csv": /^server\/(?:src\/modules\/sales\/(?:salesCsv|salesCsvGrouping|salesCsvSpool|salesImport|salesChannel|salesDocument|salesQuantity|salesMoney|normalizeSales|salesConstants)|config\/sales\.js|test\/sales\/phase3\/.*(?:[Ff]ixture|[Cc]sv))/u,
   "sales-sequence": /^server\/(?:src\/modules\/sales\/(?:SalesDocumentSequence|SalesSequence|salesSequence|salesDocumentNumber)|config\/sales\.js|test\/sales\/phase1\/fixtures\.js)/u,
-  fulfillment: /^server\/(?:src\/(?:modules\/(?:fulfillment\/|inventory\/|item\/|businessMaster\/|customer\/CustomerLookup|sales\/(?:Sales(?:Order|Fulfillment|Lifecycle|Backorder|Confirmation)|sales(?:Order|Fulfillment|Lifecycle|Inventory|Backorder|Confirmation|Document|Constants)))|handlers\/(?:fulfillments|fulfillment-queue)\/|services\/fulfillment\/)|config\/(?:fulfillment|inventory|item|sales)\.js|test\/fulfillment\/|test\/sales\/(?:phase[124]\/.*(?:[Ff]ixture|commitmentReconciliation)))/u,
+  fulfillment: /^server\/(?:src\/(?:modules\/(?:fulfillment\/|inventory\/|item\/|businessMaster\/|customer\/CustomerLookup|sales\/(?:Sales(?:Order|Fulfillment|Lifecycle|Backorder|Confirmation)|sales(?:Order|Fulfillment|Lifecycle|Inventory|Backorder|Confirmation|Document|Constants)))|handlers\/(?:fulfillments|fulfillment-queue|fulfillment-lookups|shipments)\/|services\/fulfillment\/)|config\/(?:fulfillment|inventory|item|sales)\.js|test\/fulfillment\/|test\/sales\/(?:phase[124]\/.*(?:[Ff]ixture|commitmentReconciliation)))/u,
   "fulfillment-client": /^client\/(?:package(?:-lock)?\.json|(?:vite|vitest)\.config\.js|config\/|src\/(?:components\/fulfillment\/|pages\/fulfillment\/|services\/fulfillment\.js|framework\/|stores\/session\.js|router\/|locales\/|i18n\/|styles\/))/u
 };
 
@@ -57,7 +57,7 @@ function knownPath(file) {
   if (file === "client/vitest.capacity.config.js") return true;
   if (/^client\/(?:test\/|e2e\/|public\/|config\/|src\/(?:pages|components|composables|framework|services|stores|css|assets)\/|(?:package(?:-lock)?\.json|(?:vite|vitest)\.config\.js|index\.html|src\/(?:App\.vue|main\.js))$)/u.test(file)) return true;
   if (/^server\/src\/services\/(?:auth|authorization|context|customerFile|customerImport|deviceBinding|filetype|fulfillment|idempotency|itemImport|itemMedia|logging|mysqldatabase|requestLimiter|salesJobs|scheduler|supplierImport|supplierMetrics|time|tokenRevocation)\//u.test(file)) return true;
-  if (/^server\/src\/handlers\/(?:audit|business-master|catalog|customer(?:s|-[a-z-]+)|device|fulfillment(?:s|-queue)|inventory|item(?:s|-[a-z-]+)|permissions|roles|sales(?:-[a-z-]+)?|skus|supplier(?:s|-[a-z-]+)|users?)\//u.test(file) || file === "server/src/handlers/healthHandler.js") return true;
+  if (/^server\/src\/handlers\/(?:audit|business-master|catalog|customer(?:s|-[a-z-]+)|device|fulfillment(?:s|-queue|-lookups)|shipments|inventory|item(?:s|-[a-z-]+)|permissions|roles|sales(?:-[a-z-]+)?|skus|supplier(?:s|-[a-z-]+)|users?)\//u.test(file) || file === "server/src/handlers/healthHandler.js") return true;
   if (/^server\/config\/(?:api|application|customer|database|deviceBinding|fulfillment|idempotency|inventory|item|jwt|logging|request|requestLimiter|sales|scheduler|security|supplier|tokenRevocation)\.js$/u.test(file) || file === "server/config/itemRecoveryTrustPolicy.json") return true;
   if (/^server\/src\/modules\/(?:audit|authorization|businessMaster|customer|fulfillment|inventory|item|purchasing|role|sales|supplier|user)\//u.test(file)) return true;
   return /^(?:[^/]+\.md|\.gitignore|\.gitattributes|eslint\.config\.js|server\/src\/index\.js)$/u.test(file) || runtime.test(file) || serverRuntime.test(file);
@@ -92,24 +92,15 @@ export function checkResults(needs) {
 
 export function changedFiles(eventName, event, head = process.env.GITHUB_SHA) {
   const git = (...args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
-  let base;
-  if (eventName === "pull_request") {
-    base = event.pull_request?.base?.sha; head = event.pull_request?.head?.sha;
-  } else if (eventName === "push") {
-    base = event.before; head = event.after;
-  } else if (eventName === "schedule" || eventName === "workflow_dispatch") {
-    // Routine scheduled/manual checks remain available; no baseline means no capacity request.
-    base = event.inputs?.capacity_base;
-    if (!base) return [];
-  } else {
-    throw new Error(`Unsupported capacity event: ${eventName}`);
-  }
+  assert.ok(["pull_request", "push", "schedule", "workflow_dispatch"].includes(eventName), `Unsupported capacity event: ${eventName}`);
+  if (eventName !== "workflow_dispatch" || event.inputs?.admitted_pr || !event.inputs?.capacity_base) return [];
+  assert.equal(process.env.GITHUB_REF, "refs/heads/main", "Post-UAT capacity requires main");
+  const base = event.inputs.capacity_base;
   for (const sha of [base, head]) {
     assert.match(sha ?? "", /^[a-f0-9]{40}$/u, "Capacity comparison requires full commit SHAs");
     assert.notEqual(sha, "0".repeat(40), "Missing history must not start a capacity sweep");
   }
-  if (eventName === "pull_request") base = git("merge-base", base, head);
-  else git("merge-base", "--is-ancestor", base, head);
+  git("merge-base", "--is-ancestor", base, head);
   // Keep deleted paths and both sides of a rename.
   return execFileSync("git", ["diff", "--name-only", "-z", "--no-renames", base, head, "--"], { encoding: "utf8" }).split("\0").filter(Boolean);
 }
@@ -120,18 +111,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else {
     validateCatalog();
     const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
-    let files;
-    if (process.env.GITHUB_EVENT_NAME === "workflow_dispatch" && event.inputs?.admitted_pr) {
-      const sha = process.env.GITHUB_SHA;
-      assert.match(sha, /^[a-f0-9]{40}$/u);
-      assert.match(event.inputs.admitted_pr, /^[1-9]\d*$/u);
-      assert.equal(process.env.GITHUB_REF, `refs/tags/ci-admitted/pr-${event.inputs.admitted_pr}/${sha}`);
-      const [base, head] = execFileSync("git", ["show", "-s", "--format=%P", sha], { encoding: "utf8" }).trim().split(" ");
-      files = changedFiles("pull_request", { pull_request: { base: { sha: base }, head: { sha: head } } });
-    } else {
-      files = changedFiles(process.env.GITHUB_EVENT_NAME, event);
+    const files = changedFiles(process.env.GITHUB_EVENT_NAME, event);
+    const selected = [];
+    if (process.env.GITHUB_EVENT_NAME === "workflow_dispatch" && !event.inputs?.admitted_pr && event.inputs?.capacity_base) {
+      // The trusted UAT coordinator pins the accepted interval and individual catalog IDs outside the PR.
+      const key = `${event.inputs.capacity_base}:${process.env.GITHUB_SHA}:`;
+      const grants = (process.env.CI_POST_UAT_CAPACITY ?? "").split(/\s+/u).filter(grant => grant.startsWith(key));
+      assert.ok(grants.length, "No post-UAT approval for this baseline and revision");
+      const related = selectCapacity(files);
+      for (const grant of new Set(grants)) {
+        const id = grant.slice(key.length);
+        const entry = related.find(c => c.id === id);
+        assert.ok(entry, `Post-UAT grant is unknown or unrelated to this diff: ${id}`);
+        selected.push(entry);
+      }
     }
-    const selected = selectCapacity(files);
     const groups = [...new Set(selected.filter(c => c.group !== "client").map(c => c.group))].sort();
     const outputs = { server_required: groups.length > 0, client_required: selected.some(c => c.group === "client"),
       matrix: JSON.stringify({ group: groups }), selection: JSON.stringify(selected.map(c => c.id)) };

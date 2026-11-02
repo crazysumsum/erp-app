@@ -83,11 +83,11 @@ as `Admitted PR CI` using an isolated job with no checkout or candidate code
 execution. The tag is retained for authorized retries until the PR closes. The close handler removes the tags. Make this status required on main.
 A rejected candidate needs a new push or a deliberate reopen after approval.
 
-For dispatched PRs the capacity selector uses the actual two parents of the
-admitted merge commit. Ordinary main pushes, scheduled and manual checks keep
-their existing related-file rules. A manual request without a related baseline
-selects no capacity. A shared capacity runner or CI runtime change can select
-the existing full catalog. A receipt alone never triggers a capacity sweep.
+New features can merge after functional CI, coverage and review. Record
+non-functional validation in the relevant module's post-UAT handoff with its
+owner and unchanged workload and thresholds. Routine PR, main and scheduled
+CI cannot start capacity jobs. Follow the [post-UAT dispatch procedure](ci-capacity-routing.md#selection)
+for an approved manual run after the relevant UAT is complete.
 
 Policy/workflow changes require the same external receipt; changes to the
 verifier additionally require a verified policy hash in the repository

@@ -37,12 +37,15 @@ Do not delete/skip tests, reduce workload or relax thresholds merely to save tim
 Sam has authorized separating existing large capacity cases into impact-scoped
 jobs while retaining routine correctness/transaction/permission regression and
 unchanged gates. Routine PR checks must contain no performance/capacity workload.
-Run existing capacity only when a verified diff changes the case, its fixtures,
-or its actual dependencies; shared runtime changes can select multiple scopes.
-Apply this rule to main pushes too. Scheduled/manual execution is not permission
-for an unconditional sweep: require a related-change baseline, otherwise run only
-routine checks. Unknown paths/history must report unresolved impact, not silently
-run all capacity or claim that a required workload passed.
+Finish feature implementation and affected functional regression, coverage,
+CI and review, then arrange merge. Defer all non-functional validation until
+the relevant feature has completed UAT, both locally and in CI. Record deferred
+cases, workload, thresholds and owner for the post-UAT handoff. Keep functional
+authorization, transaction integrity, idempotency and recovery checks in PRs.
+Routine PRs, main pushes and schedules are functional only. After UAT, run
+capacity only on main by explicit dispatch with a verified related-change
+baseline and an external grant for the accepted revision and individual cases.
+Unknown paths/history or unrelated grants block that post-UAT request.
 Use the single CI capacity catalog for routine exclusions and affected-case
 selection. Keep ordinary cases in mixed files and all coverage floors. This
 direction does not approve other pending new workloads or dormant opt-in suites.
