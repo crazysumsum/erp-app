@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 515,
+  "revision": 516,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "READY_FOR_TESTING",
@@ -4804,6 +4804,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-145",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (limited business UAT records)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-limited-uat at 99ed8c60 (git diff 3b9ef58d..HEAD -- docs/supplier_management)",
+      "reviewed_baseline": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
+      "source_ref": "docs/supplier_management/implementation/144_rev_145_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8095,6 +8107,17 @@
       "source_ref": "Product Owner (Sam), chat, 2026-11-02: '接受', in reply to the review page https://claude.ai/artifact/V7NNzGCYYEguXL9Q4ec2Tx (expected results and the 99 screenshots of evidence/20261030T093238-52ea32e0c5b7), which asked for acceptance per case or in bulk. The page held no per-case choices; the agent read the reply as all 41 accepted, recorded ACCEPTED for each case in the page's acceptance collection, and stated that reading to him in the same reply. testing/05_uat_test_report.md. Limited UAT before Technical Acceptance: not T51 AC 4 business sign-off, not release approval; 14 cases (group B, UAT-044/045) not run; affected cases need reconfirming if code changes. No BUSINESS approval record is written for this, because the BUSINESS_ACCEPTANCE gate means the full sign-off.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-02T00:50:17+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Limited UAT evidence limitation (REV-145 L1, L2)",
+      "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
+      "spec_baseline": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
+      "status": "PASS",
+      "source_ref": "Checked 2026-11-02: the original screenshots under /tmp/supplier-management-uat-artifacts/34753d87 were lost when /tmp was cleaned, so the junit attachment paths of evidence/20261030T093238-52ea32e0c5b7 point at nothing; the 99 compressed copies on the private review page are the only copies left and are what the Product Owner reviewed (per-case counts match the junit; UAT-040-01, UAT-042-02 and UAT-054-04 are byte-identical, each the expected 冇權限 page). The branch merged main aae9c744 (PR #313: .github/scripts, ci.yml, AGENTS.md, docs/ci-capacity-routing.md; no server or client code), so the accepted behaviour is the tested one; the harness nonetheless counts the run stale (SOURCE_CHANGED; verify_gate UAT_EXECUTION reports it missing).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-02T00:56:38+00:00"
     }
   ],
   "pending_decisions": [
@@ -10228,8 +10251,7 @@
       "impact": "MAJOR",
       "question": "Early limited business UAT before Technical Acceptance on the 41 UAT cases Supplier can run alone (24 P0, 17 P1; excluded: group B 005, 016, 024, 029, 032-036, 050, 051, 053 and UAT-044/045). How? (1) Who tests and accepts: A the Product Owner alone with the role test accounts; B real users per role, Product Owner accepts. (2) Environment: A a local UAT stack on this Mac (API 3021, client 5216, scratch erp_t51_rh_uat* only, seeded role accounts and fictional data); B a shared server (none exists). (3) Recording: A a private checklist page (PASS/FAIL/BLOCKED and notes), transcribed into testing/05_uat_test_report.md and the ledger; B results reported in chat. (4) Failures: A REPORT_ONLY, each FAIL a DEF with triage and a Product Owner decision; B fix as found. (5) Repository records: one PR at the end, its push approved under AGENTS.md then. Results are labelled limited UAT before Technical Acceptance; affected cases need reconfirming if code changes later.",
       "affected_ids": [
-        "UAT-001",
-        "UAT-055",
+        "UAT-001..UAT-055: the 41 in-scope IDs are listed in testing/05_uat_test_report.md",
         "TASK-051"
       ],
       "status": "ANSWERED",
