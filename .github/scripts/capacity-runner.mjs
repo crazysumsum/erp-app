@@ -61,7 +61,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       const cwd = fileURLToPath(new URL("../../client/", import.meta.url));
       const reporter = fileURLToPath(new URL("../../client/capacity-client.json", import.meta.url));
       const pattern = `(?:^| )(?:${selected.flatMap(c => c.names).map(escapePattern).join("|")})$`;
-      await run(process.execPath, [fileURLToPath(new URL("../../node_modules/vitest/vitest.mjs", import.meta.url)), "run",
+      await run(process.execPath, [fileURLToPath(new URL("../../node_modules/vitest/vitest.mjs", import.meta.url)), "run", "--config", "vitest.capacity.config.js",
         ...new Set(selected.map(c => c.file.slice("client/".length))), `--testNamePattern=${pattern}`,
         "--no-file-parallelism", "--maxWorkers=1", "--bail=1", "--coverage.enabled=false", "--reporter=default", "--reporter=json", `--outputFile.json=${reporter}`], { cwd });
       checkClientReport(JSON.parse(readFileSync(reporter, "utf8")), selected);

@@ -46,3 +46,11 @@ run all capacity or claim that a required workload passed.
 Use the single CI capacity catalog for routine exclusions and affected-case
 selection. Keep ordinary cases in mixed files and all coverage floors. This
 direction does not approve other pending new workloads or dormant opt-in suites.
+
+CI enforces this policy before executing PR tests. Follow
+[the admission procedure](docs/ci-test-admission.md) for changes to tests,
+fixtures, data, workers, discovery or CI wiring. Keep Sam's verified decision
+with the exact workload and approved file versions. Only the trusted approval
+administrator may publish its digest outside the PR. A feature agent must not
+approve its own receipt, add a test-triggering workflow, modify admission
+variables or dispatch around the controller. Reuse matching receipts.

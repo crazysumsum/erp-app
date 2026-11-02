@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1801,
+  "revision": 1803,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -25753,8 +25753,16 @@
       "kind": "GIT_TARGET_INTEGRATION",
       "target": "aae9c74444299539a3a5e275f37a5730e88f3378",
       "idempotency_key": "p4-mainaae9-integration",
+      "status": "CONFIRMED",
+      "source_ref": "FreshfetchactualmainPR313 singlecatalogrelatedcapacity plusSupplierdocs/benchmarkverdict-onlydelta. ActualSamPMglobalmessage01a18bf7-a448-7981-b5ab-5c9b4f4499bf verifiedread_thread approves audited32relatedonly/ruleonPRandmain/no reducedcases/data/floors; officialAGENTS updated. OriginalC+R2onecandidate workload retained, no localnewcapacity. Merge latestsharedworkflowkeepingapprovedreports only. Zero-load selector mapping beforepush, coordinateP4knownnamespace withactualcommonfileowner viaHarnessref18, no parallelrouter/newcatalog/testcase.; Observed local merge3493c659; only CI conflict resolved preserving common catalog and approved report retention; existing11 scope/coverage rules PASS/0skip today, no capacity execution."
+    },
+    {
+      "id": "ACT-P4-MAIN3CAC-INTEGRATION",
+      "kind": "GIT_TARGET_INTEGRATION",
+      "target": "3cac7805ff440fcdc0c54e5e8ad6f51815cfbe70",
+      "idempotency_key": "act-p4-main3cac-integration",
       "status": "STARTED",
-      "source_ref": "FreshfetchactualmainPR313 singlecatalogrelatedcapacity plusSupplierdocs/benchmarkverdict-onlydelta. ActualSamPMglobalmessage01a18bf7-a448-7981-b5ab-5c9b4f4499bf verifiedread_thread approves audited32relatedonly/ruleonPRandmain/no reducedcases/data/floors; officialAGENTS updated. OriginalC+R2onecandidate workload retained, no localnewcapacity. Merge latestsharedworkflowkeepingapprovedreports only. Zero-load selector mapping beforepush, coordinateP4knownnamespace withactualcommonfileowner viaHarnessref18, no parallelrouter/newcatalog/testcase."
+      "source_ref": "Fresh fetched main installs trusted test admission. Integrate locally preserving P4 reporter retention. New Sam allNFRpostUAT policy verified; PM318 functional routing pending. No push/workload."
     }
   ],
   "evidence_files": [

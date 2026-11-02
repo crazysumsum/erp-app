@@ -1,0 +1,60 @@
+
+Running 55 tests using 1 worker
+
+[1/55] client/e2e/supplier-management/uat/uat-cross-phase.spec.js:101:1 › @uat UAT-047 a keyboard user completes each phase's happy path at 375, 768 and 1440 px; focus is visible, labels and errors are clear, states are not colour-only
+[2/55] client/e2e/supplier-management/uat/uat-cross-phase.spec.js:247:1 › @uat UAT-055 a VIEWER filters Audit by date, actor, action and target, pages through it, reads each entry's detail with sensitive values redacted and a request id
+[3/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:118:1 › @uat UAT-025 a VIEWER sees only the masked account and is refused a full view, with no plaintext anywhere
+[4/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:141:1 › @uat UAT-026 a BANK-READER re-authenticates to reveal; the number shows briefly, clears after 30 s or on leaving, and the reveal is audited
+[5/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:198:1 › @uat UAT-027 a CLERK and a BANK-READER cannot add or change bank accounts; the server refuses and nothing changes
+[6/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:239:1 › @uat UAT-028 a BANK-OFFICER makes another account the default; the old default is cleared in the same operation
+[7/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:277:1 › @uat UAT-029 a Supplier without any bank account activates; missing payment data is not the Supplier module's to block
+[8/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:293:1 › @uat UAT-030 SYSTEM-ADMIN has every bank permission, yet still sees the masked list and re-authenticates to reveal and to change, with Audit and an alert
+[9/55] client/e2e/supplier-management/uat/uat-phase-003.spec.js:368:1 › @uat UAT-053 a BANK-OFFICER adds, edits, sets the default and deactivates an account; plaintext appears only while typed or revealed, and every step is audited
+[10/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:144:1 › @uat UAT-032 a Supplier with no relation to the SKU is still offered to the Buyer; there is no whitelist
+[11/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:149:1 › @uat UAT-033 a Supplier with a preferred relation is ranked first with its reason; other Active Suppliers stay selectable
+[12/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:164:1 › @uat UAT-034 a preferred Supplier that is Suspended cannot be selected; preference does not bypass the status
+[13/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:182:1 › @uat UAT-035 a completed purchase creates a soft relation and last-supplied information without changing the Supplier's status
+[14/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:187:1 › @uat UAT-036 an old purchase order keeps its Currency and Term snapshot after the Supplier's defaults change
+[15/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:212:1 › @uat UAT-037 a CLERK uploads a mixed CSV, prechecks, confirms and downloads the result; valid rows are written, error rows are not, and the counts agree
+[16/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:272:1 › @uat UAT-038 a CSV with a Bank column is refused outright, and no Bank data is written anywhere
+[17/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:306:1 › @uat UAT-043 an export holds no full Bank data or ciphertext, guards formula cells, and is audited
+[18/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:357:1 › @uat UAT-044 search, SKU selection and a 10k import stay usable at representative volume
+[19/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:361:1 › @uat UAT-045 an isolated restore matches the source, keeps Bank masked and Audit, and is not declared a success without the keys
+[20/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:365:1 › @uat UAT-039 confirming twice, by double click or by resending the same confirmation, writes the rows once and answers with the same outcome
+[21/55] client/e2e/supplier-management/uat/uat-phase-004.spec.js:411:1 › @uat UAT-046 replayed operations do not duplicate, an unavailable dependency opens nothing it should not, and work continues after recovery
+[22/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:9:1 › @uat UAT-001 a CLERK creates a Draft from code, name and currency, finds it, opens it and traces the create in Audit
+[23/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:49:1 › @uat UAT-002 a CLERK cannot create a second Supplier whose Code differs only in case
+[24/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:71:1 › @uat UAT-006 a CLERK corrects an unreferenced Draft's Code after re-authentication, and Audit keeps before, after and reason
+[25/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:104:1 › @uat UAT-009 with approval off a CLERK activates a complete Draft directly and Audit records it
+[26/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:122:1 › @uat UAT-017 a CLERK without approval cannot unblock a Blocked Supplier, in the UI or by request
+[27/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:143:1 › @uat UAT-018 an APPROVER unblocks with a reason and the Supplier becomes Suspended, not Active
+[28/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:165:1 › @uat UAT-019 a CLERK restores an Archived Supplier to Suspended, and only a second, explicit step makes it Active
+[29/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:186:1 › @uat UAT-020 a CLERK permanently deletes a never-activated Draft after re-authentication, and the delete stays traceable
+[30/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:213:1 › @uat UAT-021 a Supplier that was ever activated cannot be permanently deleted; suspend and archive remain the options
+[31/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:234:1 › @uat UAT-022 a Supplier with only the three minimum fields shows completeness hints and still activates
+[32/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:250:1 › @uat UAT-003 a same-name Supplier with another Code is warned about first, can be confirmed, and is not merged
+[33/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:283:1 › @uat UAT-004 the same identifier in another format is refused without revealing the other Supplier
+[34/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:312:1 › @uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, without Archived by default and without bank plaintext
+[35/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:368:1 › @uat UAT-008 two browsers save the same version: the second gets a conflict, keeps its input and overwrites nothing
+[36/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:399:1 › @uat UAT-023 setting another contact as primary for a purpose leaves exactly one primary
+[37/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:425:1 › @uat UAT-049 a purpose holds several contacts, primary switches cleanly, and a deactivated contact stays as history
+[38/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:461:1 › @uat UAT-042 a VIEWER cannot write from the UI, by URL or by request, and a user without Supplier access learns nothing
+[39/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:501:1 › @uat UAT-054 the Supplier list tells loading, empty, failed and no-permission apart, and a failed load can be retried
+[40/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:541:1 › @uat UAT-031 forms offer only Active currencies and terms, an old inactive value still shows, and Supplier Settings cannot write the catalogue
+[41/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:604:1 › @uat UAT-005 a Supplier already referenced by a transaction keeps its Code
+[42/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:609:1 › @uat UAT-016 a CLERK suspends with a reason; the Supplier is Suspended and no longer offered for new purchasing
+[43/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:628:1 › @uat UAT-024 a Supplier without a payment term activates, and says 未設定 rather than a made-up default
+[44/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:643:1 › @uat UAT-048 several addresses per purpose with exactly one primary, saved order, and deactivation that keeps history
+[45/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:691:1 › @uat UAT-050 an unreferenced identifier is created, corrected and deleted under control, and a normalised duplicate is refused
+[46/55] client/e2e/supplier-management/uat/uat-phase-001.spec.js:745:1 › @uat UAT-051 an APPROVER blocks with a reason and the Supplier is immediately unavailable for new purchasing
+[47/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:48:1 › @uat UAT-010 with approval on a CLERK submits to APPROVER-A; the Supplier is Pending and the approver sees it in the queue
+[48/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:83:1 › @uat UAT-011 submitting to oneself, to a user without approval or to a disabled user is refused each time and the Supplier stays Draft
+[49/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:115:1 › @uat UAT-012 the assigned APPROVER checks the difference and approves; the Supplier is Active with the submission and approval recorded
+[50/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:137:1 › @uat UAT-013 the APPROVER rejects with a reason; the Supplier returns to Draft and the CLERK can read the reason
+[51/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:161:1 › @uat UAT-014 an approval-significant edit invalidates the Pending request; the old request cannot be approved and the CLERK must submit again
+[52/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:199:1 › @uat UAT-015 turning approval off leaves an existing Pending waiting, while a new Supplier activates directly
+[53/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:227:1 › @uat UAT-040 a CLERK without settings permission is refused by the page and the API, and the value does not change
+[54/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:244:1 › @uat UAT-041 SETTINGS-ADMIN turns approval on with a reason; the next submission needs an approver and the change is in Audit
+[55/55] client/e2e/supplier-management/uat/uat-phase-002.spec.js:268:1 › @uat UAT-052 the requester withdraws, resubmits, an approver reassigns with a reason, and only the new assignee can decide
+  14 skipped
+  41 passed (3.0m)
