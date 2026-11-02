@@ -1,0 +1,290 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20261030T093238-52ea32e0c5b7",
+  "suite_id": "supplier-uat-browser",
+  "stage": "UAT",
+  "result": "BLOCKED",
+  "spec_baseline": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+  "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
+  "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
+  "started_at": "2026-10-30T09:32:39.061135Z",
+  "ended_at": "2026-10-30T09:35:39.372736Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-t51-scratch-mysqld-3450",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/supplier-management/playwright.uat.config.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "ba580673a0731e68c0af26050213a2b7a2794f3de50ab3c1747f5bee1e0a881b",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 55,
+    "passed": 41,
+    "failed": 0,
+    "skipped": 14,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "UAT-001",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-002",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-003",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-004",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-005",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-006",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-007",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-008",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-009",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-010",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-011",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-012",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-013",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-014",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-015",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-016",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-017",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-018",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-019",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-020",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-021",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-022",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-023",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-024",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-025",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-026",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-027",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-028",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-029",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-030",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-031",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-032",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-033",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-034",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-035",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-036",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-037",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-038",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-039",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-040",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-041",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-042",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-043",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-044",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-045",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-046",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-047",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-048",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-049",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-050",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-051",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-052",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-053",
+      "status": "SKIPPED"
+    },
+    {
+      "id": "UAT-054",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-055",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261030T093238-52ea32e0c5b7/stdout.log",
+      "sha256": "6fdc050c525465f06dd2613a0794bd51626e8f6a4d31e0085c55ae7f157fc45f",
+      "bytes": 10709
+    },
+    {
+      "path": "evidence/20261030T093238-52ea32e0c5b7/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261030T093238-52ea32e0c5b7/supplier-uat-browser.xml",
+      "sha256": "de39aba2eb5ca7d4dd4fb700911a864d05c9f283e11452bb641d4d7ff2792c51",
+      "bytes": 37811
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: UAT-005, UAT-016, UAT-024, UAT-029, UAT-032, UAT-033, UAT-034, UAT-035, UAT-036, UAT-050, UAT-051, UAT-053",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
