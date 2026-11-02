@@ -6,6 +6,7 @@ import { getTransactionOutcome } from "../../services/mysqldatabase/MySqlDatabas
 import { assertShipmentConfirmationHistory } from "./shipmentConfirmationWitness.js";
 import { freezeShipmentIntent,shipmentConfirmationPayload,readShipmentConfirmationSnapshot,assertShipmentConfirmationSnapshot,shipmentConfirmationSnapshotIdentity,shipmentIssuePayload } from "./shipmentConfirmationScope.js";
 import { assertAllocationSourceFacts } from "./fulfillmentAllocationScope.js";
+import { assertShipmentLeaseBoundary,readOrRenewShipmentLease,shipmentLeaseEntry,shipmentTransactionBudget } from "./shipmentOperationLease.js";
 
 const key=value=>String(value),digest=request=>fulfillmentOperationHash({operationType:"SHIP",target:request.target,payload:request.payload});
 const conflict=()=>{throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");};
@@ -23,11 +24,12 @@ export class ShipmentFailureReconciliation {
  #readAttempt;
  #inventory;
  #sales;
- constructor({database,time,logger,inventory,sales,readAttempt}){if(typeof readAttempt!=="function")throw new TypeError("Private actual-attempt reader required");Object.assign(this,{database,time,logger});this.#readAttempt=readAttempt;this.#inventory=inventory;this.#sales=sales;}
- async #operation(tx,record){
+ #leaseMs;
+ constructor({database,time,logger,inventory,sales,readAttempt,leaseMs=60000}){if(typeof readAttempt!=="function")throw new TypeError("Private actual-attempt reader required");Object.assign(this,{database,time,logger});this.#readAttempt=readAttempt;this.#inventory=inventory;this.#sales=sales;this.#leaseMs=leaseMs;}
+ async #operation(tx,record,{admit=false}={}){
   const {request,actor}=record,[[row]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=?",[request.eventId]),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
   const now=Number(clock?.now_ms),expires=Number(row?.lease_expires_at);
-  if(!row||!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(expires)||expires<=now||row.status!=="IN_PROGRESS"||row.result_json!==null||row.completed_at!==null||row.public_error_code!==""||row.public_error_details!==null||row.next_attempt_at!==null||Number(row.is_document_archived)!==0||row.operation_type!=="SHIP"||row.target_type!=="SHIPMENT"||key(row.target_id)!==request.target.id||row.payload_hash!==digest(request)||key(row.initiated_by)!==key(actor.id)||row.correlation_id!==request.correlationId||row.lease_owner!==request.leaseOwner)conflict();return row;
+  if(!row||!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(expires)||expires<=now||admit&&expires-now<shipmentTransactionBudget(this.database)||row.status!=="IN_PROGRESS"||row.result_json!==null||row.completed_at!==null||row.public_error_code!==""||row.public_error_details!==null||row.next_attempt_at!==null||Number(row.is_document_archived)!==0||row.operation_type!=="SHIP"||row.target_type!=="SHIPMENT"||key(row.target_id)!==request.target.id||row.payload_hash!==digest(request)||key(row.initiated_by)!==key(actor.id)||row.correlation_id!==request.correlationId||row.lease_owner!==request.leaseOwner)conflict();return row;
  }
  async #assertLocalAbsence(tx,snapshot,record){
   const {request,actor}=record,{shipment,root,shipmentLines}=snapshot;
@@ -54,10 +56,15 @@ export class ShipmentFailureReconciliation {
   if(!attempt||!code||attempt.signal?.aborted||getTransactionOutcome(attempt.tx)?.state!=="ROLLED_BACK")return {state:"UNKNOWN"};
   const request=attempt.request,actor=attempt.actor;
   if(!actor||!Object.isFrozen(actor)||!Object.isFrozen(request)||this.database.context?.get()?.databaseTransaction)conflict();
-  return this.database.withTransaction(async(tx,{signal})=>{
+  const lease=await this.database.withTransaction(async tx=>{
    assertFulfillmentTransaction(this.database,tx);
-   await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);
-   const initial={request,actor};await this.#operation(tx,initial);
+   await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);assertShipmentLeaseBoundary(attempt,request,this.#leaseMs);await this.#operation(tx,{request,actor});
+   return readOrRenewShipmentLease(this.database,tx,request,this.#leaseMs);
+  },{isolationLevel:"READ COMMITTED",signal:attempt.signal}),entry=shipmentLeaseEntry(lease,attempt.signal);
+  try{return await this.database.withTransaction(async(tx,{signal})=>{
+   assertFulfillmentTransaction(this.database,tx);
+   const [locks]=await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);if(locks.length!==1)conflict();entry.locked();
+   const initial={request,actor};await this.#operation(tx,initial,{admit:true});
    const currentActor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation");if(key(currentActor.id)!==key(actor.id))conflict();
    const [history]=await tx.query("SELECT shipment_id,event_id,action,from_status,to_status,actor_user_id,version_after FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action='CONFIRM_START' LIMIT 2",[request.target.id,request.eventId]);
    assertShipmentConfirmationHistory(history,{shipmentId:request.target.id,eventId:request.eventId,version:request.payload.version,actorId:actor.id});
@@ -87,6 +94,6 @@ export class ShipmentFailureReconciliation {
     const [failed]=await tx.execute("UPDATE fulfillment_operation_requests SET status='FAILED',result_json=NULL,public_error_code=?,public_error_details=?,lease_owner='',lease_expires_at=NULL,next_attempt_at=NULL,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS' AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND event_id=? AND payload_hash=? AND initiated_by=? AND correlation_id=? AND lease_owner=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)",[code,JSON.stringify(details),at,at,(await this.#operation(tx,record)).id,request.target.id,request.eventId,source.scopeHash,actor.id,request.correlationId,request.leaseOwner]);if(failed.affectedRows!==1)conflict();
     return {state:"FAILED",code,details};
    }finally{this.#sessions.delete(session);}
-  },{isolationLevel:"READ COMMITTED",signal:attempt.signal});
+  },{isolationLevel:"READ COMMITTED",signal:entry.signal});}finally{entry.close();}
  }
 }
