@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 358,
+  "revision": 361,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
     "plan": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
-    "code_commit": "b3cc7b9f2c5b93ada382beb24f21d1b72fe12fc2",
-    "source_fingerprint": "9012d57ada8a64c5c19886965ca032949bd4f19a4e19e2f05b2762c245f2ada5",
+    "code_commit": "b40cfacc089e201ee3f7087dd8f6acb0ddc3495a",
+    "source_fingerprint": "ea88a34c685e0df9522ad8c9a300d1ce0c5d01261d4ec458228cf1a83905cadd",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
     "default_commit": "01af6c24714058847d12eed90f348d181ede648a",
     "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
@@ -6775,6 +6775,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-EXHAUSTED-TECHNICAL-DEFER-SUBPATH-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-exhausted-defer-subpath-actual-results-closure-review.json SHAb0ba7f30f21e147db97602e7202e944077d80ca4d5363a36703ca4c3dd3f7b22; bounded exhausted subpath only; postB observer has source review but remains dynamic-untested, no fullRecovery/P2 closure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-BACKOFF-EXHAUSTED-NATIVE1205-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-backoff-exhaustion-native1205-postb-actual-results-closure-review.json SHA35ce7952eae2eeccf2458f91c07669abfacb7b6072b35df15d6f56858f9acd84; actualA8+0274/raw source6/support binding, four productfiles saved b40cfacc exactbytebridge; unknownACK/deadlock/wholeTask still open",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-COMMITTED-ACKLOSS-ACTUAL-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-committed-ackloss-recovery-actual-results-closure-review.json SHA93178e3c7463468e5c9608d4a30cf03d44c1bb0bf2d873a43819337148995c5b; exactscope actualoriginalevent outcome proof, sameb40/FPea88; source unchanged; not everyunknown/fullTask",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8251,6 +8287,50 @@
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/restart-recovery-private-7f1cb54814b6/result.json SHAfcd4fbf73698b88c03270fbff103ee46a5e551d581d71b0acc5f50f9ea33b5f5; exact1P0F/S exit0/notimeout, small functional only; no NFR/fullGate claim",
       "actor": "/root actual reviewed private developer runner",
       "observed_at": "2026-11-02T08:10:34.823412Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Expected exhausted Recovery RED: technicalnext_at null; subsequent cap/owner/alert/unit assertions not reached",
+      "code_commit": "9851d7d762a87db03d63eb8314070ad0ee50fc11",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "9012d57ada8a64c5c19886965ca032949bd4f19a4e19e2f05b2762c245f2ada5",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/exhausted-recovery-private-7ebc3b23ff51/result.json SHA20972e32980b4f87d691edef88a0ba69d4cfd28f32ccc4b7c9fffa606cbdac59; actualraw counts/exit/notimeout; private small functional only; postB transient observer not dynamically covered here",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T08:23:53.686596Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Bounded exhausted technical-defer subpath exact1: pending/noIssue/17tables/actualduecap/safealert/drain plus deterministic arithmetic",
+      "code_commit": "9851d7d762a87db03d63eb8314070ad0ee50fc11",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "ea88a34c685e0df9522ad8c9a300d1ce0c5d01261d4ec458228cf1a83905cadd",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/exhausted-recovery-private-a8d6e8db8dc8/result.json SHA7b96fb189a33ee7715d98e50a69d7e3a6ee4a277f5870768c28cb23b5c1e4850; actualraw counts/exit/notimeout; private small functional only; postB transient observer not dynamically covered here",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T08:30:06.995884Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Approved native1205 one-fixture/two-serial-worker functional scenario: true rootINSERT error and sameconn rollbackACK, owned backoff/current17facts, second original-event uniqueIssue success",
+      "code_commit": "9851d7d762a87db03d63eb8314070ad0ee50fc11",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "ea88a34c685e0df9522ad8c9a300d1ce0c5d01261d4ec458228cf1a83905cadd",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/lock-timeout-recovery-private-0274c703f501/result.json SHA9d308bf1ee40dc795b71c143809b38a21fce073a8f6ecaf5a8ba5c6ff7712e4b; exact1P/0F0S/exit0/no timeout; deliberate session lockwait fault, not NFR/20s timeout; current target3/sourceqty/run1fail1/drain; no wholeRecovery claim",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T08:56:07.670716Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Original committed PhaseB result with simulated client ACK loss: actual INDETERMINATE/destroy/no-release, newRC terminal witness, no repeated B Issue",
+      "code_commit": "b40cfacc089e201ee3f7087dd8f6acb0ddc3495a",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "ea88a34c685e0df9522ad8c9a300d1ce0c5d01261d4ec458228cf1a83905cadd",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/commit-ack-recovery-private-3472f62858f8/result.json SHAf4b1c032bb9535c8bb8e60af4a6a022f7ede40b49e2d25490104b178066f3006; actual1P/0F0S/exit0/notimeout; one fixture/worker; realCOMMIT then injected ACKerror; not realnetwork/NFR/allunknown proof",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T09:25:50.064244Z"
     }
   ],
   "pending_decisions": [
@@ -9966,6 +10046,14 @@
       "idempotency_key": "p2-hd241-actual-shared-caller-handoff",
       "status": "CONFIRMED",
       "source_ref": "Actual Gitshow confirms onlyCaller rename/importlocators; oldpathdeleted/newblob213ecae8786363a1b61ace07d76a5fc0cd831725 SHA2123e4d742b393f936704f6bbb0406e30441d404c135e0ca54842463866868a6. Private externalhandoff8056fd4d620230285e9204b801b97a3c76946716b36a136d4ea455962b2eaa2e observed; no P2 source consumption yet, no duplicate move/test/CI. PM actual grant onlyInventory311 onefunctionalCI, not P2 approval."
+    },
+    {
+      "id": "P2-PM-DELIVERY-FOCUS-20261102",
+      "kind": "THREAD_COORDINATION",
+      "target": "PM actual Sam userMessage01a19b99-0606-7df2-84ec-3989bdba7979",
+      "idempotency_key": "p2-pm-delivery-focus-20261102",
+      "status": "CONFIRMED",
+      "source_ref": "Root directly read actualSam: Fulfillment focusesShipmentConfirm/recovery thenstatus/clientpoll/UI, does not waitSalesdeferredDraft fullreplace; allNFR afterUAT; no newroutineCases/data/concurrency/repetitions withoutactualscopeapproval, no selfrerunfullCI/unapprovedpushround/dispatch. Existing75B finitefunctionalwork remainsreused, no new grant inferred. PriorSam message01a19b95-cc2f-77c2-80ed-107e2d292a64 statesInventory311merged; defaultGit state stillmustfetchverifybeforeintegration."
     }
   ],
   "evidence_files": [
@@ -10511,5 +10599,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Eligible eb35 and revoked failure-only b3cc components have real separate-review/source-bound small functional results, no wholeRecovery/P2 pass. Implement bounded technical backoff/exhaustion and remaining approved finite interruption/lease/twoworker/unknown scenarios; then publicConfirm/clientpoll/UI/PW/allTASK/ownerpins/coverage/currentcandidate trustedadmission/functionalCI before draftPR. AllNFR afterrelatedUAT,20s/allsecurity unchanged. DEC051actualSamB: Sales localad4eb6239e59a0b611174259c9104ccc898b83d4 preserves verified sameLine/sameReservationSet quantity pilot05d332 only, fullreplace/sourcechanges deferred; noA/migration/guard/newtest/fixture/fullCI. HD241 caller uniquecommit/handoff staticverified, notyetconsumedP2/no duplicate move. No open human decision to reask."
+  "next_safe_action": "CurrentP2 sourceb40 has native rollback/backoff/exhaustion/committedACKloss actualscoped proofs; fullRecovery/Task028/029 not complete. Save this snapshot, fetchfreshmain afterreportedInventory311merge, independentlyreview actualP2dependency/contractdiff then integrate and run onlynecessaryapprovedfunctionalchecks (noNFR/wholeCI). ContinuepublicownedConfirm API+statuslookup/lifecycle and remainingfinitefailurepaths, thenclientpoll/UI/PW/allTASK/ownerpins/coverage/currentcandidate trustedadmission/authorizedfunctionalCI→draftPR. Do notwaitSalesdeferredfullDraft. Two-worker combinedframeworkfence direction reviewed butprivateprobe notyetwritten/executed. Preserve20s and allsecurity/75B22 footprint, no unapprovedCIround. Old rawbaselines retained, not currentmainPASS."
 }
