@@ -54,3 +54,5 @@ Private MySQL 26.7.0, binary logging on, migrated as root.
 ## CI admission
 
 Sam approved the case list with the proposal on 2026-11-02: the eight cases in `server/test/integration/purchasingOperationAudit.integration.test.js`; a few rows each inside rolled-back transactions; no concurrency; one repetition; all pass. They run in the existing MySQL jobs on every PR and push to main; about 0.2 s locally; no new job, no capacity. Because the Supplier MIG-006 test's blob changed, TASK-011's receipt stops matching; one receipt again pins every Purchasing test input and supersedes it.
+
+**Digest publication — owner exception, 2026-11-02.** Sam instructed: "我作為project owner 批準你幫我發digest" — a project-owner exception to `AGENTS.md`, for `purchasing-task012.json` only. The variable was read immediately before writing and appended to: the seven existing values were preserved and `3f540062022e627a2a727817fc6533abcab0ae7724b99000d6fa2f4215bd26ec` added, nothing else. The superseded `e40f1bbe…` and `40efa97a…` were left in place; withdrawing them is Sam's call.
