@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 352,
+  "revision": 354,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
     "plan": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
-    "code_commit": "5b59938668add0265d05c767859257615fe2d4cb",
-    "source_fingerprint": "f01530f83d07d93d3d70e2d972f70fcf5db1369a56bf51fc754cae9d06647bdb",
+    "code_commit": "26a2e7b192d6f7d6a8cbb225153a5d2485ba9041",
+    "source_fingerprint": "ec4c257a9fb81657ff425dd02d98b5f038f87a292ace7f24ee711900a5061230",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
-    "default_commit": "aae9c74444299539a3a5e275f37a5730e88f3378",
+    "default_commit": "b7886a85fa0f7991cf6430d75e2c126a63ea4fa3",
     "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
   },
   "runtime": {
@@ -6565,6 +6565,78 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-INCOMING-B788-IMPACT",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_inquiry_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-incoming-b788-admission-routing-impact-review.json SHA042edc43b7d8a44dc5986fa56ff710c690f29ffa20463d3e0aace1661c8d9768; actual source scope/baseline/findings and limitations in receipt; no full P2/Recovery/CI PASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-HD026-SALES-READONLY-SOURCE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_inquiry_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-hd026-sales-readonly-contract-source-review.json SHA6c27e9af76560d496cee9f0808b7a50afb16af809601d1e7aa1846dc415cd779; actual source scope/baseline/findings and limitations in receipt; no full P2/Recovery/CI PASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-HD026-LIVE-FAILURE-SOURCE-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-hd026-live-failure-full-source-exact1-green-exact2-regression-admission-review.json SHA2fa79a1c24fe98c589841b148309f66c45030206033dc2320d4819f1d7045c1f; actual source scope/baseline/findings and limitations in receipt; no full P2/Recovery/CI PASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-HD026-LIVE-FAILURE-5E9-DIAGNOSIS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-live-failure-5e9-unexpected-result-static-diagnosis-review.json SHAb95d385d1f70788d8df10012b53c8cd0df4bec5676b083f59a9d8aac833fe78f; actual source scope/baseline/findings and limitations in receipt; no full P2/Recovery/CI PASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-HD026-OPTIONAL-STOCKTAKE-REPAIR",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-optional-stocktake-fix-exact1-repair-exact2-conditional-admission-review.json SHA0d9e8aaf4f594831ade1422fe3d02313ba988a7a0aa1cb8d3251c1ed1a99d769; limited thin component; raw original52e/ec4c baseline, no full Recovery/DEF029/P2/CI closure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-HD026-LIVE-THIN-ACTUAL-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-hd026-live-failure-thin-source-actual-results-closure-review.json SHAd7871d82c7a40443a786c97fdcbbdc3e5bc06d070777e479be874ca25146f180; limited thin component; raw original52e/ec4c baseline, no full Recovery/DEF029/P2/CI closure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7843,6 +7915,50 @@
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-49e696-current-ci-final-closing-review.json SHA02f070a4b4e51a51b06affdf35bc593d20cb6eacdbb5ffb65d800346a538c6e4; actual separate-agent exact49e696 CI/DoD closing0C/H/M; actual13/13SUCCESS, all207skipnames unchanged, full5000/20s/rollback/recovery/39floors/PW verified. No GitHub humanAPPROVE claimed.",
       "actor": "/root/fulfillment_resume_review actual independent review",
       "observed_at": "2026-10-30T04:45:32.442826+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Historical expected RED: original stale-address rollback retained SHIPPING instead of DRAFT",
+      "code_commit": "52e97201bb6af44c6a1f4be9164e95518962d8ee",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "7e48849ba2a5412e56d1665e6f39786c223c5860b3326668d50b488d77065f2a",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/permanent-failure-private-92ba942a5dae/result.json SHAc9498117bf2e3b6f7bb1c07060c38a75493b84675ba2b4cc0eb1f8768cd9e165; raw report retained, exact1 functional 0PASS/1FAIL/0SKIP/no timeout; not an NFR execution or final profile result",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T04:38:25.129040Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Unexpected live-failure functional result: safe503 instead of original409; later conservation/terminal assertions not reached",
+      "code_commit": "52e97201bb6af44c6a1f4be9164e95518962d8ee",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "de7239629cdfdc6ee1cd8f8705f70b85bd26c15556d9c265217991c9cf2743d7",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/permanent-failure-private-5e9cf9711830/result.json SHA7c71410c610f0a447e9d968df12c0adab7fe6459112e4017d0e13b3923615eca; raw report retained, exact1 functional 0PASS/1FAIL/0SKIP/no timeout; not an NFR execution or final profile result",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T06:16:16.855516Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Live permanent failure exact1: real rollback plus dual-owner/local ABSENT, original FAILED and Shipment DRAFT, exact audit",
+      "code_commit": "52e97201bb6af44c6a1f4be9164e95518962d8ee",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "ec4c257a9fb81657ff425dd02d98b5f038f87a292ace7f24ee711900a5061230",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/permanent-failure-private-1426d2ea5919/result.json SHA674f0acdd78691779f0e51b33eac3a33f530dd395b12024fce40d375a35c59eb; actual raw counts/exit0/no timeout; private small functional DEVELOPER_FOCUSED only; no NFR/full profile result",
+      "actor": "/root actual reviewed private developer runner, independently verified /root/p2_confirmation_review",
+      "observed_at": "2026-11-02T06:22:21.576352Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Affected original PhaseB exact2: atomic success/replay and intentional late-audit 24-table rollback/same-event success",
+      "code_commit": "52e97201bb6af44c6a1f4be9164e95518962d8ee",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "ec4c257a9fb81657ff425dd02d98b5f038f87a292ace7f24ee711900a5061230",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/phaseb-private-f785c42503b0/result.json SHA09ec2c0d388ae55c056c75f810da00ed1e3f98b2a0d165f927396afe8cc8e203; actual raw counts/exit0/no timeout; private small functional DEVELOPER_FOCUSED only; no NFR/full profile result",
+      "actor": "/root actual reviewed private developer runner, independently verified /root/p2_confirmation_review",
+      "observed_at": "2026-11-02T06:22:34.996784Z"
     }
   ],
   "pending_decisions": [
@@ -10062,7 +10178,9 @@
         "ActualsharedMySqlService529–544/legacyfailurecase205–233 mayreturnoriginalbusinesserrorandreleaserollbackfailedconnection; currentmetadatahasnopostTXproof. CurrentInventoryfindBySource conflatesabsent/unfinished; Salescurrentquantitycannotproveoriginaljournalabsence. No nativepartialcommit observed, no capacity/perfFAIL, no implicitdirtyBEGINclaim because SET TRANSACTIONguardrefusesactiveTX.",
         "Privateindependent gapreviewa815e24537059d137d70df7837df3ae92381514fb4f8e8e961ca1d57dc1886d9; proposal77 exactf404... readyforactualhumandecision3be1...; no fix implemented or waived.",
         "ActualHD026A approved; existingexact12RED11PASS1expectedFAIL no timeout at db-unit/failure-modes-2208a117e642/result.json. DBthinpatch implemented pending sourceGREENreview; fullowner/localRecovery proof stillincomplete and DEF029OPEN.",
-        "DBthincomponent source+actual12/23functionalGREEN independentlyverified0CHM696eec80; exact3filecommit731e3864 handedSales. Completeowner/localproof+fencedRecovery stillnotimplemented, soDEF029remainsOPEN."
+        "DBthincomponent source+actual12/23functionalGREEN independentlyverified0CHM696eec80; exact3filecommit731e3864 handedSales. Completeowner/localproof+fencedRecovery stillnotimplemented, soDEF029remainsOPEN.",
+        "Eight-file live-attempt private actual-rollback/dual-owner-read/local-negative implementation statically reviewed; replay/signal/local-negative HIGH findings resolved static. Actual5e9 exact1 FAIL original409 expected safe503, no timeout; exact2 not run. Optional Stocktake both-absent compatibility omission statically diagnosed plus readonly owned runtime/source confirmation; targeted SELECT-only fix pending source review and focused verification. Full restart/revoked Recovery incomplete, DEF029 OPEN.",
+        "Targeted optional-Stocktake compatibility fixed; actualexact1 + originalaffectedexact2 PASS at52e/ec4c/PLAN7882, 0fail/skip/timeout; independentthinclosure d7871d82. Exact8source localcommit26a2e7b1 has sameFP bytebridge, rawHEAD unchanged; base-only cleanup verified. This completes LIVE sameprocess eligible-actor failure slice only; restart/revoked Recovery, public owned HTTP/shutdown/corruption checks/ownerpins/finalfunctionalCI remain open. DEF029 stays OPEN; noNFR."
       ],
       "risk_approval_id": null
     },
@@ -10075,10 +10193,11 @@
         "TC-010"
       ],
       "closure_evidence": [
-        "Incomingaae9 capacityrouter exactnamespace gap independentlyverified: new shipments/fulfillment-lookups handlers unmapped, receipt db8f15a5b70d9da2b5efd21df6641077c4b6d3085155c8c9747dcb4a9e7d2a62. PMexactmapping coordinated; globalnewpolicy also forbids preUATcapacityjob execution. No push/CI until actualfunctionalrouting/admission reconciled."
+        "Incomingaae9 capacityrouter exactnamespace gap independentlyverified: new shipments/fulfillment-lookups handlers unmapped, receipt db8f15a5b70d9da2b5efd21df6641077c4b6d3085155c8c9747dcb4a9e7d2a62. PMexactmapping coordinated; globalnewpolicy also forbids preUATcapacityjob execution. No push/CI until actualfunctionalrouting/admission reconciled.",
+        "Latest fetchedmain b7886a85 integrated by52e97201; incoming independent impact receipt042edc43 confirms both shipment/fulfillment-lookups namespace mappings fixed and PR/main/schedule functional-only. Original routing source cause resolved; delivery condition still OPEN for exact candidate test-admission machine receipts/external trusted administrator digests/functionalCI. No capacity PASS or policy waiver."
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Fetch/impact-review/integratelatestmain includingPMreportedPR318 b7886a85 functionalCI+admission/NFRdeferredUAT; no centralwait/no automaticCIpush beforeclassificationreceipts. Then implementreviewedHD026doc80 Inventoryprepare/SalesS/localproof/Inventoryfinish withtrustedprivateverifier, followedsource/securityreview+onlyalreadyapprovedfunctionalbudgets. TASK030 six-sourcecomponent5b599386 andactual2+3functionalPASS atprecommit731e/f015 preserved; fullTASK030/Confirm/Recovery/UI/coverage/currentCI remainopen. NoNFRbeforeUAT, no newcases/loadwithoutactualSamapproval; preserve20s/allcases/scales/floors. DraftPRonlyafterallfunctionalTASK/gates."
+  "next_safe_action": "Implement source-grounded trusted registered singleton Recovery/runtime within HD026A: separate inspection, fresh eligible original-actor expired takeover into fresh preclaim-X PhaseB, and genuinely revoked failure-only fenced negative cleanup. Reuse verified eight-file live component26a2e7b1; do not rerun its exact1/exact2/DB35 without new source impact. Finish approved remaining P2 functional cases/HTTP/UI/coverage and external trusted exact-candidate CI admission, then draftPR. Preserve historicalFAIL/sourceidentities; NFR deferred until relevantUAT; 20s/all safety/scales/floors unchanged."
 }
