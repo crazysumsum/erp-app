@@ -465,3 +465,16 @@ jobs:
 
       - name: Build frontend
         run: npm run build --workspace client
+
+  publish-admitted-result:
+    needs: test
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.admitted_pr != ''
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+      statuses: write
+    uses: ./.github/workflows/ci-pr-result.yml
+    with:
+      pr: ${{ inputs.admitted_pr }}
+      result: ${{ needs.test.result }}

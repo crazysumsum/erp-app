@@ -120,7 +120,7 @@ function classify(file, declaration, previous, candidate, catalogClaims) {
   }
 }
 
-export function checkAdmission(base, head, approved = allow) {
+export function checkAdmission(base, head, approved = allow, requiredControls = []) {
   const before = tree(base), after = tree(head);
   const changed = new Map();
   const paths = [...new Set([...before.keys(), ...after.keys()])].filter(file => {
@@ -133,6 +133,11 @@ export function checkAdmission(base, head, approved = allow) {
     const a = before.get(file), b = after.get(file);
     if (file.startsWith(receipts)) continue;
     if (sensitive(file, a, baseReferences) || sensitive(file, b, headReferences)) changed.set(file, b);
+  }
+
+  for (const file of requiredControls) {
+    assert.ok(after.has(file), `Missing required admission control: ${file}`);
+    changed.set(file, after.get(file));
   }
 
   const covered = new Set(), catalogClaims = [];
@@ -217,7 +222,10 @@ export function verifyCatalog(result, catalog, audited, supportedScopes) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const head = process.env.GITHUB_SHA || "HEAD";
-  const result = checkAdmission(baseline, head);
+  const result = checkAdmission(baseline, head, allow, [
+    ".github/workflows/pr-admission.yml", ".github/workflows/ci.yml",
+    ".github/workflows/ci-pr-result.yml", ".github/scripts/test-admission.mjs"
+  ]);
   // Import only after ALL changed CI scripts, tests, fixtures and routing files
   // are approved. Catalog validation reads sources, never executes test cases.
   if (process.argv.includes("--static-only")) {

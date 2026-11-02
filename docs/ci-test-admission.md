@@ -78,8 +78,9 @@ candidate code. On success it dispatches the CI workflow on a temporary tag at
 that exact merge SHA. The CI job verifies the policy's SHA-256 against the
 out-of-band `CI_TEST_ADMISSION_POLICIES` variable (one allowed hash per line),
 checks receipts and catalog routing, and only then starts the test jobs. The
-base controller reports the actual run conclusion on the PR head as
-`Admitted PR CI` and retains its tag for authorized retries until the PR closes. The close handler removes the tags. Make this status required on main.
+approved CI reports its required aggregate Test result directly on the PR head
+as `Admitted PR CI` using an isolated job with no checkout or candidate code
+execution. The tag is retained for authorized retries until the PR closes. The close handler removes the tags. Make this status required on main.
 A rejected candidate needs a new push or a deliberate reopen after approval.
 
 For dispatched PRs the capacity selector uses the actual two parents of the
@@ -94,3 +95,9 @@ variable before activation. During a policy migration retain the approved old
 and new hashes until active candidates finish. Ordinary agents must not hold
 workflow/variable administration privileges to establish a security boundary
 against independently creating workflows or changing GitHub settings.
+
+The result job validates the tag, run attempt, two-parent merge, and current open
+PR head and merge SHA before posting. A failed, skipped or cancelled aggregate
+cannot publish success. If GitHub interrupts the callback, rerun only the base
+admission controller for that event; it looks up and reuses the completed run
+on the same immutable SHA, without dispatching a duplicate test batch.
