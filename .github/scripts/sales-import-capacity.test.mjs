@@ -91,13 +91,13 @@ test("real PR and push diffs preserve rename paths; unavailable history blocks e
   writeFileSync(path.join(cwd, "README.md"), "Documentation only\n");
   git("add", "."); git("commit", "-qm", "docs");
   const script = fileURLToPath(new URL("./sales-import-capacity.mjs", import.meta.url));
-  const run = (event, sha) => {
+  const run = (event, sha, grant = "") => {
     const output = path.join(cwd, "output"), eventPath = path.join(cwd, "event.json");
     writeFileSync(output, "");
-    writeFileSync(eventPath, JSON.stringify({ pull_request: { base: { sha: base }, head: { sha } }, before: base, after: sha }));
+    writeFileSync(eventPath, JSON.stringify({ pull_request: { base: { sha: base }, head: { sha } }, before: base, after: sha, inputs: { capacity_base: base } }));
     const stdout = execFileSync(process.execPath, [script], {
       cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, GITHUB_EVENT_NAME: event,
-        GITHUB_OUTPUT: output, GITHUB_EVENT_PATH: eventPath }
+        GITHUB_SHA: sha, GITHUB_REF: "refs/heads/main", CI_POST_UAT_CAPACITY: grant, GITHUB_OUTPUT: output, GITHUB_EVENT_PATH: eventPath }
     });
     return { output: Object.fromEntries(readFileSync(output, "utf8").trim().split("\n").map(line => { const at = line.indexOf("="); return [line.slice(0, at), line.slice(at + 1)]; })), stdout };
   };
@@ -106,6 +106,11 @@ test("real PR and push diffs preserve rename paths; unavailable history blocks e
   mkdirSync(path.join(cwd, "server/src/modules/supplier"), { recursive: true });
   renameSync(path.join(cwd, "server/src/modules/sales/service.js"), path.join(cwd, "server/src/modules/supplier/service.js"));
   git("add", "server"); git("commit", "-qm", "rename dependency");
-  assert.equal(run("pull_request", git("rev-parse", "HEAD")).output.server_required, "true");
-  assert.throws(() => run("pull_request", "0".repeat(40)), /Missing history/u);
+  const sha = git("rev-parse", "HEAD");
+  const entry = selectCapacity(["server/src/modules/sales/service.js"]).find(c => c.group === "sales");
+  const grant = `${base}:${sha}:${entry.id}`;
+  for (const event of ["pull_request", "push", "schedule"]) assert.equal(run(event, sha, grant).output.server_required, "false");
+  assert.deepEqual(JSON.parse(run("workflow_dispatch", sha, grant).output.selection), [entry.id]);
+  assert.throws(() => run("workflow_dispatch", sha), /No post-UAT approval/u);
+  assert.throws(() => run("workflow_dispatch", "0".repeat(40)), /Missing history/u);
 });
