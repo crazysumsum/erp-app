@@ -10,8 +10,8 @@ import { promisify } from "node:util";
 import http from "node:http";
 
 const execute = promisify(execFile);
-const helperFile = new URL("../test-capacity/inventory/inventoryStocktakePerformanceChild.js", import.meta.url);
-const charFile = new URL("../test-capacity/inventory/stocktake-characterization.js", import.meta.url);
+const helperFile = new URL("./inventoryStocktakePerformanceChild.js", import.meta.url);
+const charFile = new URL("./stocktake-characterization.js", import.meta.url);
 const drain = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); };
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 function extract(source, start, end) { const a = source.indexOf(start), b = source.indexOf(end, a + start.length); assert.ok(a >= 0 && b > a, `Actual function markers ${start}`); return source.slice(a, b).replace(/^export /u, ""); }
@@ -77,7 +77,7 @@ test("FF01 healthy Characterization retains fifteen ordered callbacks/options an
   assert.deepEqual(bodies, Array.from({ length: 15 }, (_, i) => i));
 });
 test("FF02 real node:test assertion and runner timeout retain failure and skipped bodies under configured maxSkipped0", async () => {
-  const profile = JSON.parse(await readFile(new URL("../../docs/inventory_management/00_project_profile.json", import.meta.url), "utf8"));
+  const profile = JSON.parse(await readFile(new URL("../../../docs/inventory_management/00_project_profile.json", import.meta.url), "utf8"));
   assert.equal(profile.suites.find(suite => suite.id === "inventory-task041-characterization").max_skipped, 0);
   const dir = await mkdtemp(path.join(tmpdir(), "inventory-failfast-child-"));
   try {
