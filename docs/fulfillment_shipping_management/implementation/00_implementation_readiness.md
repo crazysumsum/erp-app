@@ -1,5 +1,13 @@
 # Fulfillment implementation readiness
 
+## 當前：功能交付繼續，非功能驗證延至 UAT 後（2026-11-02）
+
+Sam 已批准 HD026 A。共用 DB 薄切片已實作 rollback 失敗 quarantine／destroy／不回 pool、保留原診斷並回 INDETERMINATE，以及按真正 transaction executor 保存不可變終局結果。獨立源碼覆核0C/H/M；原12案12PASS，相關既有9＋14案23PASS，均0FAIL／0SKIP、沒有增加交易嘗試或容量負載；targeted lint通過。原11PASS／1預期FAIL的RED保留。這只完成 DB 元件；雙owner原事件ABSENT／SUCCEEDED／UNKNOWN查證、可信lease fence與完整Recovery仍未完成，DEF029保持OPEN，不能宣稱完整P2。
+
+已直接核對 Sam 在 PM chat 的原訊息 `01a19a65-0902-74f1-b684-0fcb40f9f5e7`：所有非功能測試（包含已批本機／CI效能、容量、壓力）改為相關功能UAT後執行。保留全部案例、原資料量／並行數／門檻、20秒限制及後續owner；功能交付需所有TASK、受影響正確性回歸、必要review、coverage與當前功能CI。舊段落要求交付前容量Gate的時序由本項實際新指令取代，不把未執行項改成PASS，也不刪歷史失敗。方案75 B的22功能案／browser接線准入與首15案維持；三項新增P2容量未獲批准，亦不執行。UAT後由Fulfillment owner提出其具體准入及相關diff，再按Sam實際決定處理。
+
+已整合 main `aae9c744` 於 `40c544a5`，未push／跑P2候選CI或建立PR。incoming容量router對新精確handler namespaces仍有分類缺口，DEF030 OPEN；且既有workflow可能因共享DB／router變更啟動容量jobs。PM已通知中央PR318合併main b7886a85，P2會直接fetch／影響覆核／整合，不等待中央處理或UAT；推送前仍須實際核對新准入receipt與分流，不能靠舊receipt觸發NFR。可獨立繼續TASK030查詢／文件及HD026 owner／Recovery、Confirm、client／UI；本次P2仍只授權完成後draft PR，沒有P2合併授權。
+
 ## 當前：內部原子出貨及Create鎖循環已驗證，Recovery／完整P2仍待完成（2026-10-30）
 
 已無衝突整合main41fb於99cf743b。內部PhaseB可同交易完成Issue／Reservation consume／Sales／Claims／Shipment快照及原operation SUCCEEDED；兩項小型native成功／24表rollback＋原事件恢復已通過。另以雙連線先實際重現Create／Confirm的Customer-X／Sales-FK-S deadlock，再提前Create必要Sales父行S鎖；修正後race1PASS及原2項必要回歸PASS，均0FAIL／0SKIP。獨立結果覆核0C/H/M，receipt SHA42d6cf8e…94f7b1，DEF028僅此鎖循環可關閉。原RED、兩輪posting前功能失敗與較早PASS均保留各自實際FP／HEAD／PLAN，不重標。這些仍是2pool／10秒小型功能fixture，不能宣稱5,000容量或完整P2已通過。
