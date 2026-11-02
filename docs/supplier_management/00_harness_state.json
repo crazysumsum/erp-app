@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 514,
+  "revision": 515,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "READY_FOR_TESTING",
@@ -8084,6 +8084,17 @@
       "source_ref": "evidence/20261030T093238-52ea32e0c5b7/run.json run_check --execute, 2026-10-30 09:32:39-09:35:39Z on 3780b1ce (code-identical to the mode entry commit 3b9ef58d), throwaway mysqld 3450, real server and browser via the suite's own webServer and a fresh erp_t51_rh_uat* scratch database: 55 tests, 41 PASS, 0 FAIL, 14 SKIPPED (test.fixme: UAT-005, 016, 024, 029, 032, 033, 034, 035, 036, 050, 051, 053 downstream dependencies; UAT-044, 045 operations and DR), exactly the cases excluded by HD-161. status BLOCKED only because of the 14 skips (max_skipped 0). 99 screenshots attached in the junit, stored outside the repository under /tmp/supplier-management-uat-artifacts/34753d87 (REV-115 L-2). Business acceptance pending with the Product Owner.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-30T09:35:39+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Limited business UAT acceptance (HD-161, HD-162 B): the Product Owner accepted the 41 in-scope cases; not the formal business sign-off",
+      "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
+      "spec_baseline": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
+      "status": "PASS",
+      "source_ref": "Product Owner (Sam), chat, 2026-11-02: '接受', in reply to the review page https://claude.ai/artifact/V7NNzGCYYEguXL9Q4ec2Tx (expected results and the 99 screenshots of evidence/20261030T093238-52ea32e0c5b7), which asked for acceptance per case or in bulk. The page held no per-case choices; the agent read the reply as all 41 accepted, recorded ACCEPTED for each case in the page's acceptance collection, and stated that reading to him in the same reply. testing/05_uat_test_report.md. Limited UAT before Technical Acceptance: not T51 AC 4 business sign-off, not release approval; 14 cases (group B, UAT-044/045) not run; affected cases need reconfirming if code changes. No BUSINESS approval record is written for this, because the BUSINESS_ACCEPTANCE gate means the full sign-off.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-02T00:50:17+00:00"
     }
   ],
   "pending_decisions": [
@@ -11940,5 +11951,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Limited business UAT (HD-161): the Product Owner runs the 41 cases on http://127.0.0.1:5216 and records results in the checklist page; help on request (device approval, data setup for UAT-011, 031, 046, 054). REPORT_ONLY: each FAIL becomes a DEF with triage and a Product Owner decision. At the end: transcribe results into testing/05_uat_test_report.md and the ledger, then one records PR (push only with the Product Owner's approval under AGENTS.md, after computing the CI scope with .github/scripts/sales-import-capacity.mjs). Technical Acceptance remains blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed). Follow-up: reword 03 §11.5 with the next change to 03."
+  "next_safe_action": "Limited UAT records PR (claude/supplier-limited-uat): merge main, independent review, then put the push's CI scope (computed with .github/scripts/sales-import-capacity.mjs) to the Product Owner and push only on his approval (AGENTS.md); CI; merge on his word. After that: Technical Acceptance remains blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance. Follow-up: reword 03 §11.5 with the next change to 03."
 }
