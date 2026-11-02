@@ -3,9 +3,6 @@ on:
   pull_request_target:
     branches: [main]
     types: [opened, synchronize, reopened, closed]
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
 
 permissions: {}
 
@@ -19,6 +16,7 @@ jobs:
     permissions:
       contents: write
       actions: write
+      pull-requests: read
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
@@ -57,7 +55,15 @@ jobs:
           runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?event=workflow_dispatch&head_sha=$candidate&per_page=100")
           existing=$(jq -c --arg tag "$tag" '[.workflow_runs[] | select(.head_branch == $tag)][0] // empty' <<< "$runs")
           if [[ -n "$existing" ]]; then
-            state=$(jq -r 'if .status != "completed" then "pending" elif .conclusion == "success" then "success" else "failure" end' <<< "$existing")
+            current=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq '[.state,.head.sha,.merge_commit_sha] | @tsv')
+            if [[ "$current" != "$(printf 'open\t%s\t%s' "$HEAD_SHA" "$candidate")" ]]; then exit 0; fi
+            state=pending
+            if [[ "$(jq -r .status <<< "$existing")" == completed ]]; then
+              id=$(jq -r .id <<< "$existing")
+              attempt=$(jq -r .run_attempt <<< "$existing")
+              jobs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/attempts/$attempt/jobs?per_page=100")
+              state=$(jq -r '[.jobs[] | select(.name == "Test (server + client, MySQL integration)")] | if length == 1 and .[0].status == "completed" and .[0].conclusion == "success" then "success" else "failure" end' <<< "$jobs")
+            fi
             url=$(jq -r .html_url <<< "$existing")
             gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state="$state" -f context='Admitted PR CI' -f description='Reusing this exact admitted candidate run' -f target_url="$url" --silent
             exit 0
@@ -66,41 +72,6 @@ jobs:
       - name: Block PR if admission or dispatch failed
         if: failure() || cancelled()
         run: gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state=failure -f context='Admitted PR CI' -f description='Test admission or dispatch failed' -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --silent
-
-  report:
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.event == 'workflow_dispatch' && startsWith(github.event.workflow_run.head_branch, 'ci-admitted/pr-')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      statuses: write
-      pull-requests: read
-      actions: read
-    env:
-      GH_TOKEN: ${{ github.token }}
-      TAG: ${{ github.event.workflow_run.head_branch }}
-      RUN_ID: ${{ github.event.workflow_run.id }}
-      ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
-      SHA: ${{ github.event.workflow_run.head_sha }}
-      RESULT: ${{ github.event.workflow_run.conclusion }}
-      RUN_URL: ${{ github.event.workflow_run.html_url }}
-    steps:
-      - name: Report the current immutable candidate result
-        run: |
-          set -euo pipefail
-          [[ "$TAG" =~ ^ci-admitted/pr-([1-9][0-9]*)/([0-9a-f]{40})$ ]]
-          pr="${BASH_REMATCH[1]}"
-          test "${BASH_REMATCH[2]}" = "$SHA"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq .object.sha)" = "$SHA"
-          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$SHA" --jq 'if (.parents|length)==2 then .parents[1].sha else error("Not a PR merge") end')
-          if [[ "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq .run_attempt)" != "$ATTEMPT" ]]; then exit 0; fi
-          current=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$pr" --jq '[.state,.head.sha,.merge_commit_sha] | @tsv')
-          if [[ "$current" != "$(printf 'open\t%s\t%s' "$head_sha" "$SHA")" ]]; then
-            echo "Candidate is no longer current; leaving the newer PR status alone."
-            exit 0
-          fi
-          state=failure
-          if [[ "$RESULT" == success ]]; then state=success; fi
-          gh api "repos/$GITHUB_REPOSITORY/statuses/$head_sha" -f state="$state" -f context='Admitted PR CI' -f description="Candidate CI: $RESULT" -f target_url="$RUN_URL" --silent
 
   cleanup:
     if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
