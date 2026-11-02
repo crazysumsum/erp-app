@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1810,
+  "revision": 1811,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -26274,6 +26274,14 @@
       "idempotency_key": "act-p4-hd026-db-slice",
       "status": "CONFIRMED",
       "source_ref": "Verified actual Sam HD026 A human reply call1eabb1e0dd7e4a659c9a18fd64db8b17 in Fulfillment thread01a15862-9933-7e50-8e10-4015cf35d078. Exact3file standalone commit; independent receipt696eec806c12795c5498e4177506bd458ae6f3ff55f90f38ba836057a41666b4 validates original12plus23 functional tests, zero new registrations/scale. Preserve P4 acquire metrics; no P2 ownerreader or wholeRecovery adoption.; Actual cherry-pick conflict only adjacent top-levelWeakMaps; preserved both fullP4metrics and exactHD026 additiveblocks. Original35existingcases PASS0FAIL0SKIP, targetedeslint3pathsPASS. Exactlocalcommit differsidentity; no nativeDB/fullRecovery/NFR/CIclaim."
+    },
+    {
+      "id": "ACT-P4-MAINB788-INTEGRATION",
+      "kind": "GIT_TARGET_INTEGRATION",
+      "target": "b7886a85fa0f7991cf6430d75e2c126a63ea4fa3",
+      "idempotency_key": "act-p4-mainb788-integration",
+      "status": "STARTED",
+      "source_ref": "ActualPM318 merged; freshfetchverified8centralCI/policy/receiptfiles only, noSalesruntime/data/profilechange. RetainP4reporter/PFS andknownnamespaceclassification, adoptglobalpostUATNFRoff. Existingloadsnotrerun; DEC050hashbindingstillpending. LocalunaffectedintegrationunderstandingGitpermission, no newhumanapproval or CI."
     }
   ],
   "evidence_files": [

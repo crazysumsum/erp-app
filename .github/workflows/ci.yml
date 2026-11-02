@@ -12,7 +12,7 @@ on:
         required: false
         type: string
       capacity_base:
-        description: "Optional full baseline SHA: run existing capacity only for related changes since this ancestor"
+        description: "Post-UAT only: approved baseline SHA for related capacity on main"
         required: false
         type: string
 
@@ -68,8 +68,10 @@ jobs:
           node-version: 26
       - name: Verify scope and aggregate-check rules
         run: node --test .github/scripts/sales-import-capacity.test.mjs .github/scripts/coverage-shards-rules.test.mjs
-      - name: Determine related capacity cases (unresolved impact fails closed)
+      - name: Select approved post-UAT capacity or defer all cases
         id: scope
+        env:
+          CI_POST_UAT_CAPACITY: ${{ vars.CI_POST_UAT_CAPACITY }}
         run: node .github/scripts/sales-import-capacity.mjs
 
   # Independent checks and coverage start immediately; capacity gets its own DB.

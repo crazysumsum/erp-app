@@ -22,11 +22,20 @@ independent Purchasing math select no capacity. A shared runner/runtime change
 can legitimately select all existing catalog entries. An unmapped namespace or
 unavailable comparison history fails the scope check instead of starting a sweep.
 
-- PR: merge-base of base/head through head, including deleted/old rename paths.
-- Main push: before through after; no unconditional main capacity pass.
-- Schedule: routine checks only; the schedule itself is not a capacity request.
-- Manual: routine checks unless `capacity_base` supplies a full ancestor SHA;
-  capacity is limited to related changes between that SHA and the selected head.
+PR, main push, schedule and manual runs without a baseline run functional CI.
+Their server and client capacity jobs are deferred. A skipped job records no
+non-functional PASS.
+
+After the relevant UAT is complete, the coordinator verifies the acceptance
+record and Sam's workload approval, then records the UAT reference, interval
+and case IDs in the module handoff. In the repository Actions variable
+`CI_POST_UAT_CAPACITY`, add one whitespace-separated
+`<base SHA>:<accepted main SHA>:<catalog ID>` grant per approved case.
+Dispatch CI on main at the accepted revision with the full ancestor SHA in
+`capacity_base`. A moved head requires a reviewed grant for the new revision.
+The selector checks both revisions, rejects unknown or unrelated IDs and runs
+only the granted cases. Missing or stale grants fail before capacity execution.
+Remove grants after the approved run. A baseline alone cannot authorize load.
 
 ## Execution and unchanged gates
 
