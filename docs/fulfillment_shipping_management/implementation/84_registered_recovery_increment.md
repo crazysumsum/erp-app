@@ -1,0 +1,30 @@
+# TASK029 — registered original-event Recovery increment
+
+Status: eligible original-event restart increment validated and saved in local `eb35c9c6`; complete Recovery/TASK029 remains open. The validated HD027 boundary component is localaed5d2bd; its raw original1+2 results remain at their own ecd0b42f source. Actual HD026/HD027 and proposal75 B remain the authority; all NFR stays after related UAT.
+
+## Trust and source boundaries
+
+One eager `job.fulfillmentConfirmationRecovery` singleton registers fixed `fulfillment.confirmationRecovery` through the existing scheduler. Its private invocation token is valid only while that exact container instance, normalized job object, scheduler running-controller signal, owner, enabled/start/stop state and bounded monotonic invocation remain current. Each new RC transaction first holds the real framework job lease S row and verifies its actual DB clock/owner, then takes the original operation X. The framework seconds lease and operation millisecond nonce/lease remain distinct; Fulfillment does not renew the framework row or change Scheduler APIs.
+
+The worker creates a fresh AsyncLocalStorage context rather than weakening the existing actual-transaction assertion. Inspection is separate from genuine live-attempt rollback: it cannot manufacture a ROLLED_BACK outcome. It reconstructs the original public intent from persisted SHIPPING/version and exact CONFIRM_START witness, checks the original full operation hash and actor/target/correlation, then uses the same complete owner/local ABSENT protocol. Owner read-mode transactions end before new ordinary writer transactions; there is no read-proof S-to-X upgrade.
+
+Only a fresh eligible original actor and exact expired original event/hash/old-nonce CAS can mint a new nonce and private acknowledged takeover boundary. The ordinary PhaseB rechecks directory authorization, source/counters/CAS and all existing writer guards in a new original-actor context. The job/runtime proof remains necessary in its preflight, business and genuine live failure transactions, including final checks. Unknown/contradictory owner outcome stays pending. This thin increment leaves revoked-actor cleanup pending until the distinct complete-negative failure-only fence is implemented; it grants no Inventory/Sales write authority to revoked identities.
+
+The scan remains configured and bounded to100 and processing is serial, with signal/deadline checks and owned cleanup. The current source still needs bounded transient backoff/exhaustion alerts and all approved revoked/lease/unknown-outcome scenarios before completion. Production interval60s, worker timeout120s and every DB transaction ceiling20s are unchanged.
+
+## Existing private restart scenario
+
+The original registration RED probe/report is retained byte-for-byte under its recorded baseline. The same approved RECOVERY-OUTCOME post-PhaseA-crash one-SO/SKU/Line/Balance scenario is being prepared for one necessary GREEN check; it is outside routine discovery. Its fixture overrides only this job interval to300s, beyond the existing180s whole-run ceiling, and asserts scheduler runs exactly1 plus complete drain. This prevents a hidden automatic tick during the promised single manual invocation; it does not change product interval, worker/transaction timeout, business attempts or load.
+
+Source/security/probe/runner review must finish before that execution. No registered-worker GREEN, revoked cleanup, public Confirm HTTP, UI/Playwright, wholePhase, current-candidateCI or UAT PASS is claimed here. No capacity data or NFR was executed.
+
+## Actual bounded developer results
+
+- Initial eligible restart attempt `restart-recovery-private-3a4dad2cfdf4/result.json` failed at the scheduler outcome assertion, exit1/no timeout. The actual system log identifies the undeclared-self `services.require()` error before the Recovery scan/owner/business phase. Framework cluster-lease acquisition may already have occurred. Original raw artifacts and private diagnostic SHA `2e9691489cd42b5273140d6d3b04e2dbe23d527fdd5b0213e518b362c2134f12` are preserved.
+- The minimal repair uses the container's actual awaited `resolve(fixedSelfName)` identity, with private runtime/owner/signal/deadline checks before and after. No self-dependency, container policy weakening or context mock was introduced. Independent repair review SHA `1e2eb707990defc67d1629a1239032f89bd2948457e033428cd881531beb3467` found0C/H/M before one same-probe repair check.
+- `restart-recovery-private-8a4b0c5347e4/result.json` passed exact1, exit0/no timeout on HEADda4617ed/source fingerprint `9f41f593505776f10d9ed2b345693b630ecc36f420a8bc947951c087a443d771`. It asserts one actual scheduler run/drain, original-event SHIPPEDv3, attempt2/cleared lease, exactly one Issue3, Inventory consumed3/outstanding2, and Sales line fulfilled3/reserved2. It does not directly assert the Sales mapping row and is not represented as that coverage.
+- Necessary live regressions after extracting the shared proof: `permanent-failure-private-0961910addf4/result.json` exact1PASS and `phaseb-private-ff941a0e743f/result.json` exact2PASS, both exit0/no timeout on the same source. Original success/replay and intentional late-audit24-table rollback/same-event success remain intact.
+
+These are small functional developer checks, with their actual raw precommit baselines retained. No capacity/performance threshold or other gate was changed. Full component closure, revoked cleanup, bounded backoff/exhaustion and the remaining approved Recovery scenarios still require completion before TASK029/P2 readiness.
+
+Independent source/actual-results closure SHA `6a80ec05987ff6153a91063eae152e05f41a898dc5843da2650f15f2df9b043b` confirms only this eligible restart component plus necessary original1+2,0C/H/M. The next revoked first-scenario expectedRED is retained as `revoked-recovery-private-eb08222cc901/result.json`: exactly SHIPPING versus DRAFT before the missing failure-only path; no timeout and subsequent owner/history assertions not reached. Its next source is under separate review, not covered by the eligible component PASS.

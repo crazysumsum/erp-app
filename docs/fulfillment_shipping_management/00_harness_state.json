@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 356,
+  "revision": 357,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
     "plan": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
-    "code_commit": "aed5d2bd7677879d677a73e1071217909ac908c5",
-    "source_fingerprint": "209c22f0018015a21b08f55eddb32ccd7aafa765e98d83eb70e78f3fe2b4cc46",
+    "code_commit": "eb35c9c64595bfbc04ab271e6896beae61dd6186",
+    "source_fingerprint": "afa78de61781d3619b9bfaa1c6688d17a5f33045b37ad50346864ea505b5f8c1",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
     "default_commit": "01af6c24714058847d12eed90f348d181ede648a",
     "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
@@ -4091,6 +4091,24 @@
         "docs/fulfillment_shipping_management/implementation/81_recovery_atomic_transaction_lease_renewal.md",
         "No separate framework Scheduler ABI, schema, owner write grant, global isolation, default/config threshold change or new test/load admission"
       ]
+    },
+    {
+      "id": "APR-DEC051-B-EXTERNAL-DRAFT-QUANTITY-ONLY",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PM userMessage01a19b46-4978-7a22-adb4-908fe82d0c9d read directly",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam DEC051 B: preserve0106 protections; only verified sameLine/sameReservation-set Draft quantity modification, fullremove/sourcechange deferred, no newtests/fixture/wholeCI. Shared R2 SHA668ec4e9aa04f6df1288d170a7042207f10c25beadfed567eaed9851b0587965. Current Sales writer SHA05d332028afe8a08ac84eb2401fd8a5367f8ee6feeddea39fbfdcbccd7b3734d verified byteidentical to same pilot. No A migration or attached4cases/rollback-assertion/fixture expansion adopted. Not P2 Gate waiver.",
+      "recorded_at": "2026-11-02T08:05:31.958523+00:00",
+      "code_commit": "eb35c9c64595bfbc04ab271e6896beae61dd6186",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "scope": [
+        "External Sales PR319 Draft quantity-only ownership/Claims-history handoff",
+        "docs/fulfillment_shipping_management/implementation/83_pr319_draft_difference_owner_review.md",
+        "Preserve old fullUpdate/P4 incomplete/originalCI12FAIL; no duplicate implementation/test/CI or DELETE-rule change"
+      ]
     }
   ],
   "reviews": [
@@ -6714,7 +6732,7 @@
       "id": "REV-P2-CLIENT-CONTRACT-CLOSURE",
       "method": "SEPARATE_AGENT",
       "author": "/root",
-      "reviewer": "/root/p2_inquiry_review",
+      "reviewer": "/root/p2_confirmation_review",
       "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-client-contract-component-source-actual-results-closure-review.json SHA1ec5b2a7e5e8dd55d31e4fa3cd7282b7f2f16ac0ab3f8f5c66593440201e4840; bounded component only; no fullTASK/CI/Recovery PASS",
       "status": "APPROVED",
@@ -6729,6 +6747,18 @@
       "reviewer": "/root/p2_inquiry_review",
       "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-incoming-01af-purchasing-config-impact-review.json SHAfdafb4b753d5a67e6a1720d747668ffc767c55cef93d71e392c8805ca91c0be3; bounded component only; no fullTASK/CI/Recovery PASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-ELIGIBLE-RESTART-RECOVERY-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-eligible-restart-recovery-thin-source-actual-results-closure-review.json SHA6a80ec05987ff6153a91063eae152e05f41a898dc5843da2650f15f2df9b043b; scoped source/actual1+1+2 only; commit eb35c9c6 exactbytebridge; revoked/backoff/wholeTASK still OPEN",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -8121,6 +8151,61 @@
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/phaseb-private-b238f3447b26/result.json SHAc9bcd1581e2b4416bc33fdb7bfa8a2e47edaedcc68ed3013323b1251ae622435; actual counts/exit/raw; small functional only, no NFR/full profile claim",
       "actor": "/root actual reviewed private developer runner",
       "observed_at": "2026-11-02T07:37:22.254480Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Preserved Recovery integration FAIL: self require forbidden before scan; no business or timeout",
+      "code_commit": "da4617ed2536cef093422fdd18facd8a5189146c",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "cc23fb053d556416b3cfc804950d2a45d2130f867eb235c9d42bc0c9fe39d9f3",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/restart-recovery-private-3a4dad2cfdf4/result.json SHAf774430098dc7a60f5462b799112ae9ca174a7bfe74b8a73730c1a16b9b7ff73; actual raw/count/exit/notimeout preserved; bounded private functional only, no NFR/wholeGate claim",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T07:52:52.177554Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Registered eligible original-event restart exact1, one scheduler run, unique Issue and Inventory/Sales line quantities",
+      "code_commit": "da4617ed2536cef093422fdd18facd8a5189146c",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "9f41f593505776f10d9ed2b345693b630ecc36f420a8bc947951c087a443d771",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/restart-recovery-private-8a4b0c5347e4/result.json SHA7516964c39e25f92a7e44786d9528192e57499c05a5b364a6e337dd183ed0baa; actual raw/count/exit/notimeout preserved; bounded private functional only, no NFR/wholeGate claim",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T07:56:15.217538Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Necessary original permanent failure exact1 after shared proof extraction",
+      "code_commit": "da4617ed2536cef093422fdd18facd8a5189146c",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "9f41f593505776f10d9ed2b345693b630ecc36f420a8bc947951c087a443d771",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/permanent-failure-private-0961910addf4/result.json SHA56e84f370f61bd964f7d23b4c1d45cf5f60e946693926734288ca72d697f8715; actual raw/count/exit/notimeout preserved; bounded private functional only, no NFR/wholeGate claim",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T07:57:57.806358Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Necessary original PhaseB exact2 after Recovery source: success/replay and exact24table audit rollback",
+      "code_commit": "da4617ed2536cef093422fdd18facd8a5189146c",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "9f41f593505776f10d9ed2b345693b630ecc36f420a8bc947951c087a443d771",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/phaseb-private-ff941a0e743f/result.json SHAb3b63ce09513457848c19da69327ddc4ff178c9b0835be96c81b0cef4b4d52dd; actual raw/count/exit/notimeout preserved; bounded private functional only, no NFR/wholeGate claim",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T07:58:53.503752Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Expected revoked Recovery first-scenario RED: still SHIPPING before safe failure-only implementation; later assertions not reached",
+      "code_commit": "eb35c9c64595bfbc04ab271e6896beae61dd6186",
+      "spec_baseline": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "source_fingerprint": "9f41f593505776f10d9ed2b345693b630ecc36f420a8bc947951c087a443d771",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/revoked-recovery-private-eb08222cc901/result.json SHA6e5add68e910d7a93acdcdb224c83726781dc3c1c047a139dedf865b383dafc7; actual raw/count/exit/notimeout preserved; bounded private functional only, no NFR/wholeGate claim",
+      "actor": "/root actual reviewed private developer runner",
+      "observed_at": "2026-11-02T08:03:15.772661Z"
     }
   ],
   "pending_decisions": [
@@ -9828,6 +9913,14 @@
       "idempotency_key": "p2-db731e-sales-handoff",
       "status": "CONFIRMED",
       "source_ref": "Actualauthorizedsend_message_to_thread delivered731e38649b27806319416725d95c4348ee84f02b exact3files DBsource+2existingtests only; verified12+23GREEN and independentreceipt696eec806c12795c5498e4177506bd458ae6f3ff55f90f38ba836057a41666b4; no push/CI/NFR."
+    },
+    {
+      "id": "P2-HD241-ACTUAL-SHARED-CALLER-HANDOFF",
+      "kind": "THREAD_COORDINATION",
+      "target": "Inventory sole-mover shared Caller commit1d8b17dc86930bacce886f9ccc5368dbc9fdb557",
+      "idempotency_key": "p2-hd241-actual-shared-caller-handoff",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Gitshow confirms onlyCaller rename/importlocators; oldpathdeleted/newblob213ecae8786363a1b61ace07d76a5fc0cd831725 SHA2123e4d742b393f936704f6bbb0406e30441d404c135e0ca54842463866868a6. Private externalhandoff8056fd4d620230285e9204b801b97a3c76946716b36a136d4ea455962b2eaa2e observed; no P2 source consumption yet, no duplicate move/test/CI. PM actual grant onlyInventory311 onefunctionalCI, not P2 approval."
     }
   ],
   "evidence_files": [
@@ -10373,5 +10466,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD027 lease thin component locally saved aed5d2bd with actual source/1+2 closure; client a3369bfb and incoming01af config9 scoped results preserved. Continue trusted registered Recovery singleton/invocation/frameworkleaseS-before-opX, distinct expired inspection provenance and bothowner/localnegative proof; eligible fresh originalactor takeover then new ordinary writerTX, revoked stays pending until genuine failure-only fence implemented. Complete publicConfirm/clientpoll/UI/Playwright/allTASK/ownerpins/functionalcoverage/exactcandidate trusted admission+functionalCI before draftPR. All NFR after relatedUAT. PR319 DEC051 R2 only read review; Sales asks Sam once, no delete rule/migration/test/CI adoption. HD241 exactpatch static noobjection only, Inventory sole mover actualcommit handoff pending."
+  "next_safe_action": "Eligible Recovery component eb35c9c6 source+actualrestart1/live1/PhaseB2 closure saved. Current uncommitted next revoked failure-only source is under independentsecurityreview; expected revokedRED eb082 raw retained, noGREEN yet. Finish original-event zero-effect/privatecap/failure-only fence plus bounded backoff/exhaustion and other approved small Recovery scenarios, publicConfirm/clientpoll/UI/PW, allTASK/ownerpins/coverage/exactcandidate trustedadmission/functionalCI then draftPR. Preserve20s/allsecurity and allNFR afterUAT. DEC051actualSamB recorded; Sales onlysame-source quantity pilot verifiedbytes, noA/delete/schema/newtest/fixture/fullCI. HD241 actualsharedCaller commit/handoff verifiedstatic; consume uniqueowner contribution later without rerun or newCI grant. Corrected prior clientclosure reviewer to actual /root/p2_confirmation_review using originalreceipt; no other history erased."
 }
