@@ -14,6 +14,7 @@
 | Legacy execution status | 詳細來源列保留`NOT RUN`，表示尚未執行；不等同PASS |
 | 目標環境 | 待執行前確認；Migration、constraint、transaction、concurrency、worker、效能及復原案例必須使用隔離的真實 MySQL 測試環境 |
 | 修訂（HD-157，2026-10-30） | SKU-008（TC-085）的for-SKU p95上限改為3秒（NFR-005）。OPS-001（TC-128）、OPS-003（TC-130）、OPS-005（TC-132）、OPS-006（TC-133）、OPS-007（TC-134）、OPS-008（TC-135）及MIG-006（TC-006）中需要正式部署環境的部分不再另測：production-like效能、部署拓撲中的網絡故障、alert送達on-call、正式備份排程下量度RTO／RPO、正式部署時間線及按§14逐步部署、正式環境回滾。各案例在隔離真實MySQL環境的本機結果即為驗收證據。OPS-009（TC-136）、UAT及簽核不變。 |
+| 修訂（HD-158，2026-10-30） | IMP-016（TC-101）匯入期間線上一般操作的p95上限改為5秒（NFR-004）；NFR-001在正常混合負載下的2秒（OPS-001）及NFR-005的3秒（SKU-008）不變。 |
 | Build / Commit | 待執行前記錄 |
 
 > 本文件只定義測試案例，不代表功能已通過驗證。本輪不執行任何測試。涉及永久刪除、封鎖、銀行明文、金鑰輪替、Migration、故障注入及復原的案例，只可在隔離測試環境使用虛構資料執行。
@@ -277,7 +278,7 @@
 | IMP-013 | P1 | Job狀態、cancel及count重建 | API/DB | uploaded/validating/ready/queued/running/terminal jobs | cancel重送、running cancel、corrupt cached counts | list/detail/cancel並從rows重建 | 只取消未running；重送不矛盾；terminal不可倒退；total=applied+failed+skipped並可重建 | responses、job/row SQL、audit/log | — | NOT RUN |
 | IMP-014 | P0 | FR-IMPORT-008、BR-028、AC-034；Bank欄位拒絕 | File/Security | U-MGMT | accountNumber/IBAN/ciphertext/key等header和值 | upload/precheck/export及全通道scan | precheck明確invalid、不靜默忽略；不寫Supplier/Bank/job payload敏感值；一般export永不包含 | response、DB/files/log/audit scans | — | NOT RUN |
 | IMP-015 | P0 | FR-IMPORT-005、FR-IMPORT-010；result ownership與retention | API/Security/Operations | 不同creator jobs；到期files | owner/other mgmt user、不存在ID、purged result | list/detail/result；執行365日purge及重跑 | 授權/ownership依設計；IDOR不洩漏；到期file刪除且410，summary/rows/audit保留7年；purge不越root | responses、filesystem、job/row/audit SQL | — | NOT RUN |
-| IMP-016 | P1 | NFR-004；10k-row SLA與線上共存 | Performance | 10,000-row realistic CSV；正常online load | create/update/invalid分布及worker配置 | warm-up後計時precheck+execution，同時量list p95 | 合計≤10分鐘；資源/DB pool bounded；線上query仍達批准門檻；無count或資料錯誤 | p50/p95/p99、throughput/resources、DB/result | — | NOT RUN |
+| IMP-016 | P1 | NFR-004；10k-row SLA與線上共存 | Performance | 10,000-row realistic CSV；正常online load | create/update/invalid分布及worker配置 | warm-up後計時precheck+execution，同時量list p95 | 合計≤10分鐘；資源/DB pool bounded；匯入期間線上一般操作p95<5秒（HD-158；原為沿用2秒）；無count或資料錯誤 | p50/p95/p99、throughput/resources、DB/result | — | NOT RUN |
 | IMP-017 | P0 | FR-IMPORT-009、AC-040、SEC-012；一般Export | API/File/Security | U-MGMT及無權限user；有filters及Bank資料 | Unicode/逗號/換行；以=,+,-,@或control開頭cells | 按filter export、非法呼叫並以試算表開啟 | 只匯出filter內可見一般資料；無Bank；RFC4180正確；公式不執行且DB原值不變；事件記actor/條件/time/result | response/file、spreadsheet proof、DB/audit | — | NOT RUN |
 
 ### 6.10 稽核與資料可追溯性

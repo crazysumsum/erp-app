@@ -1,0 +1,107 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta4/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_7c034819 --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta4/docs/supplier_management/evidence/20261030T034819-b8b65bdb3861/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_7c034819",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1041,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9625,
+      "missed": 39,
+      "queriesMissing": 23,
+      "p50Ms": 84,
+      "p95Ms": 106
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9702,
+      "missed": 31,
+      "queriesMissing": 18,
+      "p50Ms": 916,
+      "p95Ms": 1094
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "ng wing furniture holdings limitei",
+      "truthSize": 10,
+      "missedScores": [
+        0.8888888888888888,
+        0.8727272727272727
+      ]
+    },
+    {
+      "query": "kharbour hing lighting (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8846153846153846
+      ]
+    },
+    {
+      "query": "tsang royal medical (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8627450980392157
+      ]
+    },
+    {
+      "query": "wong star chemical international ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.9
+      ]
+    },
+    {
+      "query": "ho ohan metal company limited",
+      "truthSize": 6,
+      "missedScores": [
+        0.8679245283018868
+      ]
+    },
+    {
+      "query": "asia kam industrial company limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9032258064516129
+      ]
+    },
+    {
+      "query": "pacific lee machinery limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8846153846153846
+      ]
+    },
+    {
+      "query": "star leung electronics limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.92,
+        0.92,
+        0.92,
+        0.9019607843137255,
+        0.8846153846153846,
+        0.8846153846153846
+      ]
+    },
+    {
+      "query": "victoria jaae trading limited",
+      "truthSize": 8,
+      "missedScores": [
+        0.8518518518518519,
+        0.8518518518518519,
+        0.8518518518518519
+      ]
+    },
+    {
+      "query": "dragon ocean optical limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}

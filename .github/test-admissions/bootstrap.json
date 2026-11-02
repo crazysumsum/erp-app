@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "decision": "Sam, project manager chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f on 2026-11-02: all non-functional tests after UAT; new routine tests and workload growth need prior approval.",
+  "purpose": "Keep the admission controller and deliver functional CI before UAT. Gate existing capacity on post-UAT grants for a related diff.",
+  "data": "Git trees, blob identities and classification receipts. No new application cases or dataset.",
+  "concurrency": "One static admission per candidate. Existing application and capacity worker limits retained.",
+  "repetitions": "One admission per candidate; exact dispatched PR results are reusable.",
+  "thresholds": "Missing approval/classification blocks execution; existing test thresholds and coverage floors preserved.",
+  "trigger": "PR, main and schedule run functional CI. Only a manual main dispatch with an externally approved post-UAT base/head/case can start capacity.",
+  "cost": "Existing static selection and functional gates. Zero capacity runners on feature PRs; no added routine application test.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "blob": "2cf05fdfcdc1926b9cfe30ddced86e77226a574f",
+      "kind": "support"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "blob": "99ee676dd4b93059149d8a780c21f0ca7ce739a7",
+      "kind": "support"
+    },
+    {
+      "path": ".github/workflows/pr-admission.yml",
+      "mode": "100644",
+      "blob": "c9b6a589509a0da509cc3065995cd34d363b543b",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/test-admission.mjs",
+      "mode": "100644",
+      "blob": "4b60d852c7ebce9ae53604475f24b8c4e74e8c10",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/capacity-runner.mjs",
+      "mode": "100644",
+      "blob": "53f7d2c41b9f290ed44913304b653dd54e5e3dbb",
+      "kind": "support"
+    },
+    {
+      "path": ".github/scripts/sales-import-capacity.mjs",
+      "mode": "100644",
+      "blob": "915b86c5433901f90b47f0ac3f555746bcc191cd",
+      "kind": "support"
+    },
+    {
+      "path": "client/vitest.capacity.config.js",
+      "mode": "100644",
+      "blob": "b87d048ea9fc8ffd75033937ac8123e4d47c91f8",
+      "kind": "support"
+    },
+    {
+      "path": ".github/workflows/ci-pr-result.yml",
+      "mode": "100644",
+      "blob": "1d6aa97142e921c3a397c8cad00d1de36d037f08",
+      "kind": "support"
+    }
+  ]
+}

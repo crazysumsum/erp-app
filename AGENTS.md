@@ -36,6 +36,24 @@ Preserve existing cases, assertions, coverage floors, CI and necessary review.
 Do not delete/skip tests, reduce workload or relax thresholds merely to save time.
 Sam has authorized separating existing large capacity cases into impact-scoped
 jobs while retaining routine correctness/transaction/permission regression and
-unchanged gates. Unknown/shared dependency changes must require capacity; long
-load acceptance belongs in separately approved scheduled/pre-release validation.
-This direction does not approve other pending new workloads.
+unchanged gates. Routine PR checks must contain no performance/capacity workload.
+Finish feature implementation and affected functional regression, coverage,
+CI and review, then arrange merge. Defer all non-functional validation until
+the relevant feature has completed UAT, both locally and in CI. Record deferred
+cases, workload, thresholds and owner for the post-UAT handoff. Keep functional
+authorization, transaction integrity, idempotency and recovery checks in PRs.
+Routine PRs, main pushes and schedules are functional only. After UAT, run
+capacity only on main by explicit dispatch with a verified related-change
+baseline and an external grant for the accepted revision and individual cases.
+Unknown paths/history or unrelated grants block that post-UAT request.
+Use the single CI capacity catalog for routine exclusions and affected-case
+selection. Keep ordinary cases in mixed files and all coverage floors. This
+direction does not approve other pending new workloads or dormant opt-in suites.
+
+CI enforces this policy before executing PR tests. Follow
+[the admission procedure](docs/ci-test-admission.md) for changes to tests,
+fixtures, data, workers, discovery or CI wiring. Keep Sam's verified decision
+with the exact workload and approved file versions. Only the trusted approval
+administrator may publish its digest outside the PR. A feature agent must not
+approve its own receipt, add a test-triggering workflow, modify admission
+variables or dispatch around the controller. Reuse matching receipts.

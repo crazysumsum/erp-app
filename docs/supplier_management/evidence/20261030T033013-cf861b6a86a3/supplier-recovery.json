@@ -1,0 +1,9 @@
+{
+  "tests": [
+    {
+      "name": "TC-133 local full-module backup and isolated restore: table and file reconciliation, smoke, key ring",
+      "id": "TC-133",
+      "status": "PASS"
+    }
+  ]
+}

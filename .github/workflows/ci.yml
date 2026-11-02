@@ -3,10 +3,18 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
   schedule:
     - cron: "17 2 * * 1"
   workflow_dispatch:
+    inputs:
+      admitted_pr:
+        description: "Internal PR number from the trusted admission workflow"
+        required: false
+        type: string
+      capacity_base:
+        description: "Post-UAT only: approved baseline SHA for related capacity on main"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -14,16 +22,41 @@ permissions:
 # 同一個 ref 有新的一輪 push 時，取消還在跑的舊一輪——PR 連續推幾次 commit
 # 不需要每一輪都跑到底，跑到一半的舊結果反正也不會被採用。
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ inputs.admitted_pr || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  admission:
+    name: Test admission
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Verify approved policy and test inputs before execution
+        env:
+          CI_TEST_ADMISSION_POLICIES: ${{ vars.CI_TEST_ADMISSION_POLICIES }}
+          CI_TEST_ADMISSION_DIGESTS: ${{ vars.CI_TEST_ADMISSION_DIGESTS }}
+        run: |
+          set -euo pipefail
+          script=.github/scripts/test-admission.mjs
+          digest="$(sha256sum "$script" | cut -d' ' -f1)"
+          grep -Fxq "$digest" <<< "$CI_TEST_ADMISSION_POLICIES" || { echo "Unapproved admission policy: $digest"; exit 1; }
+          node "$script"
+
   changes:
+    needs: admission
     name: Capacity impact scope
     runs-on: ubuntu-latest
     outputs:
-      required: ${{ steps.scope.outputs.required }}
-      fulfillment_required: ${{ steps.scope.outputs.fulfillment_required }}
+      server_required: ${{ steps.scope.outputs.server_required }}
+      client_required: ${{ steps.scope.outputs.client_required }}
+      matrix: ${{ steps.scope.outputs.matrix }}
+      selection: ${{ steps.scope.outputs.selection }}
     steps:
       - name: Check out repository and PR history
         uses: actions/checkout@v4
@@ -35,12 +68,15 @@ jobs:
           node-version: 26
       - name: Verify scope and aggregate-check rules
         run: node --test .github/scripts/sales-import-capacity.test.mjs .github/scripts/coverage-shards-rules.test.mjs
-      - name: Determine capacity impact (unknown changes require it)
+      - name: Select approved post-UAT capacity or defer all cases
         id: scope
+        env:
+          CI_POST_UAT_CAPACITY: ${{ vars.CI_POST_UAT_CAPACITY }}
         run: node .github/scripts/sales-import-capacity.mjs
 
   # Independent checks and coverage start immediately; capacity gets its own DB.
   audit:
+    needs: admission
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
@@ -60,6 +96,7 @@ jobs:
         run: npm run security:audit
 
   lint:
+    needs: admission
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -90,6 +127,7 @@ jobs:
   # migration。把它塞進每個 PR 的 gate 是另一件事——成本和語意都不同，UAT 也不該
   # 是 per-PR gate——所以留給 harness 的正式驗收流程跑。
   e2e:
+    needs: admission
     name: Browser tests (Playwright)
     runs-on: ubuntu-latest
     # 與 package-lock.json 的 Playwright 1.63.0 一致；預裝瀏覽器、系統依賴及字型，
@@ -114,6 +152,7 @@ jobs:
         run: npm run e2e:mocked
 
   server-tests:
+    needs: admission
     name: Server coverage shard (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     strategy:
@@ -227,40 +266,14 @@ jobs:
             console.log('Native CI transport verified:',JSON.stringify(identity));
           } finally {await db.end();}
           NODE
-          capacity_pattern="$(node .github/scripts/fulfillment-capacity.mjs pattern)"
+          capacity_pattern="$(NODE_V8_COVERAGE= node .github/scripts/capacity-runner.mjs server-pattern)"
           npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern"
 
       - name: Record candidate and shard identity
         working-directory: server
         run: node ../.github/scripts/merge-server-coverage.test.mjs record ${{ matrix.shard }} 4
 
-      - name: Run Sales capacity test without coverage instrumentation
-        if: matrix.shard == 1
-        working-directory: server
-        # 全部被 skip 時 node --test 一樣 exit 0；要求兩個場景都真的 pass。
-        run: |
-          status=0
-          node --test --test-concurrency=1 --import ./test-support/testEnv.js --test-reporter=tap test/integration/salesCapacity.integration.test.js > capacity.tap || status=$?
-          cat capacity.tap
-          test "$status" -eq 0
-          grep -qx "# pass 2" capacity.tap
-
-      - name: Run Sales import capacity test without coverage instrumentation
-        if: matrix.shard == 1
-        working-directory: server
-        # Both original 50MiB cases must pass their unchanged 30-second worker deadline.
-        run: |
-          precheck_status=0
-          node --test --test-concurrency=1 --import ./test-support/testEnv.js --test-reporter=tap --test-name-pattern='TC-035 real registered worker completes bounded50MiB/100000-row ingestion inside its unchanged30-second deadline' test/integration/salesImportPrecheck.integration.test.js > import-capacity.tap || precheck_status=$?
-          cat import-capacity.tap
-          test "$precheck_status" -eq 0
-          grep -qx "# tests 3" import-capacity.tap
-          grep -qx "# pass 3" import-capacity.tap
-          grep -qx "# fail 0" import-capacity.tap
-          grep -qx "# skipped 0" import-capacity.tap
-
-      # After all capacity samples, run the promised P1 UI lane on this job's DB.
-      # A failure propagates through server-tests -> regression -> required Test.
+      # Keep the existing real P1 browser gate after routine coverage.
       - name: Install Chromium for real Fulfillment P1 browser flows
         if: matrix.shard == 1
         run: npx playwright install --with-deps chromium
@@ -311,6 +324,7 @@ jobs:
           overwrite: true
 
   client-tests:
+    needs: admission
     name: Client coverage
     runs-on: ubuntu-latest
     steps:
@@ -324,7 +338,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
       - name: Run client coverage with existing thresholds
-        run: npm run test:coverage --workspace client
+        run: |
+          functional_pattern="$(node .github/scripts/capacity-runner.mjs client-pattern)"
+          npm run test:coverage --workspace client -- --testNamePattern="$functional_pattern"
 
   regression:
     name: Test coverage (server + client, MySQL integration)
@@ -373,11 +389,16 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  sales-import-capacity:
-    name: Sales import mixed-load capacity (TC-042)
+  server-capacity:
+    name: Related server capacity (${{ matrix.group }})
     needs: changes
-    if: needs.changes.outputs.required == 'true'
+    if: needs.changes.outputs.server_required == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      # Stop this capacity batch after a failure; preserve routine regression results.
+      fail-fast: true
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
     services: *mysql_services
     env: *database_env
     steps:
@@ -397,61 +418,58 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
         run: npm run migrate --workspace server
-      - name: Run both TC-042 business-baseline scenarios without coverage instrumentation
-        working-directory: server
+      - name: Run only selected existing capacity cases without coverage
+        env:
+          CAPACITY_SELECTION: ${{ needs.changes.outputs.selection }}
+          CAPACITY_GROUP: ${{ matrix.group }}
         run: |
-          status=0
-          node --test --test-concurrency=1 --import ./test-support/testEnv.js --test-reporter=tap test/integration/salesImportCapacity.integration.test.js > mixed-load-capacity.tap || status=$?
-          cat mixed-load-capacity.tap
-          test "$status" -eq 0
-          grep -qx "# tests 2" mixed-load-capacity.tap
-          grep -qx "# pass 2" mixed-load-capacity.tap
-          grep -qx "# fail 0" mixed-load-capacity.tap
-          grep -qx "# skipped 0" mixed-load-capacity.tap
-
-  fulfillment-capacity:
-    name: Fulfillment existing capacity (14 scenarios)
-    needs: changes
-    if: needs.changes.outputs.fulfillment_required == 'true'
-    runs-on: ubuntu-latest
-    services: *mysql_services
-    env: *database_env
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 26
-          cache: npm
-      - name: Install locked dependencies
-        run: npm ci
-      - name: Verify exact MySQL server version
-        run: test "$(docker exec "${{ job.services.mysql.id }}" mysql -uroot -proot --batch --skip-column-names -e "SELECT VERSION();")" = "26.7.0"
-      - name: Apply database migrations
-        env:
-          DB_USER: root
-          DB_PASSWORD: root
-        run: npm run migrate --workspace server
-      - name: Run all 14 existing capacity scenarios without coverage instrumentation
-        working-directory: server
-        env:
-          FULFILLMENT_LIFECYCLE_ENABLED: "true"
-          DB_SOCKET_PATH: /tmp/erp-ci-mysql-socket/mysqld.sock
-        run: node ../.github/scripts/fulfillment-capacity.mjs run
+          # Sales keeps the original TC-032/035/042 TCP runtime. Extracted native
+          # cases and Fulfillment keep their original socket/lifecycle runtime.
+          if [ "$CAPACITY_GROUP" != "sales" ]; then
+            export DB_SOCKET_PATH=/tmp/erp-ci-mysql-socket/mysqld.sock
+            export FULFILLMENT_LIFECYCLE_ENABLED=true
+          fi
+          node .github/scripts/capacity-runner.mjs run "$CAPACITY_GROUP"
       - name: Retain capacity results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fulfillment-capacity-report
-          path: server/fulfillment-capacity.tap
+          name: capacity-${{ matrix.group }}-report
+          path: capacity-${{ matrix.group }}.tap
+          if-no-files-found: error
+
+  client-capacity:
+    name: Related client capacity
+    needs: changes
+    if: needs.changes.outputs.client_required == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run only selected existing client capacity cases
+        env:
+          CAPACITY_SELECTION: ${{ needs.changes.outputs.selection }}
+        run: node .github/scripts/capacity-runner.mjs run client
+      - name: Retain client capacity results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capacity-client-report
+          path: client/capacity-client.json
           if-no-files-found: error
 
   # Keep the original check name stable; required failures/skips cannot turn green.
   test:
     name: Test (server + client, MySQL integration)
     if: always()
-    needs: [changes, regression, sales-import-capacity, fulfillment-capacity, audit, lint, build, e2e]
+    needs: [admission, changes, regression, server-capacity, client-capacity, audit, lint, build, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -460,12 +478,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 26
+      - name: Require successful test admission
+        env:
+          ADMISSION_RESULT: ${{ needs.admission.result }}
+        run: test "$ADMISSION_RESULT" = success
+
       - name: Require all checks and the selected capacity result
         env:
           CI_RESULTS: ${{ toJSON(needs) }}
         run: node .github/scripts/sales-import-capacity.mjs check
 
   build:
+    needs: admission
     name: Build frontend
     runs-on: ubuntu-latest
     steps:
@@ -483,3 +507,16 @@ jobs:
 
       - name: Build frontend
         run: npm run build --workspace client
+
+  publish-admitted-result:
+    needs: test
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.admitted_pr != ''
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+      statuses: write
+    uses: ./.github/workflows/ci-pr-result.yml
+    with:
+      pr: ${{ inputs.admitted_pr }}
+      result: ${{ needs.test.result }}

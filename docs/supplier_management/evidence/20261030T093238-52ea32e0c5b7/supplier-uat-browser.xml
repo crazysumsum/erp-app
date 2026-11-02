@@ -1,0 +1,527 @@
+<testsuites id="" name="" tests="55" failures="0" skipped="14" errors="0" time="178.082673">
+<testsuite name="uat-cross-phase.spec.js" timestamp="2026-10-30T09:32:44.880Z" hostname="" tests="2" failures="0" skipped="0" time="42.17" errors="0">
+<testcase name="@uat UAT-047 a keyboard user completes each phase&apos;s happy path at 375, 768 and 1440 px; focus is visible, labels and errors are clear, states are not colour-only" classname="uat-cross-phase.spec.js" time="28.717">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/375-p1-validation-8ed68a5b871511418a7b3ae7d07aa9cd5fa7369a.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/375-p1-active-ae8f7a50e3bdc4e24fb4ab1fe05b85b33661220e.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/375-list-error-25252fc0784c8a836a6b454df6297f62606920d2.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/375-p2-approved-56509aca5f2e81a2d20c3a8ca6749b00affccfd5.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/375-p3-collapsed-886ab694185807aee5a31bf06d24a0b640cfffa4.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/375-p4-exported-0bd55a1122a369d8984d7f30192b9634d9b36f82.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/768-p1-validation-57cd51ca1e65bae35ec678a05db138eef74ca4bb.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/768-p1-active-625cda576c5696edc82289be0e5533ba2b3ac2a2.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/768-list-error-dc23809d99fe1bb9cf2e41fd1079ad1487b5730b.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/768-p2-approved-b52a5ce37f8f1fcf2355ea6b73a77c487e14a22f.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/768-p3-collapsed-7608808856b25c2fdc333e967d306688b5e5e7a2.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/768-p4-exported-d92b9354fec63932c717d0cdd61f166b171a70bc.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/1440-p1-validation-19aed42ea8b504ed412404c95b7d09ce635db6d1.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/1440-p1-active-2155224dbfae8f1472b970239425dddb4120043b.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/1440-list-error-1b784274bf048759d1868ef002633ed31cc92ed6.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/1440-p2-approved-ca245a03cd9cae37e7de028f6e913f32140730a9.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/1440-p3-collapsed-61826dbd857604e61406ad280742519fa40e2cc9.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-1d90c--states-are-not-colour-only/attachments/1440-p4-exported-ac34e36297d9a3fc474703451d8b329846610c55.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-055 a VIEWER filters Audit by date, actor, action and target, pages through it, reads each entry&apos;s detail with sensitive values redacted and a request id" classname="uat-cross-phase.spec.js" time="13.453">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-27c23-s-redacted-and-a-request-id/attachments/by-target-601df7096e9058e3c1f4bda38723c659b5ef8337.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-27c23-s-redacted-and-a-request-id/attachments/page-2-e44184f6739905a66810ecdd10333351e06d7230.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-27c23-s-redacted-and-a-request-id/attachments/reveal-entry-0baf3e6eb2d3376b93c57ab517d8dd8b3f7c0629.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-cross-phase--uat-UAT-0-27c23-s-redacted-and-a-request-id/attachments/supplier-audit-tab-ef290c37fbf24ead688207b09a62e4369fa2f2c2.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="uat-phase-001.spec.js" timestamp="2026-10-30T09:32:44.880Z" hostname="" tests="25" failures="0" skipped="5" time="49.639" errors="0">
+<testcase name="@uat UAT-001 a CLERK creates a Draft from code, name and currency, finds it, opens it and traces the create in Audit" classname="uat-phase-001.spec.js" time="1.609">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-001-1f60c--traces-the-create-in-Audit/attachments/created-f05cc4a050eaad3dd4086f09c0e839846f602304.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-001-1f60c--traces-the-create-in-Audit/attachments/detail-d11d0ecb2117fa3016894c68218fe7a645a733e0.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-001-1f60c--traces-the-create-in-Audit/attachments/audit-bb76d38823683b200ea8a0f5afebe96eb0149e27.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-002 a CLERK cannot create a second Supplier whose Code differs only in case" classname="uat-phase-001.spec.js" time="0.903">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-002-cc2e8-e-Code-differs-only-in-case/attachments/refused-84db6e05fe95f7ceb7405da7527dbba618e09336.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-006 a CLERK corrects an unreferenced Draft&apos;s Code after re-authentication, and Audit keeps before, after and reason" classname="uat-phase-001.spec.js" time="2.28">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-006-2904f-eps-before-after-and-reason/attachments/detail-a9342f8127fcd47cedc2f771249a94d0fb58eb6e.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-006-2904f-eps-before-after-and-reason/attachments/audit-47c7c6345b461b3bfb210dde7a8ce7b347be7ebb.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-009 with approval off a CLERK activates a complete Draft directly and Audit records it" classname="uat-phase-001.spec.js" time="1.152">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-009-14b85-rectly-and-Audit-records-it/attachments/active-f119c9b1177894da39cabc03208f8b8ecdc5f46b.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-009-14b85-rectly-and-Audit-records-it/attachments/audit-5845885668804ffec082a5932844aef519034df8.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-017 a CLERK without approval cannot unblock a Blocked Supplier, in the UI or by request" classname="uat-phase-001.spec.js" time="0.735">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-017-05aef-ier-in-the-UI-or-by-request/attachments/no-unblock-b46349d5adaaff454ae7e5b34f7c3449a00520ef.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-018 an APPROVER unblocks with a reason and the Supplier becomes Suspended, not Active" classname="uat-phase-001.spec.js" time="1.935">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-018-2dbc5-ecomes-Suspended-not-Active/attachments/suspended-c1652855f7edb4f365bd97a3f9c7b6712dcebad0.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-019 a CLERK restores an Archived Supplier to Suspended, and only a second, explicit step makes it Active" classname="uat-phase-001.spec.js" time="2.257">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-019-05884-plicit-step-makes-it-Active/attachments/restored-86a1485ab53dba3f5017fac7c4aaee08903c780e.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-019-05884-plicit-step-makes-it-Active/attachments/active-305389a1473127a971b101988c44b0b5e3a55e2b.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-020 a CLERK permanently deletes a never-activated Draft after re-authentication, and the delete stays traceable" classname="uat-phase-001.spec.js" time="2.246">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-020-ec504--the-delete-stays-traceable/attachments/deleted-0da767fed4965767577944553fff679ff3423643.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-020-ec504--the-delete-stays-traceable/attachments/audit-ae23fa3c5984f88d65834870e0ea6fdd42b7b596.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-021 a Supplier that was ever activated cannot be permanently deleted; suspend and archive remain the options" classname="uat-phase-001.spec.js" time="0.723">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-021-79809--archive-remain-the-options/attachments/options-94c08447819da137bf18fa7fa00d8776296dd087.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-022 a Supplier with only the three minimum fields shows completeness hints and still activates" classname="uat-phase-001.spec.js" time="0.969">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-022-4dfd2-s-hints-and-still-activates/attachments/hints-5cec694c956ada8e28ad115cd55dc1ab841416f8.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-022-4dfd2-s-hints-and-still-activates/attachments/active-3865e598206971bae29b02e1c122f823e2f82adc.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-003 a same-name Supplier with another Code is warned about first, can be confirmed, and is not merged" classname="uat-phase-001.spec.js" time="1.29">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-003-f947e-confirmed-and-is-not-merged/attachments/warning-1376386f049728143455814ac356d2ee8ea9f89d.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-003-f947e-confirmed-and-is-not-merged/attachments/created-4b3d502f549c3da176b0dfa80b5aa92f2d073e76.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-004 the same identifier in another format is refused without revealing the other Supplier" classname="uat-phase-001.spec.js" time="1.175">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-004-1bf19-evealing-the-other-Supplier/attachments/refused-3b67a1c6727a65021710ea6d524ca7794aa71c4e.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, without Archived by default and without bank plaintext" classname="uat-phase-001.spec.js" time="5.646">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-007-18634--and-without-bank-plaintext/attachments/search-3e6e67e75321a5bb170584b5cb3874a9a1f9be6e.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-007-18634--and-without-bank-plaintext/attachments/sorted-page-2-5c4db2414a7d1b4db24f945d0cca6d6216b204ee.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-007-18634--and-without-bank-plaintext/attachments/detail-98437e8a5c9c635a579f4e581d5bd193d554a8d3.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-008 two browsers save the same version: the second gets a conflict, keeps its input and overwrites nothing" classname="uat-phase-001.spec.js" time="2.4">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-008-e4040-nput-and-overwrites-nothing/attachments/conflict-b-7819c9240cbc8ac1f8f80d51955722f5bbafb24b.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-008-e4040-nput-and-overwrites-nothing/attachments/final-d2cdb5f9f74b1d792f36ae31a695987e70e2eca6.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-023 setting another contact as primary for a purpose leaves exactly one primary" classname="uat-phase-001.spec.js" time="1.118">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-023-d0752--leaves-exactly-one-primary/attachments/contacts-c772eaa8545ba4b994eb1533947bae7fee66b5ba.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-049 a purpose holds several contacts, primary switches cleanly, and a deactivated contact stays as history" classname="uat-phase-001.spec.js" time="2.216">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-049-358be-ed-contact-stays-as-history/attachments/contacts-fefc0cdd8a02b9a6cf04f1187baadb25948a9438.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-042 a VIEWER cannot write from the UI, by URL or by request, and a user without Supplier access learns nothing" classname="uat-phase-001.spec.js" time="2.946">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-042-78e11-plier-access-learns-nothing/attachments/viewer-detail-0ce7298f6e2b66fae5a0d2bfb44871354b53e722.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-042-78e11-plier-access-learns-nothing/attachments/no-access-3c4cf1e226e951524fc4cec9f4e2e6377a44c8e7.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-054 the Supplier list tells loading, empty, failed and no-permission apart, and a failed load can be retried" classname="uat-phase-001.spec.js" time="5.104">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-054-bf34c--failed-load-can-be-retried/attachments/loading-2f3942971e16ea18879e2ff5a14cea4e55607415.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-054-bf34c--failed-load-can-be-retried/attachments/empty-32f24143eba9f4e21c079f5c2f4305dccde9efb4.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-054-bf34c--failed-load-can-be-retried/attachments/error-e05393b593c9739862de8bb552f630147eb38188.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-054-bf34c--failed-load-can-be-retried/attachments/no-permission-30043338ab11112f58be68217866f115bf17e5a9.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-031 forms offer only Active currencies and terms, an old inactive value still shows, and Supplier Settings cannot write the catalogue" classname="uat-phase-001.spec.js" time="2.842">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-031-9c9f6--cannot-write-the-catalogue/attachments/create-options-6dded5f82614d411584d35924e974aaf7a2b27c9.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-031-9c9f6--cannot-write-the-catalogue/attachments/edit-keeps-old-value-ff786113a64e3130c4b4025c31e6d0b55532ca88.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-031-9c9f6--cannot-write-the-catalogue/attachments/settings-679c931729d01a023bd2e95d2a26e93aab0cc68f.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-005 a Supplier already referenced by a transaction keeps its Code" classname="uat-phase-001.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-016 a CLERK suspends with a reason; the Supplier is Suspended and no longer offered for new purchasing" classname="uat-phase-001.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-024 a Supplier without a payment term activates, and says 未設定 rather than a made-up default" classname="uat-phase-001.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-048 several addresses per purpose with exactly one primary, saved order, and deactivation that keeps history" classname="uat-phase-001.spec.js" time="3.099">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-048-57482-tivation-that-keeps-history/attachments/addresses-bfcbb1c7ce0728f3e35707d8ce3821bf94b3bb14.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-001--uat-UAT-048-57482-tivation-that-keeps-history/attachments/ordered-e80923f367283c512fe2522e22d105aac027a843.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-050 an unreferenced identifier is created, corrected and deleted under control, and a normalised duplicate is refused" classname="uat-phase-001.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-051 an APPROVER blocks with a reason and the Supplier is immediately unavailable for new purchasing" classname="uat-phase-001.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="uat-phase-002.spec.js" timestamp="2026-10-30T09:32:44.880Z" hostname="" tests="9" failures="0" skipped="0" time="20.331" errors="0">
+<testcase name="@uat UAT-010 with approval on a CLERK submits to APPROVER-A; the Supplier is Pending and the approver sees it in the queue" classname="uat-phase-002.spec.js" time="3.083">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-010-e9af6-prover-sees-it-in-the-queue/attachments/submitted-5a1e74f33cf2fdf98907e05bd0d03a7a274e7ec0.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-010-e9af6-prover-sees-it-in-the-queue/attachments/queue-b9119ad5279aa4c5ffc519658f4e895b32066dc0.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-011 submitting to oneself, to a user without approval or to a disabled user is refused each time and the Supplier stays Draft" classname="uat-phase-002.spec.js" time="0.92">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-011-be360-nd-the-Supplier-stays-Draft/attachments/options-a33c3894528f2008f2fa1e039f4480367c805d76.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-012 the assigned APPROVER checks the difference and approves; the Supplier is Active with the submission and approval recorded" classname="uat-phase-002.spec.js" time="1.887">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-012-33c44-ssion-and-approval-recorded/attachments/diff-14fa665953033175e93892bd7129673c85b730a6.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-012-33c44-ssion-and-approval-recorded/attachments/audit-ad64a2df2545349b8382632e34a6351ab046fe82.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-013 the APPROVER rejects with a reason; the Supplier returns to Draft and the CLERK can read the reason" classname="uat-phase-002.spec.js" time="1.819">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-013-24ff3-e-CLERK-can-read-the-reason/attachments/clerk-sees-reason-862d463c683148ecdf28ab62db3189e7dd300178.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-014 an approval-significant edit invalidates the Pending request; the old request cannot be approved and the CLERK must submit again" classname="uat-phase-002.spec.js" time="2.502">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-014-e750d-the-CLERK-must-submit-again/attachments/edited-61fd18df28a9c3aaf1e27b00ad7b6ad3815fbb7b.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-014-e750d-the-CLERK-must-submit-again/attachments/resubmitted-a75dafa894935ade697563811f1bc9936f2a76f5.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-015 turning approval off leaves an existing Pending waiting, while a new Supplier activates directly" classname="uat-phase-002.spec.js" time="2.333">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-015-168ac-Supplier-activates-directly/attachments/off-6992d9a3a63bfe233718152cb599198f726d583f.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-040 a CLERK without settings permission is refused by the page and the API, and the value does not change" classname="uat-phase-002.spec.js" time="0.577">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-040-83e65-d-the-value-does-not-change/attachments/forbidden-5ba5a21153dcf9e1fa78c33c6dbb98fd5ed7c926.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-041 SETTINGS-ADMIN turns approval on with a reason; the next submission needs an approver and the change is in Audit" classname="uat-phase-002.spec.js" time="1.695">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-041-89955--and-the-change-is-in-Audit/attachments/on-8900c6bf0421c92084defcc8bc547c5cbcf5752f.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-041-89955--and-the-change-is-in-Audit/attachments/audit-b0b2b927b0dfd8e1f2df3e3e92d9d7044af4b5b2.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-052 the requester withdraws, resubmits, an approver reassigns with a reason, and only the new assignee can decide" classname="uat-phase-002.spec.js" time="5.515">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-052-0630b-the-new-assignee-can-decide/attachments/withdrawn-de9569f1063d517ba8fcec158cba6a2c5dd06f42.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-052-0630b-the-new-assignee-can-decide/attachments/reassigned-b42ca50fbbf9f585f03bccff21a16ba01ced3507.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-002--uat-UAT-052-0630b-the-new-assignee-can-decide/attachments/audit-0ad7a4b6fec62377b403f1f024e97efe26b8cb89.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="uat-phase-003.spec.js" timestamp="2026-10-30T09:32:44.880Z" hostname="" tests="7" failures="0" skipped="2" time="18.026" errors="0">
+<testcase name="@uat UAT-025 a VIEWER sees only the masked account and is refused a full view, with no plaintext anywhere" classname="uat-phase-003.spec.js" time="0.911">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-025-56610--with-no-plaintext-anywhere/attachments/masked-3b57e40eb3f09d94093f4664c95bab8bb9aa3fd2.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-026 a BANK-READER re-authenticates to reveal; the number shows briefly, clears after 30 s or on leaving, and the reveal is audited" classname="uat-phase-003.spec.js" time="2.84">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-026-829d5-g-and-the-reveal-is-audited/attachments/masked-before-6394d031bacc22b3f7e518bfd272b58356812bb3.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-026-829d5-g-and-the-reveal-is-audited/attachments/cleared-after-30s-4964f0a7973dc8a1ae6240cd68c1d1d25a12a5ae.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-026-829d5-g-and-the-reveal-is-audited/attachments/reveal-audit-18dbe0e4d1711080e6f4b6a057a950f3b255c615.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-027 a CLERK and a BANK-READER cannot add or change bank accounts; the server refuses and nothing changes" classname="uat-phase-003.spec.js" time="1.815">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-027-7ecd9-refuses-and-nothing-changes/attachments/clerk-no-write-controls-6236b1d0e3dc591584b9a650d360e0a48b04e989.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-027-7ecd9-refuses-and-nothing-changes/attachments/bank-reader-no-write-controls-fc4c4a6296075f51c6517ab28e2cc75f53e423fc.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-028 a BANK-OFFICER makes another account the default; the old default is cleared in the same operation" classname="uat-phase-003.spec.js" time="1.804">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-028-ee488-eared-in-the-same-operation/attachments/before-06678255e2c51f7bd7f7fd320b720831e5bb17ae.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-028-ee488-eared-in-the-same-operation/attachments/after-e87420562294ebd6077661e7fa0ea440a8c5fb60.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-029 a Supplier without any bank account activates; missing payment data is not the Supplier module&apos;s to block" classname="uat-phase-003.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / AP payment flows), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-030 SYSTEM-ADMIN has every bank permission, yet still sees the masked list and re-authenticates to reveal and to change, with Audit and an alert" classname="uat-phase-003.spec.js" time="4.782">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-030-06eaa-nge-with-Audit-and-an-alert/attachments/masked-for-admin-a303c4d84bd02947da5a27080cbee555f73e7410.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-003--uat-UAT-030-06eaa-nge-with-Audit-and-an-alert/attachments/admin-audit-64231dd01f1c53f13a08a737761c0081e82384d9.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-053 a BANK-OFFICER adds, edits, sets the default and deactivates an account; plaintext appears only while typed or revealed, and every step is audited" classname="uat-phase-003.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / AP payment flows), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="uat-phase-004.spec.js" timestamp="2026-10-30T09:32:44.880Z" hostname="" tests="12" failures="0" skipped="7" time="41.826" errors="0">
+<testcase name="@uat UAT-032 a Supplier with no relation to the SKU is still offered to the Buyer; there is no whitelist" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-033 a Supplier with a preferred relation is ranked first with its reason; other Active Suppliers stay selectable" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-034 a preferred Supplier that is Suspended cannot be selected; preference does not bypass the status" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-035 a completed purchase creates a soft relation and last-supplied information without changing the Supplier&apos;s status" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-036 an old purchase order keeps its Currency and Term snapshot after the Supplier&apos;s defaults change" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-037 a CLERK uploads a mixed CSV, prechecks, confirms and downloads the result; valid rows are written, error rows are not, and the counts agree" classname="uat-phase-004.spec.js" time="8.152">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-037-1181f-re-not-and-the-counts-agree/attachments/1-template-08c15a551bd46af30780cab18e573ad0f97e628d.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-037-1181f-re-not-and-the-counts-agree/attachments/2-upload-6ecf319024cf696d06108fdb240a8044be281d0d.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-037-1181f-re-not-and-the-counts-agree/attachments/3-prechecked-c75320ce9439fb972421bdc8a0c0a6bede7a3b5b.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-037-1181f-re-not-and-the-counts-agree/attachments/4-completed-cca8e9e5c1f218db970133095dc4b469aee1b8a2.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-038 a CSV with a Bank column is refused outright, and no Bank data is written anywhere" classname="uat-phase-004.spec.js" time="1.31">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-038-e78a8-nk-data-is-written-anywhere/attachments/refused-1e3f50602180aef54f7d354a2f01f7498fd675aa.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-038-e78a8-nk-data-is-written-anywhere/attachments/bank-list-empty-20f64b0a2a375c51443601face13b6cf1244d201.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-043 an export holds no full Bank data or ciphertext, guards formula cells, and is audited" classname="uat-phase-004.spec.js" time="4.004">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-043-0a81a-ormula-cells-and-is-audited/attachments/exported-clerk-85948b3716f5bbd313d13356fbf061a3ca4b6427.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-043-0a81a-ormula-cells-and-is-audited/attachments/exported-system-admin-cbebb41b5ac05d5c66fc670e8340d70bd633347d.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-043-0a81a-ormula-cells-and-is-audited/attachments/export-audit-6a28e74798eda7d2ce804c6b349f57348f9d8acd.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-044 search, SKU selection and a 10k import stay usable at representative volume" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs a representative environment and the named operations role (HD-144 B); technical evidence: performance_report.md (T50) and supplierBankRestore.integration.test.js">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-045 an isolated restore matches the source, keeps Bank masked and Audit, and is not declared a success without the keys" classname="uat-phase-004.spec.js">
+<properties>
+<property name="fixme" value="needs a representative environment and the named operations role (HD-144 B); technical evidence: performance_report.md (T50) and supplierBankRestore.integration.test.js">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="@uat UAT-039 confirming twice, by double click or by resending the same confirmation, writes the rows once and answers with the same outcome" classname="uat-phase-004.spec.js" time="19.374">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-039-70109-swers-with-the-same-outcome/attachments/double-click-120f74c43a065d5dacf66d80f98c1cd364663f12.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-039-70109-swers-with-the-same-outcome/attachments/resent-b3895aee39388feb4f35247d91cd014208d97dcd.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="@uat UAT-046 replayed operations do not duplicate, an unavailable dependency opens nothing it should not, and work continues after recovery" classname="uat-phase-004.spec.js" time="3.056">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-046-83f00-rk-continues-after-recovery/attachments/dependency-inactive-df3ecc069968e47558582a9ceb30e3c0d8c48f15.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-046-83f00-rk-continues-after-recovery/attachments/still-draft-12479aab7932e22290b8834679e520082ef04310.png]]
+
+[[ATTACHMENT|../../../../../../../../../tmp/supplier-management-uat-artifacts/34753d87/uat-phase-004--uat-UAT-046-83f00-rk-continues-after-recovery/attachments/recovered-a65ecf9e430aa1e0d288de42c50702ed5ff34661.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,6 +1,3 @@
-import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { writeFileSync } from "node:fs";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
 
@@ -22,47 +19,6 @@ export const cases = [
   ])
 ];
 
-export const pattern = `^(?:${cases.map(([, name]) => name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|")})$`;
-
-export function checkReport(report) {
-  for (const [key, count] of [["tests", cases.length], ["pass", cases.length], ["fail", 0], ["cancelled", 0], ["skipped", 0], ["todo", 0]]) {
-    assert.match(report, new RegExp(`^# ${key} ${count}$`, "mu"), `Capacity ${key} must be ${count}`);
-  }
-  for (const [, name] of cases) {
-    assert.ok(report.split("\n").some(line => /^ok \d+ - /u.test(line) && line.replace(/^ok \d+ - /u, "") === name),
-      `Missing capacity PASS: ${name}`);
-  }
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  if (process.argv[2] === "pattern") {
-    process.stdout.write(pattern);
-  } else {
-    assert.equal(process.argv[2], "run", "Expected pattern or run");
-    assert.equal(process.env.DB_INTEGRATION_TESTS, "1", "Capacity requires the native database");
-    assert.ok(!process.env.NODE_V8_COVERAGE, "Timed capacity must run without coverage instrumentation");
-    const files = [...new Set(cases.map(([file]) => `test/integration/${file}.integration.test.js`))];
-    // Stream results and stop the whole runner process group on the first failure.
-    // CI is Linux; detached gives the Node runner and its test children one owned group.
-    const child = spawn(process.execPath, ["--test", "--test-concurrency=1", "--import", "./test-support/testEnv.js",
-      "--test-reporter=tap", `--test-name-pattern=${pattern}`, ...files], { detached: true, stdio: ["ignore", "pipe", "inherit"] });
-    let report = "", stopped = false;
-    child.stdout.setEncoding("utf8");
-    child.stdout.on("data", chunk => {
-      report += chunk;
-      process.stdout.write(chunk);
-      if (!stopped && /^\s*not ok \d+ - /mu.test(report)) {
-        stopped = true;
-        try { process.kill(-child.pid, "SIGTERM"); } catch (error) { if (error.code !== "ESRCH") throw error; }
-      }
-    });
-    const result = await new Promise((resolve, reject) => {
-      child.once("error", reject);
-      child.once("close", (status, signal) => resolve({ status, signal }));
-    });
-    writeFileSync("fulfillment-capacity.tap", report);
-    assert.ok(!stopped, "Capacity batch stopped after its first failure; do not retry without Sam's decision");
-    assert.equal(result.status, 0, `Capacity process failed (${result.signal ?? result.status})`);
-    checkReport(report);
-  }
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  throw new Error("Capacity execution moved to capacity-runner.mjs; a verified CAPACITY_SELECTION is required");
 }

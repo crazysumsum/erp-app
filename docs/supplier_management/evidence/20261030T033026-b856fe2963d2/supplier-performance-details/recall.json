@@ -1,0 +1,111 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta4/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_819f84da --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta4/docs/supplier_management/evidence/20261030T033026-b856fe2963d2/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_819f84da",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1009,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9782,
+      "missed": 22,
+      "queriesMissing": 10,
+      "p50Ms": 80,
+      "p95Ms": 102
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9812,
+      "missed": 19,
+      "queriesMissing": 8,
+      "p50Ms": 892,
+      "p95Ms": 1078
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "royal ng logistics group ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8846153846153846
+      ]
+    },
+    {
+      "query": "jae wing machinery limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8888888888888888,
+        0.8695652173913043,
+        0.8695652173913043,
+        0.8636363636363636,
+        0.8636363636363636,
+        0.8636363636363636
+      ]
+    },
+    {
+      "query": "kwong oriental supplies enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8787878787878788,
+        0.875
+      ]
+    },
+    {
+      "query": "eastern pacific plastics limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8627450980392157,
+        0.8627450980392157,
+        0.8627450980392157,
+        0.8627450980392157
+      ]
+    },
+    {
+      "query": "silver ho materials (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8679245283018868
+      ]
+    },
+    {
+      "query": "golden kam paper holdings limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8679245283018868
+      ]
+    },
+    {
+      "query": "ng tai packaging limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9302325581395349,
+        0.9090909090909091
+      ]
+    },
+    {
+      "query": "star wing supplies holdings limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8771929824561403
+      ]
+    },
+    {
+      "query": "kwong ka furniture limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8837209302325582,
+        0.8695652173913043,
+        0.8636363636363636
+      ]
+    },
+    {
+      "query": "wong chan toys kinternational ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8620689655172413
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}
