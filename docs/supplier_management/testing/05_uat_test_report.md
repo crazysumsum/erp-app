@@ -87,7 +87,13 @@ Technical Execution comes from the run `evidence/20261030T093238-52ea32e0c5b7` (
 | UAT-054 | P1 | VIEWER | FR-001～FR-010 | PASS | ACCEPTED | 4 screenshots |  |
 | UAT-055 | P1 | VIEWER（UAT fixture沒有AUDITOR角色；HD-146 A修訂） | FR-081～FR-087 | PASS | ACCEPTED | 4 screenshots |  |
 
-**Screenshots:** 99 screenshots are attached to the run's junit (`supplier-uat-browser.xml`). They were stored outside the repository, under `/tmp/supplier-management-uat-artifacts/34753d87`, because Playwright traces can hold typed passwords (REV-115 L-2). The review page that showed them to the Product Owner still holds compressed copies.
+**Screenshots:** 99 screenshots are attached to the run's junit (`supplier-uat-browser.xml`). They were stored outside the repository, under `/tmp/supplier-management-uat-artifacts/34753d87`, because Playwright traces can hold typed passwords (REV-115 L-2).
+- **Limitation of the evidence (REV-145 L1):** the originals were lost when `/tmp` was cleaned (checked 2026-11-02), so the junit's attachment paths now point at nothing.
+  - The only copies left are the 99 compressed JPEGs on the private review page. They are what the Product Owner reviewed, and their per-case counts match the junit.
+  - UAT-040-01, UAT-042-02 and UAT-054-04 are byte-identical. All three show the 「冇權限」 page, which is each case's expected refusal screen (REV-145 N2, checked).
+- **Code identity after the merges (REV-145 L2):** this branch later merged main `aae9c744` (PR #313). It brought only `.github/scripts/*`, `ci.yml`, `AGENTS.md` and `docs/ci-capacity-routing.md`, and no server or client code.
+  - The accepted behaviour is therefore the one tested, and the "reconfirm if the code changes" condition is not triggered.
+  - The harness still counts the run as stale: the source fingerprint moved, so `verify_gate UAT_EXECUTION` reports it missing.
 
 ## Defects
 
@@ -101,6 +107,9 @@ None.
 
 - **The 14 out-of-scope cases.** They are accepted when they are run: group B when the downstream modules ship, and UAT-044 and 045 with Operations and the DR owner.
 - **The 41 cases.** If the code changes before release, the affected cases need reconfirming.
+- **UAT-046 (REV-145 L3).** `08_traceability.json` registers UAT-046 as manual (`suite_id` null), but it runs in `supplier-uat-browser`, under the HD-145 A amendment. Here it passed in that suite and was accepted.
+  - The manual-UAT check of `verify_gate UAT_EXECUTION` still reports it missing. This acceptance is not used to satisfy that check.
+  - Registering the suite for UAT-046 is for a later plan change.
 
 ## UAT Status
 
@@ -114,7 +123,7 @@ PENDING_USER_ACCEPTANCE: 41 of 55 accepted in this limited UAT; 14 not run.
   - The Product Owner reviewed the expected results and the screenshots on a private review page.
 - **Separate business authority/source/time:**
   - The Product Owner (Sam) replied "接受" in chat on 2026-11-02, after the review page asked for acceptance per case or in bulk.
-  - The page itself held no per-case choices at that time. The agent therefore recorded all 41 cases as ACCEPTED from that reply, and stated this reading to him in the same reply.
+  - The page itself held no per-case choices at that time. The agent therefore recorded all 41 cases as ACCEPTED from that reply, and stated this reading to him in the same reply. He has not confirmed that reading since.
 - **Pending decisions are not automated acceptance:**
   - The automated PASS is execution evidence only.
   - This acceptance covers the limited UAT before Technical Acceptance. It is not the formal business sign-off (T51 AC 4) or the release approval, which come after Technical Acceptance and the full UAT.
