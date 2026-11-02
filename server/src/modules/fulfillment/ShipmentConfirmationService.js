@@ -5,15 +5,15 @@ import { lockFulfillmentRowsInTransaction } from "./FulfillmentLockService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentOperationHash } from "./fulfillmentOperationHash.js";
-import { normalizeShipmentDraft } from "./shipmentDraftCommand.js";
 import { assertShipmentConfirmationHistory } from "./shipmentConfirmationWitness.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
 import { InventoryLookupService } from "../inventory/InventoryLookupService.js";
-import { SalesFulfillmentService } from "../sales/SalesFulfillmentService.js";
+import { SalesFulfillmentService,salesFulfillmentIntentHash } from "../sales/SalesFulfillmentService.js";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
-import { freezeShipmentIntent,readShipmentConfirmationSnapshot,assertShipmentConfirmationSnapshot,shipmentConfirmationSnapshotIdentity,shipmentIssuePayload,shipmentSalesIntent } from "./shipmentConfirmationScope.js";
+import { freezeShipmentIntent,shipmentConfirmationPayload as payload,readShipmentConfirmationSnapshot,assertShipmentConfirmationSnapshot,shipmentConfirmationSnapshotIdentity,shipmentIssuePayload,shipmentSalesIntent } from "./shipmentConfirmationScope.js";
 import { shipmentIssueProjection,assertShipmentSalesProjection,saveShipmentIssueProjection } from "./shipmentConfirmationProjection.js";
+import { ShipmentFailureReconciliation,shipmentPermanentFailureCode } from "./ShipmentFailureReconciliation.js";
 
 const fail=code=>{throw fulfillmentError(code);};
 const sourceColumns="id,shipment_number,fulfillment_id,sales_order_id,customer_id,warehouse_id,status,version,line_count,shipping_address_id,shipping_address_version,shipping_contact_id,shipping_contact_version,carrier_name,tracking_number,package_count,total_weight,weight_uom,notes,confirmation_event_id";
@@ -21,19 +21,16 @@ function command(input){
  if(!input||Object.getPrototypeOf(input)!==Object.prototype||Object.getOwnPropertySymbols(input).length||Object.keys(input).sort().join(",")!=="eventId,version"||typeof input.eventId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(input.eventId)||!Number.isSafeInteger(input.version)||input.version<1||input.version>4294967295)fail("FULFILLMENT_INPUT_INVALID");
  return Object.freeze({...input});
 }
-function payload(row,input){
- try{
-  const refs=Object.fromEntries([['shipmentId','id'],['fulfillmentId','fulfillment_id'],['salesOrderId','sales_order_id'],['customerId','customer_id'],['warehouseId','warehouse_id']].map(([key,column])=>{const value=String(row[column]);fulfillmentInteger(value);return [key,value];}));
-  const draft=normalizeShipmentDraft({eventId:input.eventId,version:input.version,shippingAddressId:Number(row.shipping_address_id),shippingAddressVersion:Number(row.shipping_address_version),shippingContactId:row.shipping_contact_id===null?null:Number(row.shipping_contact_id),shippingContactVersion:row.shipping_contact_version===null?null:Number(row.shipping_contact_version),carrierName:row.carrier_name,trackingNumber:row.tracking_number,packageCount:row.package_count===null?null:Number(row.package_count),totalWeight:row.total_weight,weightUom:row.weight_uom,notes:row.notes},{update:true});
-  return Object.freeze({...refs,...draft});
- }catch{fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");}
-}
 const digest=request=>fulfillmentOperationHash({operationType:"SHIP",target:request.target,payload:request.payload});
 const pending=operation=>({outcome:"SHIPPING",operationId:operation.operationId,eventId:operation.eventId,correlationId:operation.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+operation.eventId,retryAfterSeconds:2});
 function terminal(operation){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return {outcome:"SHIPPED",operationId:operation.operationId,eventId:operation.eventId,correlationId:operation.correlationId,result:operation.result};}
 export class ShipmentConfirmationService {
  #pendingRequests=new WeakMap();
- constructor({database,time,logger}){Object.assign(this,{database,time,logger});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time});this.inventoryLookup=new InventoryLookupService({database,time,logger});this.inventory=this.inventoryLookup.fulfillment;this.sales=new SalesFulfillmentService({database,time,logger,inventoryFulfillment:this.inventory});this.items=new ItemLookupService({database,time,logger});}
+ #startedActors=new WeakMap();
+ #attempts=new WeakMap();
+ #running=new WeakSet();
+ #failure;
+ constructor({database,time,logger}){Object.assign(this,{database,time,logger});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time});const reconciliationVerifier=(tx,session,phase)=>this.#failure.verifyReadInTransaction(tx,session,phase);this.inventoryLookup=new InventoryLookupService({database,time,logger,reconciliationVerifier});this.inventory=this.inventoryLookup.fulfillment;this.sales=new SalesFulfillmentService({database,time,logger,inventoryFulfillment:this.inventory,reconciliationVerifier});this.items=new ItemLookupService({database,time,logger});this.#failure=new ShipmentFailureReconciliation({database,time,logger,inventory:this.inventoryLookup,sales:this.sales,readAttempt:token=>this.#attempts.get(token)});}
  async startConfirmation(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
   const intent=command(input);
@@ -70,23 +67,29 @@ export class ShipmentConfirmationService {
    const [[sequence]]=await tx.query("SELECT COALESCE(MAX(sequence_no),0)+1 AS next_sequence FROM shipment_status_history WHERE shipment_id=?",[shipmentId]);
    await tx.execute("INSERT INTO shipment_status_history (shipment_id,sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id,actor_label,occurred_at) VALUES (?,?,'DRAFT','SHIPPING','CONFIRM_START',?,?,?,?,?)",[shipmentId,sequence.next_sequence,intent.eventId,intent.version+1,actor.id,actor.username,at]);
    await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'SHIP',?,?,?,?,?,?)",[shipmentId,intent.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({shipmentId,fulfillmentId:String(root.id),status:"SHIPPING",version:intent.version+1}),at]);
-   const output=Object.freeze(pending(operation));this.#pendingRequests.set(output,request);return output;
+   const output=Object.freeze(pending(operation));this.#pendingRequests.set(output,request);this.#startedActors.set(output,freezeShipmentIntent({id:actor.id,username:actor.username,roles:[...actor.roles],permissions:[...actor.permissions]}));return output;
   });
  }
  async completeConfirmation(started,{signal}={}){
   const request=this.#pendingRequests.get(started);if(!request)fail("FULFILLMENT_SOURCE_CONFLICT");
   if(signal!==undefined&&!(signal instanceof AbortSignal)||this.database.context?.get()?.databaseTransaction)throw new TypeError("New Shipment caller transaction required");
-  return this.database.withTransaction(async tx=>{
+  if(this.#running.has(started))fail("CONCURRENT_OPERATION");this.#running.add(started);const token=Object.freeze({}),attempt={tx:null,inventoryRequestHash:null,inventoryCommand:null,salesIntent:null};let terminalReplay=false;
+  try{return await this.database.withTransaction(async tx=>{
+   attempt.tx=tx;
    assertFulfillmentTransaction(this.database,tx);
-   const input={eventId:request.eventId,shipmentId:request.target.id,version:request.payload.version},replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,input);if(replay)return terminal(replay);
+   const input={eventId:request.eventId,shipmentId:request.target.id,version:request.payload.version},replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,input);if(replay){terminalReplay=true;return terminal(replay);}
    const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation"),[[operation]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=?",[request.eventId]),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
    if(!operation||operation.status!=="IN_PROGRESS"||operation.operation_type!=="SHIP"||operation.target_type!=="SHIPMENT"||String(operation.target_id)!==request.target.id||String(operation.initiated_by)!==String(actor.id)||operation.payload_hash!==digest(request)||operation.correlation_id!==request.correlationId||operation.lease_owner!==request.leaseOwner||Number(operation.lease_expires_at)<=Number(clock.now_ms))fail("CONCURRENT_OPERATION");
    const before=assertShipmentConfirmationSnapshot(await readShipmentConfirmationSnapshot(tx,request.target.id),request.eventId),identity=shipmentConfirmationSnapshotIdentity(before);
    if(Number(before.shipment.version)!==input.version+1||digest({...request,payload:payload(before.shipment,input)})!==digest(request))fail("FULFILLMENT_SOURCE_CONFLICT");
    const owner=await this.inventoryLookup.readFulfillmentAllocationScopeInTransaction(tx,{fulfillmentId:String(before.root.id),inventoryAllocationIds:before.allocations.map(row=>String(row.inventory_allocation_id))});
    const inventoryCommand=freezeShipmentIntent({actor:{userId:actor.id,serviceName:"",claimedRoles:[...actor.roles],claimedPermissions:[...actor.permissions]},source:{documentId:request.target.id,eventId:request.eventId},correlationId:request.correlationId,payload:shipmentIssuePayload(before,owner)});
+   attempt.inventoryCommand=inventoryCommand;
    const preparation=await this.inventory.claimFulfillmentBatchInTransaction(tx,{action:"ISSUE",command:inventoryCommand});
-   const order=await this.sales.getOrderForFulfillment(String(before.root.sales_order_id),{atMs:this.time.nowMs()}),intent=shipmentSalesIntent(before,order,inventoryCommand,preparation),salesProof=await this.sales.lockLinesForFulfillmentInTransaction(tx,intent);if(salesProof.replay!==false||!salesProof.order)fail("FULFILLMENT_SOURCE_CONFLICT");
+   attempt.inventoryRequestHash=preparation.requestHash;
+   const order=await this.sales.getOrderForFulfillment(String(before.root.sales_order_id),{atMs:this.time.nowMs()}),intent=shipmentSalesIntent(before,order,inventoryCommand,preparation);
+   attempt.salesIntent=intent;
+   const salesProof=await this.sales.lockLinesForFulfillmentInTransaction(tx,intent);if(salesProof.replay!==false||!salesProof.order)fail("FULFILLMENT_SOURCE_CONFLICT");
    const snapshot=assertShipmentConfirmationSnapshot(await readShipmentConfirmationSnapshot(tx,request.target.id,{locked:true,order:salesProof.order}),request.eventId);if(shipmentConfirmationSnapshotIdentity(snapshot)!==identity)fail("VERSION_CONFLICT");
    const activeByReservation=new Map();for(const claim of snapshot.allClaims){const id=String(claim.inventory_reservation_id);activeByReservation.set(id,(activeByReservation.get(id)??0n)+fulfillmentInteger(String(claim.active_claimed_quantity),{positive:false}));}
    for(const member of owner.reservationFacts)if((activeByReservation.get(member.inventoryReservationId)??0n)>BigInt(member.outstandingQuantity))fail("RESERVATION_CLAIM_CONFLICT");
@@ -117,5 +120,14 @@ export class ShipmentConfirmationService {
    const output={id:request.target.id,number:snapshot.shipment.shipment_number,status:"SHIPPED",version:shipmentVersion};await this.operations.succeedInTransaction(tx,{request,result:output});
    return {outcome:"SHIPPED",operationId:String(operation.id),eventId:request.eventId,correlationId:request.correlationId,result:output};
   },{isolationLevel:"READ COMMITTED",signal});
+  }catch(error){
+   if(terminalReplay)throw error;
+   this.#attempts.set(token,Object.freeze({tx:attempt.tx,signal,inventoryRequestHash:attempt.inventoryRequestHash,salesRequestHash:attempt.salesIntent?salesFulfillmentIntentHash(attempt.salesIntent):null,inventoryCommand:attempt.inventoryCommand,salesIntent:attempt.salesIntent,request,actor:this.#startedActors.get(started),error,errorCode:error?.code}));
+   if(!shipmentPermanentFailureCode(error))throw error;
+   let result;try{result=await this.#failure.finalize(token);}catch{await this.logger?.error?.("shipment.failure.unproven","Original Shipment failure could not be safely finalized",{code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE",correlationId:request.correlationId});}
+   const details={correlationId:request.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+request.eventId};
+   if(result?.state==="FAILED")throw fulfillmentError(result.code,result.details);
+   throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE",details);
+  }finally{this.#attempts.delete(token);this.#running.delete(started);}
  }
 }

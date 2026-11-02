@@ -2,12 +2,21 @@ import { lockFulfillmentRowsInTransaction } from "./FulfillmentLockService.js";
 import { assertClaimQuantities,assertFulfillmentQuantities } from "./fulfillmentQuantityMath.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
+import { normalizeShipmentDraft } from "./shipmentDraftCommand.js";
 
 const fail=()=>{throw fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");};
 const key=value=>String(value);
 const compare=(a,b)=>BigInt(a)<BigInt(b)?-1:BigInt(a)>BigInt(b)?1:0;
 const sum=(rows,column)=>rows.reduce((total,row)=>total+fulfillmentInteger(key(row[column]),{positive:false}),0n);
 export function freezeShipmentIntent(value){if(value&&typeof value==="object"){for(const child of Object.values(value))freezeShipmentIntent(child);Object.freeze(value);}return value;}
+export function shipmentConfirmationPayload(row,input){
+ try{
+  const refs=Object.fromEntries([['shipmentId','id'],['fulfillmentId','fulfillment_id'],['salesOrderId','sales_order_id'],['customerId','customer_id'],['warehouseId','warehouse_id']].map(([key,column])=>{const value=String(row[column]);fulfillmentInteger(value);return [key,value];}));
+  const draft=normalizeShipmentDraft({eventId:input.eventId,version:input.version,shippingAddressId:Number(row.shipping_address_id),shippingAddressVersion:Number(row.shipping_address_version),shippingContactId:row.shipping_contact_id===null?null:Number(row.shipping_contact_id),shippingContactVersion:row.shipping_contact_version===null?null:Number(row.shipping_contact_version),carrierName:row.carrier_name,trackingNumber:row.tracking_number,packageCount:row.package_count===null?null:Number(row.package_count),totalWeight:row.total_weight,weightUom:row.weight_uom,notes:row.notes},{update:true});
+  return Object.freeze({...refs,...draft});
+ }catch{throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");}
+}
+
 function index(rows,column="id"){const result=new Map(rows.map(row=>[key(row[column]),row]));if(result.size!==rows.length)fail();return result;}
 
 export async function readShipmentConfirmationSnapshot(tx,shipmentId,{locked=false,order=null}={}){
@@ -19,7 +28,8 @@ export async function readShipmentConfirmationSnapshot(tx,shipmentId,{locked=fal
   const [lineIds]=await tx.query("SELECT id FROM fulfillment_lines WHERE fulfillment_id=? ORDER BY id",[fulfillmentId]);lines=await lockFulfillmentRowsInTransaction(tx,"fulfillment_lines",lineIds.map(row=>row.id));
   const [claimIds]=await tx.query("SELECT id FROM fulfillment_line_reservation_claims WHERE fulfillment_id=? ORDER BY id",[fulfillmentId]);claims=await lockFulfillmentRowsInTransaction(tx,"fulfillment_line_reservation_claims",claimIds.map(row=>row.id));
   // All Claim writers take this held Sales root first; sibling Draft Shipment inserts must retain their own root.
-  [allClaims]=await tx.query("SELECT c.* FROM fulfillment_line_reservation_claims c JOIN fulfillments f ON f.id=c.fulfillment_id WHERE f.sales_order_id=? ORDER BY c.id",[order.orderId]);
+  allClaims=[];let afterId="0";
+  for(;;){const [page]=await tx.query("SELECT c.* FROM fulfillment_line_reservation_claims c JOIN fulfillments f ON f.id=c.fulfillment_id WHERE f.sales_order_id=? AND c.id>? ORDER BY c.id LIMIT 100",[order.orderId,afterId]);allClaims.push(...page);if(page.length<100)break;afterId=key(page.at(-1).id);}
  }else{
   [[root]]=await tx.query("SELECT * FROM fulfillments WHERE id=?",[fulfillmentId]);
   [lines]=await tx.query("SELECT * FROM fulfillment_lines WHERE fulfillment_id=? ORDER BY id",[fulfillmentId]);
