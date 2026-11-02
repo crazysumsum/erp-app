@@ -3953,3 +3953,73 @@ Sam直接批准「同意，將外部鍵測試拆成小型業務正確性測試�
 本輪容量使用1mActive/5mlines（平均5/P95 20/max100不變），取代本輪5m/25m規模。25m外部鍵改在專用隔離schema以原表欄位/索引/型別/CHECK建立index-only基準，target IDs明確只是合成索引值，不宣稱實際業務路由、全歷史關聯或25m訂單。不得以此替代小型真實業務整合測試：同key重送/不同payload/並發唯一性與rollback/Active及Archive路由都需保留原測試。取消為25mindex-only資料建立全部歷史訂單的要求。
 
 300k月度封存候選/500batch/50使用者/其餘原latency、memory、coverage、CI、review門檻不變；本輪DR依DEC040不執行，不列PASS。Archive容量本身仍測原查詢及300k候選，不將index-only資料冒充其資料。全production7.3m原始規劃保留，本輪1m結果不宣稱7.3m已PASS。初始化專用sessions可不記binlog，正式量測必須新預設連線session/global=1；不PURGE/RESET既存證據、不採用未通過的OPTIMIZE。建立資料採有界chunk、固定checkpoint、私有runtime、低CPU；磁碟入場保留100GiB。
+
+
+## Current delivery order — Sam instruction verified 2026-11-02
+
+Sam's actual project-manager message `01a19a65-0902-74f1-b684-0fcb40f9f5e7`
+in chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f` supersedes the earlier
+pre-merge nonfunctional execution timing: complete feature implementation,
+affected correctness/permission/transaction/idempotency/failure-recovery regression,
+required independent review, unchanged coverage floors and current functional CI;
+then merge under the existing authorization. Functional UAT and all nonfunctional
+execution remain separate subsequent work. Do not execute any nonfunctional suite
+locally or in CI before its related functional UAT, even under an older approval.
+No case, dataset, threshold or owner obligation is deleted or marked PASS by this
+timing change. Existing actual results retain their original source/time identity.
+
+Post-UAT owner: Sales module owner, with Fulfillment owner for joint paths and
+the project CI coordinator for admission/routing. Retain the exact profile entries
+`sales-phase003-performance`, `sales-phase004-performance`,
+`sales-phase005-merge-capacity`, `sales-phase005-index-capacity` and the original
+full `sales-phase005-performance` workload for impact-scoped post-UAT selection.
+Retain the original large mixed/50-user/10k-import+5-export, 300k Archive drain,
+large Archive query and long-reader cohorts and every original SLO; no DR per
+Sam's explicit earlier instruction. No dataset rebuild or automatic NFR rerun.
+Archive remains disabled by default pending its previously specified activation
+conditions. Operational history remains UNKNOWN until actual coverage exists.
+The functional merge does not assert UAT, NFR acceptance or production readiness.
+
+The shared HD026 DB component is limited to commit `731e3864`: terminal outcome
+metadata plus live rollback-failure quarantine/unknown result, preserving the P4
+connection-wait metrics, normal transaction isolation, pool behavior and deadlines.
+Its two existing test files retain their case registrations and fault scale.
+Sam's HD026 A reply `call_1eabb1e0dd7e4a659c9a18fd64db8b17` was verified in the
+Fulfillment owner chat. Full P2 Recovery and new owner readers are not imported.
+
+Central CI admission must accept exact reviewed test/config/helper/runner blobs.
+Feature agents do not approve their own receipts or edit admission variables.
+Before publication, integrate the coordinator's UAT-first workflow change:
+the earlier workflow would select `server-capacity` and `client-capacity` on the
+shared DB, package, workflow and classifier changes. Those workloads must remain
+deferred rather than reported as successful. DEC049 R2's four new schema cases
+and HD026's existing assertion replacements retain their actual Sam approvals;
+no further case or workload increase is authorized by this record.
+
+
+### Pre-UAT execution guard for retained mixed-file profiles
+
+The 44 retained profile references are historical verification contracts, not
+permission to execute all 44 whole-file commands now. Five contain existing
+catalogued NFR in mixed files: `sales-foundation-developer`,
+`sales-phase002-native`, `sales-phase004-unit`, `sales-phase004-native`, and
+`sales-fulfillment-pending-provider-native`. Do not invoke these unfiltered
+commands before related functional UAT. Reuse valid named historical evidence
+with its actual baseline/applicability, and use the admitted current functional
+CI with the single catalog's exact routine exclusions. Deferred cases are not
+PASS; unchanged coverage floors and functional assertions still apply.
+
+The existing TC-045 full250000 Header/250000 Line Export case, both sorts and
+every assertion including the original30s deadline, is moved unchanged to
+`server/test-capacity/sales/phase4/export.capacity.js`. Its dedicated large-data
+generation stays in that manual post-UAT case. Shared `exportFixture` creates
+only the original small fixture, on an explicit call; it registers no case and
+does not build data on import. No catalog addition or workload execution is made
+in this functional candidate. The exact case-byte and routine-discovery proofs
+are recorded in the private functional-delivery receipt; the original execution
+results remain unchanged. The source case has moved, not been deleted.
+
+Retained501/5005 boundary cases verify exact500/5000 pagination, batch resume,
+whole-aggregate rollback, fencing and ordering. Their durations are diagnostics,
+not NFR latency/memory thresholds; independent review confirms they remain
+functional correctness regressions. No new registration or larger dataset.

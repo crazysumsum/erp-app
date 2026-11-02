@@ -2,9 +2,51 @@
 
 Status: scoped developer verification completed; full Phase verification remains in progress. This is neither formal Technical Acceptance nor UAT/release approval.
 
+
+## Current delivery order — Sam instruction verified 2026-11-02
+
+Sam's actual project-manager message `01a19a65-0902-74f1-b684-0fcb40f9f5e7`
+in chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f` supersedes the earlier
+pre-merge nonfunctional execution timing: complete feature implementation,
+affected correctness/permission/transaction/idempotency/failure-recovery regression,
+required independent review, unchanged coverage floors and current functional CI;
+then merge under the existing authorization. Functional UAT and all nonfunctional
+execution remain separate subsequent work. Do not execute any nonfunctional suite
+locally or in CI before its related functional UAT, even under an older approval.
+No case, dataset, threshold or owner obligation is deleted or marked PASS by this
+timing change. Existing actual results retain their original source/time identity.
+
+Post-UAT owner: Sales module owner, with Fulfillment owner for joint paths and
+the project CI coordinator for admission/routing. Retain the exact profile entries
+`sales-phase003-performance`, `sales-phase004-performance`,
+`sales-phase005-merge-capacity`, `sales-phase005-index-capacity` and the original
+full `sales-phase005-performance` workload for impact-scoped post-UAT selection.
+Retain the original large mixed/50-user/10k-import+5-export, 300k Archive drain,
+large Archive query and long-reader cohorts and every original SLO; no DR per
+Sam's explicit earlier instruction. No dataset rebuild or automatic NFR rerun.
+Archive remains disabled by default pending its previously specified activation
+conditions. Operational history remains UNKNOWN until actual coverage exists.
+The functional merge does not assert UAT, NFR acceptance or production readiness.
+
+The shared HD026 DB component is limited to commit `731e3864`: terminal outcome
+metadata plus live rollback-failure quarantine/unknown result, preserving the P4
+connection-wait metrics, normal transaction isolation, pool behavior and deadlines.
+Its two existing test files retain their case registrations and fault scale.
+Sam's HD026 A reply `call_1eabb1e0dd7e4a659c9a18fd64db8b17` was verified in the
+Fulfillment owner chat. Full P2 Recovery and new owner readers are not imported.
+
+Central CI admission must accept exact reviewed test/config/helper/runner blobs.
+Feature agents do not approve their own receipts or edit admission variables.
+Before publication, integrate the coordinator's UAT-first workflow change:
+the earlier workflow would select `server-capacity` and `client-capacity` on the
+shared DB, package, workflow and classifier changes. Those workloads must remain
+deferred rather than reported as successful. DEC049 R2's four new schema cases
+and HD026's existing assertion replacements retain their actual Sam approvals;
+no further case or workload increase is authorized by this record.
+
 ## 固定交付阻塞表（持續更新，2026-10-30）
 
-Current: Sam approved DEC047R2C, DEC048 and DEC049R2 one candidate CI plus4 regular schema regressions. Actual C completed5PASS/0FAIL/0SKIP (run20261030T063911-a8878d2381f9, originalHEAD8f6df63e/Sourcee365f6f9/PLANfee4cd2a; never retagged): Active2400/24windows maxP95621.891ms; two500-order Archive invocations25.529/25.392s,1000manifests/18-class counts/canonicalhash/amountchain/Inventory unchanged/remaining299000; Archive600/6windows maxP953.486ms and3invalid-range400s; operational actualrows0/1,COVERAGE INACTIVE/history24hUNKNOWN. Independent runtimeclosing898a58c3 passed; full50long/300k remainNOTRUN/prelaunch/defaultArchivefalse. Current lint/build/unit236PASS; initialbrowser JWT environment omission then25PASS/1raceFAIL retained, exactexistingURLassert repaired, original26revalidationpending. Main68a8 existing9purecases inherited before newpolicy; officialmain41fb sharedcapacityrouting is now being integrated as directed, no Sales runtime/capacity load change, expected591testfiles. No push/PR/currentCI/merge PASS claimed. DEC049R2 authorizes one candidateCI; originalpushmainautomatic second batchcost remains for final concrete merge disposition. Historical evidence/approvals/failures below are retained snapshots.
+Current: Sam approved DEC047R2C, DEC048 and DEC049R2 one candidate CI plus4 regular schema regressions. Actual C completed5PASS/0FAIL/0SKIP (run20261030T063911-a8878d2381f9, originalHEAD8f6df63e/Sourcee365f6f9/PLANfee4cd2a; never retagged): Active2400/24windows maxP95621.891ms; two500-order Archive invocations25.529/25.392s,1000manifests/18-class counts/canonicalhash/amountchain/Inventory unchanged/remaining299000; Archive600/6windows maxP953.486ms and3invalid-range400s; operational actualrows0/1,COVERAGE INACTIVE/history24hUNKNOWN. Independent runtimeclosing898a58c3 passed; full50long/300k remainNOTRUN/prelaunch/defaultArchivefalse. Current lint/build/unit236PASS; initialbrowser JWT environment omission then25PASS/1raceFAIL retained, exactexistingURLassert repaired, original26revalidation subsequently PASS at run20261030T095434-208b609d88a3; original26/0FAIL/0SKIP. Main68a8 existing9purecases inherited before newpolicy; officialmain41fb sharedcapacityrouting is now being integrated as directed, no Sales runtime/capacity load change, expected591testfiles. No push/PR/currentCI/merge PASS claimed. DEC049R2 authorizes one candidateCI; originalpushmainautomatic second batchcost remains for final concrete merge disposition. Historical evidence/approvals/failures below are retained snapshots.
 
 | 具體阻塞／證據 | 最小處置 | 完成條件 | 責任人 | 需要 Sam 決定？ |
 | --- | --- | --- | --- | --- |
@@ -111,3 +153,31 @@ Only the owned socket-only MySQL runtime UUID `b65c23c2-d269-11f1-943c-6d91932a1
 The 1m Active-store/5m-line initializer and separate 25m index-only proof remain retained. Complete standard checks on the current source are running in `phase4-private/developer48-r4`; they intentionally checkpoint after 44 nonperformance suites. All four original performance suites remain mandatory and unexecuted for this final candidate. Capacity SLOs, 300k-candidate Archive drain, current-candidate CI, real-browser review and final independent whole-phase review/Gates must pass before the already authorized merge.
 
 Private evidence is retained under the sibling `phase4-private` directory: `dec043044-native-r6`, `source-index-migration-r1`, `base-runtime-migration-r1`, `archive-export-completion-native-{red,green}-r1`, `archive-export-cooldown-impact-regression-r1`, `archive-export-completion-fix-r1` and `runtime-digest-restart-r{1,2}`. Preserve this directory and relative module evidence before any worktree cleanup. Source initialization is not relabeled as a current capacity PASS; no previous run is relabeled with a new source/specification identity.
+
+
+### Pre-UAT execution guard for retained mixed-file profiles
+
+The 44 retained profile references are historical verification contracts, not
+permission to execute all 44 whole-file commands now. Five contain existing
+catalogued NFR in mixed files: `sales-foundation-developer`,
+`sales-phase002-native`, `sales-phase004-unit`, `sales-phase004-native`, and
+`sales-fulfillment-pending-provider-native`. Do not invoke these unfiltered
+commands before related functional UAT. Reuse valid named historical evidence
+with its actual baseline/applicability, and use the admitted current functional
+CI with the single catalog's exact routine exclusions. Deferred cases are not
+PASS; unchanged coverage floors and functional assertions still apply.
+
+The existing TC-045 full250000 Header/250000 Line Export case, both sorts and
+every assertion including the original30s deadline, is moved unchanged to
+`server/test-capacity/sales/phase4/export.capacity.js`. Its dedicated large-data
+generation stays in that manual post-UAT case. Shared `exportFixture` creates
+only the original small fixture, on an explicit call; it registers no case and
+does not build data on import. No catalog addition or workload execution is made
+in this functional candidate. The exact case-byte and routine-discovery proofs
+are recorded in the private functional-delivery receipt; the original execution
+results remain unchanged. The source case has moved, not been deleted.
+
+Retained501/5005 boundary cases verify exact500/5000 pagination, batch resume,
+whole-aggregate rollback, fencing and ordering. Their durations are diagnostics,
+not NFR latency/memory thresholds; independent review confirms they remain
+functional correctness regressions. No new registration or larger dataset.

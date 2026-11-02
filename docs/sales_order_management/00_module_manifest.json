@@ -56,7 +56,8 @@
       "server/src/modules/inventory/InventoryLookupService.js",
       "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
       "server/src/services/mysqldatabase/MySqlDatabaseService.js",
-      "server/scripts/activateSalesObservations.js"
+      "server/scripts/activateSalesObservations.js",
+      ".github/scripts/sales-import-capacity.mjs"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -113,7 +114,10 @@
       "server/test/integration/fulfillmentOperationRouting.integration.test.js",
       "server/test/integration/shipmentMigrations.integration.test.js",
       "server/test/salesFulfillmentService.test.js",
-      "server/test/integration/fulfillmentPendingClaims.integration.test.js"
+      "server/test/integration/fulfillmentPendingClaims.integration.test.js",
+      ".github/scripts/sales-import-capacity.test.mjs",
+      "server/test/mysqlDatabaseFailureModes.test.js",
+      "server/test/mysqlDatabaseService.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -234,7 +238,12 @@
       "server/src/services/mysqldatabase/MySqlDatabaseService.js",
       "server/database/migrations/*_create_sales_operational_observations.js",
       "server/scripts/activateSalesObservations.js",
-      "server/database/migrations/*_add_sales_backorder_order_index.js"
+      "server/database/migrations/*_add_sales_backorder_order_index.js",
+      ".github/scripts/sales-import-capacity.mjs",
+      ".github/scripts/sales-import-capacity.test.mjs",
+      "server/test/mysqlDatabaseFailureModes.test.js",
+      "server/test/mysqlDatabaseService.test.js",
+      ".github/test-admissions/sales-p4-functional.json"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -320,7 +329,12 @@
       "server/src/services/mysqldatabase/MySqlDatabaseService.js",
       "server/database/migrations/*_create_sales_operational_observations.js",
       "server/scripts/activateSalesObservations.js",
-      "server/database/migrations/*_add_sales_backorder_order_index.js"
+      "server/database/migrations/*_add_sales_backorder_order_index.js",
+      ".github/scripts/sales-import-capacity.mjs",
+      ".github/scripts/sales-import-capacity.test.mjs",
+      "server/test/mysqlDatabaseFailureModes.test.js",
+      "server/test/mysqlDatabaseService.test.js",
+      ".github/test-admissions/sales-p4-functional.json"
     ],
     "forbidden_paths": [
       ".env",
@@ -454,9 +468,9 @@
       {
         "id": "framework-connection-wait-observations",
         "module_id": "framework",
-        "version": "1-PROPOSED-readonly-bounded-cumulative-metrics; existing transaction and timeout contract retained",
+        "version": "1-readonly-bounded-cumulative-metrics; HD026 terminal outcome/quarantined live rollback integration; acquire metrics unchanged",
         "source": "server/src/services/mysqldatabase/MySqlDatabaseService.js",
-        "sha256": "fb31b7896ab65424ce577c0e76b1fb0c2cd44fffde6fa7646113018c3483d550",
+        "sha256": "15819bc9f80278c8d30df77ea22752b651028d86dbea52c2f1e6631dc3fe6d6b",
         "regression_suites": [
           "sales-phase005-unit",
           "sales-phase005-native"
