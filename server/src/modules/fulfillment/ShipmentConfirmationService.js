@@ -1,3 +1,4 @@
+import { SHIPMENT_RECOVERY_MAX_ATTEMPTS,shipmentRecoveryDelay } from "./shipmentRecoveryBackoff.js";
 import { randomUUID } from "node:crypto";
 import { FulfillmentTransactionService,assertFulfillmentTransaction } from "./FulfillmentTransactionService.js";
 import { FulfillmentOperationService } from "./FulfillmentOperationService.js";
@@ -47,10 +48,11 @@ export class ShipmentConfirmationService {
    const inspection=await this.#failure.inspectExpiredInTransaction(tx,token,eventId,transactionSignal);
    if(inspection.state!=="ABSENT")return null;
    if(!inspection.eligible)return {terminal:await this.#failure.finalizeRevokedInTransaction(tx,token,inspection)};
+   if(inspection.attemptCount>=SHIPMENT_RECOVERY_MAX_ATTEMPTS)return {terminal:await this.#failure.deferExhaustedInTransaction(tx,token,inspection)};
    const {request:original,actor,operationId}=inspection,request=freezeShipmentIntent({...original,leaseOwner:randomUUID()}),[[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),now=Number(clock?.now_ms);
    if(!Number.isSafeInteger(now)||now<0)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
    await this.#recoveryVerifier(tx,token);
-   const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1,next_attempt_at=NULL,updated_at=? WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)) AND attempt_count<10",[request.leaseOwner,now+this.operations.leaseMs,now,operationId,eventId,request.target.id,actor.id,digest(request),request.correlationId,original.leaseOwner]);
+   const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1,next_attempt_at=NULL,updated_at=? WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)) AND attempt_count<?",[request.leaseOwner,now+this.operations.leaseMs,now,operationId,eventId,request.target.id,actor.id,digest(request),request.correlationId,original.leaseOwner,SHIPMENT_RECOVERY_MAX_ATTEMPTS]);
    if(changed.affectedRows!==1)fail("CONCURRENT_OPERATION");
    const started=Object.freeze(pending({operationId,eventId,correlationId:request.correlationId}));
    this.#pendingRequests.set(started,request);this.#startedActors.set(started,actor);this.#recoveryStarts.set(started,token);this.#leaseBoundaries.set(started,Object.freeze({tx,request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:performance.now()}));
@@ -63,7 +65,27 @@ export class ShipmentConfirmationService {
   try{
    const result=await context.storage.run({auth:{claims:{sub:String(actor.id),roles:[...actor.roles],permissions:[...actor.permissions]}},signal,databaseTransaction:null},()=>this.completeConfirmation(started,{signal}));
    return {state:result.outcome==="SHIPPED"?"SUCCEEDED":"UNKNOWN"};
+  }catch{
+   return await context.storage.run({auth:{claims:{sub:String(actor.id),roles:[...actor.roles],permissions:[...actor.permissions]}},signal,databaseTransaction:null},()=>this.#observeOrDeferRecovery(started,token,signal));
   }finally{this.#recoveryStarts.delete(started);}
+ }
+ async #observeOrDeferRecovery(started,token,signal){
+  const request=this.#pendingRequests.get(started),actor=this.#startedActors.get(started);
+  if(!request||!actor||this.#recoveryStarts.get(started)!==token)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+  await this.#recoveryVerifier(null,token);
+  return this.database.withTransaction(async tx=>{
+   await this.#recoveryVerifier(tx,token);
+   const [[row]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[request.eventId]);
+   if(!row||String(row.id)!==started.operationId||row.event_id!==request.eventId||row.operation_type!=="SHIP"||row.target_type!=="SHIPMENT"||String(row.target_id)!==request.target.id||String(row.initiated_by)!==String(actor.id)||row.payload_hash!==digest(request)||row.correlation_id!==request.correlationId||Number(row.is_document_archived)!==0)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+   // Terminal results have cleared the old nonce. Validate the immutable original tuple/witness before testing live ownership.
+   const replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,{eventId:request.eventId,shipmentId:request.target.id,version:request.payload.version});
+   if(replay)return {state:replay.status};
+   const delay=shipmentRecoveryDelay(Number(row.attempt_count));
+   await this.#recoveryVerifier(tx,token);
+   const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET next_attempt_at=GREATEST(COALESCE(next_attempt_at,0),CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)+?),updated_at=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED))",[delay,row.id,request.eventId,request.target.id,actor.id,digest(request),request.correlationId,request.leaseOwner]);
+   if(changed.affectedRows!==1)fail("CONCURRENT_OPERATION");await this.#recoveryVerifier(tx,token);
+   return {state:"UNKNOWN"};
+  },{isolationLevel:"READ COMMITTED",signal});
  }
  async startConfirmation(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}

@@ -52,7 +52,7 @@ export class ShipmentConfirmationRecoveryJob extends BaseService {
    },{isolationLevel:"READ COMMITTED",signal});
    for(const event of events){
     await this.#admit(token);
-    try{const result=await this.#confirmation.recoverExpiredConfirmation(event.event_id,token,{signal});if(result.state==="SUCCEEDED"||result.state==="FAILED"){processed++;if(result.state==="FAILED")failed++;}else deferred++;}
+    try{const result=await this.#confirmation.recoverExpiredConfirmation(event.event_id,token,{signal});if(result.state==="SUCCEEDED"||result.state==="FAILED"){processed++;if(result.state==="FAILED")failed++;}else{deferred++;if(result.state==="EXHAUSTED")await this.logger.error("fulfillment.confirmation_recovery_exhausted","Shipment confirmation technical retries exhausted; original event remains pending",{code:"FULFILLMENT_RECOVERY_EXHAUSTED",correlationId:result.correlationId,attemptCount:result.attemptCount});}}
     catch{deferred++;this.#runtime(token);}
    }
    await this.logger.info("fulfillment.confirmation_recovery_completed","Shipment confirmation recovery batch completed",{processed,failed,deferred});

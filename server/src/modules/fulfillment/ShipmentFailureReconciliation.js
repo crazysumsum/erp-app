@@ -1,3 +1,4 @@
+import { SHIPMENT_RECOVERY_MAX_ATTEMPTS,SHIPMENT_RECOVERY_MAX_DELAY_MS } from "./shipmentRecoveryBackoff.js";
 import { randomUUID } from "node:crypto";
 import { readShipmentRecoveryActor } from "./shipmentRecoveryActor.js";
 import { assertFulfillmentTransaction } from "./FulfillmentTransactionService.js";
@@ -94,7 +95,7 @@ export class ShipmentFailureReconciliation {
   const proven=await this.#proveAbsence(tx,record);if(!proven)return {state:"UNKNOWN"};
   await this.#readRecovery(tx,token);await this.#operation(tx,record);
   const fresh=await readShipmentRecoveryActor(this.database,tx,key(operation.initiated_by));
-  const inspection=Object.freeze({state:"ABSENT",request,actor:fresh.actor,eligible:fresh.eligible,operationId:key(operation.id)});
+  const inspection=Object.freeze({state:"ABSENT",request,actor:fresh.actor,eligible:fresh.eligible,operationId:key(operation.id),attemptCount:Number(operation.attempt_count)});
   this.#inspections.set(inspection,{record,proven});return inspection;
  }
  async #writeFailed(tx,record,{source,snapshot},code){
@@ -106,6 +107,18 @@ export class ShipmentFailureReconciliation {
     await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'FAILED',?,?,?,?,?,?)",[request.target.id,request.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({status:"DRAFT",version:Number(snapshot.shipment.version)+1,code,outcome:"FAILED"}),at]);
     const [failed]=await tx.execute("UPDATE fulfillment_operation_requests SET status='FAILED',result_json=NULL,public_error_code=?,public_error_details=?,lease_owner='',lease_expires_at=NULL,next_attempt_at=NULL,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS' AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND event_id=? AND payload_hash=? AND initiated_by=? AND correlation_id=? AND lease_owner=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)",[code,JSON.stringify(details),at,at,(await this.#operation(tx,record)).id,request.target.id,request.eventId,source.scopeHash,actor.id,request.correlationId,request.leaseOwner]);if(failed.affectedRows!==1)conflict();
     return {state:"FAILED",code,details};
+ }
+ async deferExhaustedInTransaction(tx,token,inspection){
+  assertFulfillmentTransaction(this.database,tx);const proof=this.#inspections.get(inspection);
+  if(!proof||proof.record.tx!==tx||proof.record.recoveryToken!==token||proof.record.signal.aborted||!this.#readRecovery||inspection.eligible!==true||!Number.isSafeInteger(inspection.attemptCount)||inspection.attemptCount<SHIPMENT_RECOVERY_MAX_ATTEMPTS)conflict();
+  this.#inspections.delete(inspection);const {record}=proof,{request}=record;
+  await this.#readRecovery(tx,token);await this.#operation(tx,record);
+  const identity=await readShipmentRecoveryActor(this.database,tx,key(record.actor.id));if(!identity.eligible)conflict();
+  await this.#readRecovery(tx,token);
+  // This consumed read proof grants only a fixed technical delay, never a nonce, attempt or business write.
+  const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET next_attempt_at=GREATEST(COALESCE(next_attempt_at,0),CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)+?),updated_at=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) WHERE id=? AND event_id=? AND operation_type='SHIP' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND lease_expires_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AND (next_attempt_at IS NULL OR next_attempt_at<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)) AND attempt_count>=?",[SHIPMENT_RECOVERY_MAX_DELAY_MS,inspection.operationId,request.eventId,request.target.id,identity.actor.id,digest(request),request.correlationId,request.leaseOwner,SHIPMENT_RECOVERY_MAX_ATTEMPTS]);
+  if(changed.affectedRows!==1)conflict();await this.#readRecovery(tx,token);
+  return {state:"EXHAUSTED",correlationId:request.correlationId,attemptCount:inspection.attemptCount};
  }
  async finalizeRevokedInTransaction(tx,token,inspection){
   assertFulfillmentTransaction(this.database,tx);const proof=this.#inspections.get(inspection);
