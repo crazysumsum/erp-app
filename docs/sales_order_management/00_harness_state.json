@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1815,
+  "revision": 1816,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -26578,6 +26578,14 @@
       "idempotency_key": "p4-first-functional-publication",
       "status": "PLANNED",
       "source_ref": "ActualstandingSamcommit/PR/directmergeauthority; currentDEC050Aconfirmed/PLAN_READYlocalPASS/R5sourcebindingreview0C/H/M; independentexact920dae9creceiptdigestactivated. Commitfinalreviewedmetadata/receipt, freshmaincheck, pushbranchonce/openoneP4PR; trustedbasecontrollerdispatchescurrentcandidatefunctionalCI, allNFRdeferred/no manualdispatch/no newcases/scale. Recordactualhead/PR/run beforeanyretry."
+    },
+    {
+      "id": "ACT-P4-MAIN01AF-INTEGRATION",
+      "kind": "GIT_TARGET_INTEGRATION",
+      "target": "01af6c24",
+      "idempotency_key": "act-p4-main01af-integration",
+      "status": "STARTED",
+      "source_ref": "Prepublicationfreshfetch mainPR312 addsPurchasingconfig/validators/10approvedpurecases and4sharedstartupwires/1existingassert. Salescontractpins unaffected; normaldefaultPurchasingconfigvalid. No firstP4CIyet; integratebeforepush andverifyactualadmission union/P4sourceunchanged. No NFR/local44 rerun/newtestadmission requested; independentPurchasingreceipt included."
     }
   ],
   "evidence_files": [

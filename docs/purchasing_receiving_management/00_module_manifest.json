@@ -47,12 +47,15 @@
       "server/test-support/fakePurchasingDatabase.js",
       "client/test/**/purchasing*.test.js",
       "client/test/**/receiving*.test.js",
-      "client/e2e/purchasing-receiving-management/**"
+      "client/e2e/purchasing-receiving-management/**",
+      ".github/test-admissions/purchasing-*.json"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/configuration.test.js",
       "server/src/modules/item/ItemLookupService.js",
       "server/src/modules/item/itemConstants.js",
       "client/config/menu.js",
