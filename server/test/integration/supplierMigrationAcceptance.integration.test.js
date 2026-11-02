@@ -28,6 +28,30 @@ async function allMigrations() {
 /** Supplier 擁有嘅 migration：檔名有 supplier（0028 係 Supplier 權限 seed）。 */
 const isSupplierMigration = (name) => /supplier/u.test(name);
 
+/**
+ * 其他模組要用 Supplier 表先建得成嘅 migration（例如 Purchasing 0112 FK suppliers），連同間接依賴佢哋嘅
+ * （之後 GR 表 FK purchase_orders）。未有 Supplier 嘅部署唔會有呢啲模組，所以 MIG-006 嘅「之前」唔包佢哋。
+ */
+async function requiresSupplier(migrations) {
+  const created = (source) => [...source.matchAll(/CREATE TABLE(?: IF NOT EXISTS)?\s+`?(\w+)`?/gu)].map((match) => match[1]);
+  const sources = new Map(await Promise.all(migrations.map(async (name) =>
+    [name, await readFile(path.join(DATABASE_DIRECTORY, name), "utf8")])));
+  const missing = new Set([...sources].filter(([name]) => isSupplierMigration(name)).flatMap(([, source]) => created(source)));
+  const dependents = new Set();
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const [name, source] of sources) {
+      if (isSupplierMigration(name) || dependents.has(name)) continue;
+      if ([...source.matchAll(/REFERENCES\s+`?(\w+)`?/gu)].some((match) => missing.has(match[1]))) {
+        dependents.add(name);
+        for (const table of created(source)) missing.add(table);
+        grew = true;
+      }
+    }
+  }
+  return dependents;
+}
+
 /** 同 scripts/migrate.js 一樣嘅次序同做法（SQL 檔成個送、JS 叫 up），但唔寫 ledger：俾 MIG-002 停喺任何一支之前。 */
 async function apply(connection, name) {
   if (name.endsWith(".sql")) {
@@ -384,8 +408,9 @@ integrationTest("TC-005 (MIG-005): each bad Supplier security or limit setting s
 integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts on the upgraded schema", async (t) => {
   const { name, connection } = await scratchDatabase(t);
   const migrations = await allMigrations();
-  // 未有 Supplier 嘅部署：其他模組嘅 migration 全部做咗，再加啲核心資料（用戶、角色、用戶 audit）。
-  for (const migration of migrations.filter((file) => !isSupplierMigration(file))) await apply(connection, migration);
+  // 未有 Supplier 嘅部署：其他模組嘅 migration 全部做咗（要 Supplier 先建得成嘅除外），再加啲核心資料（用戶、角色、用戶 audit）。
+  const dependents = await requiresSupplier(migrations);
+  for (const migration of migrations.filter((file) => !isSupplierMigration(file) && !dependents.has(file))) await apply(connection, migration);
   const [user] = await connection.query(
     "INSERT INTO users (username, password_hash, created_at, updated_at) VALUES ('mig006-operator', 'not-a-real-hash', 1, 1)");
   const [[role]] = await connection.query("SELECT id FROM roles WHERE name = 'system-admin'");
