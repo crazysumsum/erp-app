@@ -99,3 +99,22 @@ The receipt was validated before the request on a throwaway branch: without its 
 ## REV-005 — review of the receipt path
 
 `method: HUMAN`, author the TASK-010 implementation agent, reviewer Sam. It covers the one change between `600d9d58` and `84b5a22e`: the receipt pattern added to `allowed_write_paths`.
+
+## Digest publication — owner exception, 2026-11-02
+
+`AGENTS.md` forbids a feature agent from modifying admission variables or approving its own receipt, and I declined when first asked. Sam then instructed: "我作為project owner 批準你這次跳過要求幫我加" — a one-time project-owner exception for this receipt only. It does not extend to any other receipt or variable change.
+
+Executed by reading the variable immediately before writing and appending, never replacing:
+
+| | Values |
+| --- | --- |
+| Before | `2c5660d2…`, `abf2c153…` (2 values; the old `bootstrap.json` grant `cf8254d4…` had already been replaced by its owner when #318 changed `bootstrap.json`) |
+| After | the same two plus `40efa97a4f925b6653f52c65828532a454e5bca5e926c5bf3e8f855199bfa867` |
+
+Verified after writing: every previous value preserved, the new digest present, no other value added. With the real variable the gate then passed for this branch after merging #318: `Test admission passed … 12 reviewed inputs; 0 capacity references`.
+
+## Capacity deferred by #318
+
+#318 (`AGENTS.md`, `sales-import-capacity.mjs`) made routine PRs, main pushes and schedules functional only; capacity now runs only after the feature's UAT, on main, by explicit dispatch with an external grant. For an admitted PR dispatch `changedFiles` returns no files, so **this push runs no capacity**. Sam's approval of 38 cases for this push is therefore unused.
+
+For the post-UAT handoff: `selectCapacity` on this PR's diff still identifies 38 existing catalogued cases — Fulfillment 25, Sales 5, Supplier 5, Customer 2, framework 1 — because `applicationConfiguration.js` is shared startup runtime. They belong to those modules' owners; this task adds no non-functional workload of its own.
