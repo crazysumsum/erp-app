@@ -39,7 +39,7 @@
     "TASK-011": "DONE",
     "TASK-012": "DONE",
     "TASK-013": "DONE",
-    "TASK-014": "PENDING",
+    "TASK-014": "DONE",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
     "TASK-017": "PENDING",
@@ -542,6 +542,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md#hd-014--schema-decisions"
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "TASK-014 Draft save against design 8.2 and the providers: (1) refuse every ineligible Supplier/SKU on each save, or only newly chosen ones while unchanged ones that later became ineligible save with a warning; (2) with no Supplier provider for a non-primary ordering address or supplier_sku_refs, read Supplier tables, wait for the Supplier owner, or accept only null/the primary ordering address and leave the SKU reference empty; (3) read inventory_warehouses and users directly in the transaction as Sales does, or wait for providers; (4) read Items before the transaction, or wait for a transactional Item purchase lookup?",
+      "affected_ids": [
+        "TASK-014",
+        "TASK-017"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task014_po_draft_service.md#hd-015--provider-gaps-and-draft-eligibility"
     }
   ],
   "external_actions": [
@@ -640,9 +651,17 @@
       "idempotency_key": "purchasing-hd006-pr322-merge-20261103",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 89c5a06757c1de18fd3ab5750f935be17f3f714a, verified as an ancestor of origin/main; admitted CI run 41568902471 completed success on the dispatched merge of head b65b858f3bedbdb885672566e069711bf7704f5b with origin/main ab320dc8 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
+    },
+    {
+      "id": "EXT-013",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/324 -> main",
+      "idempotency_key": "purchasing-task013-pr324-merge-20261103",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit cb685ce30efa433fb7a85e668e37175b7cd19c05, verified as an ancestor of origin/main; admitted CI run 41573394805 completed success on the dispatched merge of head 288a6c048fe8e83a170f4b50f6d2d7b7f866f59f with origin/main 89c5a067 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-013 is DONE: PurchasingSequenceService, PurchasingOperationService and PurchasingAuditService; no schema. Next startable task: TASK-014 (PO Draft create/update domain service). It must persist REJECTED audit in its own short transaction (deferred from TASK-013) and add its commands and audit actions to the services' allowlists; operation lookup by eventId arrives with TASK-033. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-014 is DONE: PurchaseOrderService Draft create/update, editable projection and REJECTED audit; no schema; HD-015 answered (1B draft tolerance for unchanged masters, 2C primary ordering address only and empty Supplier SKU reference, 3A Warehouse/Buyer read in the transaction, Item reads on the transaction connection). Next startable task: TASK-015 (PO Draft create/update handlers): wire PurchaseOrderService with the real Supplier, Business Master and Item providers and pass JWT claims and request context. TASK-017 submit must revalidate every master strictly and decide whether Item and Supplier reads need locking reads; open for the Supplier owner: transactional reads of a Supplier address by ID and of supplier_sku_refs. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }
