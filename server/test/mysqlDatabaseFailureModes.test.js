@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { ApplicationError } from "../src/framework/errors/ApplicationError.js";
 import {
+  getActiveTransactionIsolation,
+  getTransactionOutcome,
   MySqlDatabaseOperationError,
   MySqlDatabaseService
 } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
@@ -118,8 +120,19 @@ test("the four standard isolation levels are accepted and interpolated verbatim"
   ]) {
     const connection = fakeConnection();
     const { database } = createDatabase(connection);
-
-    await database.withTransaction(() => "ok", { isolationLevel: level.toLowerCase() });
+    let actualTransaction;
+    await database.withTransaction((transaction) => {
+      actualTransaction = transaction;
+      assert.equal(getTransactionOutcome(transaction), null);
+      assert.equal(getTransactionOutcome({ ...transaction }), null);
+      assert.equal(getActiveTransactionIsolation(transaction), level);
+      return "ok";
+    }, { isolationLevel: level.toLowerCase() });
+    const outcome = getTransactionOutcome(actualTransaction);
+    assert.deepEqual(outcome, { state: "COMMITTED" });
+    assert.equal(Object.isFrozen(outcome), true);
+    assert.throws(() => { outcome.state = "ROLLED_BACK"; }, TypeError);
+    assert.equal(getActiveTransactionIsolation(actualTransaction), null);
 
     assert.equal(
       connection.calls[0][1],
@@ -138,9 +151,13 @@ test("a connection destroyed on abort is never released back to the pool", async
   });
   const { database } = createDatabase(connection);
   const controller = new AbortController();
+  let actualTransaction;
 
   const pending = database.withTransaction(
-    (transaction) => transaction.execute("INSERT INTO orders (name) VALUES (?)", ["x"]),
+    (transaction) => {
+      actualTransaction = transaction;
+      return transaction.execute("INSERT INTO orders (name) VALUES (?)", ["x"]);
+    },
     { signal: controller.signal }
   );
   await new Promise((resolve) => { setImmediate(resolve); });
@@ -151,6 +168,7 @@ test("a connection destroyed on abort is never released back to the pool", async
   // 重複 release 會把一條已經銷毀的連線還進池子，之後每一個拿到它的請求都會壞。
   assert.equal(names(connection).includes("destroy"), true);
   assert.equal(names(connection).includes("release"), false);
+  assert.deepEqual(getTransactionOutcome(actualTransaction), { state: "INDETERMINATE" });
 });
 
 test("a destroy that itself fails is logged rather than swallowed", async () => {
@@ -212,15 +230,20 @@ test("a rollback failure is logged and the original error still surfaces", async
     }
   });
   const { database, logger } = createDatabase(connection);
+  let actualTransaction;
 
   await assert.rejects(
     () =>
-      database.withTransaction((transaction) =>
-        transaction.execute("INSERT INTO orders (name) VALUES (?)", ["x"])
-      ),
-    // rollback 失敗不得掩蓋原本的錯誤——那才是開發者要看到的。
+      database.withTransaction((transaction) => {
+        actualTransaction = transaction;
+        assert.equal(getTransactionOutcome(transaction), null);
+        return transaction.execute("INSERT INTO orders (name) VALUES (?)", ["x"]);
+      }),
+    // Preserve the original diagnosis without treating an unconfirmed rollback as a business rejection.
     (error) => {
-      assert.equal(error.code, "DATABASE_OPERATION_FAILED");
+      assert.equal(error.code, "DATABASE_TRANSACTION_INDETERMINATE");
+      assert.equal(error.cause.code, "DATABASE_OPERATION_FAILED");
+      assert.equal(error.cause.cause.message, "write failed");
       return true;
     }
   );
@@ -230,16 +253,21 @@ test("a rollback failure is logged and the original error still surfaces", async
   );
   assert.ok(entry, "rollback 失敗必須留下記錄");
   assert.equal(entry.context.error.message, "rollback also failed");
-  assert.equal(names(connection).includes("release"), true);
+  assert.equal(names(connection).includes("destroy"), true);
+  assert.equal(names(connection).includes("release"), false);
+  assert.deepEqual(getTransactionOutcome(actualTransaction), { state: "INDETERMINATE" });
+  assert.equal(Object.isFrozen(getTransactionOutcome(actualTransaction)), true);
 });
 
 test("an error thrown by the callback itself is wrapped, not leaked raw", async () => {
   const connection = fakeConnection();
   const { database } = createDatabase(connection);
+  let actualTransaction;
 
   await assert.rejects(
     () =>
-      database.withTransaction(() => {
+      database.withTransaction((transaction) => {
+        actualTransaction = transaction;
         throw new Error("business rule violated");
       }),
     (error) => {
@@ -253,6 +281,8 @@ test("an error thrown by the callback itself is wrapped, not leaked raw", async 
     }
   );
   assert.deepEqual(names(connection), ["query", "begin", "rollback", "release"]);
+  assert.deepEqual(getTransactionOutcome(actualTransaction), { state: "ROLLED_BACK" });
+  assert.equal(Object.isFrozen(getTransactionOutcome(actualTransaction)), true);
 });
 
 test("an ApplicationError from the callback passes through unchanged", async () => {

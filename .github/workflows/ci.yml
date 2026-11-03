@@ -267,18 +267,18 @@ jobs:
           } finally {await db.end();}
           NODE
           capacity_pattern="$(NODE_V8_COVERAGE= node .github/scripts/capacity-runner.mjs server-pattern)"
-          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern"
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=coverage/shard/functional-tests.xml
 
       - name: Record candidate and shard identity
         working-directory: server
         run: node ../.github/scripts/merge-server-coverage.test.mjs record ${{ matrix.shard }} 4
 
-      # Keep the existing real P1 browser gate after routine coverage.
-      - name: Install Chromium for real Fulfillment P1 browser flows
+      # Keep the existing P1 exact2 gate and approved P2 exact2 gate in the same browser step.
+      - name: Install Chromium for real Fulfillment browser flows
         if: matrix.shard == 1
         run: npx playwright install --with-deps chromium
 
-      - name: Run real Fulfillment P1 browser flows on an owned UUID database
+      - name: Run real Fulfillment P1 and P2 browser flows on owned UUID databases
         if: matrix.shard == 1
         env:
           DB_SOCKET_PATH: /tmp/erp-ci-mysql-socket/mysqld.sock
@@ -297,13 +297,23 @@ jobs:
           assert len(list(root.iter('testcase')))==2, 'Both real P1 flows must execute'
           assert not any(list(root.iter(tag)) for tag in ['failure','error','skipped']), 'P1 failures/skips block CI'
           PY
+          npx playwright test --config client/e2e/fulfillment-shipping-management/p2.playwright.config.js
+          python3 - <<'PY2'
+          import os, pathlib, xml.etree.ElementTree as ET
+          report=pathlib.Path(os.environ['HARNESS_RUN_DIR'])/'fulfillment-p2-browser.xml'
+          root=ET.parse(report).getroot()
+          assert len(list(root.iter('testcase')))==2, 'Both real P2 flows must execute'
+          assert not any(list(root.iter(tag)) for tag in ['failure','error','skipped']), 'P2 failures/skips block CI'
+          PY2
 
-      - name: Retain synthetic Fulfillment P1 browser report
+      - name: Retain synthetic Fulfillment P1 and P2 browser reports
         if: always() && matrix.shard == 1
         uses: actions/upload-artifact@v4
         with:
-          name: fulfillment-p1-browser-report
-          path: ${{ runner.temp }}/fulfillment-p1-browser/fulfillment-p1-browser.xml
+          name: fulfillment-browser-reports
+          path: |
+            ${{ runner.temp }}/fulfillment-p1-browser/fulfillment-p1-browser.xml
+            ${{ runner.temp }}/fulfillment-p1-browser/fulfillment-p2-browser.xml
           if-no-files-found: error
 
       - name: Finalize Inventory native coverage ownership proof

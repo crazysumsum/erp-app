@@ -12,15 +12,24 @@ import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySq
 import { claimFulfillmentInventoryScope } from "./inventoryFulfillmentScope.js";
 import { FULFILLMENT_INVENTORY_COMMANDS } from "./inventoryFulfillmentConstants.js";
 import { postFulfillmentAllocationBatch } from "./inventoryFulfillmentAllocation.js";
+import { prepareFulfillmentIssueOutcome,finishFulfillmentIssueOutcome,markFulfillmentReconciliationRead,enterFulfillmentWriteMode } from "./inventoryFulfillmentOutcome.js";
+
+const OUTCOME_UNKNOWN_SOURCE_CODES=new Set(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR","ER_KEY_DOES_NOT_EXITS","INVENTORY_SOURCE_CONFLICT","INVENTORY_INPUT_INVALID","INVENTORY_QUANTITY_INVALID","INVENTORY_DEPENDENCY_UNAVAILABLE","ALLOCATION_STATE_CONFLICT"]);
+function unknownOutcomeSource(error){return OUTCOME_UNKNOWN_SOURCE_CODES.has(error?.cause?.code??error?.code);}
 
 export class InventoryFulfillmentService {
   #receipts=new WeakMap();
   #preparations=new WeakMap();
-  constructor({database,time,logger,itemLookup,operations,locks,audit}={}) {
+  #reconciliationVerifier;
+  #outcomeContexts=new WeakMap();
+  #outcomeProofs=new WeakMap();
+  constructor({database,time,logger,itemLookup,operations,locks,audit,reconciliationVerifier}={}) {
     this.database=database;this.context=database?.context;this.time=time;
     this.itemLookup=itemLookup??new ItemLookupService({database,time,logger});
     this.operations=operations??new InventoryOperationService();this.locks=locks??new InventoryLockService();
     this.audit=audit??new InventoryAuditService({database,time,logger});
+    if(reconciliationVerifier!==undefined&&typeof reconciliationVerifier!=="function")throw new TypeError("Trusted reconciliation verifier required");
+    this.#reconciliationVerifier=reconciliationVerifier;
   }
   assertTransaction(tx) {
     if (!tx||typeof tx.query!=="function"||typeof tx.execute!=="function"||this.context?.get()?.databaseTransaction!==tx||getActiveTransactionIsolation(tx)!=="READ COMMITTED") throw new TypeError("Fulfillment Inventory requires the current active READ COMMITTED caller transaction");
@@ -29,6 +38,7 @@ export class InventoryFulfillmentService {
   async #command(tx,command,action) {
     if (!FULFILLMENT_INVENTORY_COMMANDS[action]) throw inventoryError("INVENTORY_INPUT_INVALID");
     const current=this.assertTransaction(tx),permission=action==="REVERSE"?"fulfillment.reverse":"fulfillment.operation";
+    enterFulfillmentWriteMode(tx);
     const authorization={purpose:`fulfillment.${action.toLowerCase()}`,requiredCallerPermission:permission};
     const documentType=["ISSUE","REVERSE"].includes(action)?"SHIPMENT":"PICK";
     const normalized=providerInventoryCommand(tx,command,{authorization,module:"FULFILLMENT",documentType});
@@ -44,6 +54,35 @@ export class InventoryFulfillmentService {
     const actor=await assertActorFresh(tx,{actorId:context.actor.userId,claimedRoles:context.actor.claimedRoles,claimedPermissions:context.actor.claimedPermissions});
     if (!actor.username||!["fulfillment.view",permission].every(p=>actor.permissions.includes(p))) throw inventoryError("PERMISSION_STALE");
     return {...context,payload,actorLabel:actor.username,permissions:actor.permissions};
+  }
+  async #outcomeBinding(tx,session,phase){
+    this.assertTransaction(tx);
+    if(!this.#reconciliationVerifier)throw new TypeError("Trusted reconciliation verifier required");
+    const source=await this.#reconciliationVerifier(tx,session,phase);
+    fulfillmentInventoryFields(source,["fulfillmentId","shipmentId","salesOrderId","customerId","warehouseId","eventId","actorId","scopeHash","correlationId","inventoryRequestHash","salesRequestHash","pickedLines"]);
+    if(!Object.isFrozen(source)||!Array.isArray(source.pickedLines)||!Object.isFrozen(source.pickedLines))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    for(const field of ["fulfillmentId","shipmentId","salesOrderId","customerId","warehouseId","actorId"])fulfillmentInventoryId(source[field]);
+    if(typeof source.scopeHash!=="string"||!/^[a-f0-9]{64}$/u.test(source.scopeHash)||source.inventoryRequestHash!==null&&(typeof source.inventoryRequestHash!=="string"||!/^[a-f0-9]{64}$/u.test(source.inventoryRequestHash))||[source.eventId,source.correlationId].some(value=>typeof value!=="string"||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value)))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    if(source.salesRequestHash!==null&&(typeof source.salesRequestHash!=="string"||!/^[a-f0-9]{64}$/u.test(source.salesRequestHash)))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    return source;
+  }
+  async prepareShipmentIssueOutcomeReadInTransaction(tx,session){
+    const source=await this.#outcomeBinding(tx,session,"inventory.prepare");markFulfillmentReconciliationRead(tx);
+    let prepared;try{prepared=await prepareFulfillmentIssueOutcome(tx,source);}catch(error){if(!unknownOutcomeSource(error))throw error;prepared={available:false,rows:[]};}
+    if(await this.#outcomeBinding(tx,session,"inventory.prepare")!==source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const context=Object.freeze({});this.#outcomeContexts.set(context,{tx,session,source,prepared,finished:false});return context;
+  }
+  async readShipmentIssueOutcomeInTransaction(tx,context){
+    const read=this.#outcomeContexts.get(context);
+    if(!read||read.tx!==tx||read.finished||await this.#outcomeBinding(tx,read.session,"inventory.finish")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    read.finished=true;let outcome;try{outcome=await finishFulfillmentIssueOutcome(tx,read.prepared,read.source);}catch(error){if(!unknownOutcomeSource(error))throw error;outcome={state:"UNKNOWN"};}
+    if(await this.#outcomeBinding(tx,read.session,"inventory.finish")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const proof=Object.freeze({state:outcome.state});this.#outcomeProofs.set(proof,{...read,outcome});return proof;
+  }
+  async verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof){
+    const read=this.#outcomeProofs.get(proof);
+    if(!read||read.tx!==tx||read.session!==session||await this.#outcomeBinding(tx,session,"inventory.verify")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    return structuredClone(read.outcome);
   }
   async claimFulfillmentBatchInTransaction(tx,{action,command}) {
     const context=await this.#command(tx,command,action),timestamp=this.time.nowMs();

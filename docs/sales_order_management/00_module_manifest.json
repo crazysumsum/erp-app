@@ -294,7 +294,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "HD018-A-scoped-candidate-source-proof-implementation; HD011-A last-sync/current-CAS retained; DEC037 TC032-only10s owner documentation integrated; exact closing review/full P1 gates pending; no Customer2.2 or proposed Purchasing/P4 contract adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
+        "sha256": "1f00ca6abe4135c95fa76ddd152e9de39ff074e6c24e006a3230ab037eb4bb24",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

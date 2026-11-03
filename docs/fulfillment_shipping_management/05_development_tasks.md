@@ -1560,7 +1560,11 @@ P1-GATE「Queue／Picking完整測試及PR」：執行§1.7，加上Queue／Clai
 - Reversal入口仍由P3 capability gate隱藏／拒絕；PR經Sales、Inventory、Customer及Warehouse owner review。
 
 ### Integration and regression
-Consumers：Customer address／contact 契約、Inventory posting 契約、Sales `applyFulfillmentResultInTransaction`。必跑套件：`lint`、`client-build`、`security-audit`、`fulfillment-technical`；回歸須包含 P0～P1 全部核心案例，並加入 100 行原子 confirm、failure injection 及 Recovery。
+Consumers：Customer address／contact 契約、Inventory posting 契約、Sales `applyFulfillmentResultInTransaction`。本 P2 merge group 的本地必跑工具檢查為 `lint`、`client-build`、`security-audit`；完整開發功能回歸改由同一個實際候選的現有 GitHub CI 執行，保留 P0～P1 全部普通核心案例、原已批准15＋22功能案例、原子 Confirm／failure injection／Recovery 及全部既有權限、數量、CAS、FK、重播與 rollback 檢查。執行位置／證據契約須由與本 DESIGN／PLAN 相符的實際人類批准生效；未批准前不得把本候選當成新准入或本地 suite PASS。
+
+P2 merge-time 的完整回歸證據須包含真實 admission、4個 server coverage shards、client coverage、P1 exact2及P2 exact2 native browser、原全域及逐檔 coverage floors、5個既有 required checks及穩定 aggregate。保存每 shard 的原生 JUnit case ledger與既有 commit／Node／cwd／shard manifests；對原P0／P1 developer argv 的實際檔案集合核對普通功能 cases，保留166／230 lower bounds、0非預期skip／not-run。不可用全域總數代替模塊數、將空 helper／被排除的空 Capacity file PASS 灌入case數，或把非功能 catalog exclusions重寫成PASS。缺report、檔案歸屬／名稱有歧義、數量不足或非預期skip一律不通過；原始證據由獨立覆核後才可登記，不能偽裝原本local run_check結果。
+
+原100行／5,000筆原子Confirm及所有其他NFR的資料規模、並發、重複次數、門檻、owner與原20秒交易限制均保留；按Sam後續明確政策延至相關UAT之後，只可在main以單一capacity catalog、已核相關變更baseline及外部accepted revision／individual case grant明確dispatch。本段只改P2 merge-time developer與CI分工，不批准非功能執行，不修改已完成P0／P1的歷史證據或其phase定義，也不提前處置P3。正式TECHNICAL／REGRESSION、TC-001～012與全部mandatory/APPLICABLE關係維持；TC-012及混合NFR cases的post-UAT deferred-stage／正式gate契約仍待專門處置，本P2開發候選不得冒稱正式驗收或UAT通過。存量mixed suite的stage membership僅保留既有trace結構，並非直接執行權限；本P2不選取它。P3及任何存量broad suite須在獨立的catalog／功能限定執行契約對齊後才可調用，NFR仍只准post-UAT的已接受revision／個別case grant。
 
 ### Git and merge plan
 `branch_strategy` 為 `DEFAULT`，分支 `codex/fulfillment-p2-shipment`，merge group `fulfillment-p2`，依賴 `PHASE-002` 已合併。部署按設計 §13.1 先小量 warehouse 角色開放 Shipment Confirm 及 Recovery jobs。合併流程與 cleanup 同 `PHASE-001`。

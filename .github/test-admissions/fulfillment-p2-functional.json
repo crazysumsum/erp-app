@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "decision": "Sam actual first15 A (call_1c2c79ff32fd4d5984942e3ccb0d2624, proposal73); remaining22 B including browser wiring, excluding3capacity (call_a75bc62af7f7445491a14ff5768d36d8, original proposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa); HD026 A existing rollback/outcome case corrections and narrow owner proofs (call_1eabb1e0dd7e4a659c9a18fd64db8b17, original77 f404a227e53c1e151761d5729ec52933de2b71cb6b6fe8594d844fa7c38df88a); HD027 A (call_4d7dd8b0845f4d2ebedd7a5d25a8ebbd). Exact original user records independently verified in source extract af2f1475a77a08f0be54f2d6e1d3a3f9024267bcbd8b771f4ccfb7e380f996c2.  Final baseline/publication authority: Actual Sam userMessage01a1a032-83ed-7352-90d6-aba6e1acff91 in PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, replying 批准 to proposal turn01a1a030-6579-7862-8f4f-15a303d5392c. Verified read_thread extract SHA25625806c7cb0afb56fe5a1bc5b0d8d6fe50987df1b15e7ba1e5af315a7616f2e74. Exact8patch3652496cd79928418db080945380a6e648c7af9384db72198bbbe06439f4c305 and composition8d781bf5e8c114080f7a0df5131212a992ac4509a961681f906d65886ec903cb; independent trusted administrator must verify/register exact receipt digest. This author-generated receipt grants nothing by itself. Actual Sam additional direct answer 納入既有修訂，仍只跑一次 CI in PM userMessage01a1a038-60de-74f0-a171-ff248f39d68f (call_9f4c022158974bbbbe3e8dffaa2ab8d5): admit only existing transactionCommitDeadline blobfe979bbec0c5a847b74da4e3821abb972e3ee4cd,95to96pins,zero new cases/data/time/CI repetitions; no additional local15 run. Actual new Sam PMuser01a1a067-b9bc-7880-a185-200a356945ca answered 批准更新准入、推送及一次純功能 CI (call_534c717e5edf4826b8ea4aa278f48f87), verified directly via read_thread: admit the exact3existing-test repairs from59132209, two additional files+one repin,Inventory71+P227=98; one additional normalcontrollerfunctionalCI on originalDraftPR326 after trustedadmin registration/release. Prior onceCI41595040008FAIL preserved, no automatic retries/dispatch/merge/NFR.",
+  "purpose": "Publish the approved15+22 functional Shipment cases with exact source/permissions/CAS, real atomic Issue and rollback, genuine original-event recovery, strict client polling and two native browser journeys. Keep existing DB regressions and thresholds; do not duplicate historical overlapping attempts. Correct existing no-scheduler fixture service membership, exact discovery metadata and observer context forwarding. All existing registrations, assertions, fixture sizes, thresholds and production20s remain unchanged; no new test case.",
+  "data": "Mostly one synthetic SO/SKU/Line/Reservation/Balance5units,picked3 per scenario; selected two-line/two-bucket5+2 fixtures and same-SO sibling work use the exact proposal75 ceilings. Lookup wrong-owner has one extra synthetic Customer/address. Recovery families retain4/3/3 serial fixtures; fresh guards7; owner3; rollback4. No100-line/5000-member, capacity or performance workload. Existing MySqlDatabaseService/FailureModes tests retain their finite fake connections, faults and original timers; no native load or new cases. Whole-file registrations and fixture/config family labels classify blobs and are not all newly added cases.",
+  "concurrency": "Existing4server shards. Within each finite scenario at most the original two interleaved business commands/workers; fixture/app pool settings unchanged. One Playwright worker, retries0; P1 exact2 then P2 exact2 in the existing shard1 browser step. No new job/step/shard/worker.",
+  "repetitions": "One normal functional CI execution per admitted candidate; no new recurring frequency or automatic retry. Internal attempts/GET ceilings exactly proposal75. Preserve first15 and existing DB case registrations; no duplicate old private durable/atomic/retry cases.",
+  "thresholds": "All functional cases and existing global/per-file server/client coverage floors pass. Production transaction20,000ms unchanged, native fixture10,000ms where inherited. Keep native CAS/FK/quantity/authorization/idempotency/recovery and rollback assertions; original sibling Create15s limit, HTTP202<=3000ms, P1exact2 and P2exact2 with no failures/errors/skips. All NFR remains deferred until related UAT and separate main dispatch grant.",
+  "trigger": "One newly authorized natural controller functional CI from one push to existing DraftPR326 after trusted administrator registers/verifies this new exact receipt. Previousrun41595040008failed and remains recorded. Failure stops for report, no automatic retry/manualdispatch/NFR/ready/merge.",
+  "cost": "Original approved estimates: first15 adds40-90seconds test work; remaining22 adds6-12minutes, roughly7-14runner-minutes additional work, not measured on this consolidated CI candidate. Latest existing maincb685 run41575307745 completed in16m24s created-to-updated with13successful functional jobs; capacity lanes deferred. Tentative full candidate20-35minutes wall is an estimate, shard reassignment/runner cost unknown. A later post-merge main CI would be a separate full run and is not authorized by this draft. No added job/step or NFR. Five additional support pins are authority documents and existing imported SFC inputs caught by the unchanged controller basename heuristic; zero new cases or workload. The exact eight-file baseline patch is adopted. Prior25-pin receipt plus Inventory71 pins makes96,zero overlap. Sam explicitly admitted the existing deadline file fe979bbe correction; it changes one existing rollback assertion/import, adds zero cases/data/timers/workers and no separate run. Its historic15-case fakeDB local invocation completed in0.9899seconds; this is not current-candidate CI evidence. The first authorized functional attempt41595040008 took18m19 wall and failed before native P1/P2browser and mergedcoverage; it is not successfulfullrun cost. The additional explicitly approved run remains estimated20-35minutes, unknown exactcriticalpath/runnercost; adds no cases/data/jobs/workers beyond the unchanged suite. Three exact local original cases passed once under the separate environment-resume authority; not repeated for this publication.",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "blob": "8453a8cee34dc1ded7be1d0b0e88bdaf8b40753a",
+      "kind": "support"
+    },
+    {
+      "path": "client/e2e/fulfillment-shipping-management/p2.playwright.config.js",
+      "mode": "100644",
+      "blob": "048bcc7f5d336c6aa520965a23f94e0257377a25",
+      "kind": "functional",
+      "cases": [
+        "BROWSER-SHIPMENT-HAPPY native two-line Draft cancel/recreate, Confirm and two A4 snapshot views at four widths",
+        "BROWSER-SHIPMENT-RECOVERY native stale source, revoked access and original-event unknown result never resubmit"
+      ]
+    },
+    {
+      "path": "client/e2e/fulfillment-shipping-management/p2.spec.js",
+      "mode": "100644",
+      "blob": "2fdcee23a5c84dd80b1a7775e232bf025b2666d5",
+      "kind": "functional",
+      "cases": [
+        "BROWSER-SHIPMENT-HAPPY native two-line Draft cancel/recreate, Confirm and two A4 snapshot views at four widths",
+        "BROWSER-SHIPMENT-RECOVERY native stale source, revoked access and original-event unknown result never resubmit"
+      ]
+    },
+    {
+      "path": "client/test/services/shipmentPolling.test.js",
+      "mode": "100644",
+      "blob": "ce8fcb02fa1cd13338f482f58aecc7bfb97519b3",
+      "kind": "functional",
+      "cases": [
+        "CLIENT-POLL-LIFECYCLE: three finite original-event schedules stop on success, failure and owner/unmount abort",
+        "CLIENT-ERROR-RECOVERY: finite202/409/403/503 safe outcomes retain the original input without automatic submission"
+      ]
+    },
+    {
+      "path": "client/test/services/shipmentService.test.js",
+      "mode": "100644",
+      "blob": "83beef60e7af5219917177a627fba63ac9266975",
+      "kind": "functional",
+      "cases": [
+        "CLIENT-CONTRACT: Shipment wire identities, exact weight and malformed outcome rejection without resubmission"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1CancellationFixture.js",
+      "mode": "100644",
+      "blob": "058e7ab9bba781c53310e26df9d212db0de3bb58",
+      "kind": "functional",
+      "cases": [
+        "Approved P2 Draft/Shipment/Confirm/Recovery finite functional fixture families; original P0/P1 fixture quantities and behavior unchanged"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1Fixture.js",
+      "mode": "100644",
+      "blob": "166a0a51141761547c019eb04adba122f36f5d3b",
+      "kind": "functional",
+      "cases": [
+        "Approved P2 Draft/Shipment/Confirm/Recovery finite functional fixture families; original P0/P1 fixture quantities and behavior unchanged"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/shipmentDraftCommand.test.js",
+      "mode": "100644",
+      "blob": "e445bdde70a8f64e0b9749aca7c56941841b9aaa",
+      "kind": "functional",
+      "cases": [
+        "Shipment Draft canonical complete form preserves selected versions and approved optional weight",
+        "Shipment Draft refuses derived fields, incomplete pairs, unsafe identities, versions and logistics",
+        "Draft cancel accepts bounded optional reason and only the original event/version contract"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/shipmentWeight.test.js",
+      "mode": "100644",
+      "blob": "8968bfcc5e15bcf6446684091524a55b835f3b24",
+      "kind": "functional",
+      "cases": [
+        "HD025A preserves exact decimal boundaries and canonicalizes only validated fraction zeros",
+        "HD025A rejects coercion, rounding, invalid null pairs and unapproved units",
+        "HD025A keeps original operation hash strict while equivalent DB readback has identical intent"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentConfirmation.integration.test.js",
+      "mode": "100644",
+      "blob": "d2ba554aba43f798cbef0406c54a5df1dc8cf16b",
+      "kind": "functional",
+      "cases": [
+        "LOOKUP-PARENT-ACTIVE: parent-bound active and default shipping choices",
+        "LOOKUP-CHILD-VERSION: wrong-owner and removed-purpose refusal; original stale-version case retained",
+        "LOOKUP-HTTP-PERMISSION: strict parent query, six-read ceiling and fresh permissions",
+        "CONFIRM-INTENT: same-event double start and Confirm versus Cancel",
+        "CONFIRM-TERMINAL-WITNESS: immutable original outcomes, history faults and selected version headroom",
+        "CONFIRM-START-ROLLBACK: late audit rollback then original-event start",
+        "ISSUE-ATOMIC: two-line two-bucket zero-picked preservation and original-event replay",
+        "ISSUE-ROLLBACK: Inventory, Sales, snapshot and audit faults restore all24 facts",
+        "ISSUE-OWNER-PROOF: source mismatch, foreign receipt issuer and stale owner version",
+        "ISSUE-FRESH-GUARDS: seven finite source, actor, adjustment and incompatible-work guards",
+        "CONFIRM-HTTP-OUTCOME: committed200 and original pending202 within3000ms",
+        "OPERATION-HTTP-VISIBILITY: original pending and terminal reads with fresh authorization"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentDraft.integration.test.js",
+      "mode": "100644",
+      "blob": "9bdffbe26850bf3369833ae7d99aa9a81284d015",
+      "kind": "functional",
+      "cases": [
+        "P2 Draft creates exact picked lines, canonical decimal, active pointer and original replay without owner effects",
+        "P2 Draft concurrent same-event and different-event Create retain one effective Shipment",
+        "P2 Draft update uses exact child versions and CAS; cancellation clears pointer without changing picked facts",
+        "P2 Draft rejects stale or inactive shipping address and wrong parent state without partial effects",
+        "P2 Draft late audit failure rolls back all document, line, history and pointer changes",
+        "P2 Draft committed success survives projection failure and original event recovery"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentDraftApi.integration.test.js",
+      "mode": "100644",
+      "blob": "058041b872922d014d8b53146d5dbac88e8cddc7",
+      "kind": "functional",
+      "cases": [
+        "P2 actual HTTP Draft supports strict create/update/detail/cancel and original event replay",
+        "P2 actual HTTP rejects weight Number coercion, unknown fields, stale address and missing permission",
+        "P2 actual HTTP rechecks revoked role before cached or domain replay"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentInquiry.integration.test.js",
+      "mode": "100644",
+      "blob": "49be81b55d6ca3111907541dd0b078c6623a99c5",
+      "kind": "functional",
+      "cases": [
+        "SHIPMENT-INQUIRY-DOCUMENT: exact filters, bounded detail and immutable two-line delivery projection",
+        "SHIPMENT-DOCUMENT-SAFETY: unconfirmed refusal, literal snapshot, private headers and fresh revoked access"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentRecovery.integration.test.js",
+      "mode": "100644",
+      "blob": "8cd68087ccded98e81b06f91750b7e6c26f9d89a",
+      "kind": "functional",
+      "cases": [
+        "RECOVERY-LEASE: native deadlock, lock timeout, two-worker fence and renewal shutdown",
+        "RECOVERY-OUTCOME: restart, lost commit acknowledgement and indeterminate rollback",
+        "RECOVERY-REVOKED-FAILURE: trusted cleanup, interrupted failure recording and exhaustion"
+      ]
+    },
+    {
+      "path": "server/test/mysqlDatabaseFailureModes.test.js",
+      "mode": "100644",
+      "blob": "e0200f1b2c3bdb91e2575370b6c4368f088f81b6",
+      "kind": "functional",
+      "cases": [
+        "an unsupported isolation level is rejected before any SQL is issued",
+        "the four standard isolation levels are accepted and interpolated verbatim",
+        "a connection destroyed on abort is never released back to the pool",
+        "a destroy that itself fails is logged rather than swallowed",
+        "a transaction whose parent request is already aborted never begins",
+        "a rollback failure is logged and the original error still surfaces",
+        "an error thrown by the callback itself is wrapped, not leaked raw",
+        "an ApplicationError from the callback passes through unchanged",
+        "the service rejects malformed calls before touching the database",
+        "a query is refused when its signal is already aborted",
+        "the service refuses to be constructed without a pool or a context",
+        "shutdown closes the pool once and tolerates being called again"
+      ]
+    },
+    {
+      "path": "server/test/mysqlDatabaseService.test.js",
+      "mode": "100644",
+      "blob": "4389cf950356b987357ba818727d7261cd2fc4f4",
+      "kind": "functional",
+      "cases": [
+        "MySQL database service verifies connectivity during initialization",
+        "MySQL database service rejects an invalid initialization health result",
+        "MySQL database service applies query timeouts and parameterized execution",
+        "MySQL database service commits successful transactions and releases connections",
+        "MySQL database service rolls back failed transactions",
+        "transaction queries automatically inherit the transaction timeout signal",
+        "a commit slower than the deadline is cut off, and no rollback chases it",
+        "a commit that fits inside the deadline still commits normally",
+        "transaction abort destroys a connection with unfinished database work"
+      ]
+    },
+    {
+      "path": "docs/fulfillment_shipping_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "2cf25708ebff602aa7c47309b41e2dd295ce07da",
+      "kind": "support"
+    },
+    {
+      "path": "docs/fulfillment_shipping_management/03_design_spec.md",
+      "mode": "100644",
+      "blob": "50a3b2b6b5aeed4f655868f095e4a0ff92924d78",
+      "kind": "support"
+    },
+    {
+      "path": "docs/fulfillment_shipping_management/08_traceability.json",
+      "mode": "100644",
+      "blob": "025b36cd40774b9dd33a44692597f5766a33790a",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/components/fulfillment/FulfillmentCancelPanel.vue",
+      "mode": "100644",
+      "blob": "b77778a9fd9d934afc2bcf17a3ec9453c4b604f0",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/fulfillment/FulfillmentDetailPage.vue",
+      "mode": "100644",
+      "blob": "eca9838b5064cdc6e24c5c78a545311f25e710e3",
+      "kind": "support"
+    },
+    {
+      "path": "docs/fulfillment_shipping_management/05_development_tasks.md",
+      "mode": "100644",
+      "blob": "8dd94640f0193d13863658bf363006fd7b945e7a",
+      "kind": "support"
+    },
+    {
+      "path": "docs/sales_order_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "aed1e4ef2381eb9449941b2c85fe1c96627c9415",
+      "kind": "support"
+    },
+    {
+      "path": "docs/sales_order_management/03_design_spec.md",
+      "mode": "100644",
+      "blob": "00d1d1896f847d3bc14d609c1a5ec5fc162ab8cb",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/transactionCommitDeadline.test.js",
+      "mode": "100644",
+      "blob": "fe979bbec0c5a847b74da4e3821abb972e3ee4cd",
+      "kind": "functional",
+      "cases": [
+        "a COMMIT that never answers is cut off by the deadline",
+        "a ROLLBACK that never answers is cut off too",
+        "a BEGIN that never answers is cut off as well",
+        "a commit inside the deadline is untouched",
+        "an indeterminate commit is a different error from a clean timeout",
+        "an indeterminate commit is reported with what a human needs to reconcile",
+        "a connection lost during COMMIT is indeterminate even without a timeout",
+        "a commit the server refuses outright is determinate, not indeterminate",
+        "a failed COMMIT is not chased by a ROLLBACK",
+        "no failed transaction ever puts its connection back in the pool",
+        "an operation discarded by an already-aborted signal does not crash the process",
+        "a transaction budget longer than the request budget fails startup",
+        "the check counts the wait for a connection, not just the transaction",
+        "a budget that exactly fills the request timeout is refused",
+        "the shipped defaults leave the transaction inside the request budget"
+      ]
+    },
+    {
+      "path": "server/test/applicationFactory.test.js",
+      "mode": "100644",
+      "blob": "b42a336f1e3fadbc59d7db39dddb9ccab9752a7c",
+      "kind": "functional",
+      "cases": [
+        "application factory validates configuration before creating the MySQL database pool",
+        "application factory shuts down container services when setup fails",
+        "application factory builds a startable and stoppable API with injected resources",
+        "responses that short-circuit the request still carry CORS headers",
+        "the application factory does not itself require the scheduler",
+        "business handlers and auth strategies are auto-discovered from implementations",
+        "application creation fails and cleans up when an eager service cannot initialize",
+        "TC-007 application startup rejects invalid Sales config before creating the database pool"
+      ]
+    },
+    {
+      "path": "server/test/serviceContainer.test.js",
+      "mode": "100644",
+      "blob": "16638636ca4f25f1f948b4585c9a99731a0f9aed",
+      "kind": "functional",
+      "cases": [
+        "service container initializes singleton dependencies once and shuts down in reverse order",
+        "service container rejects missing and circular dependencies",
+        "service discovery finds the built-in public services",
+        "service discovery rejects duplicate service names",
+        "service container rolls initialized services back when startup fails",
+        "request and transient services remain isolated inside service scopes",
+        "service resolution automatically uses the active asynchronous request scope",
+        "singleton services reject request-scoped dependencies",
+        "production modules do not directly construct container-owned public services"
+      ]
+    }
+  ]
+}

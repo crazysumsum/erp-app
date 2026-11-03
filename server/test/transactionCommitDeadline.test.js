@@ -5,7 +5,7 @@ import {
   validateApplicationConfiguration
 } from "../src/framework/configuration/applicationConfiguration.js";
 import { ConfigurationError } from "../src/framework/configuration/ConfigurationError.js";
-import { MySqlDatabaseService } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
+import { MySqlDatabaseService, getTransactionOutcome } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
 import { RequestContextService } from "../src/services/context/RequestContextService.js";
 import { createTestTime, servicesWithTime } from "../test-support/createTestTime.js";
 
@@ -115,17 +115,26 @@ test("a ROLLBACK that never answers is cut off too", async () => {
     }
   });
   const { database } = createDatabase(connection);
+  const businessError = new Error("business failure");
+  let actualTransaction;
 
   await assert.rejects(
     () =>
       withinDeadline(
-        database.withTransaction(async () => {
-          throw new Error("business failure");
+        database.withTransaction(async (transaction) => {
+          actualTransaction = transaction;
+          throw businessError;
         })
       ),
-    (error) => error.code === "DATABASE_TRANSACTION_FAILED"
+    (error) => {
+      assert.equal(error.code, "DATABASE_TRANSACTION_INDETERMINATE");
+      assert.equal(error.cause, businessError);
+      return true;
+    }
   );
 
+  assert.deepEqual(getTransactionOutcome(actualTransaction), { state: "INDETERMINATE" });
+  assert.equal(connection.calls.includes("destroy"), true);
   assert.equal(connection.calls.includes("release"), false);
 });
 

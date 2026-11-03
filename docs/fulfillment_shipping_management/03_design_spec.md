@@ -870,6 +870,8 @@ Create／Update body：
 
 Create不送`version`；Contact相關欄位須同為NULL或同為正整數。Weight與Weight UOM成對；packageCount為正整數。
 
+HD-025（Sam已批准A）：選填`totalWeight`只接受正decimal string，最多14位整數及6位小數，範圍`0.000001`～`99999999999999.999999`；不接受JSON Number、符號、指數、空白、多餘前導0或超精度，不四捨五入。先驗精度再移除小數尾0；DB固定六位小數回讀使用同一canonicalization。單位僅`KG`／`G`，不自動換算；`totalWeight:null`必須配`weightUom:""`。Confirm／Recovery內部意圖沿用canonical已保存重量及單位，公開Confirm body維持eventId/version；generic operation hash不放寬。
+
 Confirm body：`{eventId,version}`。200回`{outcome:"SHIPPED",shipment,inventoryMovementIds,salesOrder}`；202回：
 
 ```json
