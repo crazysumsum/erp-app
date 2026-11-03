@@ -1,5 +1,6 @@
 import { httpClient } from "@/framework/http/HttpClient.js";
 import { ApiError } from "@/framework/http/ApiError.js";
+import { ERROR_CODE_MESSAGES } from "@/framework/http/errorMessages.js";
 
 export const service={name:"shipment"};
 const statuses=["DRAFT","SHIPPING","SHIPPED","CANCELLED","REVERSING","REVERSED"],sorts=["lastBusinessUpdatedAt","createdAt","shippedAt","shipmentDate","shipmentNumber","id"];
@@ -40,9 +41,21 @@ function write(path,input,validate,{signal}={}){
  object(input,["eventId","version","shippingAddressId","shippingAddressVersion","shippingContactId","shippingContactVersion","carrierName","trackingNumber","packageCount","totalWeight","weightUom","notes","reason","idempotencyKey"]);
  const {idempotencyKey,...body}=input;if(idempotencyKey!==undefined&&(typeof idempotencyKey!=="string"||!/^[\x21-\x7e]{1,190}$/u.test(idempotencyKey)))invalid();validate(body);return httpClient.post(path,{idempotent:true,idempotencyKey:idempotencyKey??body.eventId,body,...(signal===undefined?{}:{signal})});
 }
+export function shipmentOriginalReference(eventId,correlationId=null){
+ event(eventId);if(correlationId!==null&&!uuid(correlationId))invalid();return Object.freeze({eventId,correlationId,statusUrl:`/api/v1/fulfillment-operations/by-event/${eventId}`});
+}
 export function shipmentOperationReference(value){
  if(!value||!uuid(value.eventId)||!uuid(value.correlationId)||value.statusUrl!==`/api/v1/fulfillment-operations/by-event/${value.eventId}`)unavailable();
- return Object.freeze({eventId:value.eventId,correlationId:value.correlationId,statusUrl:value.statusUrl});
+ return shipmentOriginalReference(value.eventId,value.correlationId);
+}
+export function shipmentFailure(error){
+ const status=error?.status,code=error?.code,preserveInput=true;
+ if(status===401||status===403||["PERMISSION_STALE","FULFILLMENT_PERMISSION_DENIED"].includes(code))return {message:"登入或操作權限已變更，請重新登入或聯絡管理員。",action:"none",preserveInput};
+ if(["SHIPPING_ADDRESS_CHANGED","SHIPPING_ADDRESS_UNAVAILABLE"].includes(code))return {message:"送貨地址或聯絡資料已變更，輸入仍保留；請重新選擇有效資料並核對。",action:"address",preserveInput};
+ if(["ALLOCATION_CANDIDATE_CHANGED","ALLOCATION_INSUFFICIENT","RESERVATION_CLAIM_CONFLICT","FULFILLMENT_SOURCE_CONFLICT","FULFILLABLE_QUANTITY_CHANGED"].includes(code))return {message:"履約來源或分配資料已變更，輸入仍保留；請返回履約單核對可用操作。",action:"allocation",preserveInput};
+ if(status===202||status>=500||["DATABASE_TRANSACTION_INDETERMINATE","FULFILLMENT_DEPENDENCY_UNAVAILABLE","TIMEOUT","NETWORK_ERROR","CONCURRENT_OPERATION"].includes(code))return {message:"暫時未能確認出貨結果，請保留原操作識別碼並查詢原結果，不要再次提交。",action:"recover",preserveInput};
+ if(status===404)return {message:"找不到可用的出貨資料，請返回列表重新查詢。",action:"none",preserveInput};
+ return {message:Object.hasOwn(ERROR_CODE_MESSAGES,code)?ERROR_CODE_MESSAGES[code]:"出貨操作未能完成，請保留輸入並重新核對。",action:error instanceof TypeError?"correct":status===409?"reload":"none",preserveInput};
 }
 export default {
  listShipments({signal,...query}={}){return httpClient.get("/api/v1/shipments",{params:normalizeShipmentQuery(query),signal}).then(result=>{if(!result||!Array.isArray(result.items)||result.items.length>100||!Number.isSafeInteger(result.total)||result.total<0||!Number.isSafeInteger(result.page)||result.page<1||!Number.isSafeInteger(result.pageSize)||result.pageSize<1||result.pageSize>100||typeof result.hasMore!=="boolean")unavailable();return result;});},
