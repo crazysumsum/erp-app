@@ -1002,7 +1002,7 @@ Phase 4 Reversal, Reporting & Release Evidence
 
 - [ ] Restore後PO、Approval、GR、progress、Movement、Reversal及Audit集合100%對賬。
 - [ ] 代表性PO涵蓋none／batch／batch_expiry、partial、over、Blocked、Archived SKU、expiry override及reversal。
-- [ ] Release evidence包含版本、migrations、permissions、Approval OFF初值、性能、安全、backup／restore、reconciliation及UAT結果；OPEN-006未解決則阻擋Go-Live。
+- [ ] Release evidence包含版本、migrations、permissions、Approval OFF初值、性能、安全、backup／restore、reconciliation及UAT結果；OPEN-006已決定為全新系統上線（HD-006）：release evidence須記錄沒有Purchasing資料遷移，並包含Sam的Go-Live簽核。
 
 **驗證：** 隔離restore rehearsal、reconciliation command及已批准`07_uat_test_cases.md`／UAT執行記錄。
 
@@ -1047,7 +1047,7 @@ Phase 4 Reversal, Reporting & Release Evidence
 | Provider狀態在PO後改變 | 在途貨被錯拒或不安全放行 | 使用history／committed contracts、快照、warning＋reason；Expired／位置等仍fail closed |
 | Partial reversal與generic reversal衝突 | 超量反向或既有功能regression | 專用Purchasing batch reversal及link累計鎖；保留generic full reversal tests |
 | Phase入口提前顯示 | 使用者遇到半成功流程 | capability gate；只在Phase Checkpoint通過後開menu／action |
-| OPEN-006 cutover資料未定 | 無法安全Go-Live | 不阻擋核心開發，但P4-T10及Go-Live必須BLOCKED |
+| OPEN-006（已決定，HD-006） | 全新系統上線，沒有Purchasing資料遷移；Opening Stock由Inventory紀錄導入負責對賬 | 不再阻擋；Go-Live仍須`TASK-044`的release簽核 |
 
 ---
 
@@ -1946,7 +1946,7 @@ Confirmed GR commit後冪等更新Supplier最近供貨日期／soft SKU relation
 ### Acceptance criteria
 - Restore後PO、Approval、GR、progress、Movement、Reversal及Audit集合100%對賬。
 - 代表性PO涵蓋none／batch／batch_expiry、partial、over、Blocked、Archived SKU、expiry override及reversal。
-- Release evidence包含版本、migrations、permissions、Approval OFF初值、性能、安全、backup／restore、reconciliation及UAT結果；OPEN-006未解決則阻擋Go-Live。
+- Release evidence包含版本、migrations、permissions、Approval OFF初值、性能、安全、backup／restore、reconciliation及UAT結果；OPEN-006已決定為全新系統上線（HD-006）：release evidence須記錄沒有Purchasing資料遷移，並包含Sam的Go-Live簽核。
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-041, TASK-043。對應 mandatory 技術測試：TC-012, TC-009。

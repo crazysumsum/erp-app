@@ -22,6 +22,28 @@ Both return `{id, number, status: "DRAFT", version, warnings, replayed}`, where 
 - `server/test/integration/purchasingPurchaseOrderApi.integration.test.js`: 2 cases through the real application, HTTP, JWT, framework idempotency and MySQL. Create returns 201. The same key with the same body replays the stored response; with another body it is `IDEMPOTENCY_CONFLICT`; a mismatched key, a missing key and a client total are refused. Update returns 200, and a stale version is 409 with only `currentVersion`. `purchasing.view` alone is 403 and no token is 401. HTTP writes commit, so the cases delete their POs and masters afterwards. Their operation and audit rows, and the current month's `purchasing_document_sequences` row, remain (those tables refuse DELETE). They use HKD and no Payment Term (TC-001).
 - Mutation sweep, 19 mutants over the three handler files: all RED. The first pass's one survivor was an incomplete mutant that relaxed only half the eventId pattern; the full uppercase mutant is RED.
 
+## HD-016 — handler directories and the document revision
+
+The full suite on the first implementation failed one case that main does not: `server/test/handlerConventions.test.js` "every handler's directory matches its URL prefix". A handler must live in the directory named by the first URL segment after `/api/v1/`. Design §9.3 and the manifest put every Purchasing handler under `handlers/purchasing/`, while §5.2's routes start `/api/v1/purchase-orders/`. The module uses eight prefixes: `purchase-orders`, `purchase-order-approvals`, `purchasing-settings`, `purchasing-audit-logs`, `purchasing-operations`, `purchasing-lookups`, `goods-receipts`, `receiving-lookups`. Boundary checking accepts only manifest paths, so either fix needed a manifest or design edit. Changing or relaxing the convention test was not an option.
+
+Sam's decision, 2026-11-03: "全部按你的建議執行", accepting option A.
+
+- Design §9.3 now places handlers by URL prefix. `handlers/purchasing/` and `handlers/receiving/` keep only shared schemas and service wiring, never a handler class. The manifest adds all eight directories to `source_paths` and `allowed_write_paths` at once, so later tasks need no further manifest edit. URLs are unchanged.
+- The same revision folds the decisions previously deferred to "the next document revision", so the baselines move once:
+  - HD-006 (OPEN-006 decided: greenfield go-live) into the requirement §0 and §18.3, design §0.2 and §15.2, and `TASK-044`.
+  - HD-009 (amounts at the Currency scale) into §2.8.
+  - HD-010 (amount overflow code) into §5.7.
+  - HD-011 (no Purchasing transaction timeout) into §12.1.
+  - HD-012 (charset, composite address FK, defaults, CHECKs) into §4.3–4.6.
+  - HD-013 (Business Master impact checker) into §2.4 and §9.2.
+  - HD-014 (operation, line and sequence triggers) into §4.3, §4.14 and §4.16.
+  - HD-015 (Draft eligibility and provider gaps) into §8.2.
+- The capacity scope map (`.github/scripts/sales-import-capacity.mjs`) does not know the new handler directories. Routine CI is unaffected; a post-UAT capacity dispatch over this diff would stop with "Unmapped change". The file is CI wiring outside this module, so it is recorded here as a post-UAT blocker for the CI owner, not changed.
+
+**Records the revision supersedes.** The requirement, design and plan files and the manifest all changed, so both baselines moved: design `08a08a3d` → `bedf5d1b`, plan `d1c00718` → `7cca891a`. Every approval (APR-001–APR-009) and the design review REV-006 is bound to the old baselines and needs Sam's re-confirmation on the new ones. The originals are kept, not rewritten without a new decision. There are no run-evidence files or observations to strand.
+
+**Cross-module.** Supplier's manifest consumes this module's `03_design_spec.md` as `supplier-consumer-contract`, pinned at `366abb1f…`. That pin now differs from the file (`927ddc66…`), so Supplier's harness reports contract drift until the Supplier owner re-pins it. This module may not edit `docs/supplier_management/`.
+
 ## CI admission
 
 Pending Sam's decision on the two new files.

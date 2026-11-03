@@ -553,6 +553,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task014_po_draft_service.md#hd-015--provider-gaps-and-draft-eligibility"
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "server/test/handlerConventions.test.js requires a handler's directory to equal the URL's first segment after /api/v1/, but design 9.3 and the manifest place every Purchasing handler under server/src/handlers/purchasing/ while 5.2 routes are /api/v1/purchase-orders/... (eight prefixes in all). Move handlers into URL-prefix directories with a manifest and design revision (folding HD-006 and HD-009..HD-015 into the same revision so the baselines move once), or change the URLs to /api/v1/purchasing/...?",
+      "affected_ids": [
+        "TASK-015",
+        "DES-006",
+        "DES-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#hd-016--handler-directories-and-the-document-revision"
     }
   ],
   "external_actions": [
