@@ -227,6 +227,7 @@ integrationTest("update 完整取代 Lines：保留 ID、重排、刪除、新�
     const f = await masters(tx), po = service(db, tx);
     const created = await po.create({ claims: f.claims, input: body(f) });
     const [boxLine] = await lines(tx, created.id);
+    await tx.query("UPDATE purchase_order_lines SET created_at = 1 WHERE id = ?", [boxLine.id]);
     const input = body(f, { version: 1, orderingAddressId: null, paymentTermId: null, defaultReceivingWarehouseId: null, expectedDeliveryDate: null,
       notes: "第二版", lines: [
         { skuId: f.skuB, purchaseSkuUomId: f.eachB, orderedQuantity: "2", unitPrice: "1.25" },
@@ -249,6 +250,7 @@ integrationTest("update 完整取代 Lines：保留 ID、重排、刪除、新�
     assert.ok(Number(rows[0].id) > Number(boxLine.id), "新 Line 有新 ID");
     assert.equal(Number(rows[1].id), Number(boxLine.id));
     assert.equal(rows[1].version, 2);
+    assert.equal(rows[1].created_at, 1, "保留 Line 嘅建立時間");
     assert.equal(rows[1].uom_to_base_factor_snapshot, 1);
     assert.equal(Number(rows[1].ordered_base_quantity), 5);
     assert.deepEqual((await audits(tx, f.actorId)).at(-1).detail, { version: 2, lineCount: 2, totalAmount: "17.50", currencyCode: f.currency });
@@ -324,10 +326,15 @@ integrationTest("新揀嘅 Supplier、SKU、UOM、地址、倉、Buyer 同 Curre
     await tx.query("UPDATE currencies SET status = 'INACTIVE' WHERE code = ?", [f.currency]);
     await assert.rejects(po.create({ claims: f.claims, input: body(f, { orderingAddressId: null }) }), coded("CURRENCY_NOT_ACTIVE"));
     await tx.query("UPDATE currencies SET status = 'ACTIVE' WHERE code = ?", [f.currency]);
+    // 快照上限 2048 bytes（§4.5）：三行 190 個 4-byte 字。
+    await tx.query("UPDATE supplier_addresses SET address_line1 = ?, address_line2 = ?, address_line3 = ? WHERE id = ?",
+      ["𠀀".repeat(190), "𠀀".repeat(190), "𠀀".repeat(190), f.primaryAddress]);
+    await assert.rejects(po.create({ claims: f.claims, input: body(f) }), coded("PURCHASING_INPUT_INVALID", { field: "orderingAddressId" }));
+    await tx.query("UPDATE supplier_addresses SET address_line1 = '1 Probe Road', address_line2 = '', address_line3 = '' WHERE id = ?", [f.primaryAddress]);
 
     const [[{ count }]] = await tx.query("SELECT COUNT(*) count FROM purchase_orders WHERE created_by = ?", [f.actorId]);
     assert.equal(Number(count), 0);
-    assert.equal((await audits(tx, f.actorId)).length, cases.length + 2);
+    assert.equal((await audits(tx, f.actorId)).length, cases.length + 3);
     // 冇 relation 嘅 Active Supplier 照揀得（FR-PO-002、AC-003）。
     const created = await po.create({ claims: f.claims, input: body(f, { supplierId: f.supplierB, orderingAddressId: null }) });
     assert.equal(Number((await order(tx, created.id)).supplier_id), f.supplierB);
@@ -384,6 +391,10 @@ integrationTest("Audit 失敗令成單 rollback；權限過時被拒；REJECTED 
     assert.deepEqual(await operationsOf(tx, f.actorId), []);
     const [[sequenceAfter]] = await tx.query("SELECT COALESCE(MAX(next_value), 0) next FROM purchasing_document_sequences WHERE document_type = 'PO' AND `year_month` = '209911'");
     assert.deepEqual(sequenceAfter, sequenceBefore);
+    // 5xx 嘅 ApplicationError（依賴未準備好）都唔係「拒絕」。
+    const unready = service(db, tx);
+    unready.suppliers.businessMaster = null;
+    await assert.rejects(unready.create({ claims: f.claims, input: body(f) }), coded("BUSINESS_MASTER_NOT_READY"));
     assert.deepEqual(await audits(tx, f.actorId), [], "非 4xx 失敗唔當 REJECTED");
 
     const po = service(db, tx);
