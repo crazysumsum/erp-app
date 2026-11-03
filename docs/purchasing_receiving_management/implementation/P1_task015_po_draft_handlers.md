@@ -45,6 +45,23 @@ Sam's decision, 2026-11-03: "全部按你的建議執行", accepting option A.
 
 **Cross-module.** Supplier's manifest consumes this module's `03_design_spec.md` as `supplier-consumer-contract`, pinned at `366abb1f…`. That pin now differs from the file (`927ddc66…`), so Supplier's harness reports contract drift until the Supplier owner re-pins it. This module may not edit `docs/supplier_management/`.
 
+## REV-007 and re-confirmation
+
+Sam's decision, 2026-11-03: "全部批准，我作為project owner 批準你幫我發digest". This covers the four requests made together:
+
+1. **REV-007**: the document revision of commit `fbcbebeb`, reviewed and approved against design baseline `bedf5d1b…` with no open findings. It supersedes REV-006 for the current baseline; REV-006 is kept.
+2. **APR-001 to APR-009** are re-confirmed on design `bedf5d1b…` and plan `7cca891a…`. Each keeps its original decision and history; a "Re-confirmed on 2026-11-03 for TASK-015 HD-016" line records the move, as in the earlier passes.
+3. **CI admission** of receipt `purchasing-task015` (below).
+4. **A one-time project-owner authorization** for the agent to publish that receipt's digest.
+
 ## CI admission
 
-Pending Sam's decision on the two new files.
+Proposal of 2026-11-03, approved by Sam as above. The new receipt `.github/test-admissions/purchasing-task015.json` pins:
+
+- **The two new files**, 9 functional cases:
+  - `purchaseOrderHandlers.test.js`, 7 cases, no database.
+  - `purchasingPurchaseOrderApi.integration.test.js`, 2 cases through the real application, which commit and clean up as described under Verification.
+- **The eight files and the config support pin of `purchasing-task012`**, re-pinned unchanged. The HD-016 revision changed the manifest, design and task documents those tests read, so the old receipt no longer matches. The workload is unchanged.
+- **Support pins** for the revised `00_module_manifest.json`, `03_design_spec.md` and `05_development_tasks.md`.
+
+It runs routinely on every PR and main push in the existing server jobs, with no new job and no capacity, adding about 1.8 s locally (CI not measured, estimated under 3 s).
