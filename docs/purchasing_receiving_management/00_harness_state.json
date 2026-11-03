@@ -640,6 +640,14 @@
       "idempotency_key": "purchasing-hd006-pr322-merge-20261103",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 89c5a06757c1de18fd3ab5750f935be17f3f714a, verified as an ancestor of origin/main; admitted CI run 41568902471 completed success on the dispatched merge of head b65b858f3bedbdb885672566e069711bf7704f5b with origin/main ab320dc8 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
+    },
+    {
+      "id": "EXT-013",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/324 -> main",
+      "idempotency_key": "purchasing-task013-pr324-merge-20261103",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit cb685ce30efa433fb7a85e668e37175b7cd19c05, verified as an ancestor of origin/main; admitted CI run 41573394805 completed success on the dispatched merge of head 288a6c048fe8e83a170f4b50f6d2d7b7f866f59f with origin/main 89c5a067 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
     }
   ],
   "evidence_files": [],
