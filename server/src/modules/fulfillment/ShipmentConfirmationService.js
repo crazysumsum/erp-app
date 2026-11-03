@@ -20,7 +20,7 @@ import { getTransactionOutcome } from "../../services/mysqldatabase/MySqlDatabas
 
 const fail=code=>{throw fulfillmentError(code);};
 const sourceColumns="id,shipment_number,fulfillment_id,sales_order_id,customer_id,warehouse_id,status,version,line_count,shipping_address_id,shipping_address_version,shipping_contact_id,shipping_contact_version,carrier_name,tracking_number,package_count,total_weight,weight_uom,notes,confirmation_event_id";
-function command(input){
+export function normalizeShipmentConfirmationCommand(input){
  if(!input||Object.getPrototypeOf(input)!==Object.prototype||Object.getOwnPropertySymbols(input).length||Object.keys(input).sort().join(",")!=="eventId,version"||typeof input.eventId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(input.eventId)||!Number.isSafeInteger(input.version)||input.version<1||input.version>4294967295)fail("FULFILLMENT_INPUT_INVALID");
  return Object.freeze({...input});
 }
@@ -89,7 +89,7 @@ export class ShipmentConfirmationService {
  }
  async startConfirmation(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
-  const intent=command(input);
+  const intent=normalizeShipmentConfirmationCommand(input);
   return this.transactions.withTransaction(async tx=>{
    const replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,{shipmentId,...intent});if(replay)return terminal(replay);
    const [[before]]=await tx.query(`SELECT ${sourceColumns} FROM shipments WHERE id=?`,[shipmentId]);if(!before)fail("SHIPMENT_NOT_FOUND");
@@ -125,6 +125,10 @@ export class ShipmentConfirmationService {
    await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'SHIP',?,?,?,?,?,?)",[shipmentId,intent.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({shipmentId,fulfillmentId:String(root.id),status:"SHIPPING",version:intent.version+1}),at]);
    const output=Object.freeze(pending(operation));this.#pendingRequests.set(output,request);this.#startedActors.set(output,freezeShipmentIntent({id:actor.id,username:actor.username,roles:[...actor.roles],permissions:[...actor.permissions]}));this.#leaseBoundaries.set(output,Object.freeze({tx,request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:performance.now()}));return output;
   });
+ }
+ ownsStartedConfirmation(started){
+  const boundary=this.#leaseBoundaries.get(started);
+  return this.#pendingRequests.has(started)&&!!boundary&&getTransactionOutcome(boundary.tx)?.state==="COMMITTED";
  }
  async completeConfirmation(started,{signal}={}){
   const request=this.#pendingRequests.get(started);if(!request)fail("FULFILLMENT_SOURCE_CONFLICT");

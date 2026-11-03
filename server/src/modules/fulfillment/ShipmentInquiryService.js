@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { FulfillmentTransactionService } from "./FulfillmentTransactionService.js";
+import { FulfillmentInquiryService } from "./FulfillmentInquiryService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
@@ -71,11 +72,28 @@ export class ShipmentInquiryService {
  }
  detail(id,input={}){
   identifier(id);const options=shipmentDetailQuery(input);
-  return this.#read(async tx=>{
+  return this.#read(tx=>this.#detail(tx,id,options));
+ }
+ async #detail(tx,id,options){
    const actor=await this.#actor(tx),{row,root,lines}=await this.#family(tx,id),[issues]=await tx.query(`SELECT ${issueColumns} FROM shipment_issue_details WHERE shipment_id=? AND id>? ORDER BY id LIMIT 101`,[id,options.issueAfterId]),[history]=await tx.query("SELECT * FROM shipment_status_history WHERE shipment_id=? AND sequence_no<? ORDER BY sequence_no DESC LIMIT 101",[id,options.historyBeforeSequence]);
    const [[pending]]=await tx.query("SELECT EXISTS(SELECT 1 FROM fulfillment_operation_requests WHERE target_type='SHIPMENT' AND target_id=? AND status='IN_PROGRESS') AS active",[id]),[[reversal]]=await tx.query("SELECT id,reversal_number,status FROM shipment_reversals WHERE shipment_id=? ORDER BY id DESC LIMIT 1",[id]);
    const allowedActions=[];if(row.status==="DRAFT"&&root.status==="PICKED"&&String(root.active_shipment_id)===id&&!pending.active&&actor.permissions.includes("fulfillment.operation"))allowedActions.push("update","cancel");if(["SHIPPED","REVERSED"].includes(row.status))allowedActions.push("printDeliveryNote","printPackingList");
    return {...basic(row,root),...await this.#selection(tx,row),lines,issues:{items:issues.slice(0,100).map(issueProjection),hasMore:issues.length>100,nextCursor:issues.length>100?identifier(issues[99].id):null},history:{items:history.slice(0,100).map(item=>({sequence:Number(item.sequence_no),fromStatus:item.from_status,toStatus:item.to_status,action:item.action,reason:item.reason,eventId:item.event_id,versionAfter:Number(item.version_after),actorLabel:item.actor_label,occurredAt:Number(item.occurred_at)})),hasMore:history.length>100,nextCursor:history.length>100?Number(history[99].sequence_no):null},reversal:reversal?{id:identifier(reversal.id),number:reversal.reversal_number,status:reversal.status}:null,allowedActions};
+ }
+ confirmationResult(terminal){
+  const id=identifier(terminal?.result?.id);
+  return this.#read(async tx=>{
+   const actor=await this.#actor(tx);if(!actor.permissions.includes("fulfillment.operation"))throw fulfillmentError("FULFILLMENT_PERMISSION_DENIED");
+   const shipment=await this.#detail(tx,id,shipmentDetailQuery({}));
+   if(terminal.outcome!=="SHIPPED"||terminal.result.status!=="SHIPPED"||!historic(shipment)||shipment.confirmationEventId!==terminal.eventId||shipment.version<terminal.result.version)unavailable();
+   const {salesOrder}=await new FulfillmentInquiryService({database:this.database}).detailInTransaction(tx,shipment.fulfillmentId);
+   if(salesOrder.id!==shipment.salesOrder.id)unavailable();
+   const [issues]=await tx.query("SELECT shipment_line_id,inventory_movement_id,issued_base_quantity FROM shipment_issue_details WHERE shipment_id=? ORDER BY id LIMIT 5001",[id]);
+   if(!issues.length||issues.length>5000)unavailable();
+   const totals=new Map(shipment.lines.map(line=>[line.id,0n])),inventoryMovementIds=[];
+   for(const issue of issues){const line=identifier(issue.shipment_line_id);if(!totals.has(line))unavailable();totals.set(line,totals.get(line)+fulfillmentInteger(String(issue.issued_base_quantity)));inventoryMovementIds.push(identifier(issue.inventory_movement_id));}
+   if(new Set(inventoryMovementIds).size!==issues.length||shipment.lines.some(line=>totals.get(line.id)!==BigInt(line.shippedBaseQuantity)))unavailable();
+   return {outcome:"SHIPPED",shipment,inventoryMovementIds,salesOrder};
   });
  }
  deliveryNote(id){
