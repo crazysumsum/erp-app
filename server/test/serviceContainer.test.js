@@ -226,6 +226,8 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: []
     },
     { name: "fulfillmentOpenMatter", lifecycle: "singleton", dependencies: ["mysqldatabase"] },
+    { name: "job.fulfillmentConfirmationRecovery", lifecycle: "singleton", dependencies: ["scheduler", "mysqldatabase", "time", "logging"] },
+    { name: "fulfillment.shipmentConfirmation", lifecycle: "singleton", dependencies: ["mysqldatabase", "time", "logging"] },
     {
       // 共享 store 需要注入 mysqldatabase——那正是它必須是 service 的原因。
       name: "idempotency",
