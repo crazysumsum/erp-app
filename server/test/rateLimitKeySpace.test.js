@@ -81,6 +81,29 @@ test("hitting the ceiling is reported, because the guarantee no longer holds", a
   assert.equal(exhausted.at(-1).evictedKeys, 5);
 });
 
+test("eviction samples only the window after its random start", async (t) => {
+  // 起點由 Math.random 決定；固定佢，先每次都行到「跳過起點之前嘅 key」嗰段，
+  // 唔再靠運氣達到 coverage floor。20 個 key、取樣 8 個：起點 = floor(0.999 × 12) = 11。
+  t.mock.method(Math, "random", () => 0.999);
+  const { store } = createStore({ maxTrackedKeys: 20 });
+
+  for (let i = 0; i < 20; i += 1) {
+    await store.consume(`key-${i}`, OPTIONS);
+  }
+  // 取樣窗 key-11～key-18 入面，只有 key-15 仲係最多 token；key-0～key-10 同佢一樣多，
+  // 但喺起點之前，唔應該被抽中。
+  for (let i = 11; i < 20; i += 1) {
+    if (i !== 15) await store.consume(`key-${i}`, OPTIONS);
+  }
+
+  await store.consume("incoming", OPTIONS);
+
+  assert.equal(store.evictedKeys, 1);
+  assert.equal(store.buckets.has("key-15"), false);
+  for (let i = 0; i < 11; i += 1) assert.equal(store.buckets.has(`key-${i}`), true, `key-${i}`);
+  assert.equal(store.buckets.has("incoming"), true);
+});
+
 test("an ordinary load never evicts anything", async () => {
   const { store, exhausted } = createStore({ maxTrackedKeys: 1000 });
 
