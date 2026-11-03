@@ -30,7 +30,7 @@
 | OPEN-004 | PO為`PO-YYYYMM-000001`，GR為`GR-YYYYMM-000001`；各文件類型每月重置，首次保存Draft時產生，取消後亦不可重用。 | 需要transaction-safe monthly sequence table。 |
 | OPEN-005 | 本期只有A4 browser print；使用者可用瀏覽器另存PDF。系統不產生或保存PDF artifact。 | 不新增PDF library、檔案表、電郵或範本引擎。 |
 
-OPEN-006屬上線資料及責任人輸入，不阻擋核心設計或開發，但阻擋正式Go-Live。
+OPEN-006已由Sam於2026-11-03決定按全新系統上線（HD-006）：只導入Customer、Supplier、Item及Inventory紀錄，不導入任何Purchasing交易歷史，所以本模組沒有資料遷移或舊收貨量對賬；Go-Live簽核在`TASK-044`的`RELEASE_APPROVAL`記錄。
 
 ### 0.3 核心架構決策
 
@@ -283,6 +283,10 @@ InventoryLookupService.findOperationsBySource(transaction, query)
 
 `reversePurchaseReceiptBatchInTransaction()`支援一或多個Receipt Details的部分反向；鎖原Movement及所有既有reversal links，確保累計反向量不超原量。Inventory generic reversal仍可保留「整組完整反向」語意，Purchasing不得以generic endpoint模擬部分反向。
 
+#### Business Master consumer
+
+Business Master在Currency／Payment Term變更前詢問每個consumer的影響。`purchase_orders`建立後，Purchasing以`PurchasingBusinessMasterImpactChecker`取代placeholder checker（HD-013），由`businessMasterFactory.js`登記：DRAFT、PENDING_APPROVAL、CONFIRMED、PARTIALLY_RECEIVED算進行中使用，FULLY_RECEIVED、CLOSED、CANCELLED算歷史；未分類status、異常count或無效subject一律fail closed；table不存在時回`NOT_INSTALLED`。
+
 ### 2.5 寫入交易骨架
 
 ```text
@@ -336,7 +340,7 @@ COMMIT
 - `unitPrice`為0～`999999999999999.9999`的decimal string，最多4位小數，DB為`DECIMAL(19,4)`。
 - Currency `decimal_places`支援0～4；確認PO時保存`currency_decimal_places_snapshot`。
 - `lineAmount = roundHalfUp(orderedQuantity × unitPrice, currencyDecimalPlaces)`；先逐Line round，再加總得到Subtotal／Total。
-- Amount DB欄位用`DECIMAL(25,4)`；API一律回固定scale decimal string，CSV及print使用同一formatter。
+- Amount DB欄位用`DECIMAL(25,4)`；API一律回Currency小數位的固定scale decimal string（HD-009：HKD `376.50`、JPY `377`，不是儲存用的`376.5000`），CSV及print使用同一formatter。
 - 不使用`Number`乘除金額，不以browser結果作正式Total。`moneyMath.js`以decimal parser＋BigInt scaled arithmetic實作並有邊界unit tests。
 - GR保存PO Line的Unit Price／Line Amount只作read-only snapshot projection；Inventory command完全不帶價格或成本。
 
@@ -495,7 +499,7 @@ purchasing_audit_logs ─────────── logical immutable audit 
 | `next_value` | INT UNSIGNED | NOT NULL／1 | 下一個可配置值；最大999999。 |
 | `updated_at` | BIGINT UNSIGNED | NOT NULL | 最近分配時間。 |
 
-Primary key為`(document_type,year_month)`。分配時以`INSERT ... ON DUPLICATE KEY UPDATE document_type=VALUES(document_type)`確保row存在，再`SELECT ... FOR UPDATE`讀current value及遞增；PO／GR insert與sequence update同transaction。Rollback可令未commit號碼再次可用，但任何已commit Draft的號碼即使其後Cancelled也不可重用。
+Primary key為`(document_type,year_month)`。分配時以`INSERT ... ON DUPLICATE KEY UPDATE document_type=VALUES(document_type)`確保row存在，再`SELECT ... FOR UPDATE`讀current value及遞增；PO／GR insert與sequence update同transaction。Rollback可令未commit號碼再次可用，但任何已commit Draft的號碼即使其後Cancelled也不可重用。CHECK（HD-012）：type `PO`／`GR`、month `YYYYMM`（01～12）、`next_value` 1～1,000,000（1,000,000代表該月已用盡）；trigger令`next_value`只可不變或遞增並拒絕DELETE（HD-014）。
 
 ### 4.4 `purchasing_settings`
 
@@ -508,7 +512,7 @@ Primary key為`(document_type,year_month)`。分配時以`INSERT ... ON DUPLICAT
 | `updated_by` | BIGINT UNSIGNED | NULL／FK users SET NULL | 最後修改人。 |
 | `updated_by_label` | VARCHAR(190) | NOT NULL | Actor snapshot。 |
 
-Migration只在row不存在時insert預設值，不以`INSERT IGNORE`吞掉其他錯誤。未知setting fields在API boundary被拒絕；歷史由`purchasing_audit_logs`查詢。
+Migration只在row不存在時insert預設值，不以`INSERT IGNORE`吞掉其他錯誤。未知setting fields在API boundary被拒絕；歷史由`purchasing_audit_logs`查詢。CHECK：singleton `id = 1`、flag 0／1（HD-012）。
 
 ### 4.5 `purchase_orders`
 
@@ -521,9 +525,9 @@ Migration只在row不存在時insert預設值，不以`INSERT IGNORE`吞掉其�
 | `supplier_id` | BIGINT UNSIGNED | NOT NULL／FK suppliers RESTRICT | 正式Supplier。 |
 | `supplier_code_snapshot` | VARCHAR(64) | NOT NULL | 確認時快照；Draft亦保存最近選擇值。 |
 | `supplier_name_snapshot` | VARCHAR(190) | NOT NULL | 歷史顯示。 |
-| `ordering_address_id` | BIGINT UNSIGNED | NULL／FK supplier_addresses RESTRICT | 選用地址。 |
+| `ordering_address_id` | BIGINT UNSIGNED | NULL／composite FK `(ordering_address_id,supplier_id)`→`supplier_addresses(id,supplier_id)` RESTRICT | 選用地址；composite FK令PO不能使用另一Supplier的地址，NULL不檢查（HD-012）。 |
 | `ordering_address_snapshot` | JSON | NULL | 白名單地址行／國家／電話，上限2048 bytes。 |
-| `currency_code` | CHAR(3) | NOT NULL／FK currencies RESTRICT | PO Currency。 |
+| `currency_code` | CHAR(3) ascii_bin | NOT NULL／FK currencies RESTRICT | PO Currency；字元集與`currencies.code`相同，否則FK建立不到（HD-012）。 |
 | `currency_name_snapshot` | VARCHAR(100) | NOT NULL | 顯示快照。 |
 | `currency_decimal_places_snapshot` | TINYINT UNSIGNED | NOT NULL | 0～4，金額round基準。 |
 | `payment_term_id` | BIGINT UNSIGNED | NULL／FK payment_terms RESTRICT | 選填。 |
@@ -556,6 +560,7 @@ Indexes／constraints：
 - `INDEX idx_po_buyer(buyer_id,status,order_date,id)`、`idx_po_currency(currency_code,status,id)`。
 - `INDEX idx_po_delivery(status,expected_delivery_date,id)`、`idx_po_outstanding(has_outstanding,status,expected_delivery_date,id)`。
 - `po_number`格式由service驗證；sequence table及unique keys處理競態。
+- CHECK（HD-012）：`po_number`與`document_year_month`／`sequence_no`一致、`sequence_no` 1～999999、§3.2七個status、Currency小數位0～4、金額≥0、flags 0／1。代碼欄（`po_number`、`document_year_month`、`status`）用`ascii_bin`，令CHECK分大小寫。
 
 ### 4.6 `purchase_order_lines`
 
@@ -587,7 +592,7 @@ Indexes／constraints：
 | `reversed_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 成功Reversal合計。 |
 | `net_received_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | gross－reversed projection。 |
 | `closed_remaining_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 人工結束未收量。 |
-| `has_outstanding`,`is_over_received` | TINYINT(1) | NOT NULL | 列表projection。 |
+| `has_outstanding`,`is_over_received` | TINYINT(1) | NOT NULL／1、0 | 列表projection（預設值HD-012）。 |
 | `close_reason` | VARCHAR(500) | NOT NULL／`''` | 關閉時原因。 |
 | `closed_at`,`closed_by` | BIGINT UNSIGNED | NULL／actor FK SET NULL | Line close資料。 |
 | `version` | INT UNSIGNED | NOT NULL／1 | Draft edit及progress CAS。 |
@@ -600,6 +605,7 @@ Indexes／constraints：
 - `INDEX idx_po_lines_sku(sku_id,purchase_order_id,id)`及`idx_po_lines_outstanding(purchase_order_id,has_outstanding,id)`。
 - Composite FK `(purchase_sku_uom_id,sku_id)`→`item_sku_uoms(id,sku_id)`，確保UOM ownership。
 - `gross/reversed/net/closed`只由Lifecycle／Posting／Reversal service更新；client不可輸入。
+- CHECK（HD-012）：line number 1～100、tracking `none`／`batch`／`batch_expiry`、factor 1～1,000,000、quantities >0、price及amount ≥0、`gross_received = net_received + reversed`、flags 0／1；`tracking_policy_snapshot`用`ascii_bin`。
 
 ### 4.7 `purchase_order_approvals`
 
@@ -813,7 +819,7 @@ Inventory provider v1保留既有`inventory_movements.reversal_of_movement_id` u
 | `request_id`,`correlation_id` | VARCHAR(64) | NOT NULL／`''` | 追蹤。 |
 | `created_at` | BIGINT UNSIGNED | NOT NULL | Claim時間。 |
 
-`UNIQUE(source_document_type,source_document_id,source_line_id,event_id)`是永久冪等核心；`command_type`納入hash但不放unique key，防同一event換command產生第二個效果。另設`INDEX(event_id,id)`及`INDEX(source_document_type,source_document_id,id)`。Domain operation與business effect同transaction，不存在永久IN_PROGRESS row；至少保留7年。
+`UNIQUE(source_document_type,source_document_id,source_line_id,event_id)`是永久冪等核心；`command_type`納入hash但不放unique key，防同一event換command產生第二個效果。另設`INDEX(event_id,id)`及`INDEX(source_document_type,source_document_id,id)`。Domain operation與business effect同transaction，不存在永久IN_PROGRESS row；至少保留7年。Trigger（HD-014）拒絕DELETE；command、source、event、hash、actor及created_at建立後不可改；result只可由未完成寫一次成完成，之後凍結。CHECK：source type allowlist、細楷RFC 9562 `event_id`、64-hex `request_hash`、完成時才有result、`result_summary` ≤ 8192 bytes。
 
 ### 4.15 `purchasing_audit_logs`
 
@@ -845,7 +851,8 @@ Migration建立並用真MySQL測試以下保護：
 - `purchase_order_status_history`、`goods_receipt_reversals`、`goods_receipt_reversal_details`及`purchasing_audit_logs`拒絕UPDATE／DELETE。
 - `purchase_order_approvals`建立後拒絕改snapshot、hash、PO版本、requester及assigned approver；只允許合法lifecycle columns更新。
 - `purchase_orders`離開DRAFT後拒絕改Supplier、Currency、Payment Term、dates、Warehouse、Buyer、reference、notes及金額；只允許合法status、progress flags、version及lifecycle actor／time更新。
-- `purchase_order_lines`在parent非DRAFT時拒絕改SKU、UOM、quantity、price、dates、notes及snapshots，只允許Posting／Reversal／Close projections。
+- `purchase_order_lines`在parent非DRAFT時拒絕改SKU、UOM、quantity、price、dates、notes及snapshots，只允許Posting／Reversal／Close projections；亦拒絕新增、刪除或把Line移到非DRAFT的PO，否則刪除再新增會繞過保護（HD-014）。Confirm時service必須先寫好Line快照，才把header切出DRAFT。
+- `purchasing_operation_requests`的身份及結果不可變（§4.14）；`purchasing_document_sequences`只可前進並拒絕DELETE（§4.3）（HD-014）。
 - `goods_receipts`在CONFIRMED後拒絕改PO、Supplier、business date、delivery note、notes及confirmation result；只允許reversal status／quantity projection。
 - `goods_receipt_lines`在parent Confirmed後全部凍結；Reversal只更新原Detail、GR及PO projections，不回寫收貨當時的Line evidence。
 - `goods_receipt_details`在parent CONFIRMED後拒絕改physical facts或DELETE，只允許累計reversed quantity。
@@ -1074,6 +1081,7 @@ GR detail至少回：
 | 400 | `PURCHASING_INPUT_INVALID` | AJV schema、未知欄位、長度或格式。 |
 | 400 | `PURCHASING_QUANTITY_INVALID`／`UOM_CONVERSION_INVALID` | 0／負數／scale／非整數Base／超上限。 |
 | 400 | `UNIT_PRICE_INVALID`／`ZERO_PRICE_REASON_REQUIRED` | Price scale／負值／零價缺原因。 |
+| 400 | `PURCHASING_INPUT_INVALID`（`field`為`lineAmount`／`totalAmount`） | 數量及單價各自合法，但Line Amount或PO Total超出`DECIMAL(25,4)`（HD-010）。 |
 | 404 | `PURCHASE_ORDER_NOT_FOUND`／`GOODS_RECEIPT_NOT_FOUND` | 不存在或owner不符。 |
 | 409 | `PO_STATE_CONFLICT`／`GR_STATE_CONFLICT` | 狀態不允許命令。 |
 | 409 | `VERSION_CONFLICT` | Stale version。 |
@@ -1298,7 +1306,11 @@ Submit前顯示Supplier、Line數、總額、Currency、交期、零價及缺Pay
 - Supplier Relation只帶入建議值，不阻止沒有relation的Active Supplier。
 - Purchase UOM必須屬SKU；factor server讀取。Decimal quantity乘factor後必須整數Base。
 - SKU必須`purpose:"purchase"`可用、`inventoryTracked=true`且tracking不為serial，否則新PO不可確認；Draft可保存暫時未完整資料，但submit完整重驗。
-- Draft save可容許Supplier／SKU在載入後剛失效，response標warning；submit／approve必須fail closed。
+- Draft save資格（HD-015 1B）：新選擇（create、更換的Supplier、新Line、更換SKU或Purchase UOM的Line）必須當下合格；Update時未更換、但之後才失效的Supplier或Line照存並回warning（`SUPPLIER_NOT_PURCHASABLE`；`SKU_NOT_PURCHASABLE`＋`lineNumber`）。Serial一律拒絕，因為Line快照不能保存。Submit／approve必須fail closed。
+- Supplier provider只提供主要訂購地址（HD-015 2C）：`orderingAddressId`只接受null或該地址；`supplier_sku_ref_id`留NULL、`supplier_item_code_snapshot`留空，待Supplier owner提供transaction內讀取指定地址及`supplier_sku_refs`的方法。已失效但未更換的Supplier保留原地址快照，不可選新地址。
+- Warehouse及Buyer沒有provider（HD-015 3A），於transaction內唯讀：`inventory_warehouses`要求`status='ACTIVE'`並`LOCK IN SHARE MODE`；`users`要求`status='active'`，Buyer label為display name，否則username。
+- SKU／UOM以transaction connection建立的`ItemLookupService`批量讀取（HD-015 4），不另借連線；這是snapshot讀取，submit須另行決定是否需要locking read。
+- 4xx拒絕以獨立短transaction寫REJECTED audit（§4.15）；schema形狀錯誤在handler以`PURCHASING_INPUT_INVALID`拒絕，不進service。
 - 金額用`moneyMath`計算；client amount被schema拒絕。
 - Update先鎖PO並CAS version，再完整compare children；任何child ID不屬PO回404。
 - Create、copy及update都claim event。Copy只複製仍合法的editable values；新編號、新IDs、新version，無approval／receipt歷史。
@@ -1428,6 +1440,7 @@ server/src/modules/purchasing/
   PurchasingSequenceService.js
   PurchasingOperationService.js
   PurchasingAuditService.js
+  PurchasingBusinessMasterImpactChecker.js
   PurchasingSettingsService.js
   PurchaseOrderService.js
   PurchaseApprovalService.js
@@ -1444,25 +1457,33 @@ server/src/modules/purchasing/
 
 ### 9.3 新增Handlers與schemas
 
+Handler所在目錄必須等於URL `/api/v1/`之後的第一段（`server/test/handlerConventions.test.js`）。所以handler按URL前綴分目錄；`purchasing/`及`receiving/`只放共用schema及service組裝，不放handler class（HD-016）。
+
 ```text
-server/src/handlers/purchasing/
-  purchasingSchemas.js
+server/src/handlers/purchasing/            共用：purchasingSchemas.js
+server/src/handlers/purchase-orders/
   listPurchaseOrdersHandler.js
   getPurchaseOrderHandler.js
   createPurchaseOrderHandler.js
   updatePurchaseOrderHandler.js
   copyPurchaseOrderHandler.js
-  purchaseOrderApprovalHandlers.js
+  purchaseOrderApprovalHandlers.js        /purchase-orders/:id/approval/*
   purchaseOrderLifecycleHandlers.js
   listOutstandingPurchaseOrdersHandler.js
-  purchasingExportHandlers.js
+  purchasingExportHandlers.js             /purchase-orders/export、/purchase-orders/outstanding/export
+server/src/handlers/purchase-order-approvals/
+  listMyPurchaseOrderApprovalsHandler.js
+server/src/handlers/purchasing-settings/
   purchasingSettingsHandlers.js
+server/src/handlers/purchasing-audit-logs/
   purchasingAuditHandler.js
+server/src/handlers/purchasing-operations/
   purchasingOperationLookupHandler.js
+server/src/handlers/purchasing-lookups/
   purchasingLookupHandlers.js
 
-server/src/handlers/receiving/
-  receivingSchemas.js
+server/src/handlers/receiving/             共用：receivingSchemas.js
+server/src/handlers/goods-receipts/
   listGoodsReceiptsHandler.js
   getGoodsReceiptHandler.js
   createGoodsReceiptHandler.js
@@ -1471,6 +1492,7 @@ server/src/handlers/receiving/
   confirmGoodsReceiptHandler.js
   reverseGoodsReceiptHandler.js
   receivingExportHandler.js
+server/src/handlers/receiving-lookups/
   receivingLookupHandlers.js
 ```
 
@@ -1722,12 +1744,11 @@ const purchasingConfig = {
   exportMaxRows: 50000,
   exportTimeoutMs: 120000,
   approvalSnapshotMaxBytes: 65536,
-  auditDetailMaxBytes: 8192,
-  transactionTimeoutMs: 30000
+  auditDetailMaxBytes: 8192
 };
 ```
 
-PO／GR format、status、permissions、reason rules及7-year retention是domain constants，不用環境變數任意覆寫。Config normalization在startup驗證正整數、上下限及transaction timeout與route timeout關係，錯誤則fail startup。
+PO／GR format、status、permissions、reason rules及7-year retention是domain constants，不用環境變數任意覆寫。Config normalization在startup驗證正整數及上下限，錯誤則fail startup。本模組沒有自己的transaction timeout（HD-011）：HTTP transaction使用`database.transactionTimeoutMs`，由既有的`acquireTimeoutMs + transactionTimeoutMs < requestTimeoutMs`跨section檢查保護；設定`transactionTimeoutMs`會被當作不支援的設定拒絕。
 
 ### 12.2 Audit action allowlist
 
@@ -1911,7 +1932,7 @@ Metrics labels不得包含PO／GR Number、Supplier／SKU名稱、reason或user 
 
 ### 15.2 不阻擋核心開發、但阻擋Go-Live
 
-- OPEN-006：舊系統未完成PO、Previously Received及Inventory Opening的切換資料、日期、owner與對賬簽核人。
+- Go-Live release簽核（OPEN-006已決定：全新系統上線，無Purchasing資料遷移，HD-006）。
 - 正式Currency清單及各currency decimal places；至少HKD seed須存在。
 - Production角色分工、Approval setting初始簽核、Warehouse／Bin及Supplier／SKU主資料ready。
 - Backup／restore rehearsal、容量數據、security review及完整UAT證據。
