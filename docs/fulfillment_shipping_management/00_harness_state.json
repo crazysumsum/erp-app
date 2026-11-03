@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 369,
+  "revision": 372,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-003",
   "current_task": "TASK-027",
   "baseline": {
-    "design": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
-    "plan": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
-    "code_commit": "898fbda54855ad0c8a640547bc2784b466394bc9",
-    "source_fingerprint": "61290e7707f227108c6e33e2dcd34d4652297ea60f46d3497fefac56d61e25e8",
+    "design": "5f5568a32688332add8ec23710628a7fc0eb3b04961b505ab9124686ca8c14bb",
+    "plan": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+    "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+    "source_fingerprint": "19f21b1fb874f78cddbdb09dda9a5548ccb518914fdb771c295295a4b06bcd8e",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
-    "default_commit": "cb685ce30efa433fb7a85e668e37175b7cd19c05",
+    "default_commit": "23c7ee1b9adcee3b0b0a7129f1ec7961d0a3a43f",
     "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
   },
   "runtime": {
@@ -4109,6 +4109,59 @@
         "docs/fulfillment_shipping_management/implementation/83_pr319_draft_difference_owner_review.md",
         "Preserve old fullUpdate/P4 incomplete/originalCI12FAIL; no duplicate implementation/test/CI or DELETE-rule change"
       ]
+    },
+    {
+      "id": "APR-P2-EXACT-EIGHTFILE-20261103-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PM user decision verified via read_thread",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam PMuser01a1a032-83ed-7352-90d6-aba6e1acff91 directly read; extract privatep2-final-baseline-proposal/actual-sam-eightfile-draft-ci-approval.json SHA25806c7cb0afb56fe5a1bc5b0d8d6fe50987df1b15e7ba1e5af315a7616f2e74; exactproposal3652496c...+composition8d781... verified; externaltrustedadminrelease stillrequired.",
+      "recorded_at": "2026-11-03T07:08:03.054844+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5f5568a32688332add8ec23710628a7fc0eb3b04961b505ab9124686ca8c14bb",
+      "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+      "scope": [
+        "Exact eight-file baseline3652496cd79928418db080945380a6e648c7af9384db72198bbbe06439f4c305",
+        "Original15A+22Bfunctional workload unchanged; independent71+24composition, then separately approved deadline25th pin",
+        "Draft before exactlyone existingnormalcontrollerfunctionalPRCI aftertrustedadminrelease; failurestop/report,no retry/merge/mainCI/NFR"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P2-EXACT-EIGHTFILE-20261103-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PM user decision verified via read_thread",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam PMuser01a1a032-83ed-7352-90d6-aba6e1acff91 directly read; extract privatep2-final-baseline-proposal/actual-sam-eightfile-draft-ci-approval.json SHA25806c7cb0afb56fe5a1bc5b0d8d6fe50987df1b15e7ba1e5af315a7616f2e74; exactproposal3652496c...+composition8d781... verified; externaltrustedadminrelease stillrequired.",
+      "recorded_at": "2026-11-03T07:08:03.054844+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+      "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+      "scope": [
+        "Exact eight-file baseline3652496cd79928418db080945380a6e648c7af9384db72198bbbe06439f4c305",
+        "Original15A+22Bfunctional workload unchanged; independent71+24composition, then separately approved deadline25th pin",
+        "Draft before exactlyone existingnormalcontrollerfunctionalPRCI aftertrustedadminrelease; failurestop/report,no retry/merge/mainCI/NFR"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P2-DEADLINE-FE979-96PIN-20261103",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PM user01a1a038-60de-74f0-a171-ff248f39d68f directly verified",
+      "decision": "APPROVED",
+      "source_ref": "Actual reply 納入既有修訂，仍只跑一次 CI tocall_9f4c022158974bbbbe3e8dffaa2ab8d5; privateactual-sam-deadline-96pin-approval.json preservesoriginalreply. Existing100644fe979bbec0c5a847b74da4e3821abb972e3ee4cd only; no further local15run.",
+      "recorded_at": "2026-11-03T07:08:03.054844+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+      "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+      "scope": [
+        "Existing deadline file fe979bbec0c5a847b74da4e3821abb972e3ee4cd, one corrected rollback case;15originalregistrations/timers retained",
+        "P2receipt24to25/overall95to96,0newcase/data/time/worker/CIattempt"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -7159,6 +7212,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-ADOPTED-EIGHTFILE-ACTUAL96-SOURCE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "5f5568a32688332add8ec23710628a7fc0eb3b04961b505ab9124686ca8c14bb",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-adopted-eightfile-actual96pin-receipts-source-review.json SHA1fe81eaf9eb05a9d6578efd248e15f6ed9e5428429beb15010430e16811c14af actuald289 against657fc07c;8exactpatch/threeD-P/95originalsubset+onlyfe979/96actualpins/0overlap/oldgrantunchanged;0C/H/M. NotCIoradminauthority.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-INCOMING-MAIN-CB685-23C7",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_inquiry_review",
+      "reviewed_baseline": "5f5568a32688332add8ec23710628a7fc0eb3b04961b505ab9124686ca8c14bb",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-cb685-23c7-incoming-main-impact-review.json SHAa643bc0853bc602e52326149e97de79ab68bc2caec8f3d6fb21619eb8215738b;only2StocktakeSFC/noP2directdependency/95pinsunchanged,0C/H/M.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8954,6 +9031,39 @@
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/fresh-revoked-private-df99776c205c/result.json SHAdfcc3b1ae22f92bef39e5691df4c0853128066c04f12e933ddcf5c253d5467e7; originala5dirtysource61290→898sameFPbytebridge; rawnotretagged; actualclosured44de473d2081bd611fb14fc7355e93da2a052980059e11e5ecfc2c03507d269",
       "actor": "/root actual independentlyreviewed once execution",
       "observed_at": "2026-11-03T06:12:18.529530Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Localfeaturemainintegration only:23c7incomingtwoStocktakeSFCs→657fc07c, then approvedsource/receiptcommitd289; notmainmerge/CIpass",
+      "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+      "spec_baseline": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+      "source_fingerprint": "19f21b1fb874f78cddbdb09dda9a5548ccb518914fdb771c295295a4b06bcd8e",
+      "status": "PASS",
+      "source_ref": "Actualgitmerge657fc07c58ccdb08eed14f93ca93881071d97465 includes23c7ee1b9adcee3b0b0a7129f1ec7961d0a3a43f; independentincomingreviewa643bc0853bc602e52326149e97de79ab68bc2caec8f3d6fb21619eb8215738b. All8exactbytes/96pins/oldgrantSHAverified; unchangedoldUIevidencenotretagged. Typedclassificationcorrectedbyindependentreview:localupmergeisnotactualmainMERGEqualification.",
+      "actor": "/root actual git observation",
+      "observed_at": "2026-11-03T07:08:03.054844+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DirectSTATIClint/build/highthresholdaudit0 onidenticalFP; notfunctional/currentCI result",
+      "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+      "spec_baseline": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+      "source_fingerprint": "19f21b1fb874f78cddbdb09dda9a5548ccb518914fdb771c295295a4b06bcd8e",
+      "status": "PASS",
+      "source_ref": "Privatep2-final-local-static-checks-20261103.json SHA16aa260cfce72dcd49bdef4aef917ef04d1163cc6607f74fd769852cb6e831a0. Actualsessions41169/80172exit0; audit52536DNSFAIL preserved thenauthorizednetwork97825exit0,0highcritical/1low14moderate. No native/browser/test execution.",
+      "actor": "/root actualdirectcommands",
+      "observed_at": "2026-11-03T07:08:03.054844+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "EXTERNAL_ADMISSION_ADMINISTRATION_ONLY:PMactualregistered96composition,originalverifier108reviewed/0capacityPASS; publicationreleased,notfunctionalCI/UATPASS",
+      "code_commit": "d289e01f683388a206eabdccc262126ab9c18d9e",
+      "spec_baseline": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+      "source_fingerprint": "19f21b1fb874f78cddbdb09dda9a5548ccb518914fdb771c295295a4b06bcd8e",
+      "status": "PASS",
+      "source_ref": "ActualPMread_thread releaseexec-2981277f-657f-4abf-896b-f4334854c0bb andregistrationcmdexec-e4eaff75-5a2d-4d5b-976b-e75a663f4b4d exit0; privatep2-final-baseline-proposal/actual-pm-trusted-admin-release.json. Earlierapprovalsource_ref release-still-required text records pre-registration condition,nowfulfilled. Rootdidnotalterregistry/selfgrant.",
+      "actor": "PMtrustedadministrator observed by/root actualread_thread",
+      "observed_at": "2026-11-03T07:10:38.592492+00:00"
     }
   ],
   "pending_decisions": [
@@ -9484,8 +9594,8 @@
         "DEF-029",
         "DEF-030"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam PMuser01a1a032-83ed-7352-90d6-aba6e1acff91 directly read; extract privatep2-final-baseline-proposal/actual-sam-eightfile-draft-ci-approval.json SHA25806c7cb0afb56fe5a1bc5b0d8d6fe50987df1b15e7ba1e5af315a7616f2e74; exactproposal3652496c...+composition8d781... verified; externaltrustedadminrelease stillrequired. AdditionalSamuser01a1a038-60de-74f0-a171-ff248f39d68f explicitlyadmitsfe979/96; alloriginalfailure/historyretained."
     }
   ],
   "external_actions": [
@@ -10736,6 +10846,14 @@
       "idempotency_key": "p2-source-publication-898fbda54855ad0c8a640547bc2784b466394bc9",
       "status": "CONFIRMED",
       "source_ref": "Actual6reviewedtest/wiringfiles committed898/FP61290; exactSam15+22budgets+existingDBcases, staticlint0. Nomodificationofproductsrc/migrations/configvsintegrateda5. Allsource/externalCIoutputsactualscope preserved; nopush/PR/controller/CI. Limitedreview800449402a59abcccbe2ef27f92aaa1aeb887ea0350849104623e08da55a84a4."
+    },
+    {
+      "id": "P2-APPROVED-ONCE-DRAFT-FUNCTIONAL-CI-20261103",
+      "kind": "PUSH_DRAFT_PR_FUNCTIONAL_CI",
+      "target": "crazysumsum/erp-app codex/fulfillment-p2-shipment→main, one Draft only",
+      "idempotency_key": "p2-approved-once-draft-functional-20261103",
+      "status": "PLANNED",
+      "source_ref": "SamactualPMusers01a1a032-83ed-7352-90d6-aba6e1acff91+01a1a038-60de-74f0-a171-ff248f39d68f. NOTSTARTED; trustedadminmustregister96andreleasepublicationfirst. No retry/merge/mainCI/NFR. PMactualreleaseexec-2981277f-657f-4abf-896b-f4334854c0bb verifiedread_thread,registrationreadback/sourcecmdexec-e4eaff75-5a2d-4d5b-976b-e75a663f4b4d exit0; publicationallowedafterreview/docpinverification. No ownregistrymutation."
     }
   ],
   "evidence_files": [
@@ -11286,5 +11404,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await singlePM/Sam exactbaseline/CIevidencelocation/reporter/draftPRsequence disposition andtrustedadministrator grantcomposition; no remainingauthorizednative batch andno NFR. Deliverimplementation89 andprivate8file365/reconciliation+composition8d781 withoriginal15A/22B/77A/81Aprovenance. Ifactuallyapproved, freshfetch/impactlatestmain, adoptonlymatchingreviewedbytes/ownerbaseline lineage, recomputefinalrealcommit/pins, obtaintrustedexternaladmissionthenexecuteapprovedfunctionalPRcontrollersequence. Requireactual4JUnit ledger166/230/0unexpectedskip,P1exact2/P2exact2,allfloors/checks/reviewsbeforequalification. No merge orformalTECH/UAT/NFRauthority inferred."
+  "next_safe_action": "PMtrustedadminhasregistered/readbackexactreceiptsandexplicitlyreleasedpublication; no furtheradminwait. DeliverfinaldoccheckpointHEAD/tree+Inventory71receipt5568d01435732cff046fac62354291a94cdfaec083f6a40645445edc6e35328d+P225receipt173cdbf252342be1c943a8bb8f54719c25ce595521e50081105ed46f4c2fed5e toPMtrustedadmin. PMactualtrustedadminreleaseexec-2981277f-657f-4abf-896b-f4334854c0bb nowobserved: bothdigestsregistered/readback,unchangedverifier108reviewed/0capacityPASS. Completeactualindependentreview+doccheckpoint,verifyonlydocdelta/pinsunchanged,thenbranchpush/Draftwithoutnewapproval. Rootsolepublisher; normalcontrollerfunctionalPRCIonceonly; admission/CI failurestop/reportbeforechange/retry. No merge/mainCI/manualdispatch/NFR. Requireactual4shardJUnit166/230floors/0unexpectedskip,P1P2exact2each,allcoverage/checks/reviews; TASK027-033/DEF029030notdone. Native remainsSTOPPED; postUATNFRseparate."
 }
