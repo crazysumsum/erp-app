@@ -115,7 +115,7 @@
         "id": "inventory-domain-contract",
         "version": "planning-v49 candidate; P4 Stocktake plus merged Fulfillment HD024 additive read contracts; existing writer ABI unchanged",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "4b3f2efb4f781f6c2ade5aac41b499fcbe3ce034e34805af0e926e2d9dc5a080",
+        "sha256": "203616c65521170fd9205ebaeda4aba1733f3948849cce171e25aab4df7d9aa8",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

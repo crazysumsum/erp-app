@@ -1,0 +1,7 @@
+const object=properties=>({type:"object",additionalProperties:false,required:Object.keys(properties),properties});
+const id={type:"string",pattern:"^[1-9][0-9]{0,15}$",maxLength:16},version={type:"integer",minimum:1,maximum:4294967295},text={type:"string"};
+export const SHIPMENT_EMPTY=object({});
+export const SHIPMENT_ID_PARAMS=object({id:{type:"integer",minimum:1,maximum:Number.MAX_SAFE_INTEGER}});
+const shipment=object({id,number:{type:"string",pattern:"^SHP-[0-9]{6}-[0-9]{6,13}$",maxLength:24},fulfillmentId:id,status:{enum:["DRAFT","SHIPPING","SHIPPED","CANCELLED","REVERSING","REVERSED"]},version,shippingAddressId:id,shippingAddressVersion:version,shippingContactId:{...id,type:["string","null"]},shippingContactVersion:{...version,type:["integer","null"]},carrierName:{type:"string",maxLength:190},trackingNumber:{type:"string",maxLength:190},packageCount:{...version,type:["integer","null"]},totalWeight:{type:["string","null"],pattern:"^(?:0|[1-9][0-9]{0,13})(?:\\.[0-9]{1,6})?$",maxLength:21},weightUom:{enum:["","KG","G"]},notes:{type:"string",maxLength:2000},lines:{type:"array",minItems:1,maxItems:100,items:object({id,fulfillmentLineId:id,lineNo:{type:"integer",minimum:1,maximum:100},skuCode:text,skuName:text,baseUomCode:text,shippedBaseQuantity:{type:"string",pattern:"^(0|[1-9][0-9]{0,15})$",maxLength:16}})}});
+export const SHIPMENT_DETAIL_RESPONSE=object({shipment});
+export const SHIPMENT_DRAFT_RESPONSE=object({outcome:object({id,number:shipment.properties.number,status:{enum:["DRAFT","CANCELLED"]},version}),shipment});

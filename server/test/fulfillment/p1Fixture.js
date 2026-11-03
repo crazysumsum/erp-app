@@ -48,7 +48,7 @@ export async function startP1Http(t,f,{diagnostics=false}={}){
  const profile=diagnostics?capacityDiagnostics(t,app.services.require("mysqldatabase"),"HTTP_APPLICATION_DATABASE"):null;
  const request=async(method,path,body,{auth=true,key=randomUUID()}={})=>{
   const response=await fetch(new URL(path,url),{method,headers:{...(auth?{Authorization:`Bearer ${auth==="denied"?denied:token}`} : {}),...(body===undefined?{}:{"Content-Type":"application/json","Idempotency-Key":key})},...(body===undefined?{}:{body:JSON.stringify(body)})});
-  return {status:response.status,body:await response.json(),headers:{cacheControl:response.headers.get("cache-control"),pragma:response.headers.get("pragma")}};
+  return {status:response.status,body:await response.json(),headers:{cacheControl:response.headers.get("cache-control"),pragma:response.headers.get("pragma"),nosniff:response.headers.get("x-content-type-options")}};
  };
  return profile?(method,path,...args)=>profile.phase(path.endsWith("/allocate")?"HTTP_ALLOCATE":path.endsWith("/reallocate")?"HTTP_REALLOCATE":path.endsWith("/pick-confirm")?"HTTP_PICK":"HTTP_OTHER",()=>request(method,path,...args)):request;
 }
