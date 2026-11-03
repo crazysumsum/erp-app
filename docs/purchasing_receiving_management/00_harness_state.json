@@ -542,6 +542,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md#hd-014--schema-decisions"
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "TASK-014 Draft save against design 8.2 and the providers: (1) refuse every ineligible Supplier/SKU on each save, or only newly chosen ones while unchanged ones that later became ineligible save with a warning; (2) with no Supplier provider for a non-primary ordering address or supplier_sku_refs, read Supplier tables, wait for the Supplier owner, or accept only null/the primary ordering address and leave the SKU reference empty; (3) read inventory_warehouses and users directly in the transaction as Sales does, or wait for providers; (4) read Items before the transaction, or wait for a transactional Item purchase lookup?",
+      "affected_ids": [
+        "TASK-014",
+        "TASK-017"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task014_po_draft_service.md#hd-015--provider-gaps-and-draft-eligibility"
     }
   ],
   "external_actions": [
