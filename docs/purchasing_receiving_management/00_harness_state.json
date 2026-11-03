@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 18,
+  "revision": 19,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -442,8 +442,8 @@
         "NFR-011",
         "NFR-013"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/HD006_greenfield_go_live.md#decision"
     },
     {
       "id": "HD-007",
@@ -636,5 +636,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-012 is DONE: migrations 0114-0116 (operation requests, audit logs, initial immutability triggers). Next startable task: TASK-013 (sequence, operation and audit services), which writes no schema. Its confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY; HD-006 blocks every gate."
+  "next_safe_action": "TASK-012 is DONE: migrations 0114-0116 (operation requests, audit logs, initial immutability triggers). Next startable task: TASK-013 (sequence, operation and audit services), which writes no schema. Its confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }
