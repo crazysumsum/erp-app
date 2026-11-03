@@ -18,6 +18,9 @@ export class InventoryLookupService {
     this.purchase=new InventoryPurchaseService(options);
   }
   findOperationsBySource(tx,query) { return this.purchase.findOperationsBySource(tx,query); }
+  prepareShipmentIssueOutcomeReadInTransaction(tx,session){return this.fulfillment.prepareShipmentIssueOutcomeReadInTransaction(tx,session);}
+  readShipmentIssueOutcomeInTransaction(tx,context){return this.fulfillment.readShipmentIssueOutcomeInTransaction(tx,context);}
+  verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof){return this.fulfillment.verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof);}
   async #authorize(tx,permission="fulfillment.operation") {
     const current=this.fulfillment.assertTransaction(tx),claims=current.auth?.claims,actorId=Number(claims?.sub);
     if(!claims||!Number.isSafeInteger(actorId)||actorId<1||!Array.isArray(claims.roles)||!Array.isArray(claims.permissions))throw inventoryError("PERMISSION_STALE");

@@ -3036,7 +3036,7 @@ console.log(JSON.stringify({raceInjected:injected,rejected,foreignPreserved:true
                     capture = {'kind': 'CI_INPUTS_BEFORE', 'identity': identity, 'shard': shard, 'snapshot': before, 'at': start}
                     proof_bytes = encode(proof)
                     files = {'inventory-proof/before.json': encode(capture), 'inventory-proof/complete.json': proof_bytes,
-                        'manifest.json': manifest_bytes, raw_name: raw}
+                        'manifest.json': manifest_bytes, raw_name: raw, 'functional-tests.xml': b'<testsuites/>'}
                     if shard == 1 and mutation == 'raw-set': files['raw/coverage-9-1234567890123-0.json'] = raw
                     if shard == 1 and mutation == 'raw-bytes': files[raw_name] = raw + b' '
                     add_bundle('server-coverage-%d' % shard, 'Server coverage shard (%d/8)' % shard,

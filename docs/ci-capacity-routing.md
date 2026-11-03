@@ -67,8 +67,8 @@ unexpected skips; only an explicitly unselected capacity job may be skipped.
 
 Global server floors remain 92% lines, 83% branches, 90% functions, with all existing
 per-file floors. The raw eight-shard candidate/runtime identity checks remain.
-Dependency audit, lint, build, mocked browser tests and the exact two-flow real P1
-Fulfillment browser gate remain. No additional routine test registration is added:
+Dependency audit, lint, build, mocked browser tests and the real Fulfillment P1 and P2
+browser gates remain. Each browser suite must pass both flows on shard 1. No additional routine test registration is added:
 the existing six scope/gate tests are updated, and the five coverage-rule tests are
 unchanged. Further private filter probes are outside CI discovery.
 
