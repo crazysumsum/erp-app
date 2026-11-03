@@ -267,7 +267,7 @@ jobs:
           } finally {await db.end();}
           NODE
           capacity_pattern="$(NODE_V8_COVERAGE= node .github/scripts/capacity-runner.mjs server-pattern)"
-          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern"
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=coverage/shard/functional-tests.xml
 
       - name: Record candidate and shard identity
         working-directory: server

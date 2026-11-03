@@ -181,9 +181,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
+        "version": "HD026-A-owner-reviewed-readonly-outcome-candidate; ordinary ABI preserved; final baseline/CI/merge pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
+        "sha256": "1f00ca6abe4135c95fa76ddd152e9de39ff074e6c24e006a3230ab037eb4bb24",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -191,9 +191,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
-        "version": "HD024-A-owner-actual-prefix-readonly-preview-adopted; oldrecommendation/writeABI unchanged; source/runtime gates pending",
+        "version": "HD026-A-owner-reviewed-readonly-outcome-candidate; ordinary ABI preserved; final baseline/CI/merge pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
+        "sha256": "203616c65521170fd9205ebaeda4aba1733f3948849cce171e25aab4df7d9aa8",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -288,8 +288,7 @@
     "developer": [
       "lint",
       "client-build",
-      "security-audit",
-      "fulfillment-p1-developer"
+      "security-audit"
     ],
     "technical": [
       "fulfillment-technical"

@@ -2227,8 +2227,7 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "security-audit",
-        "fulfillment-technical"
+        "security-audit"
       ]
     },
     {
