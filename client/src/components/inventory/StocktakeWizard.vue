@@ -12,6 +12,7 @@ import { createStocktakeTable, stocktakeError, validStocktakeText } from "./stoc
 const props = defineProps({ id: { type: Number, required: true }, readQuery: { type: Object, default: () => ({}) }, operate: Boolean, adjust: Boolean,
   blocked: Boolean, command: { type: Function, required: true }, intentState: { type: Object, required: true }, retry: { type: Function, required: true },
   queryOriginal: { type: Function, required: true }, reprepare: { type: Function, required: true } });
+const summaryContext = ref(null);
 const header = ref(null), loading = ref(false), error = ref(""), flowError = ref(""), mode = ref(""), action = ref(""), reason = ref(""), passwordModal = ref(false);
 const editor = ref(null), row = ref(null), editorDirty = ref(false), settled = ref(false), summary = ref(null), exporting = ref(false), downloadNotice = ref("");
 const lookupMode = ref("Code"), lookupText = ref(""), lookupLoading = ref(false), lookupResult = ref(null);
@@ -28,7 +29,7 @@ const lineTable = createStocktakeTable({ active: () => current() && !mode.value,
   onRetire: () => { settled.value = false; committedKey.value = null; },
   onCommit: (response, _, key) => {
     if (response.id !== props.id || !response.globalSummary) { settled.value = false; return; }
-    summary.value = response.globalSummary; settled.value = true; committedKey.value = key;
+    summary.value = response.globalSummary; summaryContext.value = { status: response.status, version: response.version, varianceStage: response.varianceStage }; settled.value = true; committedKey.value = key;
     const pendingFocus = returnCountFocus;
     if (pendingFocus?.key === key && !response.rows.some(line => line.id === pendingFocus.id)) nextTick(() => {
       if (alive && editable.value && key === committedKey.value && key === lines.value?.key && returnCountFocus === pendingFocus && queryInput.value?.nativeEl?.isConnected) {
@@ -47,6 +48,24 @@ const globalSummary = computed(() => summary.value ?? header.value?.progress);
 const total = computed(() => globalSummary.value?.totalLines ?? null);
 const completed = computed(() => globalSummary.value ? globalSummary.value.countedLines + globalSummary.value.notFoundLines : null);
 const status = computed(() => header.value?.status);
+const startedTime = computed(() => {
+  const value = header.value?.startedAt;
+  if (!Number.isSafeInteger(value) || value < 0) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat("zh-HK", {
+    timeZone: "Asia/Hong_Kong", dateStyle: "short", timeStyle: "medium" }).format(date) : null;
+});
+const varianceSummary = computed(() => {
+  if (!currentKnown.value || !["PREVIEW", "FROZEN"].includes(header.value?.varianceStage)) return null;
+  if (summary.value && (!summaryContext.value || summaryContext.value.status !== header.value.status ||
+    summaryContext.value.version !== header.value.version || summaryContext.value.varianceStage !== header.value.varianceStage)) return null;
+  const value = summary.value ?? header.value?.varianceSummary;
+  if (!value || !["totalLines", "countedLines", "notFoundLines", "uncountedLines", "gainLines", "lossLines", "zeroLines"]
+    .every(field => Number.isSafeInteger(value[field]) && value[field] >= 0) ||
+    value.countedLines + value.notFoundLines + value.uncountedLines !== value.totalLines ||
+    value.gainLines + value.lossLines + value.zeroLines !== value.countedLines + value.notFoundLines) return null;
+  return value;
+});
 const editable = computed(() => props.operate && status.value === "COUNTING" && currentKnown.value && settled.value && !props.blocked);
 const strong = computed(() => ["post", "cancel"].includes(action.value));
 const strongAllowed = computed(() => (action.value === "post" ? props.adjust : props.operate) && !props.intentState.busy &&
@@ -59,7 +78,7 @@ const lineColumns = [{ name: "bin", label: "庫位", field: "binCodeCurrent", al
 const scopeColumns = [{ name: "code", label: "所屬庫位", field: "binCodeCurrent", align: "left" }, { name: "status", label: "目前庫位狀態", field: "statusCurrent", align: "left" }];
 async function reload() {
   const own = ++generation; controller.abort(); controller = new AbortController(); loading.value = true; error.value = ""; settled.value = false;
-  lineTable.dispose(); scopeTable.dispose(); summary.value = null;
+  lineTable.dispose(); scopeTable.dispose(); summary.value = null; summaryContext.value = null;
   try {
     const result = await inventory.getStocktake(props.id, { signal: controller.signal });
     if (!alive || own !== generation) return false;
@@ -188,7 +207,7 @@ function canDiscard() {
 }
 function clear() {
   returnCountFocus = null;
-  generation++; lookupGeneration++; controller.abort(); header.value = null; summary.value = null; row.value = null; mode.value = ""; reason.value = "";
+  generation++; lookupGeneration++; controller.abort(); header.value = null; summary.value = null; summaryContext.value = null; row.value = null; mode.value = ""; reason.value = "";
   passwordModal.value = false; editorDirty.value = false; lookupText.value = ""; lookupResult.value = null; error.value = ""; flowError.value = "";
   currentKnown.value = false; factsError.value = ""; confirmedAdd.value = null; filters.value = {}; queryText.value = "";
   lineTable.dispose(); scopeTable.dispose();
@@ -218,12 +237,18 @@ onMounted(reload); onUnmounted(() => { alive = false; clear(); });
       <q-banner class="q-mb-md bg-surface">
         <template v-if="!currentKnown">上次已讀到 {{ header.status }}；目前狀態未能確認，不能推定已解鎖或仍鎖定。</template>
         <template v-else-if="status === 'DRAFT'">範圍排他；尚未鎖定庫存。</template>
-        <template v-else-if="['COUNTING', 'READY_TO_POST'].includes(status)">本次讀取：{{ header.scope.total }} 個範圍庫位有持久盤點鎖，暫停庫存異動。失敗或未知結果必須重查，不能推定已解鎖。</template>
+        <template v-else-if="['COUNTING', 'READY_TO_POST'].includes(status)">本次讀取：{{ header.scope.total }} 個範圍庫位有持久盤點鎖，暫停庫存異動。失敗或未知結果必須重查，不能推定已解鎖。
+          <span class="block">鎖定開始時間：{{ startedTime ?? "未能確認" }}（Asia/Hong_Kong）</span>
+        </template>
         <template v-else-if="status === 'CANCELLED'">已取消，不代表已過帳。保留取消前 {{ header.varianceStage }} 與歷史。</template>
         <template v-else>本次讀取：已過帳，歷史唯讀。</template>
       </q-banner>
       <p v-if="globalSummary" role="status">全局完成 {{ completed }}/{{ total }} · 未點算 {{ globalSummary.uncountedLines }} · NOT_FOUND {{ globalSummary.notFoundLines }}</p>
       <p>差異 {{ header.varianceStage }}：PREVIEW 是未凍結預覽；FROZEN 才是 Ready 後的伺服器值。不同 SKU／UOM 不加總數量。</p>
+      <p v-if="['PREVIEW', 'FROZEN'].includes(header.varianceStage)" role="status">
+        <template v-if="varianceSummary">已讀全局差異分類（{{ header.varianceStage }}，行數）：盤盈 {{ varianceSummary.gainLines }} · 盤虧 {{ varianceSummary.lossLines }} · 零差異 {{ varianceSummary.zeroLines }}。不是目前頁／篩選的數量。</template>
+        <template v-else>差異分類未能確認；請重讀，不把未點算或缺失資料當作零差異。</template>
+      </p>
       <div class="row q-gutter-sm q-mb-md">
         <q-btn v-if="operate && status === 'DRAFT'" outline label="編輯草稿範圍" :disable="blocked || !!mode" @click="openEditor('scope')" />
         <q-btn v-if="operate && status === 'DRAFT'" color="primary" label="準備 Start" :disable="blocked || !!mode" @click="prepare('start')" />
@@ -277,6 +302,10 @@ onMounted(reload); onUnmounted(() => { alive = false; clear(); });
           <p v-if="action === 'post'">整張 FROZEN 差異原子過帳。每 Bucket 仍須保護 allocated，整張仍須保護 Reserved 覆蓋；全零仍需密碼與 device 簽章。</p>
           <p v-if="action === 'cancel'">取消保留歷史，只解除這張盤點的鎖；需目前密碼，不需 device 簽章。停用庫位不阻擋合法取消。</p>
           <p>全局 {{ total }} 行；不混加不同 SKU／UOM。</p>
+          <p v-if="action === 'ready'">
+            <template v-if="varianceSummary">已讀全局差異分類（{{ header.varianceStage }}，行數）：盤盈 {{ varianceSummary.gainLines }} · 盤虧 {{ varianceSummary.lossLines }} · 零差異 {{ varianceSummary.zeroLines }}；以伺服器 Ready 結果為準。</template>
+            <template v-else>差異分類未能確認；未點算不是零差異。</template>
+          </p>
           <q-input v-if="strong" v-model="reason" type="textarea" autogrow outlined label="Post／Cancel 原因" :disable="blocked || submitting" />
           <q-banner v-if="flowError" role="alert" class="bg-negative text-white q-mt-md">{{ flowError }}</q-banner>
           <section v-if="intentState.record" aria-label="原工作流程復原">
