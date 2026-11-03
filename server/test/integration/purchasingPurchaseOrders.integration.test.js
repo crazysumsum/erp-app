@@ -4,10 +4,14 @@
  * Supplier、Item、Business Master provider、sequence、operation 同 audit 全部用真 class。Operation／audit／sequence 有 trigger
  * 擋 DELETE，所以每個案例喺一個外層 transaction 入面做，最後 rollback；service 嘅 `withTransaction()` 用 SAVEPOINT 代替，
  * 失敗時 ROLLBACK TO SAVEPOINT，等「全有或全無」喺同一個外層 transaction 入面睇得到。主檔同月份（2099-11）都係測試專用。
+ * 並發案例要真 commit 先證明到 PO 行鎖：佢用 HKD、唔建 Payment Term（TC-001 要求冇 Payment Term），完咗刪走 PO 同主檔；
+ * 刪唔走嘅 operation、audit 同隨機 2100 年之後月份嘅 sequence 會留低。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
+import mysql from "mysql2/promise";
 
 import { BusinessMasterProvider } from "../../src/modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
@@ -31,7 +35,7 @@ const silent = { async info() {}, async warn() {}, async debug() {}, async error
 
 function database(t) {
   const config = { host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306), socketPath: process.env.DB_SOCKET_PATH,
-    user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, connectionLimit: 2,
+    user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, connectionLimit: 5,
     waitForConnections: true, queueLimit: 10, acquireTimeoutMs: 5000, queryTimeoutMs: 10000, transactionTimeoutMs: 20000,
     abandonedConnectionAction: "destroy" };
   const pool = createMySqlDatabasePool(config);
@@ -253,7 +257,9 @@ integrationTest("update 完整取代 Lines：保留 ID、重排、刪除、新�
     assert.equal(rows[1].created_at, 1, "保留 Line 嘅建立時間");
     assert.equal(rows[1].uom_to_base_factor_snapshot, 1);
     assert.equal(Number(rows[1].ordered_base_quantity), 5);
-    assert.deepEqual((await audits(tx, f.actorId)).at(-1).detail, { version: 2, lineCount: 2, totalAmount: "17.50", currencyCode: f.currency });
+    const last = (await audits(tx, f.actorId)).at(-1);
+    assert.equal(last.action, "purchase_order.updated");
+    assert.deepEqual(last.detail, { version: 2, lineCount: 2, totalAmount: "17.50", currencyCode: f.currency });
     assert.equal((await operationsOf(tx, f.actorId)).at(-1).source_document_id, String(created.id));
   });
 });
@@ -411,4 +417,78 @@ integrationTest("Audit 失敗令成單 rollback；權限過時被拒；REJECTED 
     assert.deepEqual(logged, [{ event: "purchasing.audit.rejected_not_persisted", details: { action: "purchase_order.created",
       code: "PERMISSION_STALE", auditErrorCode: "TypeError", requestId: null, correlationId: null } }]);
   });
+});
+
+/** 已 commit 嘅最少主檔：actor 兼 Buyer、HKD Supplier、一個 SKU。 */
+async function committedMasters(db) {
+  const tag = randomUUID().replaceAll("-", "").slice(0, 12), now = Date.now();
+  const insert = async (table, row) => Number((await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId);
+  const actorId = await insert("users", { username: `po_race_${tag}`, password_hash: "synthetic", created_at: now, updated_at: now });
+  const role = await insert("roles", { name: `po_race_${tag}`, created_at: now });
+  await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = 'purchasing.mgmt'", [role]);
+  await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [actorId, role]);
+  const supplierId = await insert("suppliers", { supplier_code: `POR-${tag}`, supplier_code_key: `por-${tag}`, supplier_name: "Race",
+    supplier_name_key: "race", default_currency_code: "HKD", status: "active", created_at: now, updated_at: now });
+  const item = await insert("items", { name: `Race ${tag}`, status: "active", created_at: now, updated_at: now });
+  const uom = await insert("item_uoms", { code: `R${tag}`, name: "Each", created_at: now, updated_at: now });
+  const skuId = await insert("item_skus", { item_id: item, sku_code: `RACE-${tag}`, sku_name: "Race", status: "active", created_at: now, updated_at: now });
+  const skuUomId = await insert("item_sku_uoms", { sku_id: skuId, uom_id: uom, to_base_factor: 1, is_base: 1, created_at: now, updated_at: now });
+  const cleanup = async () => {
+    await db.query("DELETE FROM purchase_order_lines WHERE purchase_order_id IN (SELECT id FROM purchase_orders WHERE created_by = ?)", [actorId]);
+    await db.query("DELETE FROM purchase_orders WHERE created_by = ?", [actorId]);
+    for (const [sql, id] of [["DELETE FROM item_sku_uoms WHERE id = ?", skuUomId], ["DELETE FROM item_skus WHERE id = ?", skuId],
+      ["DELETE FROM items WHERE id = ?", item], ["DELETE FROM item_uoms WHERE id = ?", uom], ["DELETE FROM suppliers WHERE id = ?", supplierId],
+      ["DELETE FROM user_roles WHERE user_id = ?", actorId], ["DELETE FROM role_permissions WHERE role_id = ?", role],
+      ["DELETE FROM roles WHERE id = ?", role], ["DELETE FROM users WHERE id = ?", actorId]]) await db.query(sql, [id]);
+  };
+  return { actorId, supplierId, skuId, skuUomId, cleanup, claims: { sub: String(actorId), roles: [`po_race_${tag}`], permissions: ["purchasing.mgmt"] } };
+}
+
+integrationTest("兩個人同時用同一 version 保存：PO 行鎖令第二個人收到 VERSION_CONFLICT，唔會覆蓋（AC-010）", async (t) => {
+  const db = database(t), f = await committedMasters(db);
+  // 隨機遠期月份：sequence row commit 咗之後刪唔走，唔可以撞其他案例嘅月份。
+  const month = Date.UTC(2100 + Math.floor(Math.random() * 7900), 6, 15);
+  const clock = new SystemTimeService({ config: { application: { timeZone: "Asia/Hong_Kong" } }, options: { clock: () => new Date(month) } });
+  const businessMaster = new BusinessMasterProvider({ database: db, repository: new BusinessMasterRepository() });
+  const po = new PurchaseOrderService({ database: db, logger: silent, time: clock, businessMaster, audit: new PurchasingAuditService({ auditDetailMaxBytes: 8192 }),
+    suppliers: new SupplierLookupService({ database: db, logger: silent, time: clock }), sequences: new PurchasingSequenceService(),
+    operations: new PurchasingOperationService(), config: normalizePurchasingConfig() });
+  const draft = (notes, unitPrice) => ({ eventId: randomUUID(), supplierId: f.supplierId, currencyCode: "HKD", orderDate: "2099-11-15",
+    buyerId: f.actorId, notes, lines: [{ skuId: f.skuId, purchaseSkuUomId: f.skuUomId, orderedQuantity: "1", unitPrice }] });
+  const blocker = await db.pool.getConnection();
+  // 睇 lock wait 要 performance_schema 權限，應用帳戶冇；用 CI 嘅 fixture 管理員，只讀。
+  const observer = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
+    socketPath: process.env.DB_SOCKET_PATH, user: process.env.DB_ADMIN_USER, password: process.env.DB_ADMIN_PASSWORD });
+  try {
+    const created = await po.create({ claims: f.claims, input: draft("v1", "1") });
+    // 先由第三條連線鎖住 PO，等兩個 update 都排隊，先放手。
+    await blocker.query("START TRANSACTION");
+    await blocker.query("SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE", [created.id]);
+    const save = (notes, price) => po.update({ claims: f.claims, purchaseOrderId: created.id, input: { ...draft(notes, price), version: 1 } })
+      .then((value) => ({ value }), (error) => ({ error }));
+    const outcomes = [save("A", "2"), save("B", "3")];
+    const limit = Date.now() + 10000;
+    for (;;) {
+      const [[{ waits }]] = await observer.query(`SELECT COUNT(*) waits FROM performance_schema.data_lock_waits w
+        JOIN performance_schema.data_locks l ON l.engine_lock_id = w.blocking_engine_lock_id
+        WHERE l.object_schema = ? AND l.object_name = 'purchase_orders'`, [process.env.DB_NAME]);
+      if (Number(waits) >= 2) break;
+      assert.ok(Date.now() < limit, "兩個 update 都要等緊 PO 行鎖");
+      await delay(20);
+    }
+    await blocker.query("COMMIT");
+    const results = await Promise.all(outcomes);
+    const won = results.filter((result) => result.value), lost = results.filter((result) => result.error);
+    assert.equal(won.length, 1, JSON.stringify(results.map((result) => result.error?.code ?? "ok")));
+    assert.equal(lost[0].error.code, "VERSION_CONFLICT");
+    assert.deepEqual(lost[0].error.publicDetails, { currentVersion: 2 });
+    const [[header]] = await db.query("SELECT version, notes, total_amount FROM purchase_orders WHERE id = ?", [created.id]);
+    const winner = results.indexOf(won[0]) === 0 ? { notes: "A", total: "2.0000" } : { notes: "B", total: "3.0000" };
+    assert.deepEqual({ ...header }, { version: 2, notes: winner.notes, total_amount: winner.total });
+  } finally {
+    await blocker.query("ROLLBACK").catch(() => {});
+    blocker.release();
+    await observer.end();
+    await f.cleanup();
+  }
 });
