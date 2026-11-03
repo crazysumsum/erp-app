@@ -7,11 +7,16 @@ const emit = defineEmits(["saved", "close", "dirty"]);
 const original = Object.freeze({ ...props.line });
 const quantity = ref(original.countedQuantity === null ? "" : String(original.countedQuantity));
 const notFound = ref(original.notFound), dirty = ref(false);
-function changed() { dirty.value = true; emit("dirty"); }
+const quantityError = ref("");
+function changed() { quantityError.value = ""; dirty.value = true; emit("dirty"); }
 async function save() {
   if (props.disabled) throw new Error("原操作仍待核對，不能重新提交。");
   const value = stocktakeQuantity(quantity.value);
-  if (!notFound.value && value === null) throw new Error("請輸入 Base UOM 安全非負整數；留白不是 0，或明確選擇未發現。");
+  quantityError.value = "";
+  if (!notFound.value && value === null) {
+    quantityError.value = "請輸入 Base UOM 安全非負整數；留白不是 0，或明確選擇未發現。";
+    throw new Error(quantityError.value);
+  }
   try {
     const receipt = await props.submit({ lines: [{ lineId: original.id, expectedVersion: original.version,
       ...(notFound.value ? { notFound: true } : { countedQuantity: value }) }] });
@@ -30,6 +35,7 @@ defineExpose({ canDiscard });
     <q-checkbox :model-value="notFound" label="未發現（實際為 0）" :disable="disabled || submitting"
       @update:model-value="notFound = $event; changed()" />
     <q-input :model-value="quantity" label="實數（Base UOM）" outlined inputmode="numeric" :disable="disabled || submitting || notFound"
+      :error="!!quantityError" :error-message="quantityError"
       @update:model-value="quantity = $event ?? ''; changed()" />
     <p class="text-caption">留白＝未輸入，不是 0。沒有清回未點算動作；不接受 Pack 換算。</p>
     <div class="row justify-end q-gutter-sm">
