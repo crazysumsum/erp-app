@@ -39,7 +39,7 @@
     "TASK-011": "DONE",
     "TASK-012": "DONE",
     "TASK-013": "DONE",
-    "TASK-014": "PENDING",
+    "TASK-014": "DONE",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
     "TASK-017": "PENDING",
@@ -663,5 +663,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-013 is DONE: PurchasingSequenceService, PurchasingOperationService and PurchasingAuditService; no schema. Next startable task: TASK-014 (PO Draft create/update domain service). It must persist REJECTED audit in its own short transaction (deferred from TASK-013) and add its commands and audit actions to the services' allowlists; operation lookup by eventId arrives with TASK-033. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-014 is DONE: PurchaseOrderService Draft create/update, editable projection and REJECTED audit; no schema; HD-015 answered (1B draft tolerance for unchanged masters, 2C primary ordering address only and empty Supplier SKU reference, 3A Warehouse/Buyer read in the transaction, Item reads on the transaction connection). Next startable task: TASK-015 (PO Draft create/update handlers): wire PurchaseOrderService with the real Supplier, Business Master and Item providers and pass JWT claims and request context. TASK-017 submit must revalidate every master strictly and decide whether Item and Supplier reads need locking reads; open for the Supplier owner: transactional reads of a Supplier address by ID and of supplier_sku_refs. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }

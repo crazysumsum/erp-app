@@ -38,4 +38,6 @@ Sam's decision, 2026-11-03: "全部按你的建議執行", accepting 1B, 2C, 3A 
 
 ## CI admission
 
-Pending Sam's decision on the two new files.
+Proposal of 2026-11-03: two new files, 13 functional cases (5 without a database, 8 on MySQL, one of them committing for the PO row lock), routine trigger in the existing server test jobs, about 0.33 s locally, no new job and no capacity (`selectCapacity()` returns none for this diff). Sam's decision the same day: "我作為project owner 批準你幫我發digest", approving that scope and a one-time project-owner authorization for the agent to publish the digest of `.github/test-admissions/purchasing-task014.json` (`c1e4ae46…51bcd6`), which pins only the two new files. Published by appending; the variable now holds 12 digests and none of the earlier 11 was removed. Receipts `purchasing-task012` and `purchasing-task013` stay in force: none of their pins changed.
+
+Local full server suite, serial as in CI: 4441 pass, 451 skipped, 100 fail. The same 100 cases fail with the same names on `origin/main` `cb685ce3`. They are in 15 Fulfillment and Inventory integration files that require CI's disposable runtime or a fresh database ("Fulfillment native tests require their owned disposable runtime", "Owned isolated schema or fresh CI database required"), and none of them imports the Purchasing module.
