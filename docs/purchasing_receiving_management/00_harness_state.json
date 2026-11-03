@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 17,
+  "revision": 19,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -37,8 +37,8 @@
     "TASK-009": "DONE",
     "TASK-010": "DONE",
     "TASK-011": "DONE",
-    "TASK-012": "PENDING",
-    "TASK-013": "PENDING",
+    "TASK-012": "DONE",
+    "TASK-013": "DONE",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
@@ -263,6 +263,27 @@
         "Approved on 2026-11-02 with option A of the TASK-011 Business Master and Supplier MIG-006 decision; Sam asked for the Supplier test change to be made here"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-009",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md#apr-009--scope",
+      "recorded_at": "2026-11-02T17:05:27+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d1c00718d37a484a51da343b2c25423b919249ebfa4ce53e29f3df7d793ef76f",
+      "code_commit": null,
+      "scope": [
+        "TASK-012",
+        "server/database/migrations/0114_create_purchasing_operation_requests.js",
+        "server/database/migrations/0115_create_purchasing_audit_logs.js",
+        "server/database/migrations/0116_add_purchasing_immutability_triggers.js",
+        "server/test/integration/supplierMigrationAcceptance.integration.test.js",
+        "Approved on 2026-11-02 together with the TASK-012 schema proposal, including its three recommended additions"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -421,8 +442,8 @@
         "NFR-011",
         "NFR-013"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/HD006_greenfield_go_live.md#decision"
     },
     {
       "id": "HD-007",
@@ -510,6 +531,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task011_po_core_tables.md#hd-013--business-master-and-supplier-mig-006"
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "TASK-012 against design 4.14-4.16: add triggers freezing purchasing_operation_requests identity and outcome (not in 4.16), reject adding or removing lines once the PO leaves DRAFT (4.16 only forbids editing them), and make document sequences forward-only with no DELETE (4.3 requires numbers never be reused but 4.16 lists no trigger)? Or implement only what 4.16 lists?",
+      "affected_ids": [
+        "TASK-012",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task012_operation_audit.md#hd-014--schema-decisions"
     }
   ],
   "external_actions": [
@@ -584,9 +616,33 @@
       "idempotency_key": "purchasing-p1-task010-pr312-merge-20261102",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 01af6c24714058847d12eed90f348d181ede648a, verified as an ancestor of origin/main; admitted CI run 41387956715 completed success on the dispatched merge of head ebdde943ed786100c6d06ceaf962621e7750496d with origin/main b7886a85 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
+    },
+    {
+      "id": "EXT-010",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/320 -> main",
+      "idempotency_key": "purchasing-p1-task011-pr320-merge-20261102",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 3036f761c29a331109c6645652e98e9dbb41db96, verified as an ancestor of origin/main; admitted CI run 41406456637 completed success on the dispatched merge of head a42e99f501171cccba45f4f816ed9337d8443944 with origin/main 01af6c24 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
+    },
+    {
+      "id": "EXT-011",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/321 -> main",
+      "idempotency_key": "purchasing-p1-task012-pr321-merge-20261103",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 6472fa9f914218198d9ff558d4c33fd1f1723284, verified as an ancestor of origin/main; admitted CI run 41424272095 completed success on the dispatched merge of head 63b686e034f3e2e2e979a12cf63ae0e89ff0240c with origin/main b15edbf7 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
+    },
+    {
+      "id": "EXT-012",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/322 -> main",
+      "idempotency_key": "purchasing-hd006-pr322-merge-20261103",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 89c5a06757c1de18fd3ab5750f935be17f3f714a, verified as an ancestor of origin/main; admitted CI run 41568902471 completed success on the dispatched merge of head b65b858f3bedbdb885672566e069711bf7704f5b with origin/main ab320dc8 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-011 is DONE: migrations 0110-0113 (settings, sequences, purchase_orders, purchase_order_lines), the Purchasing Business Master impact checker, and a dependency-aware Supplier MIG-006. APR-001 through APR-008 valid on design 08a08a3ddebb / plan d1c00718d37a. Next startable task: TASK-012 (operation request, audit and immutability migrations), which needs schema sign-off and a CI admission receipt before it is written; Supplier MIG-006 excludes its tables transitively without further change, and any new table that references a Currency or Payment Term must be added to PurchasingBusinessMasterImpactChecker. HD-009..HD-013 to fold into the design at its next revision. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY; HD-006 blocks every gate."
+  "next_safe_action": "TASK-013 is DONE: PurchasingSequenceService, PurchasingOperationService and PurchasingAuditService; no schema. Next startable task: TASK-014 (PO Draft create/update domain service). It must persist REJECTED audit in its own short transaction (deferred from TASK-013) and add its commands and audit actions to the services' allowlists; operation lookup by eventId arrives with TASK-033. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }

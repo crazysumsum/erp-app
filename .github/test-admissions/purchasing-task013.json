@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-03 in Claude Code session f804490c on the TASK-013 CI admission proposal: \"我作為project owner 批準你幫我發digest\", a one-time project-owner authorization for the agent to publish this receipt's digest; recorded in docs/purchasing_receiving_management/implementation/P1_task013_services.md. Adds one new file only; receipt purchasing-task012 stays valid with all its pins unchanged",
+  "purpose": "Purchasing PO/GR monthly numbers are unique, padded, reset monthly, stop at 999999 and are never reused after commit, including when a transaction snapshot predates another commit; a domain event replays the same request and rejects a different payload, command or actor; audit writes only allowlisted fields and a failed audit rolls the business transaction back",
+  "data": "A few rows per case through the real MySqlDatabaseService.withTransaction(), rolled back, on months in 2098 and 2099; the concurrency case commits and leaves one purchasing_document_sequences row per run in a random month after 2100 (the table refuses DELETE). Two cases need no database. No fixture files",
+  "concurrency": "One case runs two interleaved transactions for correctness; all others one transaction",
+  "repetitions": "1",
+  "thresholds": "All cases pass",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing MySQL integration jobs",
+  "cost": "Measured locally: whole file 0.18 s wall time. CI not measured, estimated under one second. No new job and no capacity",
+  "files": [
+    {
+      "path": "server/test/integration/purchasingServices.integration.test.js",
+      "mode": "100644",
+      "blob": "78e93fbc43ee7dfd69b8660fe5a36a1b297e806a",
+      "kind": "functional",
+      "cases": [
+        "payload hash 唔理 key 次序、唔包 password，但包 command 同 decimal 原字串",
+        "run() 將 COMMIT 未知同鎖衝突譯成公開錯誤碼，其他錯誤原樣拋出",
+        "PO／GR 編號各自獨立、6 位補零、每月重置",
+        "rollback 嘅號碼會再派；同一 transaction 入面唔會重複",
+        "snapshot 早過另一個 commit 都唔會重複派號；commit 咗嘅號碼唔再派",
+        "配完 999999 就 DOCUMENT_SEQUENCE_EXHAUSTED，唔會轉 7 位亦唔會重置",
+        "同 event 同 hash 回原結果；唔同 hash、command 或 actor 一律 PURCHASING_EVENT_CONFLICT",
+        "Operation 身份按 source document 分；非法輸入喺寫 DB 之前拒絕",
+        "Audit 只寫 allowlist action 同欄位，target scope 由 action 決定",
+        "Audit INSERT 失敗令成個業務 transaction rollback"
+      ]
+    }
+  ]
+}

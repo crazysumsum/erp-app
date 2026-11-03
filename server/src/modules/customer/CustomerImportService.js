@@ -380,14 +380,25 @@ export class CustomerImportService {
         if (!actor || !permissions.includes("customer.view") || !permissions.includes("customer.mgmt")) {
           throw customerImportError("CUSTOMER_IMPORT_AUTHORIZATION_REVOKED", 403, "確認人的客戶管理權限已失效");
         }
+        // Discover without range locks; the job lock precedes this transaction's read view.
+        const [[next]] = await connection.query(
+          `(SELECT \`row_number\` FROM customer_import_rows FORCE INDEX (idx_customer_import_row_status)
+             WHERE job_id = ? AND status = 'valid' ORDER BY \`row_number\` LIMIT 1)
+           UNION ALL
+           (SELECT \`row_number\` FROM customer_import_rows FORCE INDEX (idx_customer_import_row_status)
+             WHERE job_id = ? AND status = 'warning' ORDER BY \`row_number\` LIMIT 1)
+           ORDER BY \`row_number\` LIMIT 1`,
+          [jobId, jobId]
+        );
+        if (!next) return null;
         const [[row]] = await connection.query(
           `SELECT job_id, \`row_number\`, operation, match_customer_id, expected_customer_version,
                   normalized_payload, status, errors, warnings, version
              FROM customer_import_rows
-            WHERE job_id = ? AND status IN ('valid','warning')
-            ORDER BY \`row_number\` ASC LIMIT 1 FOR UPDATE`, [jobId]
+            WHERE job_id = ? AND \`row_number\` = ? AND status IN ('valid','warning') FOR UPDATE`,
+          [jobId, next.row_number]
         );
-        if (!row) return null;
+        if (!row) throw customerImportError("CUSTOMER_IMPORT_ROW_STATE_CONFLICT", 409, "匯入資料列狀態已變更");
         rowNumber = Number(row.row_number);
         const appliedCustomerId = await applyRow(connection, { job, row, actor: { id: Number(actor.id), username: actor.username, permissions }, nowMs });
         const [marked] = await connection.execute(
