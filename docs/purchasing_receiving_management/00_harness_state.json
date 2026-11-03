@@ -659,6 +659,14 @@
       "idempotency_key": "purchasing-task013-pr324-merge-20261103",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit cb685ce30efa433fb7a85e668e37175b7cd19c05, verified as an ancestor of origin/main; admitted CI run 41573394805 completed success on the dispatched merge of head 288a6c048fe8e83a170f4b50f6d2d7b7f866f59f with origin/main 89c5a067 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS"
+    },
+    {
+      "id": "EXT-014",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/327 -> main",
+      "idempotency_key": "purchasing-task014-pr327-merge-20261103",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 0657f1f2239de44e97920889b33b93d148369ce5, verified as an ancestor of origin/main; admitted CI run 41596939096 attempt 2 completed success on the dispatched merge 7d3dd21b of head c474d5bddee4df63d62969473ae628533e9dd778 with origin/main 23c7ee1b (capacity jobs skipped by the post-UAT rule); attempt 1 failed only on the random RateLimitStore.js branch floor, fixed by PR #328; Admitted PR CI SUCCESS"
     }
   ],
   "evidence_files": [],
