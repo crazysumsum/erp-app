@@ -27,4 +27,4 @@ Local: lint clean; the Purchasing, configuration, Business Master and Supplier M
 
 ## CI admission
 
-Pending Sam's decision on the proposal of 2026-11-03.
+Proposal of 2026-11-03: the one new file, 10 functional cases, routine trigger in the existing MySQL jobs, about 0.18 s locally, no new job and no capacity. Sam's decision the same day: "我作為project owner 批準你幫我發digest", a one-time project-owner authorization for the agent to publish the digest of `.github/test-admissions/purchasing-task013.json`, which pins only `purchasingServices.integration.test.js`. Receipt `purchasing-task012` stays in force: none of its ten pins changed.

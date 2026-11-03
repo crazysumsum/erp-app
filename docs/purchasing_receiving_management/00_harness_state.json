@@ -38,7 +38,7 @@
     "TASK-010": "DONE",
     "TASK-011": "DONE",
     "TASK-012": "DONE",
-    "TASK-013": "PENDING",
+    "TASK-013": "DONE",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
@@ -644,5 +644,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-012 is DONE: migrations 0114-0116 (operation requests, audit logs, initial immutability triggers). Next startable task: TASK-013 (sequence, operation and audit services), which writes no schema. Its confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-013 is DONE: PurchasingSequenceService, PurchasingOperationService and PurchasingAuditService; no schema. Next startable task: TASK-014 (PO Draft create/update domain service). It must persist REJECTED audit in its own short transaction (deferred from TASK-013) and add its commands and audit actions to the services' allowlists; operation lookup by eventId arrives with TASK-033. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }
