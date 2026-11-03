@@ -12,6 +12,7 @@ import { pathToFileURL } from "node:url";
 const execute = promisify(execFile);
 const hash = value => createHash("sha256").update(value).digest("hex");
 const hex = value => typeof value === "string" && /^[a-f0-9]{64}$/u.test(value);
+const coverageShards = [1, 2, 3, 4, 5, 6, 7, 8];
 const thresholds = { lines: 92, branches: 83, functions: 90 };
 const json = value => JSON.stringify(value, (_key, item) => item && typeof item === "object" && !Array.isArray(item)
   ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
@@ -56,9 +57,8 @@ export function buildMergeRecord({ before, after, outcome, lcovSha256, parts }) 
   assert.ok(before.inputs && Object.keys(before.inputs).length > 0);
   assert.deepEqual(outcome, { exitCode: 0, signal: null });
   assert.ok(hex(lcovSha256));
-  assert.equal(parts.length, 4);
-  assert.deepEqual(parts.map(part => part.shard).sort(), [1, 2, 3, 4]);
-  assert.equal(new Set(parts.map(part => part.sha256)).size, 4);
+  assert.deepEqual(parts.map(part => part.shard).sort((a, b) => a - b), coverageShards);
+  assert.equal(new Set(parts.map(part => part.sha256)).size, coverageShards.length);
   const first = parts[0];
   for (const part of parts) {
     assert.ok(hex(part.sha256));
@@ -229,7 +229,7 @@ export async function closeSqlMonitor(db, socket, { timeoutMs = 5000, primary } 
 
 export async function captureMergeParts(repo, identity) {
   const parts = [];
-  for (let shard = 1; shard <= 4; shard += 1) {
+  for (const shard of coverageShards) {
     const directory = path.join(repo, `server/coverage/shards/server-coverage-${shard}`);
     const text = await fs.readFile(path.join(directory, "inventory-proof/complete.json"), "utf8"), part = JSON.parse(text);
     assert.equal(part.kind, "CI_NATIVE_SHARD"); assert.equal(part.shard, shard);
@@ -282,7 +282,7 @@ async function main() {
   const kind = mode.endsWith("shard") ? "shard" : "merge";
   assert.equal(identity.job, kind === "shard" ? "server-tests" : "regression");
   const shard = kind === "shard" ? Number(shardText) : null;
-  assert.ok(kind === "merge" ? shardText === undefined : Number.isSafeInteger(shard) && shard >= 1 && shard <= 4);
+  assert.ok(kind === "merge" ? shardText === undefined : coverageShards.includes(shard));
   const repo = (await command("git", ["rev-parse", "--show-toplevel"])).stdout.trim();
   assert.equal(await fs.realpath(process.cwd()), await fs.realpath(repo));
   assert.equal((await command("git", ["rev-parse", "HEAD"])).stdout.trim(), identity.commit);

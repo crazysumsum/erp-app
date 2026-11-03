@@ -1545,8 +1545,13 @@ def collect_hd235_native_coverage(ctx, core, source):
             return content, log
 
         parts = []
-        for shard in range(1, 5):
-            files, _log = artifact('server-coverage-%d' % shard, 'Server coverage shard (%d/4)' % shard,
+        # Bind cardinality to the verified candidate workflow, including older four-shard runs.
+        workflow = (ctx.repo / '.github/workflows/ci.yml').read_text()
+        totals = re.findall(r'^ +COVERAGE_SHARD_TOTAL: "(4|8)"$', workflow, re.MULTILINE)
+        require(len(totals) == 1, 'Reviewed coverage shard total')
+        shard_total = int(totals[0])
+        for shard in range(1, shard_total + 1):
+            files, _log = artifact('server-coverage-%d' % shard, 'Server coverage shard (%d/%d)' % (shard, shard_total),
                 'Collect native server coverage for this shard', 'Finalize Inventory native coverage ownership proof')
             proof = json.loads(files['inventory-proof/complete.json'])
             identity = {'commit': tested_commit, 'runId': str(run_id), 'attempt': attempt, 'job': 'server-tests'}
@@ -1569,7 +1574,7 @@ def collect_hd235_native_coverage(ctx, core, source):
             require(set(files) == {'inventory-proof/complete.json', 'inventory-proof/before.json', 'manifest.json'}
                     | {row['path'] for row in raw_files}, 'Exact native shard archive set')
             require(manifest == {'commit': tested_commit, 'node': before['node'], 'cwd': before['cwd'],
-                    'shard': shard, 'total': 4, 'reports': len(raw_files)}
+                    'shard': shard, 'total': shard_total, 'reports': len(raw_files)}
                     and sha(files['manifest.json']) == proof['manifestSha256'], 'Original manifest bytes')
             for row in raw_files:
                 require(re.fullmatch(r'raw/coverage-\d+-\d{13}-\d+\.json', row['path'])

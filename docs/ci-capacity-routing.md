@@ -39,7 +39,7 @@ Remove grants after the approved run. A baseline alone cannot authorize load.
 
 ## Execution and unchanged gates
 
-Routine server coverage keeps four serial shards on separate MySQL databases.
+Routine server coverage keeps eight serial shards on separate MySQL databases.
 Only catalogued names are excluded, including the two nested Customer contention
 children. Ordinary cases in the same files still run. Client coverage likewise
 excludes only the two catalogued large-data cases. Scope helpers run outside the
@@ -66,7 +66,7 @@ case. The fixed required Test check rejects failed/cancelled/missing results and
 unexpected skips; only an explicitly unselected capacity job may be skipped.
 
 Global server floors remain 92% lines, 83% branches, 90% functions, with all existing
-per-file floors. The raw four-shard candidate/runtime identity checks remain.
+per-file floors. The raw eight-shard candidate/runtime identity checks remain.
 Dependency audit, lint, build, mocked browser tests and the exact two-flow real P1
 Fulfillment browser gate remain. No additional routine test registration is added:
 the existing six scope/gate tests are updated, and the five coverage-rule tests are
