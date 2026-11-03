@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
+import { execFileSync } from "node:child_process";
 import { readFile,readdir } from "node:fs/promises";
 import { fileURLToPath,pathToFileURL } from "node:url";
 import path from "node:path";
@@ -19,6 +20,30 @@ async function createSalesProviderDatabase(t){
     if(errors.length)throw new AggregateError(errors,"Sales provider owned resource cleanup failed");
   });
   await admin.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);created=true;db=await mysql.createConnection({...connectionOptions,database:name});
+  await initializeSalesBaseline(db,name,connectionOptions);
+  return {db,name,connectionOptions,cleanup};
+}
+
+// Node isolates test files in separate processes. Cache only the schema and
+// migration seeds, before the first caller gets its database or writes case data.
+let baselineDump;
+function runMysqlClient(binary, options, args, input) {
+  const transport = options.socketPath
+    ? ["--protocol=SOCKET", `--socket=${options.socketPath}`]
+    : ["--protocol=TCP", `--host=${options.host ?? "localhost"}`, `--port=${options.port}`];
+  const executable = process.env.MYSQL_BIN ? path.join(process.env.MYSQL_BIN, binary) : binary;
+  return execFileSync(executable, ["--no-defaults", ...transport, `--user=${options.user}`,
+    "--default-character-set=utf8mb4", ...args], {
+    input, maxBuffer: 64 * 1024 * 1024, env: { ...process.env, MYSQL_PWD: options.password ?? "" }
+  });
+}
+
+async function initializeSalesBaseline(db,name,options) {
+  const routineShard = process.env.GITHUB_JOB === "server-tests" && process.env.SALES_CAPACITY_SEPARATE_STEP === "1";
+  if (routineShard && baselineDump) {
+    runMysqlClient("mysql", options, ["--binary-mode", name], baselineDump);
+    return;
+  }
   await db.query("CREATE TABLE fr_schema_migrations(name VARCHAR(190) PRIMARY KEY,applied_at BIGINT UNSIGNED NOT NULL)");
   const directory=fileURLToPath(new URL("../../../database/",import.meta.url));
   // The named P0 contribution is independent of unpublished Sales0089/0090 and every withdrawn owner installer.
@@ -27,7 +52,10 @@ async function createSalesProviderDatabase(t){
     if(name.endsWith(".js"))await (await import(pathToFileURL(path.join(directory,name)).href)).up(db);else await db.query(await readFile(path.join(directory,name),"utf8"));
     await db.execute("INSERT INTO fr_schema_migrations(name,applied_at) VALUES (?,?)",[name,Date.now()]);
   }
-  return {db,name,connectionOptions,cleanup};
+  if (routineShard) {
+    baselineDump = runMysqlClient("mysqldump", options, ["--single-transaction", "--set-gtid-purged=OFF",
+      "--no-tablespaces", "--hex-blob", "--routines", "--events", "--triggers", "--skip-add-locks", name]);
+  }
 }
 
 async function seedFulfillmentSalesOrder(db,baseQuantity) {
