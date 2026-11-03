@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "PENDING — to be replaced with Sam's verified decision before the digest is published",
+  "decision": "Sam's explicit decision of 2026-11-03 in Claude Code session f804490c on the limiter eviction sampling CI admission proposal: \"批准這個範圍, 我作為project owner 批準你幫我發digest\", approving one new functional case in server/test/rateLimitKeySpace.test.js (catalogued capacity cases audit-21 and audit-22 unchanged and still excluded from routine CI) and a one-time project-owner authorization for the agent to publish this receipt's digest; recorded in the PR body",
   "purpose": "MemoryRateLimitStore.evictOne() samples a window from a random start; one new functional case fixes Math.random so the skip-to-start branch runs on every routine CI run and proves keys before the start are never evicted, removing the random per-file branch-coverage floor failure seen in run 41596939096",
   "data": "20 in-memory rate-limit keys plus one incoming key; no database, no fixture files",
   "concurrency": "None; single in-process case",
