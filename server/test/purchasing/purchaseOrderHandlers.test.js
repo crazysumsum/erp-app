@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { CreatePurchaseOrderHandler } from "../../src/handlers/purchasing/createPurchaseOrderHandler.js";
-import { UpdatePurchaseOrderHandler } from "../../src/handlers/purchasing/updatePurchaseOrderHandler.js";
+import { CreatePurchaseOrderHandler } from "../../src/handlers/purchase-orders/createPurchaseOrderHandler.js";
+import { UpdatePurchaseOrderHandler } from "../../src/handlers/purchase-orders/updatePurchaseOrderHandler.js";
 import { PURCHASE_ORDER_CREATE_INPUT, PURCHASE_ORDER_UPDATE_INPUT } from "../../src/handlers/purchasing/purchasingSchemas.js";
 import { PurchaseOrderService } from "../../src/modules/purchasing/PurchaseOrderService.js";
 

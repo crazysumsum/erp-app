@@ -1,5 +1,5 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
-import { EMPTY, PURCHASE_ORDER_COMMAND_RESPONSE, PURCHASE_ORDER_WRITE_POLICY, purchaseOrderCommand, purchaseOrderService } from "./purchasingSchemas.js";
+import { EMPTY, PURCHASE_ORDER_COMMAND_RESPONSE, PURCHASE_ORDER_WRITE_POLICY, purchaseOrderCommand, purchaseOrderService } from "../purchasing/purchasingSchemas.js";
 
 /** 建立 PO Draft＋月度編號＋完整 Lines（設計 §5.2）。 */
 export class CreatePurchaseOrderHandler extends BaseRequestHandler {

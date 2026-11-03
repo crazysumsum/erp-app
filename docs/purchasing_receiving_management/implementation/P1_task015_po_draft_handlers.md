@@ -7,7 +7,7 @@ Built on 2026-11-03 from main `611fd638`. No schema change, manifest edit or new
 | `POST /api/v1/purchase-orders/create` | `CreatePurchaseOrderHandler` (`createPurchaseOrder`) | jwt, `purchasing.mgmt`, idempotency enabled, 201. |
 | `POST /api/v1/purchase-orders/:id/update` | `UpdatePurchaseOrderHandler` (`updatePurchaseOrder`) | jwt, `purchasing.mgmt`, idempotency enabled, `id` from the path, `version` required, 200. |
 
-Both return `{id, number, status: "DRAFT", version, warnings, replayed}`, where `warnings` carries the HD-015 1B codes. `purchasingSchemas.js` holds the strict create and update schemas (`additionalProperties: false` at every level), the write policy, and `purchaseOrderCommand()` and `purchaseOrderService()`, which the two handlers share.
+Both handlers live in `server/src/handlers/purchase-orders/` (HD-016). Both return `{id, number, status: "DRAFT", version, warnings, replayed}`, where `warnings` carries the HD-015 1B codes. `purchasingSchemas.js` holds the strict create and update schemas (`additionalProperties: false` at every level), the write policy, and `purchaseOrderCommand()` and `purchaseOrderService()`, which the two handlers share.
 
 ## Choices within the design
 
@@ -20,7 +20,8 @@ Both return `{id, number, status: "DRAFT", version, warnings, replayed}`, where 
 
 - `server/test/purchasing/purchaseOrderHandlers.test.js`: 7 cases, no database. Covers metadata, the provider and config wiring, the arguments the service receives, update's version and path ID, `Idempotency-Key` versus `eventId`, unknown and client-computed fields, and non-coerced types with field paths.
 - `server/test/integration/purchasingPurchaseOrderApi.integration.test.js`: 2 cases through the real application, HTTP, JWT, framework idempotency and MySQL. Create returns 201. The same key with the same body replays the stored response; with another body it is `IDEMPOTENCY_CONFLICT`; a mismatched key, a missing key and a client total are refused. Update returns 200, and a stale version is 409 with only `currentVersion`. `purchasing.view` alone is 403 and no token is 401. HTTP writes commit, so the cases delete their POs and masters afterwards. Their operation and audit rows, and the current month's `purchasing_document_sequences` row, remain (those tables refuse DELETE). They use HKD and no Payment Term (TC-001).
-- Mutation sweep, 19 mutants over the three handler files: all RED. The first pass's one survivor was an incomplete mutant that relaxed only half the eventId pattern; the full uppercase mutant is RED.
+- `server/test/handlerConventions.test.js` and `handlerRegistry.test.js` pass with the handlers in `purchase-orders/`.
+- Mutation sweep, 19 mutants over the three handler files: all RED, rerun after the move. The first pass's one survivor was an incomplete mutant that relaxed only half the eventId pattern; the full uppercase mutant is RED.
 
 ## HD-016 — handler directories and the document revision
 

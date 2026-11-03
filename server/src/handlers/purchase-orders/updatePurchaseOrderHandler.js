@@ -1,7 +1,7 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import {
   EMPTY, PURCHASE_ORDER_COMMAND_RESPONSE, PURCHASE_ORDER_ID_PARAMS, PURCHASE_ORDER_WRITE_POLICY, purchaseOrderCommand, purchaseOrderService
-} from "./purchasingSchemas.js";
+} from "../purchasing/purchasingSchemas.js";
 
 /** DRAFT 先改得；完整取代 editable projection＋version（設計 §5.2）。 */
 export class UpdatePurchaseOrderHandler extends BaseRequestHandler {
