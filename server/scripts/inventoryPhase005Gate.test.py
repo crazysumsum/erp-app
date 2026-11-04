@@ -1465,7 +1465,7 @@ try {
         identity = {'commit': 'a' * 40, 'runId': '123', 'attempt': 1, 'job': 'regression'}
         terminal = {'connections': 0, 'transactions': 0, 'locks': 0,
                     'observerSocketClosed': True, 'containerExitCode': 0, 'forced': False}
-        for number in range(1, 5):
+        for number in range(1, 9):
             directory = root / ('server/coverage/shards/server-coverage-%d' % number)
             (directory / 'raw').mkdir(parents=True)
             (directory / 'inventory-proof').mkdir()
@@ -1475,7 +1475,7 @@ try {
                                'isBlockCoverage': True}]}]})
             (directory / raw_name).write_text(raw_text)
             manifest = {'commit': identity['commit'], 'node': 'v26.6.0', 'cwd': '/synthetic/server',
-                        'shard': number, 'total': 4, 'reports': 1}
+                        'shard': number, 'total': 8, 'reports': 1}
             manifest_text = json.dumps(manifest)
             (directory / 'manifest.json').write_text(manifest_text)
             proof = {'kind': 'CI_NATIVE_SHARD', 'identity': dict(identity, job='server-tests'),
@@ -1499,7 +1499,7 @@ try {
         return {'before': before, 'after': copy.deepcopy(before),
             'outcome': {'exitCode': 0, 'signal': None}, 'lcovSha256': 'b' * 64,
             'parts': [{'shard': n, 'sha256': str(n) * 64, 'run_id': '123', 'attempt': 1,
-                       'commit': 'a' * 40} for n in range(1, 5)]}
+                       'commit': 'a' * 40} for n in range(1, 9)]}
 
     def hd235_coverage(self):
         record, expected = self.hd233_coverage()
@@ -2757,7 +2757,7 @@ catch(error){console.log(JSON.stringify({accepted:false,error:error.message}));}
             payload = {'root': directory, 'identity': identity}
             initial = self.hd235_node_probe(probe, payload)
             self.assertTrue(initial['accepted'], initial)
-            self.assertEqual(len(initial['value']), 4)
+            self.assertEqual(len(initial['value']), 8)
             shard = root / 'server/coverage/shards/server-coverage-1'
             manifest = shard / 'manifest.json'
             manifest_original = manifest.read_text()
@@ -3018,12 +3018,12 @@ console.log(JSON.stringify({raceInjected:injected,rejected,foreignPreserved:true
                         'workflow_run': {'id': run_id, 'head_sha': commit}}
                     jobs.append(job); api_artifacts.append(item); bundles.append((files, job, item))
                 parts = []
-                for shard in range(1, 5):
+                for shard in range(1, 9):
                     identity = {'commit': tested_commit, 'runId': str(run_id), 'attempt': attempt, 'job': 'server-tests'}
                     before = snapshot('shard')
                     raw_name = 'raw/coverage-%d-1234567890123-0.json' % shard
                     raw = encode({'result': [{'scriptId': str(shard), 'url': 'file:///synthetic.js', 'functions': []}]})
-                    manifest = {'commit': tested_commit, 'node': before['node'], 'cwd': before['cwd'], 'shard': shard, 'total': 4, 'reports': 1}
+                    manifest = {'commit': tested_commit, 'node': before['node'], 'cwd': before['cwd'], 'shard': shard, 'total': 8, 'reports': 1}
                     manifest_bytes = encode(manifest)
                     proof = {'kind': 'CI_NATIVE_SHARD', 'identity': identity, 'shard': shard,
                         'before': before, 'after': copy.deepcopy(before), 'originalOutcome': 'success',
@@ -3036,10 +3036,10 @@ console.log(JSON.stringify({raceInjected:injected,rejected,foreignPreserved:true
                     capture = {'kind': 'CI_INPUTS_BEFORE', 'identity': identity, 'shard': shard, 'snapshot': before, 'at': start}
                     proof_bytes = encode(proof)
                     files = {'inventory-proof/before.json': encode(capture), 'inventory-proof/complete.json': proof_bytes,
-                        'manifest.json': manifest_bytes, raw_name: raw}
+                        'manifest.json': manifest_bytes, raw_name: raw, 'functional-tests.xml': b'<testsuites/>'}
                     if shard == 1 and mutation == 'raw-set': files['raw/coverage-9-1234567890123-0.json'] = raw
                     if shard == 1 and mutation == 'raw-bytes': files[raw_name] = raw + b' '
-                    add_bundle('server-coverage-%d' % shard, 'Server coverage shard (%d/4)' % shard,
+                    add_bundle('server-coverage-%d' % shard, 'Server coverage shard (%d/8)' % shard,
                         'Collect native server coverage for this shard', 'Finalize Inventory native coverage ownership proof', files, shard)
                     parts.append({'shard': shard, 'sha256': digest(proof_bytes), 'run_id': str(run_id), 'attempt': attempt,
                         'commit': tested_commit, 'manifestSha256': digest(manifest_bytes), 'rawFiles': proof['rawFiles']})
@@ -3054,7 +3054,7 @@ console.log(JSON.stringify({raceInjected:injected,rejected,foreignPreserved:true
                 files = {'inventory-proof/before.json': encode(capture), 'inventory-proof/complete.json': encode(proof), 'lcov.info': lcov}
                 if mutation == 'lcov': files['lcov.info'] += b'changed'
                 add_bundle('inventory-native-merge-proof', 'Test coverage (server + client, MySQL integration)',
-                    'Merge native coverage and enforce unchanged global and per-file floors', 'Finalize Inventory native merge proof', files, 5)
+                    'Merge native coverage and enforce unchanged global and per-file floors', 'Finalize Inventory native merge proof', files, 9)
                 for files, job, item in bundles:
                     stream = io.BytesIO()
                     with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
