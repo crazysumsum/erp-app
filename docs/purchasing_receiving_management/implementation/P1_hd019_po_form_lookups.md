@@ -40,3 +40,7 @@ All are `GET`, require `purchasing.mgmt` and re-read the actor's permissions fro
 `suppliers` without `q` orders by name; `buyers` joins roles to users on every keystroke of a debounced search. Neither has a capacity measurement. Owner: Purchasing, with the handoff items already recorded for TASK-016.
 
 The CI owner also needs to add `server/src/handlers/purchasing-lookups/` to the capacity catalog `.github/scripts/sales-import-capacity.mjs` with the other new handler directories.
+
+## CI admission
+
+Sam approved on 2026-11-04: 「全部批准，我作為project owner 批準你幫我發digest」. The scope is 6 new functional integration cases in `server/test/integration/purchasingLookups.integration.test.js`, on every PR and main push in the existing server shards, in `.github/test-admissions/purchasing-hd019-lookups.json`. He also authorized publishing this receipt's digest once, as project owner.

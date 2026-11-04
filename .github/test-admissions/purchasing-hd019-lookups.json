@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-04 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你幫我發digest\", answering the consolidated proposals for the HD-019 Purchasing lookups (6 new functional integration cases), and a one-time project-owner authorization for the agent to publish this receipt's digest",
+  "purpose": "The seven purchasing-lookups routes work with purchasing.mgmt alone, refuse purchasing.view, no token and stale permissions; Suppliers, SKUs, Currencies, Payment Terms, warehouses and Buyers return only what a new PO accepts; Supplier defaults carry no internal fields; failures map to the documented codes",
+  "data": "Each case commits 4 users and roles, 2 Payment Terms, 5 Suppliers, 1 address, 1 Item, 3 UOMs, 4 SKUs with their mappings, 3 barcodes and 2 warehouses over real HTTP and MySQL, and deletes them afterwards. No fixture files",
+  "concurrency": "1",
+  "repetitions": "1",
+  "thresholds": "All cases pass; coverage floors unchanged",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing server coverage shards",
+  "cost": "Measured locally with coverage: about 5 s for the file, including 6 application starts. CI not measured, estimated about 5 s on one shard. No new job and no capacity",
+  "files": [
+    {
+      "path": "server/test/integration/purchasingLookups.integration.test.js",
+      "mode": "100644",
+      "blob": "2230c0e11b373a87b17490667c8e14772830fb4b",
+      "kind": "functional",
+      "cases": [
+        "七條 lookup 只要 purchasing.mgmt；purchasing.view 403、冇 token 401",
+        "DB 權限收走之後，七條 lookup 都係 PERMISSION_STALE",
+        "Supplier 只回 Active：完全相符嘅 code 排先、% 係字面、非 ASCII 唔會 500；帶 skuId 用 provider，SKU 唔可採購就 409",
+        "Supplier 預設值帶 Currency、Payment Term、主要地址，唔帶內部 notes；停用 Supplier 同失效預設各有錯誤碼",
+        "SKU 只回儲存會接受嘅：冇 tracked、serial、唔可採購都唔出；UOM 只出 active，barcode 精確搵",
+        "Currency、Payment Term、Warehouse 只回 Active；Buyer 係 Active 而有 purchasing.mgmt，只回 ID 同 label"
+      ]
+    }
+  ]
+}
