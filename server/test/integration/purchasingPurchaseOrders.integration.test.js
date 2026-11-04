@@ -492,3 +492,153 @@ integrationTest("兩個人同時用同一 version 保存：PO 行鎖令第二個
     await f.cleanup();
   }
 });
+
+integrationTest("copy 建新編號、新 ID 嘅 Draft，唔抄狀態、進度同舊資格；來源唔郁，operation 同 Audit 指返來源", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const source = await orders.create({ claims: f.claims, input: body(f, { orderDate: "2099-11-01", supplierReference: "QUOTE-9", notes: "抄我" }) });
+    const [first, second] = await lines(tx, source.id);
+    await tx.query("UPDATE purchase_order_lines SET gross_received_base_quantity = 5, net_received_base_quantity = 5, has_outstanding = 0, is_over_received = 1 WHERE id = ?", [first.id]);
+    await tx.query("UPDATE purchase_orders SET status = 'PARTIALLY_RECEIVED', has_confirmed_receipt = 1, has_outstanding = 0, confirmed_at = ?, version = 7 WHERE id = ?", [NOW, source.id]);
+    const before = JSON.stringify([await order(tx, source.id), await lines(tx, source.id)]), inventory = await inventoryCounts(tx);
+
+    const input = { eventId: randomUUID() }, result = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input, context: { requestId: "req-c", ip: "127.0.0.1" } });
+    assert.deepEqual({ ...result, id: 0, number: "" }, { id: 0, number: "", status: "DRAFT", version: 1, warnings: [], replayed: false });
+    assert.notEqual(result.id, source.id);
+    assert.notEqual(result.number, source.number);
+
+    const header = await order(tx, result.id), copied = await lines(tx, result.id);
+    assert.deepEqual({ status: header.status, version: header.version, confirmedAt: header.confirmed_at, receipt: header.has_confirmed_receipt, outstanding: header.has_outstanding },
+      { status: "DRAFT", version: 1, confirmedAt: null, receipt: 0, outstanding: 1 });
+    assert.equal(header.created_by, f.actorId);
+    assert.equal(header.supplier_id, f.supplierA);
+    assert.equal(header.ordering_address_id, f.primaryAddress);
+    assert.equal(header.payment_term_id, f.paymentTerm);
+    assert.equal(header.default_receiving_warehouse_id, f.warehouse);
+    assert.equal(header.buyer_id, f.buyer);
+    assert.deepEqual([header.supplier_reference, header.notes, header.total_amount], ["QUOTE-9", "抄我", "30.0200"]);
+    const [[{ orderDate }]] = await tx.query("SELECT DATE_FORMAT(order_date, '%Y-%m-%d') AS orderDate FROM purchase_orders WHERE id = ?", [result.id]);
+    assert.equal(orderDate, "2099-11-15", "Order Date 用今日，唔抄來源");
+    assert.equal(copied.length, 2);
+    assert.ok(copied.every((row) => ![first.id, second.id].includes(row.id)), "新 Line ID");
+    assert.deepEqual(copied.map((row) => [row.line_number, row.version, Number(row.gross_received_base_quantity), Number(row.net_received_base_quantity), row.has_outstanding, row.is_over_received]),
+      [[1, 1, 0, 0, 1, 0], [2, 1, 0, 0, 1, 0]]);
+    assert.deepEqual(copied.map((row) => [row.sku_id, row.purchase_sku_uom_id, row.ordered_quantity, row.unit_price, row.zero_price_reason, row.line_note]),
+      [[f.skuA, f.boxA, "3.000000", "10.0050", "", "boxes"], [f.skuB, f.eachB, "2.000000", "0.0000", "免費樣品 sample", ""]]);
+    assert.equal(JSON.stringify([await order(tx, source.id), await lines(tx, source.id)]), before, "來源完全唔郁");
+    assert.deepEqual(await inventoryCounts(tx), inventory);
+
+    const audit = (await audits(tx, f.actorId)).at(-1);
+    assert.deepEqual([audit.action, audit.outcome, audit.target_id], ["purchase_order.copied", "SUCCEEDED", result.id]);
+    assert.equal(audit.detail.sourcePurchaseOrderId, source.id);
+    const operation = (await operationsOf(tx, f.actorId)).at(-1);
+    assert.deepEqual([operation.command_type, operation.source_document_id], ["COPY_PURCHASE_ORDER", String(source.id)]);
+
+    const replay = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input });
+    assert.deepEqual(replay, { id: result.id, number: result.number, status: "DRAFT", version: 1, warnings: [], replayed: true });
+    const [[{ total }]] = await tx.query("SELECT COUNT(*) AS total FROM purchase_orders WHERE created_by = ?", [f.actorId]);
+    assert.equal(total, 2, "Replay 唔會多建一張");
+  });
+});
+
+integrationTest("copy 只抄仍然合法嘅值：選填主檔清空、Buyer 換操作者、唔合格 Line 剔走，全部有 warning（HD-017 2A）", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const source = await orders.create({ claims: f.claims, input: body(f, { orderDate: "2099-11-01", expectedDeliveryDate: "2099-11-10", lines: [
+      { skuId: f.skuA, purchaseSkuUomId: f.boxA, orderedQuantity: "1", unitPrice: "1", expectedDeliveryDate: "2099-11-02" },
+      { skuId: f.skuA, purchaseSkuUomId: f.eachA, orderedQuantity: "2", unitPrice: "1", expectedDeliveryDate: "2099-12-01" },
+      { skuId: f.skuB, purchaseSkuUomId: f.eachB, orderedQuantity: "3", unitPrice: "1" }] }) });
+
+    await tx.query("UPDATE supplier_address_purposes SET is_primary = 0 WHERE address_id = ?", [f.primaryAddress]);
+    const addressOnly = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID() } });
+    assert.deepEqual(addressOnly.warnings.filter((warning) => warning.lineNumber === undefined).map((warning) => warning.field),
+      ["orderingAddressId", "expectedDeliveryDate"], "已經唔係主要訂購地址就清空，其他值照抄");
+    assert.equal((await order(tx, addressOnly.id)).payment_term_id, f.paymentTerm);
+    await tx.query("UPDATE supplier_address_purposes SET is_primary = 1 WHERE address_id = ?", [f.primaryAddress]);
+
+    await tx.query("UPDATE payment_terms SET status = 'INACTIVE' WHERE id = ?", [f.paymentTerm]);
+    await tx.query("UPDATE inventory_warehouses SET status = 'INACTIVE' WHERE id = ?", [f.warehouse]);
+    await tx.query("UPDATE users SET status = 'disabled' WHERE id = ?", [f.buyer]);
+    await tx.query("UPDATE item_skus SET purchasable = 0 WHERE id = ?", [f.skuB]);
+    await tx.query("UPDATE item_sku_uoms SET to_base_factor = 7 WHERE id = ?", [f.boxA]);
+
+    const result = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID() } });
+    assert.deepEqual(result.warnings, [
+      { code: "COPY_FIELD_CHANGED", field: "orderingAddressId" }, { code: "COPY_FIELD_CHANGED", field: "paymentTermId" },
+      { code: "COPY_FIELD_CHANGED", field: "defaultReceivingWarehouseId" }, { code: "COPY_FIELD_CHANGED", field: "buyerId" },
+      { code: "COPY_FIELD_CHANGED", field: "expectedDeliveryDate", lineNumber: 1 }, { code: "COPY_LINE_DROPPED", lineNumber: 3 },
+      { code: "COPY_FIELD_CHANGED", field: "expectedDeliveryDate" }
+    ]);
+    const header = await order(tx, result.id), copied = await lines(tx, result.id);
+    assert.deepEqual([header.ordering_address_id, header.ordering_address_snapshot, header.payment_term_id, header.payment_term_snapshot, header.default_receiving_warehouse_id,
+      header.expected_delivery_date], [null, null, null, null, null, null]);
+    assert.equal(header.buyer_id, f.actorId, "停用嘅 Buyer 換做操作者");
+    assert.deepEqual(copied.map((row) => [row.line_number, row.purchase_sku_uom_id, row.uom_to_base_factor_snapshot, row.ordered_base_quantity]),
+      [[1, f.boxA, 7, 7], [2, f.eachA, 1, 2]], "行號重排；factor 用目前值，唔用來源快照");
+    const [[{ first, second }]] = await tx.query(`SELECT MAX(IF(line_number = 1, expected_delivery_date, NULL)) AS first,
+      DATE_FORMAT(MAX(IF(line_number = 2, expected_delivery_date, NULL)), '%Y-%m-%d') AS second FROM purchase_order_lines WHERE purchase_order_id = ?`, [result.id]);
+    assert.deepEqual([first, second], [null, "2099-12-01"], "過咗期嘅交期清空，未過期照抄");
+    assert.equal(header.total_amount, "3.00".padEnd(6, "0"));
+  });
+});
+
+integrationTest("copy 遇到不可採購 Supplier、冇 Line 剩低或者唔存在嘅來源就成張拒絕，寫 REJECTED Audit；要 purchasing.mgmt", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const copy = (id, claims = f.claims) => orders.copy({ claims, purchaseOrderId: id, input: { eventId: randomUUID() } });
+    const count = async () => Number((await tx.query("SELECT COUNT(*) AS total FROM purchase_orders WHERE created_by = ?", [f.actorId]))[0][0].total);
+    const source = await orders.create({ claims: f.claims, input: body(f) });
+
+    await assert.rejects(copy(Number.MAX_SAFE_INTEGER), coded("PURCHASE_ORDER_NOT_FOUND"));
+    await assert.rejects(copy(0), coded("PURCHASING_INPUT_INVALID", { field: "purchaseOrderId" }));
+    await assert.rejects(orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID(), status: "CONFIRMED" } }), (error) => error.code === "PURCHASING_INPUT_INVALID");
+    await assert.rejects(orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: "NOPE" } }), coded("PURCHASING_INPUT_INVALID", { field: "eventId" }));
+
+    await tx.query("UPDATE item_skus SET status = 'inactive' WHERE id IN (?)", [[f.skuA, f.skuB]]);
+    await assert.rejects(copy(source.id), coded("SKU_NOT_PURCHASABLE", { field: "lines" }));
+    await tx.query("UPDATE item_skus SET status = 'active' WHERE id IN (?)", [[f.skuA, f.skuB]]);
+
+    await tx.query("UPDATE suppliers SET status = 'suspended' WHERE id = ?", [f.supplierA]);
+    await assert.rejects(copy(source.id), coded("SUPPLIER_NOT_PURCHASABLE", { field: "supplierId" }));
+    await tx.query("UPDATE suppliers SET status = 'active' WHERE id = ?", [f.supplierA]);
+
+    await tx.query("UPDATE currencies SET status = 'INACTIVE' WHERE code = ?", [f.currency]);
+    await assert.rejects(copy(source.id), coded("CURRENCY_NOT_ACTIVE"));
+    await tx.query("UPDATE currencies SET status = 'ACTIVE' WHERE code = ?", [f.currency]);
+
+    assert.equal(await count(), 1, "冇一次留低新 PO");
+    const rejected = (await audits(tx, f.actorId)).filter((row) => row.outcome === "REJECTED");
+    assert.deepEqual(rejected.map((row) => [row.action, row.detail.code]), [["purchase_order.copied", "PURCHASE_ORDER_NOT_FOUND"], ["purchase_order.copied", "PURCHASING_INPUT_INVALID"],
+      ["purchase_order.copied", "PURCHASING_INPUT_INVALID"], ["purchase_order.copied", "PURCHASING_INPUT_INVALID"], ["purchase_order.copied", "SKU_NOT_PURCHASABLE"],
+      ["purchase_order.copied", "SUPPLIER_NOT_PURCHASABLE"], ["purchase_order.copied", "CURRENCY_NOT_ACTIVE"]]);
+
+    await tx.query("DELETE rp FROM role_permissions rp JOIN user_roles ur ON ur.role_id = rp.role_id WHERE ur.user_id = ?", [f.actorId]);
+    await assert.rejects(copy(source.id, { ...f.claims, permissions: [] }), coded("PERMISSION_STALE"));
+  });
+});
+
+integrationTest("copy 逐個條件剔走唔合格嘅 Line：UOM 停用、唔再追蹤庫存、改咗 serial、factor 改咗換唔到整數", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const source = await orders.create({ claims: f.claims, input: body(f, { lines: [
+      { skuId: f.skuA, purchaseSkuUomId: f.boxA, orderedQuantity: "0.5", unitPrice: "1" }, { skuId: f.skuB, purchaseSkuUomId: f.eachB, orderedQuantity: "1", unitPrice: "1" }] }) });
+    for (const [sql, restore] of [
+      [["UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [f.box]], ["UPDATE item_uoms SET status = 'active' WHERE id = ?", [f.box]]],
+      [["UPDATE item_skus SET inventory_tracked = 0 WHERE id = ?", [f.skuA]], ["UPDATE item_skus SET inventory_tracked = 1 WHERE id = ?", [f.skuA]]],
+      [["UPDATE item_skus SET tracking_policy = 'serial' WHERE id = ?", [f.skuA]], ["UPDATE item_skus SET tracking_policy = 'batch_expiry' WHERE id = ?", [f.skuA]]],
+      [["UPDATE item_sku_uoms SET to_base_factor = 7 WHERE id = ?", [f.boxA]], ["UPDATE item_sku_uoms SET to_base_factor = 24 WHERE id = ?", [f.boxA]]]
+    ]) {
+      await tx.query(...sql);
+      const result = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID() } });
+      assert.deepEqual(result.warnings, [{ code: "COPY_LINE_DROPPED", lineNumber: 1 }], sql[0]);
+      assert.deepEqual((await lines(tx, result.id)).map((row) => row.sku_id), [f.skuB], sql[0]);
+      await tx.query(...restore);
+    }
+    const clean = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID() } });
+    assert.deepEqual([clean.warnings, (await lines(tx, clean.id)).length], [[], 2], "主檔復原就兩行都抄");
+  });
+});
