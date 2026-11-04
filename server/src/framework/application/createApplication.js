@@ -252,6 +252,11 @@ class Application {
       startupTime,
       startedTime: this.time.timestamp(),
       url,
+      // Only report the registered Customer module's real destructive-write registry.
+      // Custom service-discovery scopes may intentionally omit the Customer module.
+      ...(this.services.has("customer.references") ? {
+        customerReferences: await this.services.require("customer.references").inspectReadiness()
+      } : {}),
       // 這四個逾時的實際效果沒有人會自己算，而算錯的後果是安靜的：某一段沒有
       // 上限，或某個設定值從此是空話。所以啟動時把換算結果講出來。
       requestBudget: describeRequestBudget(

@@ -1,5 +1,9 @@
 # Customer Management — IMPLEMENT Readiness
 
+## TASK-032 local checkpoint — 2026-11-04
+
+Latest integrated base `59c6e740` (#329, existing main CI41762836822 successful). The three Customer product fingerprints remain those reviewed by Tech Lead and exercised under the separate C1/C2 private grants. Startup observation, wrong-contract refusal and optional attachment/core-read isolation have scoped developer evidence; production reference-provider assembly, deployment and formal acceptance remain open. [Current evidence and minimal publication plan](task032-reference-startup-candidate.md#integrated-local-checkpoint--2026-11-04) supersedes older pending-PR244/runtime2.1 narrative for this task only. PR244/323 are already delivered and must not be replayed. Historical checkpoints below are retained; they do not authorize new tests or publication.
+
 ## Status
 
 ### Latest-main contract drift — approval required before PR244 merge

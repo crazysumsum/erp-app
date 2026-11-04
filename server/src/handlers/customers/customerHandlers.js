@@ -1,4 +1,5 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { optionalService } from "../../framework/services/serviceAccess.js";
 import { CustomerService } from "../../modules/customer/CustomerService.js";
 import { CustomerPartyService } from "../../modules/customer/CustomerPartyService.js";
 import { CustomerCreditService } from "../../modules/customer/CustomerCreditService.js";
@@ -37,7 +38,7 @@ function commandInput(req) {
 class CustomerHandler extends BaseRequestHandler {
   constructor(services = {}) {
     super(services);
-    this.customer = new CustomerService({ database: services.require("mysqldatabase"), time: services.require("time") });
+    this.customer = new CustomerService({ database: services.require("mysqldatabase"), time: services.require("time"), references: optionalService(services, "customer.references") });
     this.party = new CustomerPartyService({ database: services.require("mysqldatabase"), time: services.require("time") });
     this.credit = new CustomerCreditService({ database: services.require("mysqldatabase"), time: services.require("time") });
     this.approvals = new CustomerApprovalService({ database: services.require("mysqldatabase"), time: services.require("time") });
