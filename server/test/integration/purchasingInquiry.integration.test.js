@@ -121,7 +121,7 @@ integrationTest("列表預設按更新時間同 ID 倒序，分頁穩定；summa
     const item = all.items[1];
     assert.deepEqual(item, { id: tieLow.id, number: tieLow.number, status: "DRAFT", version: 1, supplierId: f.supplierA, supplierCode: `INQ-${f.tag}-a`,
       supplierName: `Name${f.tag} a`, currencyCode: "HKD", orderDate: "2099-11-01", expectedDeliveryDate: null, buyerId: f.manager.id, buyerLabel: "Buyer",
-      supplierReference: "", totalAmount: "10.0000", hasOutstanding: false, createdAt: NOW, updatedAt: NOW, allowedActions: ["edit", "copy"], lineCount: 1,
+      supplierReference: "", totalAmount: "10.00", hasOutstanding: false, createdAt: NOW, updatedAt: NOW, allowedActions: ["edit", "submit", "copy"], lineCount: 1,
       orderedBaseQuantity: "10", netReceivedBaseQuantity: "0", outstandingBaseQuantity: "0", closedRemainingBaseQuantity: "0", risks: [] });
     assert.deepEqual(all.items[0].allowedActions, ["copy"], "已確認唔可以再改");
     assert.deepEqual((await list({}, f.viewer)).items.map((row) => row.allowedActions), [[], [], []], "只有 view 冇任何寫入動作");
@@ -269,7 +269,11 @@ integrationTest("詳情回交易快照同逐行進度，目前主資料另外放
     assert.deepEqual(progress(clean.lines[0]), ["10", "5", "1", "4", "4", "0", "2"]);
     assert.deepEqual(progress(clean.lines[1]), ["5", "8", "0", "8", "0", "3", "0"]);
     assert.equal(clean.lines[0].expectedDeliveryDate, "2099-12-01");
-    assert.equal(clean.lines[0].unitPrice, "1.0000");
+    assert.deepEqual([clean.totalAmount, clean.subtotalAmount, clean.lines[0].lineAmount, clean.lines[0].unitPrice], ["10.00", "10.00", "1.00", "1.0000"], "金額用 Currency scale（HD-009）；單價固定 4 位");
+    const noDecimals = await f.order({ supplierId: f.supplierB, currency_decimal_places_snapshot: 0, lines: [{ sku: f.skuA }] });
+    const yen = await inquiry.get({ claims: f.manager.claims, id: noDecimals.id });
+    assert.deepEqual([yen.totalAmount, yen.subtotalAmount, yen.lines[0].lineAmount], ["10", "10", "1"]);
+    assert.equal((await inquiry.list({ claims: f.manager.claims, input: { supplierId: f.supplierB } })).items.find((item) => item.id === noDecimals.id).totalAmount, "10");
 
     await tx.query("UPDATE suppliers SET supplier_name = ?, status = 'inactive' WHERE id = ?", [`Renamed ${f.tag}`, f.supplierA]);
     await tx.query("UPDATE item_skus SET sku_name = ?, status = 'archived' WHERE id = ?", [`New ${f.tag}`, f.skuB.id]);
@@ -304,7 +308,7 @@ integrationTest("詳情回交易快照同逐行進度，目前主資料另外放
     await tx.query("UPDATE items SET status = 'active' WHERE id = (SELECT item_id FROM item_skus WHERE id = ?)", [f.skuA.id]);
 
     const draft = await inquiry.get({ claims: f.manager.claims, id: (await f.order({ supplierId: f.supplierB, lines: [{ sku: f.skuA }] })).id });
-    assert.deepEqual(draft.allowedActions, ["edit", "copy"]);
+    assert.deepEqual(draft.allowedActions, ["edit", "submit", "copy"]);
     assert.deepEqual([draft.hasOutstanding, draft.lines[0].outstandingBaseQuantity], [false, "0"], "Draft 未有嘢要收");
   });
 });
