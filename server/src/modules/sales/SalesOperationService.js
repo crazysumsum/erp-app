@@ -1,3 +1,5 @@
+import { ApplicationError } from "../../framework/errors/ApplicationError.js";
+import { requireSalesActor } from "./salesAuthorization.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
 import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 import { salesEventId } from "./salesValidation.js";
@@ -22,6 +24,19 @@ function safeResult(value) {
   if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
       typeof result.number !== "string" || !/^(SO|QT|SI)-\d{6}-\d{6}$/u.test(result.number) ||
       !(result.number.startsWith("SI-") ? ["QUEUED","CANCELLED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
+  identifier(result.id); identifier(result.version);
+  return { id: result.id, number: result.number, status: result.status, version: result.version };
+}
+
+export function safeSalesOperationResult(value, commandType) {
+  let result = typeof value === "string" ? JSON.parse(value) : value;
+  if(commandType==="CREATE_EXPORT"){if(!result||Object.keys(result).join(",")!=="id")throw new TypeError("Invalid Export operation result");return {id:identifier(result.id)};}
+  if (commandType === "UPLOAD_IMPORT") {
+    const job=result?.importJob;result={id:job?.id,number:job?.batchNumber,status:job?.status,version:job?.version};
+  }
+  if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
+      typeof result.number !== "string" || !/^(SO|QT|SI)-\d{6}-\d{6}$/u.test(result.number) ||
+      !(result.number.startsWith("SI-") ? commandType === "UPLOAD_IMPORT" ? ["UPLOADED"] : ["QUEUED","CANCELLED"] : result.number.startsWith("SO-") ? [...STATUSES,"CONFIRMING","PARTIALLY_FULFILLED","COMPLETED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
   identifier(result.id); identifier(result.version);
   return { id: result.id, number: result.number, status: result.status, version: result.version };
 }
@@ -100,6 +115,20 @@ export class SalesOperationService {
     if (!row) return null;
     return { status: row.status, result: row.status === "SUCCEEDED" ? safeResult(row.result_summary) : null,
       ...(row.status === "FAILED" ? { errorCode: Object.hasOwn(SALES_ERROR_STATUS, row.error_code) ? row.error_code : "SALES_DEPENDENCY_UNAVAILABLE" } : {}) };
+  }
+
+  async lookup(database,{claims,eventId}) {
+    salesEventId(eventId);
+    return database.withTransaction(async tx=>{
+      const actor=await requireSalesActor(tx,claims,"sales.view");
+      const [[row]]=await tx.query(`SELECT id,command_type,target_type,status,result_summary,error_code FROM sales_operation_requests WHERE event_id=? AND actor_user_id=?`,[eventId,actor.id]);
+      const target=row&&(TARGETS[row.command_type]??({CONFIRM_ORDER:"SALES_ORDER",UPLOAD_IMPORT:"IMPORT_JOB",CREATE_EXPORT:"EXPORT_JOB"})[row.command_type]);
+      if(!row||!target||target!==row.target_type)throw salesError("SALES_ORDER_NOT_FOUND");
+      if(!actor.permissions.includes(target==="IMPORT_JOB"?"sales.import":target==="EXPORT_JOB"?"sales.view":"sales.mgmt"))throw new ApplicationError("Original operation permission required",{code:"FORBIDDEN",statusCode:403});
+      const result=row.status==="SUCCEEDED"?safeSalesOperationResult(row.result_summary,row.command_type):null;
+      if(result&&target!=="EXPORT_JOB"&&(target==="IMPORT_JOB")!==result.number.startsWith("SI-"))throw new TypeError("Invalid Sales operation target result");
+      return {eventId,operationId:identifier(Number(row.id)),status:row.status,result,errorCode:row.status==="FAILED"?(Object.hasOwn(SALES_ERROR_STATUS,row.error_code)?row.error_code:"SALES_DEPENDENCY_UNAVAILABLE"):null};
+    });
   }
 
   async run(database, work, options) {

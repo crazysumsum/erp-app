@@ -12,7 +12,8 @@ test("TC-022 confirm body preserves types and rejects authoritative/surplus fiel
 test("TC-022 confirm and by-event handlers declare exact namespace, write authorization and bounded response contracts",()=>{
  assert.equal(ConfirmSalesOrderHandler.api.path,"/api/v1/sales-orders/:id/confirm");assert.equal(ConfirmSalesOrderHandler.api.idempotency.enabled,true);
  assert.equal(SalesOperationLookupHandler.api.path,"/api/v1/sales-operations/by-event/:eventId");
- for(const handler of [ConfirmSalesOrderHandler,SalesOperationLookupHandler])assert.deepEqual(handler.api.authorizationPolicies[0].options.permissions,["sales.view","sales.mgmt"]);
+ assert.deepEqual(ConfirmSalesOrderHandler.api.authorizationPolicies[0].options.permissions,["sales.view","sales.mgmt"]);
+ assert.deepEqual(SalesOperationLookupHandler.api.authorizationPolicies[0].options.permissions,["sales.view"]);
  assert.deepEqual(Object.keys(ConfirmSalesOrderHandler.api.responseSchema),["200","202"]);
  const pending=ConfirmSalesOrderHandler.api.responseSchema[202];assert.equal(pending.additionalProperties,false);assert.ok(!pending.properties.leaseOwner);
 });
