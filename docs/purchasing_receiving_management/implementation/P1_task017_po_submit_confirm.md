@@ -42,3 +42,11 @@ TASK-016 returned `totalAmount`, `subtotalAmount` and `lineAmount` at the stored
 ## Deferred
 
 No capacity case was added or run. `TC-004`'s approval and lifecycle parts stay open for TASK-022 to TASK-026.
+
+## CI admission
+
+Sam approved on 2026-11-04: 「全部批准，我作為project owner 批準你幫我發digest」. The scope is 10 new functional cases (2 state machine, 1 money, 1 handler contract, 5 service, 1 HTTP), the corrected amount expectations and `submit` in existing inquiry and API cases, the API cleanup change, the unchanged re-pin of the 13 inputs pinned by receipts that these changes invalidate, and a one-time project-owner authorization for the agent to publish this receipt's digest. Receipt: `.github/test-admissions/purchasing-task017.json`.
+
+Measured locally per file: state machine 0.06 s, money 0.06 s, handler 0.1 s, inquiry 0.22 s, Purchase Order service 0.5 s, API 3.1 s; the new cases add about 1 s. CI is not measured, estimated under 3 s, with no new job and no capacity workload.
+
+The local full suite was 5064 tests: 4518 pass, 100 fail, 446 skipped; coverage 95.85% lines, 87.23% branches, 94.79% functions. All 100 failures are the environment-only Fulfillment/Inventory cases. That full run preceded merging main's #329, which only changed a Fulfillment test fixture and its receipt; the Purchasing and handler files were rerun afterwards, 115 of 115.
