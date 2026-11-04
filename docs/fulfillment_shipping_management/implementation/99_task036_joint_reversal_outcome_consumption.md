@@ -36,6 +36,8 @@ InventoryLookupService 只轉接其同一個 `fulfillment` 實例：`prepareShip
 
 ## 同一 fresh RC 的確切順序（尚未接入產品 caller）
 
+順序2之前使用的 frozen source 必須來自既有可信 original attempt／已證完整原集合；本候選尚無該 issuer。順序4只作鎖內重驗，不能補填、改造或重新發行 source。若沒有這個可信前置來源即 UNKNOWN；不得先逆序取得 Fulfillment 父鎖來 bootstrap，也不得把035 advisory升成 capability。
+
 | 順序 | coordinator 必持／呼叫 | owner 實際 verifier phase |
 | --- | --- | --- |
 | 0 | 沿既有 `readReversalTerminal` 查原 E_R 真終局；已有真正結果則原路返回。只有仍待查且有可信 attempt/fence 才進下列 fresh RC；不能由待查列自簽 session | 不借 SHIP session |
@@ -95,7 +97,7 @@ Inventory SUCCEEDED 返回 `{state,result,requestHash}`，Sales SUCCEEDED 返回
 | --- | --- | --- | --- |
 | E_R、原 normalized domain command、domain scopeHash、actor/correlation | `startReversal` 真 Phase A；同實例 #startedAttempts 保存 request/hash/actor，0092／Reversal／history 保存事實 | 只從提交成功 Phase A 的私有 binding 取得；DTO不是能力 | 可核對保存的 journal/hash／history；現無授權重建 REVERSE session 的 loader，不能只查 row 重造能力 |
 | E_S、S1／SO／客戶／倉庫、原 SHIP witness | 035 同 RR collector，原 journal/history/audit；原 Issue不可變引用 | 未來持 E_R fence 後在固定鎖序內重讀並核全部 source | 原持久事實可重讀，仍須權限／鎖內驗真；今日欄位不能重算歷史 payload |
-| 完整 lines／Claims／原 allocations／Issue references／q | 035 collector＋mapper 是 advisory／historical source；0097保存原 member/Movement引用 | 真 Phase B／reconciliation 固定父鎖內完整 discovery、逐欄核後 frozen；不能用 advisory 當 fence | 可重新完整讀原事實，但不能還原原 attempt 的 expected versions 或私有能力 |
+| 完整 lines／Claims／原 allocations／Issue references／q | 035 collector＋mapper 是 advisory／historical source；0097保存原 member/Movement引用 | 首次由真 Phase B 在固定父鎖內完整 discovery／核對時捕獲為可信 original attempt 的完整來源；日後 reconciliation 須在步驟2前已有該 frozen source，步驟4只重驗，缺來源即 UNKNOWN | 可重新完整讀原事實，但不能還原原 attempt 的 expected versions 或私有能力；不能以 advisory／待查row自簽補足 |
 | 原 E_R Inventory preclaimHash／command | **035 尚無**真正 Phase B preclaim | 未來實際 `claimFulfillmentBatchInTransaction(...action:"REVERSE")` 回傳的 genuine preparation.requestHash，綁當次 actor/command/tx，而非預算 hash | 完成時 owner journal保存hash；現 reader要求先有可信原hash，沒有正式 REVERSE跨程序bootstrap／issuer，不能拿待查row自簽 |
 | 原 E_R Sales intentHash／intent | mapper只有 salesIntentFields，缺原 actor/event/真 Inventory hash；**無真正 E_R Sales attempt** | 未來完整 normalized intent 綁 genuine preclaim 後，由既有 salesFulfillmentIntentHash 取得並隨真 Sales驗證／journal受理保存至可信 attempt | 完成 journal有原 recovery_payload/intent/hash；現正式 reader可驗，沒有可供Fulfillment跳過issuer的普通loader |
 | 原 executor/tx 實際結果及取消邊界 | DB只讀 getTransactionOutcome；035保存的是 **Phase A** tx提交證據 | 真 Phase B executor／caller保存那一次 tx、COMMITTED/ROLLED_BACK/INDETERMINATE、signal及attempt關聯；目前尚無 | executor物件證據不跨程序；不能以例外、ACK失敗、或Phase A結果代替Phase B；未知commit須查真原事件 |
