@@ -173,8 +173,8 @@ const lookupValidators = Object.fromEntries(Object.entries(LOOKUP_QUERY).map(([k
 export function purchasingLookupQuery(req, kind) {
   const request = { query: structuredClone(req.input.query) };
   validated(lookupValidators[kind], request, "query");
-  const { q, barcode, ...rest } = request.input.query;
-  return { ...rest, ...(q === undefined ? {} : { q: q.trim() }), ...(barcode === undefined ? {} : { barcode: barcode.trim() }) };
+  const { q, ...rest } = request.input.query;
+  return { ...rest, ...(q === undefined ? {} : { q: q.trim() }) };
 }
 
 export const PURCHASING_SUPPLIER_ID_PARAMS = PURCHASE_ORDER_ID_PARAMS;

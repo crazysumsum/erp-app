@@ -71,6 +71,8 @@ async function setup(t) {
   await insert("item_sku_barcodes", { sku_id: skus.main.id, sku_uom_id: skus.main.mapping, barcode_type: "internal", barcode: `B${tag}`, normalized_barcode: `B${tag}`, created_at: now, updated_at: now });
   await insert("item_sku_barcodes", { sku_id: skus.untracked.id, sku_uom_id: skus.untracked.mapping, barcode_type: "internal", barcode: `U${tag}`, normalized_barcode: `U${tag}`, created_at: now, updated_at: now });
 
+  await insert("item_sku_barcodes", { sku_id: skus.stopped.id, sku_uom_id: skus.stopped.mapping, barcode_type: "internal", barcode: `S${tag}`, normalized_barcode: `S${tag}`, created_at: now, updated_at: now });
+
   const warehouse = await insert("inventory_warehouses", { warehouse_code: `W${tag}`, normalized_code: `w${tag}`, warehouse_name: `Depot ${tag}`, status: "ACTIVE", version: 1, created_by: buyer.id, updated_by: buyer.id, created_at: now, updated_at: now });
   await insert("inventory_warehouses", { warehouse_code: `X${tag}`, normalized_code: `x${tag}`, warehouse_name: `Depot ${tag}`, status: "INACTIVE", version: 1, created_by: buyer.id, updated_by: buyer.id, created_at: now, updated_at: now });
 
@@ -129,6 +131,7 @@ integrationTest("Supplier 只回 Active：完全相符嘅 code 排先、% 係字
     defaultCurrencyCode: "HKD", defaultPaymentTermId: named.body.data.items[0].defaultPaymentTermId });
 
   assert.deepEqual((await get(`suppliers?q=sb-${tag}`)).body.data.items.map((row) => row.supplierId), [suppliers.other]);
+  assert.deepEqual((await get(`suppliers?q=${encodeURIComponent(` sb-${tag} `)}`)).body.data.items.map((row) => row.supplierId), [suppliers.other]);
   assert.deepEqual((await get(`suppliers?q=sa-${tag}`)).body.data.items.map((row) => row.supplierId), [suppliers.main, suppliers.longer]);
   assert.deepEqual((await get(`suppliers?q=${encodeURIComponent(`%${tag}`)}`)).body.data.items, []);
   assert.deepEqual((await get(`suppliers?q=${encodeURIComponent("供應商")}`)).status, 200);
@@ -172,6 +175,7 @@ integrationTest("SKU 只回儲存會接受嘅：冇 tracked、serial、唔可採
 
   assert.deepEqual((await get(`skus?barcode=B${tag}`)).body.data.items.map((row) => row.skuId), [skus.main.id]);
   assert.deepEqual((await get(`skus?barcode=U${tag}`)).body.data.items, []);
+  assert.deepEqual((await get(`skus?barcode=S${tag}`)).body.data.items, []);
   assert.deepEqual((await get("skus?barcode=no-such-barcode")).body.data.items, []);
   invalid(await get(`skus?q=${encodeURIComponent("a\u0007")}`), "q");
 });
