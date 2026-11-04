@@ -8,6 +8,8 @@ import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { normalizeShipmentReversal } from "./shipmentReversalCommand.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
+import { fulfillmentOperationHash } from "./fulfillmentOperationHash.js";
+import { getTransactionOutcome } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 
 const fail=code=>{throw fulfillmentError(code);};
 function terminal(operation){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
@@ -15,6 +17,7 @@ function pending(operation,reversal,shipmentVersion){
  return Object.freeze({outcome:"REVERSING",operationId:operation.operationId,eventId:operation.eventId,correlationId:operation.correlationId,statusUrl:`/api/v1/fulfillment-operations/by-event/${operation.eventId}`,retryAfterSeconds:2,reversal:Object.freeze({id:String(reversal.id),number:reversal.reversal_number,version:Number(reversal.version)}),shipmentVersion});
 }
 export class ShipmentReversalService {
+ #startedAttempts=new WeakMap();
  constructor({database,time,downstreamRegistry,operationLeaseMs=60000}){
   Object.assign(this,{database,time});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry});
  }
@@ -27,11 +30,34 @@ export class ShipmentReversalService {
    return replay?terminal(replay):null;
   });
  }
+ // A successful observation is not a lease renewal or a substitute for the writer's locked fence check.
+ async readStartedReversal(started){
+  const binding=this.#startedAttempts.get(started);if(!binding)return null;
+  const {request}=binding;
+  return this.transactions.withTransaction(async tx=>{
+   const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.reverse");
+   if(String(actor.id)!==binding.initiatorId)return null;
+   const replay=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId:request.target.id,command:request.payload});
+   if(replay)return replay.operationId===binding.operationId&&replay.correlationId===binding.correlationId?terminal(replay):null;
+   const [[row]]=await tx.query("SELECT o.*,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS observed_now_ms FROM fulfillment_operation_requests o WHERE id=? AND event_id=?",[binding.operationId,request.eventId]);
+   if(!row)return null;
+   if(row.status!=="IN_PROGRESS"){
+    const completed=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId:request.target.id,command:request.payload});
+    return completed&&completed.operationId===binding.operationId&&completed.correlationId===binding.correlationId?terminal(completed):null;
+   }
+   if(String(row.id)!==binding.operationId||row.operation_type!=="REVERSE"||row.target_type!=="SHIPMENT"||String(row.target_id)!==request.target.id||row.event_id!==request.eventId||
+      String(row.initiated_by)!==binding.initiatorId||row.payload_hash!==binding.payloadHash||row.correlation_id!==binding.correlationId||row.lease_owner!==binding.leaseOwner||
+      String(row.is_document_archived)!=="0"||String(row.attempt_count)!==String(binding.attemptCount)||row.next_attempt_at!==null||row.result_json!==null||row.completed_at!==null||row.public_error_code!==""||row.public_error_details!==null)return null;
+   let now,expires;try{now=fulfillmentInteger(String(row.observed_now_ms),{positive:false});expires=fulfillmentInteger(String(row.lease_expires_at));}catch{return null;}
+   return expires>now?started:null;
+  });
+ }
  async startReversal(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
   const command=normalizeShipmentReversal(input),number=await this.sequence.reserveNumber({documentType:"REVERSAL"});
-  const request={eventId:command.eventId,operationType:"REVERSE",target:{type:"SHIPMENT",id:shipmentId},payload:command,leaseOwner:randomUUID(),correlationId:randomUUID()};
-  return this.transactions.withTransaction(async tx=>{
+  const request=Object.freeze({eventId:command.eventId,operationType:"REVERSE",target:Object.freeze({type:"SHIPMENT",id:shipmentId}),payload:command,leaseOwner:randomUUID(),correlationId:randomUUID()});
+  let created=null;
+  const output=await this.transactions.withTransaction(async tx=>{
    const operation=await this.operations.claimInTransaction(tx,request);
    if(operation.replay)return terminal(operation);
    const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.reverse");
@@ -64,7 +90,13 @@ export class ShipmentReversalService {
    const [[history]]=await tx.query("SELECT COALESCE(MAX(sequence_no),0)+1 AS next_sequence FROM shipment_status_history WHERE shipment_id=?",[shipmentId]);
    await tx.execute("INSERT INTO shipment_status_history (shipment_id,sequence_no,from_status,to_status,action,reason,event_id,version_after,actor_user_id,actor_label,occurred_at) VALUES (?,?,'SHIPPED','REVERSING','REVERSE_START',?,?,?,?,?,?)",[shipmentId,history.next_sequence,command.reason,command.eventId,command.version+1,actor.id,actor.username,at]);
    await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'REVERSE',?,?,?,?,?,?)",[shipmentId,command.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({shipmentId,fulfillmentId:String(root.id),reversalId,status:"REVERSING",version:command.version+1}),at]);
-   return pending(operation,{id:reversalId,reversal_number:number,version:1},command.version+1);
+   const result=pending(operation,{id:reversalId,reversal_number:number,version:1},command.version+1);
+   created={executor:tx,result,facts:Object.freeze({request,initiatorId:String(actor.id),operationId:operation.operationId,correlationId:request.correlationId,leaseOwner:request.leaseOwner,attemptCount:1,payloadHash:fulfillmentOperationHash(request)})};
+   return result;
   });
+  const binding=created&&output===created.result&&getTransactionOutcome(created.executor)?.state==="COMMITTED"?created.facts:null;
+  created=null;
+  if(binding)this.#startedAttempts.set(output,binding);
+  return output;
  }
 }
