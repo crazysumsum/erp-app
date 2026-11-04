@@ -113,7 +113,7 @@ export function purchaseOrderListRequest(req) {
 const object = (properties) => ({ type: "object", required: Object.keys(properties), additionalProperties: false, properties });
 const TEXT = { type: "string" }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
 const NULLABLE_TEXT = { type: ["string", "null"] }, NULLABLE_DATE = { type: ["string", "null"] };
-const AMOUNT = { type: "string", pattern: "^\\d+\\.\\d{4}$" }, BASE_QUANTITY = { type: "string", pattern: "^\\d+$" };
+const AMOUNT = { type: "string", pattern: "^\\d+(?:\\.\\d{1,4})?$" }, BASE_QUANTITY = { type: "string", pattern: "^\\d+$" };
 const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "copy"] } };
 const HEADER = {
   id: ID, number: { type: "string", pattern: "^PO-\\d{6}-\\d{6}$" }, status: { enum: STATUSES }, version: ID, supplierId: ID, supplierCode: TEXT, supplierName: TEXT,

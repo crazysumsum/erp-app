@@ -154,11 +154,11 @@ integrationTest("List 同 Detail 經 HTTP：view 讀到過咗 response schema �
   const list = await get(`?supplierId=${created.supplier}&status=DRAFT&hasOutstanding=false&pageSize=5&q=${encodeURIComponent(input.supplierReference)}`, { token: viewToken });
   assert.equal(list.status, 200, JSON.stringify(list.body));
   assert.deepEqual([list.body.data.total, list.body.data.page, list.body.data.pageSize, list.body.data.items[0].id], [1, 1, 5, po.id]);
-  assert.deepEqual([list.body.data.items[0].totalAmount, list.body.data.items[0].allowedActions], ["2.5000", []]);
+  assert.deepEqual([list.body.data.items[0].totalAmount, list.body.data.items[0].allowedActions], ["2.50", []]);
 
   const detail = await get(`/${po.id}`, { token: viewToken });
   assert.equal(detail.status, 200, JSON.stringify(detail.body));
-  assert.deepEqual([detail.body.data.number, detail.body.data.lines[0].orderedBaseQuantity, detail.body.data.lines[0].lineAmount], [po.number, "2", "2.5000"]);
+  assert.deepEqual([detail.body.data.number, detail.body.data.lines[0].orderedBaseQuantity, detail.body.data.lines[0].lineAmount], [po.number, "2", "2.50"]);
   assert.deepEqual(detail.body.data.currentMasterDifferences, { supplier: null, lines: [] });
 
   const bad = await get("?sortBy=password_hash", { token: viewToken });

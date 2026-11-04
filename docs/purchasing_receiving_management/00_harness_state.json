@@ -41,7 +41,7 @@
     "TASK-013": "DONE",
     "TASK-014": "DONE",
     "TASK-015": "DONE",
-    "TASK-016": "PENDING",
+    "TASK-016": "DONE",
     "TASK-017": "PENDING",
     "TASK-018": "PENDING",
     "TASK-019": "PENDING",
@@ -599,6 +599,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task016_po_list_detail_copy.md#hd-017"
+    },
+    {
+      "id": "HD-018",
+      "impact": "MAJOR",
+      "question": "TASK-017 left three points open: (1) whether confirm writes status history before TASK-022 creates that table; (2) what confirm does when a UOM factor or Currency scale changed since the Draft was saved; (3) whether Item reads need locking reads at confirm, given the provider has none.",
+      "affected_ids": [
+        "TASK-017",
+        "TASK-022",
+        "DES-005",
+        "DES-009"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task017_po_submit_confirm.md#hd-018"
     }
   ],
   "external_actions": [
@@ -721,9 +734,17 @@
       "idempotency_key": "purchasing-task015-pr331-merge-20261103",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 87edf064d2abf40ed55570b04e455cd3ddbc7770, verified as an ancestor of origin/main; admitted CI run 41612873792 completed success on the dispatched merge 0b586783 of head 53fa522c9b59c06367be2ed31a51a8a9cfd611eb with origin/main c2ee7e69 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; the merge gate's parent check did not execute before merging, and a post-merge API check confirmed the CI-tested and merged commits have identical parents and tree 2c3fc38b"
+    },
+    {
+      "id": "EXT-016",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/333 -> main",
+      "idempotency_key": "purchasing-task016-pr333-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit ae54601f8dbd79055956c15c508d439dea98d864, verified as an ancestor of origin/main; admitted CI run 41757244336 attempt 1 completed success on the dispatched merge 18cb9944 of head 85a119714afc63a69040d05bd7afaf434fe523c0 with origin/main e5500fc9 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; pre-merge gate read the parents through the API, and the merged commit has the same parents and tree 555ce8c0"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-015 is DONE (PR #331). TASK-016 is in progress on claude/purchasing-task016: PO list, detail and copy API with HD-017 answered (1A ID-only reads of suppliers and item_skus/items for name search; 2A copy keeps what is still valid and warns; 3A no approval, GR or history fields until their tables exist; 4A hasOutstanding means CONFIRMED or PARTIALLY_RECEIVED with the flag set). TASK-017 submit must revalidate every master strictly and decide whether Item and Supplier reads need locking reads; open for the Supplier owner: transactional reads of a Supplier address by ID and of supplier_sku_refs. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-016 is DONE (PR #333, HD-017). TASK-017 is in progress on claude/purchasing-task017: Approval OFF submit and confirm with HD-018 answered (1A audit only until TASK-022 adds status history; 2A refuse with PO_MASTER_CHANGED when a factor or Currency scale changed; 3A non-locking Item reads), plus the fix for TASK-016 returning stored-scale amounts. TASK-017 submit must revalidate every master strictly and decide whether Item and Supplier reads need locking reads; open for the Supplier owner: transactional reads of a Supplier address by ID and of supplier_sku_refs. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }

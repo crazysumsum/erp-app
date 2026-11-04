@@ -1,6 +1,7 @@
 import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
+import { storedAmount } from "./moneyMath.js";
 import { purchasingError } from "./purchasingErrors.js";
 import { localDate, positiveId } from "./purchasingValidation.js";
 
@@ -16,9 +17,10 @@ const LINE_OUTSTANDING = `GREATEST(CAST(l.ordered_base_quantity AS SIGNED) - CAS
 const PO_NUMBER = /^PO-\d{6}-\d{6}$/u;
 const MAX_SEARCH_IDS = 100; // 設計 §8.9：名稱搜尋最多 100 個 ID。
 const date = (column) => `DATE_FORMAT(${column}, '%Y-%m-%d') AS ${column}`;
-const SUMMARY = `id, po_number, status, version, supplier_id, supplier_code_snapshot, supplier_name_snapshot, currency_code, ${date("order_date")},
+const SUMMARY = `id, po_number, status, version, supplier_id, supplier_code_snapshot, supplier_name_snapshot, currency_code,
+  currency_decimal_places_snapshot, ${date("order_date")},
   ${date("expected_delivery_date")}, buyer_id, buyer_label, supplier_reference, total_amount, has_outstanding, created_at, updated_at`;
-const DETAIL = `${SUMMARY}, ordering_address_id, ordering_address_snapshot, currency_name_snapshot, currency_decimal_places_snapshot, payment_term_id,
+const DETAIL = `${SUMMARY}, ordering_address_id, ordering_address_snapshot, currency_name_snapshot, payment_term_id,
   payment_term_snapshot, default_receiving_warehouse_id, default_warehouse_code_snapshot, notes, subtotal_amount, has_confirmed_receipt, created_by_label,
   updated_by_label, confirmed_at, closed_at, cancelled_at`;
 const LINE = `id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, tracking_policy_snapshot, inventory_tracked_snapshot,
@@ -89,12 +91,12 @@ function toHeader(row, permissions) {
     id: Number(row.id), number: row.po_number, status: row.status, version: Number(row.version), supplierId: Number(row.supplier_id),
     supplierCode: row.supplier_code_snapshot, supplierName: row.supplier_name_snapshot, currencyCode: row.currency_code, orderDate: row.order_date,
     expectedDeliveryDate: row.expected_delivery_date, buyerId: nullableId(row.buyer_id), buyerLabel: row.buyer_label, supplierReference: row.supplier_reference,
-    totalAmount: String(row.total_amount), hasOutstanding: Boolean(row.has_outstanding) && RECEIVING.includes(row.status),
+    totalAmount: storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot)), hasOutstanding: Boolean(row.has_outstanding) && RECEIVING.includes(row.status),
     createdAt: Number(row.created_at), updatedAt: Number(row.updated_at), allowedActions: allowedActions(row.status, permissions)
   };
 }
 
-function toPurchaseOrderLine(row, receiving) {
+function toPurchaseOrderLine(row, receiving, places) {
   const ordered = BigInt(row.ordered_base_quantity), net = BigInt(row.net_received_base_quantity), closed = BigInt(row.closed_remaining_base_quantity);
   return {
     id: Number(row.id), lineNumber: Number(row.line_number), skuId: Number(row.sku_id), skuCode: row.sku_code_snapshot, skuName: row.sku_name_snapshot,
@@ -102,7 +104,7 @@ function toPurchaseOrderLine(row, receiving) {
     minimumReceiptLifeDays: nullableId(row.minimum_receipt_life_days_snapshot), baseUomId: Number(row.base_uom_id), baseUomCode: row.base_uom_code_snapshot,
     purchaseSkuUomId: Number(row.purchase_sku_uom_id), purchaseUomCode: row.purchase_uom_code_snapshot, uomToBaseFactor: Number(row.uom_to_base_factor_snapshot),
     supplierItemCode: row.supplier_item_code_snapshot, orderedQuantity: String(row.ordered_quantity), orderedBaseQuantity: String(ordered),
-    unitPrice: String(row.unit_price), lineAmount: String(row.line_amount), zeroPriceReason: row.zero_price_reason, expectedDeliveryDate: row.expected_delivery_date,
+    unitPrice: String(row.unit_price), lineAmount: storedAmount(row.line_amount, places), zeroPriceReason: row.zero_price_reason, expectedDeliveryDate: row.expected_delivery_date,
     lineNote: row.line_note, grossReceivedBaseQuantity: String(row.gross_received_base_quantity), reversedBaseQuantity: String(row.reversed_base_quantity),
     netReceivedBaseQuantity: String(net), outstandingBaseQuantity: receiving ? String(nonNegative(ordered - net - closed)) : "0",
     overReceivedBaseQuantity: String(nonNegative(net - ordered)), closedRemainingBaseQuantity: String(closed), closeReason: row.close_reason,
@@ -116,9 +118,9 @@ function toPurchaseOrderDetail(row, lines, permissions) {
     currencyName: row.currency_name_snapshot, currencyDecimalPlaces: Number(row.currency_decimal_places_snapshot),
     paymentTermId: nullableId(row.payment_term_id), paymentTerm: row.payment_term_snapshot,
     defaultReceivingWarehouseId: nullableId(row.default_receiving_warehouse_id), defaultWarehouseCode: row.default_warehouse_code_snapshot,
-    notes: row.notes, subtotalAmount: String(row.subtotal_amount), hasConfirmedReceipt: Boolean(row.has_confirmed_receipt),
+    notes: row.notes, subtotalAmount: storedAmount(row.subtotal_amount, Number(row.currency_decimal_places_snapshot)), hasConfirmedReceipt: Boolean(row.has_confirmed_receipt),
     createdByLabel: row.created_by_label, updatedByLabel: row.updated_by_label, confirmedAt: nullableId(row.confirmed_at), closedAt: nullableId(row.closed_at),
-    cancelledAt: nullableId(row.cancelled_at), lines: lines.map((line) => toPurchaseOrderLine(line, RECEIVING.includes(row.status)))
+    cancelledAt: nullableId(row.cancelled_at), lines: lines.map((line) => toPurchaseOrderLine(line, RECEIVING.includes(row.status), Number(row.currency_decimal_places_snapshot)))
   };
 }
 
