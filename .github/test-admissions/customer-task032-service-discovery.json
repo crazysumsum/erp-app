@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "decision": "Actual Sam answer in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, human turn 01a1a57a-0da4-75a0-84b8-aa96d176d7b7 / user message 01a1a57a-0e04-7473-86b0-65a518bdacbc, question call_4e9a3c6bbd7e4edc844cf65ac6baea53 item0: 批准定向一案、准入及一次 PR CI. Actual question binds serviceContainer.test.js candidate58bc12c5, one local original failing case, independent admission preserving other grants, latest-main integration/review, one natural existing eight-shard functional CI on original Draft PR336; stop on any failure, merge separately decided.",
+  "purpose": "Correct the existing exact built-in-service discovery expectation for the approved customer.references singleton, fixing the sole test failure in PR336 CI41787590219. Preserve the full deepEqual assertion and all existing cases.",
+  "data": "Five inserted expectation lines only: customer.references, singleton, dependencies[]. No new cases, fixtures, database rows, parameters, workers or acceptance thresholds. Entire existing test file remains functional and reviewed.",
+  "concurrency": "One original local case, serial; then existing eight functional CI shards with unchanged within-shard concurrency. No capacity execution.",
+  "repetitions": "One local execution of service discovery finds the built-in public services, completed1PASS/0FAIL/0SKIP; one natural CI from one ordinary push to Draft PR336. No retry or manual dispatch.",
+  "thresholds": "Keep exact full service-definition deepEqual and every existing assertion, coverage floor, lint/build/security/browser and functional gate. No skips or lowered thresholds. Merge separately decided.",
+  "trigger": "After exact-head independent review, latest-main reconciliation, independent administrator registration/readback and trusted static admission, Customer uniquely pushes original Draft PR336 once. Keep Draft; first failure stops for report.",
+  "cost": "No additional test cases or CI jobs. Actual approved local case178.762ms, process245.756ms. Natural CI estimate10–15minutes, unmeasured for repaired candidate; no workload run for estimation.",
+  "files": [
+    { "path": "server/test/serviceContainer.test.js", "mode": "100644", "blob": "58bc12c5640e5b5aaf5e99febe90561b8caad222", "kind": "functional", "cases": ["service discovery finds the built-in public services"] }
+  ]
+}
