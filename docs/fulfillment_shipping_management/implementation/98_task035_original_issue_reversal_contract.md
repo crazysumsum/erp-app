@@ -96,3 +96,11 @@ Fulfillment以回執 member601＋Movement610/611更新Issue310/311、寫兩detai
 最小下一段產品改動應為 Fulfillment 私有scope／projection mapper：接收完整原集合與Inventory advisory，whitelist組command、對應310/311及檢查兩leg回執；由未來內部 `completeReversalPhaseB` 使用，不在 `startReversal` 增加庫存寫入。真正連起writer之前必須：TASK034完整DoD通過；Sales owner補目前reverse準備資料；建立仿照既有Confirmation的可信原started／committed-PhaseA／lease binding；完成鎖內完整集合與required下游的可核契約。這輪**沒有實作這段**。
 
 反向結果reader是TASK036 Recovery的明確輸入依賴；TASK035的正常原子交易設計可先完成，但不明結果只能停REVERSING，不得在缺reader時啟用自動恢復或宣稱036完成。沒有新增營運政策需Sam決定；現階段無另需TL選擇的方案，需TL協調Sales owner補上述準備介面，及Inventory／Sales owner分別交反向reader契約。TASK035／036均未因本稿改為完成，後續測試／執行仍受既有gate、准入及資源授權限制。
+
+## Sales 讀取候選與呼叫順序（2026-11-04）
+
+技術負責人已對照本契約與 Sales 的本機單檔候選。候選基線為 `d434a857`，`SalesFulfillmentService.js` 的 SHA-256 為 `1b94bfb2c496a4af85a3af12894a13881426cb8733ccd51d73995c14282ed5e2`。前文列出的 TASK-035 Sales 準備資料已有可供接線的源碼候選，TASK-036 的反向結果查證仍待交付。
+
+1. 先以原沖銷事件及授權判斷是否已有終局。確需組成新的寫入嘗試時，才用原出貨的 Sales 訂單、Shipment 與確認事件呼叫 `getShipmentReversalScope({salesOrderId, shipmentId, originalConfirmationEventId})`。此讀取使用獨立的 REPEATABLE READ 交易，在呼叫前須結束先前的交易。
+2. 本例用訂單及各行的 `observedVersion` 分別填 Sales intent 的 `expectedOrderVersion` 與行 `expectedVersion`。由原出貨逐項比對 claim、reservation、原 Inventory operation 及數量。mapping 的 `inventoryVersionFloor` 僅代表 Sales 最後觀測到的版本，Reservation 的當前 `expectedVersion` 取自 Inventory。
+3. 寫入使用另一個 READ COMMITTED 交易，重新核實原事件、目前權限、Sales 版本、整張出貨與下游狀態。若另一個嘗試在讀取期間已完成，按原事件查回終局。此次已核對函式與欄位，整合及資料庫行為尚待驗證。
