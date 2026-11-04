@@ -651,7 +651,8 @@ integrationTest("submit 審批關閉：完整 Draft 直接 CONFIRMED，寫目前
     const [lineA, lineB] = await lines(tx, draft.id), inventory = await inventoryCounts(tx);
     await tx.query("UPDATE suppliers SET supplier_name = 'Renamed Supplier' WHERE id = ?", [f.supplierA]);
     await tx.query("UPDATE item_skus SET sku_name = 'Renamed SKU' WHERE id = ?", [f.skuA]);
-    const [[{ version: policyVersion }]] = await tx.query("SELECT version FROM purchasing_settings WHERE id = 1");
+    await tx.query("UPDATE purchasing_settings SET version = 7 WHERE id = 1");
+    await tx.query("UPDATE purchase_orders SET updated_by = NULL, updated_by_label = 'someone else' WHERE id = ?", [draft.id]);
 
     const input = { eventId: randomUUID(), version: 1 }, context = { requestId: "req-s", correlationId: "corr-s", ip: "127.0.0.1" };
     const result = await orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input, context });
@@ -660,6 +661,7 @@ integrationTest("submit 審批關閉：完整 Draft 直接 CONFIRMED，寫目前
     const header = await order(tx, draft.id), confirmed = await lines(tx, draft.id);
     assert.deepEqual([header.status, header.version, header.confirmed_at, header.confirmed_by, header.updated_by, header.has_outstanding, header.has_confirmed_receipt],
       ["CONFIRMED", 2, NOW, f.actorId, f.actorId, 1, 0]);
+    assert.equal(header.updated_by_label, (await tx.query("SELECT username FROM users WHERE id = ?", [f.actorId]))[0][0].username);
     assert.equal(header.supplier_name_snapshot, "Renamed Supplier", "確認時寫目前快照");
     assert.equal(header.total_amount, "30.0200");
     assert.deepEqual(confirmed.map((row) => row.id), [lineA.id, lineB.id], "Line ID 唔變");
@@ -669,7 +671,7 @@ integrationTest("submit 審批關閉：完整 Draft 直接 CONFIRMED，寫目前
 
     const audit = (await audits(tx, f.actorId)).at(-1);
     assert.deepEqual([audit.action, audit.outcome, audit.target_id, audit.target_label], ["purchase_order.confirmed", "SUCCEEDED", draft.id, draft.number]);
-    assert.deepEqual(audit.detail, { version: 2, lineCount: 2, totalAmount: "30.02", currencyCode: f.currency, policyVersion: Number(policyVersion) });
+    assert.deepEqual(audit.detail, { version: 2, lineCount: 2, totalAmount: "30.02", currencyCode: f.currency, policyVersion: 7 });
     const operation = (await operationsOf(tx, f.actorId)).at(-1);
     assert.deepEqual([operation.command_type, operation.source_document_id], ["SUBMIT_PURCHASE_ORDER", String(draft.id)]);
 

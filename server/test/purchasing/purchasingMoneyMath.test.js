@@ -107,7 +107,7 @@ test("DB 金額轉返 Currency scale（HD-009）；多餘小數或者形狀唔�
   assert.equal(storedAmount("999999999999999999999.0000", 2), "999999999999999999999.00");
   assert.throws(() => storedAmount("376.5100", 1), TypeError);
   assert.throws(() => storedAmount("376.5000", 0), TypeError);
-  for (const value of ["376.5", "376", 376.5, null, "-1.0000"]) assert.throws(() => storedAmount(value, 2), TypeError, String(value));
+  for (const value of ["376.5", "376", "100", "100.00", 376.5, null, "-1.0000"]) assert.throws(() => storedAmount(value, 2), TypeError, String(value));
   assert.throws(() => storedAmount("1.0000", 5), TypeError);
 });
 

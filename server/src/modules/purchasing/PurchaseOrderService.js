@@ -179,9 +179,9 @@ export class PurchaseOrderService {
     await tx.query(`INSERT INTO purchase_order_lines (${LINE_COLUMNS.join(", ")}) VALUES ?`,
       [lines.map((row) => LINE_COLUMNS.map((column) => column === "purchase_order_id" ? id : row[column]))]);
     const version = request.version + 1, status = current.nextStatus;
-    const [result] = await tx.query("UPDATE purchase_orders SET ?, status = ?, version = ?, confirmed_at = ?, confirmed_by = ? WHERE id = ? AND version = ? AND status = 'DRAFT'",
-      [{ ...header, updated_at: nowMs, updated_by: actor.id, updated_by_label: actor.username }, status, version, nowMs, actor.id, id, request.version]);
-    if (Number(result.affectedRows) !== 1) throw purchasingError("CONCURRENT_OPERATION");
+    // #lockDraft 鎖住 PO 兼驗咗 version，所以呢度唔使再 CAS。
+    await tx.query("UPDATE purchase_orders SET ?, status = ?, version = ?, confirmed_at = ?, confirmed_by = ? WHERE id = ?",
+      [{ ...header, updated_at: nowMs, updated_by: actor.id, updated_by_label: actor.username }, status, version, nowMs, actor.id, id]);
 
     const summary = { id, number: current.po_number, status, version };
     await this.audit.record(tx, { actor, action: AUDIT_ACTION.SUBMIT, targetId: id, targetLabel: current.po_number,
