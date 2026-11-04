@@ -32,6 +32,8 @@
       "server/src/handlers/customer-exports/**",
       "server/src/handlers/customer-audit/**",
       "server/src/services/customerImport/**",
+      "server/src/services/customer/CustomerReferenceService.js",
+      "server/src/framework/application/createApplication.js",
       "server/src/services/customerFile/**",
       "server/scripts/rotateCustomerBankEncryption.js",
       "server/scripts/reindexCustomerBankBlindIndexes.js",
@@ -73,6 +75,8 @@
       "server/src/handlers/customer-exports/**",
       "server/src/handlers/customer-audit/**",
       "server/src/services/customerImport/**",
+      "server/src/services/customer/CustomerReferenceService.js",
+      "server/src/framework/application/createApplication.js",
       "server/src/services/customerFile/**",
       "server/scripts/rotateCustomerBankEncryption.js",
       "server/scripts/reindexCustomerBankBlindIndexes.js",
@@ -86,6 +90,7 @@
       "client/src/framework/ui/DataTable.vue"
     ],
     "approval_required_paths": [
+      "server/src/framework/application/createApplication.js",
       "server/src/modules/businessMaster/BusinessMasterProvider.js",
       "server/src/modules/businessMaster/BusinessMasterRepository.js",
       "server/database/migrations/**",
