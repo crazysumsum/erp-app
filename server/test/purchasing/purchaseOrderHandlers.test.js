@@ -3,10 +3,14 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
+import { CopyPurchaseOrderHandler } from "../../src/handlers/purchase-orders/copyPurchaseOrderHandler.js";
 import { CreatePurchaseOrderHandler } from "../../src/handlers/purchase-orders/createPurchaseOrderHandler.js";
+import { GetPurchaseOrderHandler } from "../../src/handlers/purchase-orders/getPurchaseOrderHandler.js";
+import { ListPurchaseOrdersHandler } from "../../src/handlers/purchase-orders/listPurchaseOrdersHandler.js";
 import { UpdatePurchaseOrderHandler } from "../../src/handlers/purchase-orders/updatePurchaseOrderHandler.js";
 import { PURCHASE_ORDER_CREATE_INPUT, PURCHASE_ORDER_UPDATE_INPUT } from "../../src/handlers/purchasing/purchasingSchemas.js";
 import { PurchaseOrderService } from "../../src/modules/purchasing/PurchaseOrderService.js";
+import { PurchasingInquiryService } from "../../src/modules/purchasing/PurchasingInquiryService.js";
 
 const logger = { async info() {}, async warn() {}, async error() {}, async debug() {} };
 const time = { now: () => new Date(0), nowMs: () => 0, timestamp: () => "", at: (ms) => new Date(ms), fileDate: () => "2026-11-03" };
@@ -27,7 +31,8 @@ function handler(Handler) {
   const instance = new Handler(services()), calls = [];
   const result = { id: 41, number: "PO-202611-000001", status: "DRAFT", version: 1, warnings: [], replayed: false };
   instance.orders = { create: async (command) => { calls.push(["create", command]); return result; },
-    update: async (command) => { calls.push(["update", command]); return { ...result, version: 2 }; } };
+    update: async (command) => { calls.push(["update", command]); return { ...result, version: 2 }; },
+    copy: async (command) => { calls.push(["copy", command]); return result; } };
   return { instance, calls };
 }
 
@@ -116,5 +121,66 @@ test("數量同金額要係原本嘅字串，唔會 coerce；其他型別錯誤�
     [body({ buyerId: undefined }), "buyerId"]
   ];
   for (const [input, field] of cases) await assert.rejects(instance.execute(request(input)), invalid(field), field);
+  assert.deepEqual(calls, []);
+});
+
+test("Read handler metadata：GET、jwt、只要 purchasing.view；唔開 idempotency，query 同 response 都係白名單", () => {
+  for (const [Handler, name, path] of [[ListPurchaseOrdersHandler, "listPurchaseOrders", "/api/v1/purchase-orders"],
+    [GetPurchaseOrderHandler, "getPurchaseOrder", "/api/v1/purchase-orders/:id"]]) {
+    assert.equal(Handler.handlerName, name);
+    assert.deepEqual([Handler.api.method, Handler.api.path, Handler.api.authType, Handler.api.idempotency], ["GET", path, undefined, undefined]);
+    assert.deepEqual(Handler.api.authorizationPolicies, [{ name: "hasPermission", options: { permissions: ["purchasing.view"] } }]);
+    assert.ok(new Handler(services()).inquiry instanceof PurchasingInquiryService);
+  }
+  const { additionalProperties, properties } = ListPurchaseOrdersHandler.api.responseSchema[200].properties.items.items;
+  assert.equal(additionalProperties, false);
+  assert.ok(!Object.keys(properties).some((field) => /bank|iban|account|internal/iu.test(field)));
+  assert.equal(GetPurchaseOrderHandler.api.responseSchema[200].additionalProperties, false);
+  assert.deepEqual(GetPurchaseOrderHandler.api.requestSchema.params.required, ["id"]);
+});
+
+test("List 將 query 字串轉型先交畀 service；未知 filter、爛 enum、超上限一律 PURCHASING_INPUT_INVALID", async () => {
+  const instance = new ListPurchaseOrdersHandler(services()), calls = [];
+  instance.inquiry = { list: async (command) => { calls.push(command); return { items: [], total: 0, page: 1, pageSize: 20 }; } };
+  const list = (query) => instance.execute({ input: { query, params: {}, body: {} }, auth: { claims: { sub: "9" } } });
+
+  await list({ page: "2", pageSize: "50", supplierId: "12", hasOutstanding: "false", descending: "true", status: ["DRAFT", "CLOSED"], q: "ABC", orderDateFrom: "2026-11-01" });
+  assert.deepEqual(calls, [{ claims: { sub: "9" }, input: { page: 2, pageSize: 50, supplierId: 12, hasOutstanding: false, descending: true, status: ["DRAFT", "CLOSED"], q: "ABC",
+    orderDateFrom: "2026-11-01" } }]);
+  calls.length = 0;
+  for (const [query, field] of [[{ unknown: "1" }, "query"], [{ pageSize: "101" }, "pageSize"], [{ page: "0" }, "page"], [{ sortBy: "password_hash" }, "sortBy"],
+    [{ status: "NOPE" }, "status"], [{ status: ["DRAFT", "NOPE"] }, "status"], [{ supplierId: "abc" }, "supplierId"], [{ hasOutstanding: "maybe" }, "hasOutstanding"],
+    [{ currencyCode: "hkd" }, "currencyCode"], [{ orderDateTo: "30/02/2026" }, "orderDateTo"], [{ q: "x".repeat(191) }, "q"]]) {
+    await assert.rejects(list(query), invalid(field), JSON.stringify(query));
+  }
+  assert.deepEqual(calls, []);
+});
+
+test("Get 用 path 嘅 ID 同 JWT claims 叫 service", async () => {
+  const instance = new GetPurchaseOrderHandler(services()), calls = [];
+  instance.inquiry = { get: async (command) => { calls.push(command); return { id: 41 }; } };
+  const response = await instance.execute({ input: { params: { id: "41" }, query: {}, body: {} }, auth: { claims: { sub: "9" } } });
+  assert.deepEqual(calls, [{ claims: { sub: "9" }, id: 41 }]);
+  assert.deepEqual([response.statusCode, response.data], [200, { id: 41 }]);
+});
+
+test("Copy metadata 同 create 一樣要 mgmt 同 idempotency；body 只收 eventId，來源 ID 嚟自 path，回 201", async () => {
+  assert.deepEqual([CopyPurchaseOrderHandler.handlerName, CopyPurchaseOrderHandler.api.method, CopyPurchaseOrderHandler.api.path],
+    ["copyPurchaseOrder", "POST", "/api/v1/purchase-orders/:id/copy"]);
+  assert.deepEqual(CopyPurchaseOrderHandler.api.authorizationPolicies, [{ name: "hasPermission", options: { permissions: ["purchasing.mgmt"] } }]);
+  assert.deepEqual(CopyPurchaseOrderHandler.api.idempotency, { enabled: true });
+  assert.deepEqual(Object.keys(CopyPurchaseOrderHandler.api.responseSchema), ["201"]);
+
+  const { instance, calls } = handler(CopyPurchaseOrderHandler), eventId = randomUUID();
+  const response = await instance.execute(request({ eventId }, { params: { id: "41" } }));
+  assert.equal(response.statusCode, 201);
+  assert.deepEqual(calls, [["copy", { claims: { sub: "9", roles: ["buyer"], permissions: ["purchasing.mgmt"] }, input: { eventId }, purchaseOrderId: 41,
+    context: { requestId: "req-1", correlationId: "corr-1", ip: "127.0.0.1" } }]]);
+  calls.length = 0;
+
+  await assert.rejects(instance.execute(request({ eventId, supplierId: 1 }, { params: { id: "41" } })), invalid("body"));
+  await assert.rejects(instance.execute(request({ eventId, status: "CONFIRMED" }, { params: { id: "41" } })), invalid("body"));
+  await assert.rejects(instance.execute(request({}, { params: { id: "41" }, key: eventId })), invalid("eventId"));
+  await assert.rejects(instance.execute(request({ eventId }, { params: { id: "41" }, key: randomUUID() })), invalid("eventId"));
   assert.deepEqual(calls, []);
 });

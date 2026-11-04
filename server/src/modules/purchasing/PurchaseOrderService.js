@@ -5,7 +5,7 @@ import { ItemLookupService } from "../item/ItemLookupService.js";
 import { documentTotal, lineAmount } from "./moneyMath.js";
 import { purchasingError } from "./purchasingErrors.js";
 import { draftProjection } from "./purchasingProjections.js";
-import { positiveId } from "./purchasingValidation.js";
+import { eventId, onlyFields, positiveId } from "./purchasingValidation.js";
 import { toBaseQuantity } from "./quantityMath.js";
 
 // Serial 唔支援；DB CHECK 亦只收呢三個，所以就算係容許照存嘅舊 Line 都要擋（設計 §4.6）。
@@ -18,6 +18,8 @@ const LINE_COLUMNS = ["id", "purchase_order_id", "line_number", "sku_id", "sku_c
   "purchase_sku_uom_id", "purchase_uom_code_snapshot", "uom_to_base_factor_snapshot", "ordered_quantity", "ordered_base_quantity",
   "unit_price", "line_amount", "zero_price_reason", "expected_delivery_date", "line_note", "version", "created_at", "updated_at"];
 
+const AUDIT_ACTION = Object.freeze({ CREATE: "purchase_order.created", UPDATE: "purchase_order.updated", COPY: "purchase_order.copied" });
+
 const invalid = (field) => purchasingError("PURCHASING_INPUT_INVALID", { field });
 
 function addressSnapshot(address) {
@@ -27,7 +29,7 @@ function addressSnapshot(address) {
 }
 
 /**
- * PO Draft create／update（設計 §3.1、§8.2；TASK-014）。一個 REPEATABLE READ transaction：actor freshness → event claim →
+ * PO Draft create／update／copy（設計 §3.1、§8.2；TASK-014、TASK-016）。一個 REPEATABLE READ transaction：actor freshness → event claim →
  * sequence（create）／鎖 PO 同 Lines（update）→ 主檔 → 寫 PO、Lines、Audit → complete operation（§2.5、§2.6）。
  *
  * Supplier／SKU 資格（HD-015 1B）：新揀嘅（create、換咗嘅 Supplier、新 Line、換咗 SKU 或 Purchase UOM 嘅 Line）一定要合格；
@@ -53,18 +55,24 @@ export class PurchaseOrderService {
     return this.#command({ kind: "UPDATE", claims, purchaseOrderId, input, context });
   }
 
+  /** `purchaseOrderId` 係來源 PO；request 只有 eventId，內容喺 transaction 入面由來源同目前主檔得出（設計 §8.2）。 */
+  copy({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "COPY", claims, purchaseOrderId, input, context });
+  }
+
   async #command(command) {
     try {
-      if (command.kind === "UPDATE") positiveId(command.purchaseOrderId, "purchaseOrderId");
-      const draft = draftProjection(command.input, { maxLines: this.config.maxPurchaseOrderLines, update: command.kind === "UPDATE" });
-      return await this.operations.run(this.database, (tx) => this.#save(tx, command, draft));
+      if (command.kind !== "CREATE") positiveId(command.purchaseOrderId, "purchaseOrderId");
+      const request = command.kind === "COPY" ? { eventId: eventId(onlyFields(command.input, ["eventId"], "body").eventId) }
+        : draftProjection(command.input, { maxLines: this.config.maxPurchaseOrderLines, update: command.kind === "UPDATE" });
+      return await this.operations.run(this.database, (tx) => this.#save(tx, command, request));
     } catch (error) {
       if (error instanceof ApplicationError && error.statusCode >= 400 && error.statusCode < 500) await this.#rejected(command, error);
       throw error;
     }
   }
 
-  async #save(tx, { kind, claims, purchaseOrderId, context }, draft) {
+  async #save(tx, { kind, claims, purchaseOrderId, context }, request) {
     const nowMs = this.time.nowMs();
     const fresh = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
     if (!fresh.permissions.includes("purchasing.mgmt")) throw permissionStaleError();
@@ -72,15 +80,16 @@ export class PurchaseOrderService {
     const trace = { requestId: context.requestId, correlationId: context.correlationId };
     const { operationId, replay } = await this.operations.claim(tx, {
       commandType: `${kind}_PURCHASE_ORDER`, sourceDocumentId: purchaseOrderId === null ? "" : String(purchaseOrderId),
-      eventId: draft.eventId, payload: { purchaseOrderId, draft }, actor, nowMs, ...trace
+      eventId: request.eventId, payload: { purchaseOrderId, draft: request }, actor, nowMs, ...trace
     });
     // Replay 只回當時嘅結果摘要；warning 係當時主檔狀態，唔重算。
     if (replay) return { ...replay, warnings: [], replayed: true };
 
+    const warnings = [];
+    const draft = kind === "COPY" ? await this.#copiedDraft(tx, purchaseOrderId, request.eventId, actor, nowMs, warnings) : request;
     const current = kind === "UPDATE" ? await this.#lockDraft(tx, purchaseOrderId, draft) : null;
     const number = current ? { number: current.po_number }
       : await this.sequences.nextNumberInTransaction(tx, { documentType: "PO", localDate: this.time.fileDate(this.time.at(nowMs)), nowMs });
-    const warnings = [];
     const header = await this.#header(tx, draft, current, nowMs, warnings);
     const lines = await this.#lines(tx, draft, current, header.currency_decimal_places_snapshot, nowMs, warnings);
     header.subtotal_amount = header.total_amount = documentTotal(lines.map((row) => row.line_amount), header.currency_decimal_places_snapshot);
@@ -102,8 +111,9 @@ export class PurchaseOrderService {
       [lines.map((row) => LINE_COLUMNS.map((column) => column === "purchase_order_id" ? id : row[column]))]);
 
     const summary = { id, number: number.number, status: "DRAFT", version };
-    await this.audit.record(tx, { actor, action: kind === "CREATE" ? "purchase_order.created" : "purchase_order.updated", targetId: id,
-      targetLabel: number.number, detail: { version, lineCount: lines.length, totalAmount: header.total_amount, currencyCode: header.currency_code },
+    await this.audit.record(tx, { actor, action: AUDIT_ACTION[kind], targetId: id, targetLabel: number.number,
+      detail: { version, lineCount: lines.length, totalAmount: header.total_amount, currencyCode: header.currency_code,
+        ...(kind === "COPY" ? { sourcePurchaseOrderId: purchaseOrderId } : {}) },
       nowMs, ip: context.ip, ...trace });
     await this.operations.complete(tx, { operationId, result: summary, nowMs });
     return { ...summary, warnings, replayed: false };
@@ -121,6 +131,85 @@ export class PurchaseOrderService {
     row.lines = new Map(lines.map((line) => [Number(line.id), line]));
     for (const line of draft.lines) if (line.id !== null && !row.lines.has(line.id)) throw purchasingError("PURCHASE_ORDER_NOT_FOUND");
     return row;
+  }
+
+  /**
+   * Copy 只抄仍然合法嘅 editable values（§8.2；HD-017 2A）：Supplier 唔可採購或者冇 Line 剩低就成張拒絕；選填主檔失效就清空，Buyer 失效換做
+   * 操作者，SKU／UOM 唔合格就剔走嗰行，全部回 warning。Order Date 用今日。出嚟嘅 Draft 再行一次 create 嘅完整驗證，唔帶狀態、收貨或者舊資格。
+   */
+  async #copiedDraft(tx, sourceId, event, actor, nowMs, warnings) {
+    const dateOf = (column) => `DATE_FORMAT(${column}, '%Y-%m-%d') AS ${column}`;
+    const [[source]] = await tx.query(`SELECT supplier_id, ordering_address_id, currency_code, payment_term_id, ${dateOf("expected_delivery_date")},
+      default_receiving_warehouse_id, buyer_id, supplier_reference, notes FROM purchase_orders WHERE id = ?`, [sourceId]);
+    if (!source) throw purchasingError("PURCHASE_ORDER_NOT_FOUND");
+    const [rows] = await tx.query(`SELECT line_number, sku_id, purchase_sku_uom_id, ordered_quantity, unit_price, zero_price_reason,
+      ${dateOf("expected_delivery_date")}, line_note FROM purchase_order_lines WHERE purchase_order_id = ? ORDER BY line_number`, [sourceId]);
+    const today = this.time.fileDate(this.time.at(nowMs)), supplierId = Number(source.supplier_id);
+    const changed = (field, lineNumber) => warnings.push({ code: "COPY_FIELD_CHANGED", field, ...(lineNumber ? { lineNumber } : {}) });
+
+    try {
+      await this.suppliers.assertUsableInTransaction(tx, supplierId, { purpose: "purchase", atMs: nowMs });
+    } catch (error) {
+      if (["SUPPLIER_NOT_USABLE", "SUPPLIER_NOT_FOUND"].includes(error?.code)) throw purchasingError("SUPPLIER_NOT_PURCHASABLE", { field: "supplierId" });
+      throw error;
+    }
+    let orderingAddressId = source.ordering_address_id === null ? null : Number(source.ordering_address_id);
+    if (orderingAddressId !== null) {
+      // Provider 連 Supplier 嘅預設 Currency／Payment Term 一齊驗；預設失效只係攞唔到地址，唔應該令成張 Copy 失敗。
+      const primary = await this.suppliers.getPurchaseDefaultsInTransaction(tx, supplierId, { atMs: nowMs }).catch((error) => {
+        if (["CURRENCY_NOT_ACTIVE", "PAYMENT_TERM_NOT_ACTIVE"].includes(error?.code)) return null;
+        throw error;
+      });
+      if (primary?.orderingAddress?.id !== orderingAddressId) { orderingAddressId = null; changed("orderingAddressId"); }
+    }
+    let paymentTermId = source.payment_term_id === null ? null : Number(source.payment_term_id);
+    if (paymentTermId !== null) {
+      try { await this.businessMaster.assertPaymentTermUsableInTransaction(tx, { id: paymentTermId, purpose: "new_assignment" }); }
+      catch (error) {
+        if (error?.code !== "PAYMENT_TERM_NOT_ACTIVE") throw error;
+        paymentTermId = null;
+        changed("paymentTermId");
+      }
+    }
+    let warehouseId = source.default_receiving_warehouse_id === null ? null : Number(source.default_receiving_warehouse_id);
+    if (warehouseId !== null) {
+      const [[warehouse]] = await tx.query("SELECT status FROM inventory_warehouses WHERE id = ?", [warehouseId]);
+      if (warehouse?.status !== "ACTIVE") { warehouseId = null; changed("defaultReceivingWarehouseId"); }
+    }
+    const [[buyer]] = await tx.query("SELECT id FROM users WHERE id = ? AND status = 'active'", [source.buyer_id]);
+    if (!buyer) changed("buyerId");
+
+    const skus = await new ItemLookupService({ database: tx, logger: this.logger, time: this.time })
+      .findManyByIds(rows.map((row) => Number(row.sku_id)), { purpose: "purchase", atMs: nowMs });
+    const lines = [];
+    for (const row of rows) {
+      const lineNumber = Number(row.line_number);
+      if (!this.#stillPurchasable(skus.get(Number(row.sku_id)), Number(row.purchase_sku_uom_id), row.ordered_quantity)) {
+        warnings.push({ code: "COPY_LINE_DROPPED", lineNumber });
+        continue;
+      }
+      const expired = row.expected_delivery_date !== null && row.expected_delivery_date < today;
+      if (expired) changed("expectedDeliveryDate", lineNumber);
+      lines.push({ skuId: Number(row.sku_id), purchaseSkuUomId: Number(row.purchase_sku_uom_id), orderedQuantity: row.ordered_quantity,
+        unitPrice: row.unit_price, zeroPriceReason: row.zero_price_reason, expectedDeliveryDate: expired ? null : row.expected_delivery_date,
+        lineNote: row.line_note });
+    }
+    if (!lines.length) throw purchasingError("SKU_NOT_PURCHASABLE", { field: "lines" });
+    const expired = source.expected_delivery_date !== null && source.expected_delivery_date < today;
+    if (expired) changed("expectedDeliveryDate");
+
+    return draftProjection({ eventId: event, supplierId, orderingAddressId, currencyCode: source.currency_code, paymentTermId, orderDate: today,
+      expectedDeliveryDate: expired ? null : source.expected_delivery_date, defaultReceivingWarehouseId: warehouseId,
+      buyerId: buyer ? Number(buyer.id) : actor.id, supplierReference: source.supplier_reference, notes: source.notes, lines },
+    { maxLines: this.config.maxPurchaseOrderLines, update: false });
+  }
+
+  /** 同 #lines 嘅條件一樣；UOM factor 改咗之後換唔到整數 Base quantity 都算唔合格。 */
+  #stillPurchasable(sku, purchaseSkuUomId, orderedQuantity) {
+    const uom = sku?.uoms.find((entry) => entry.skuUomId === purchaseSkuUomId);
+    if (!uom || uom.status !== "active" || !sku.usable || !sku.inventoryTracked || !TRACKING.includes(sku.trackingPolicy) || !sku.uoms.some((entry) => entry.isBase)) return false;
+    try { toBaseQuantity(orderedQuantity, uom.toBaseFactor, { maxBaseQuantity: this.config.maxQuantity }); return true; }
+    catch (error) { if (error instanceof ApplicationError) return false; throw error; }
   }
 
   async #header(tx, draft, current, nowMs, warnings) {
@@ -209,8 +298,7 @@ export class PurchaseOrderService {
   }
 
   async #rejected({ kind, claims, purchaseOrderId, context }, error) {
-    const action = error.code === "PURCHASING_EVENT_CONFLICT" ? "purchasing.operation_conflict"
-      : kind === "CREATE" ? "purchase_order.created" : "purchase_order.updated";
+    const action = error.code === "PURCHASING_EVENT_CONFLICT" ? "purchasing.operation_conflict" : AUDIT_ACTION[kind];
     const targetId = Number.isSafeInteger(purchaseOrderId) && purchaseOrderId > 0 ? purchaseOrderId : null;
     try {
       await this.database.withTransaction((tx) => this.audit.recordRejected(tx, { actorId: Number(claims?.sub), action, targetId,

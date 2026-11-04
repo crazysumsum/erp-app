@@ -11,5 +11,5 @@ export class CreatePurchaseOrderHandler extends BaseRequestHandler {
     super(services);
     this.orders = purchaseOrderService(services, this.logger);
   }
-  async execute(req) { return this.response(await this.orders.create(purchaseOrderCommand(req, false)), { statusCode: 201 }); }
+  async execute(req) { return this.response(await this.orders.create(purchaseOrderCommand(req, "create")), { statusCode: 201 }); }
 }
