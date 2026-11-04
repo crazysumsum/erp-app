@@ -762,6 +762,14 @@
       "idempotency_key": "purchasing-task017-pr334-merge-20261104",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit d434a85767045613ac6d7a64ed81742bc6937fc9, verified as an ancestor of origin/main; admitted CI run 41766406647 attempt 1 completed success on the dispatched merge 2673b56f of head 82bdeb7b53a190d18ce28941206508aa932f273d with origin/main 59c6e740 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; pre-merge gate read the parents through the API, and the merged commit has the same parents and tree d91bad4c"
+    },
+    {
+      "id": "EXT-018",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/337 -> main",
+      "idempotency_key": "purchasing-hd019-pr337-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit d9c4a267f92fa25e39784c7aa47b7693296c1ed0, verified as an ancestor of origin/main; admitted CI run 41791119711 attempt 1 completed success on the dispatched merge a4a96f44 of head 778d9ce82a547e75be2b8a12ccf6bf72fb839976 with origin/main 591634bb (capacity jobs skipped by the post-UAT rule); pre-merge gate read the parents through the API, and the merged commit has the same parents and tree feae8920"
     }
   ],
   "evidence_files": [],
