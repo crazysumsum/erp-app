@@ -23,7 +23,7 @@ export class ShipmentReversalService {
   const request={eventId:command.eventId,operationType:"REVERSE",target:{type:"SHIPMENT",id:shipmentId},payload:command,leaseOwner:randomUUID(),correlationId:randomUUID()};
   return this.transactions.withTransaction(async tx=>{
    const operation=await this.operations.claimInTransaction(tx,request);
-   if(operation.replay){if(operation.status==="FAILED")fail(operation.publicErrorCode);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
+   if(operation.replay){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
    const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.reverse");
    if(!operation.created){
     const [[reversal]]=await tx.query("SELECT * FROM shipment_reversals WHERE event_id=?",[command.eventId]);
