@@ -8,6 +8,7 @@ import test from "node:test";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { purchasingLookupService } from "../../src/handlers/purchasing/purchasingSchemas.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
@@ -48,7 +49,9 @@ async function setup(t) {
   const supplier = (code, row = {}) => insert("suppliers", { supplier_code: `${code}-${tag}`, supplier_code_key: `${code}-${tag}`.toLowerCase(), supplier_name: `Name ${tag} ${code}`,
     supplier_name_key: `name ${tag} ${code}`.toLowerCase(), display_name: `Name ${tag} ${code}`, default_currency_code: "HKD", status: "active", created_at: now, updated_at: now, ...row });
   const suppliers = { main: await supplier("SA", { default_payment_term_id: term }), other: await supplier("SB"), stopped: await supplier("SC", { status: "inactive" }),
-    badTerm: await supplier("SD", { default_payment_term_id: stoppedTerm }) };
+    badTerm: await supplier("SD", { default_payment_term_id: stoppedTerm }),
+    // 名稱排先過 SA，但 code 只係前綴相符：完全相符嘅 SA 要排先。
+    longer: await supplier(`SA-${tag}`, { supplier_name: `AAA ${tag}`, supplier_name_key: `aaa ${tag}`, display_name: `AAA ${tag}` }) };
   const address = await insert("supplier_addresses", { supplier_id: suppliers.main, label: "HQ", address_line1: "1 Probe Road", city: "Hong Kong", country_code: "HK", phone: "+852", notes: "internal", created_at: now, updated_at: now });
   await db.query("INSERT INTO supplier_address_purposes (address_id, supplier_id, purpose_code, is_primary, created_at, updated_at) VALUES (?, ?, 'ordering', 1, ?, ?)", [address, suppliers.main, now, now]);
   cleanup.splice(cleanup.findIndex(([table]) => table === "supplier_addresses") + 1, 0, ["supplier_address_purposes", "address_id", address]);
@@ -76,7 +79,8 @@ async function setup(t) {
     const response = await fetch(`${url}/api/v1/purchasing-lookups/${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
     return { status: response.status, body: await response.json() };
   };
-  return { db, get, tag, buyer, plain, viewer, stopped, suppliers, skus, packMapping, term, stoppedTerm, address, warehouse };
+  const lookup = purchasingLookupService(application.services, application.services.require("logging").logger);
+  return { db, get, lookup, tag, buyer, plain, viewer, stopped, suppliers, skus, packMapping, term, stoppedTerm, address, warehouse };
 }
 
 const invalid = (result, field) => {
@@ -100,6 +104,9 @@ integrationTest("七條 lookup 只要 purchasing.mgmt；purchasing.view 403、�
     assert.equal((await get(path, viewer.token)).status, 403, path);
   }
   assert.equal((await get("suppliers", null)).status, 401);
+  // Service 唔信 handler：就算 token 同 DB 一致，冇 purchasing.mgmt 都唔讀。
+  await assert.rejects(context.lookup.warehouses({ claims: { sub: String(viewer.id), roles: [viewer.name], permissions: ["purchasing.view"] } }),
+    (error) => error.code === "PERMISSION_STALE");
 });
 
 // 分開一個 application：連續 403 會觸發 rate limit。
@@ -122,6 +129,7 @@ integrationTest("Supplier 只回 Active：完全相符嘅 code 排先、% 係字
     defaultCurrencyCode: "HKD", defaultPaymentTermId: named.body.data.items[0].defaultPaymentTermId });
 
   assert.deepEqual((await get(`suppliers?q=sb-${tag}`)).body.data.items.map((row) => row.supplierId), [suppliers.other]);
+  assert.deepEqual((await get(`suppliers?q=sa-${tag}`)).body.data.items.map((row) => row.supplierId), [suppliers.main, suppliers.longer]);
   assert.deepEqual((await get(`suppliers?q=${encodeURIComponent(`%${tag}`)}`)).body.data.items, []);
   assert.deepEqual((await get(`suppliers?q=${encodeURIComponent("供應商")}`)).status, 200);
 
