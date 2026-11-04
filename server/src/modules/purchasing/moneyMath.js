@@ -31,6 +31,15 @@ export function formatAmount(units, currencyDecimalPlaces) {
   return formatScaledDecimal(units, places);
 }
 
+/** DB 嘅 DECIMAL(25,4) 字串轉返 API 用嘅 Currency scale（HD-009）。多過 Currency scale 嘅小數即係資料錯誤，唔可以靜靜咁截走。 */
+export function storedAmount(value, currencyDecimalPlaces) {
+  const places = currencyPlaces(currencyDecimalPlaces);
+  if (typeof value !== "string" || !/^\d{1,21}\.\d{4}$/u.test(value)) throw new TypeError("Stored amount must be a DECIMAL(25,4) string");
+  const divisor = 10n ** BigInt(UNIT_PRICE_SCALE - places), units = BigInt(value.replace(".", ""));
+  if (units % divisor !== 0n) throw new TypeError("Stored amount has more decimals than its Currency");
+  return formatAmount(units / divisor, places);
+}
+
 /** roundHalfUp(orderedQuantity × unitPrice, Currency 小數位)；兩個因子都非負，HALF_UP 即係加一半再截斷。 */
 export function lineAmount(orderedQuantity, unitPrice, currencyDecimalPlaces) {
   const places = currencyPlaces(currencyDecimalPlaces);
