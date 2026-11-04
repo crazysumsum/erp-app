@@ -50,3 +50,11 @@ No capacity case was added or run. Owner: Purchasing, with the CI owner for the 
 
 - The default `updatedAt` sort has no usable index without a status filter: `idx_po_list` starts with `status`, so an unfiltered list filesorts every PO. Scale and threshold: requirement capacity with 20 concurrent users, list p95 under 2 seconds (design §1.1).
 - A `q` search uses an OR across `po_number`, `supplier_reference`, `supplier_id` and an `EXISTS` on lines, and may scan the header table at the same scale. Any index this requires is a schema change that needs sign-off first.
+
+## CI admission
+
+Sam approved on 2026-11-04: 「全部批准，我作為project owner 批準你幫我發digest」. The scope is 18 new functional cases (8 in the new inquiry file, 4 Copy, 4 handler contract, 2 HTTP), the unchanged re-pin of the 13 inputs pinned by receipts that these changes invalidate, and a one-time project-owner authorization for the agent to publish this receipt's digest. Receipt: `.github/test-admissions/purchasing-task016.json`.
+
+Measured locally per file: inquiry 0.24 s, Purchase Order service 0.39 s, API 2.8 s, handler 0.1 s; the new cases add about 2 s. CI is not measured, estimated under 5 s, with no new job and no capacity workload.
+
+The local full suite was 5054 tests: 4492 pass, 116 fail, 446 skipped; coverage 95.86% lines, 87.19% branches, 94.81% functions. 100 failures are the environment-only Fulfillment/Inventory cases. The other 16 came from the rebuilt local environment missing CI's `FULFILLMENT_LIFECYCLE_ENABLED=true`: clean main fails the same 16 in the same environment, and with the setting both Sales files pass all 43 cases and the Purchasing files pass all 105. That full run preceded merging main's #330, which only changed CI and Inventory scripts.
