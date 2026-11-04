@@ -42,7 +42,7 @@
     "TASK-014": "DONE",
     "TASK-015": "DONE",
     "TASK-016": "DONE",
-    "TASK-017": "PENDING",
+    "TASK-017": "DONE",
     "TASK-018": "PENDING",
     "TASK-019": "PENDING",
     "TASK-020": "PENDING",
@@ -612,6 +612,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task017_po_submit_confirm.md#hd-018"
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "question": "TASK-018's form needs Supplier, SKU, Currency, Payment Term, warehouse and Buyer choices and Supplier defaults, but no task builds the §5.5 lookups, the existing routes need Supplier or Inventory permissions, and the Buyer candidate rule and Supplier search without a SKU are undefined.",
+      "affected_ids": [
+        "TASK-018",
+        "TASK-020",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_hd019_po_form_lookups.md#hd-019"
     }
   ],
   "external_actions": [
@@ -742,9 +754,17 @@
       "idempotency_key": "purchasing-task016-pr333-merge-20261104",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit ae54601f8dbd79055956c15c508d439dea98d864, verified as an ancestor of origin/main; admitted CI run 41757244336 attempt 1 completed success on the dispatched merge 18cb9944 of head 85a119714afc63a69040d05bd7afaf434fe523c0 with origin/main e5500fc9 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; pre-merge gate read the parents through the API, and the merged commit has the same parents and tree 555ce8c0"
+    },
+    {
+      "id": "EXT-017",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/334 -> main",
+      "idempotency_key": "purchasing-task017-pr334-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit d434a85767045613ac6d7a64ed81742bc6937fc9, verified as an ancestor of origin/main; admitted CI run 41766406647 attempt 1 completed success on the dispatched merge 2673b56f of head 82bdeb7b53a190d18ce28941206508aa932f273d with origin/main 59c6e740 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; pre-merge gate read the parents through the API, and the merged commit has the same parents and tree d91bad4c"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-016 is DONE (PR #333, HD-017). TASK-017 is in progress on claude/purchasing-task017: Approval OFF submit and confirm with HD-018 answered (1A audit only until TASK-022 adds status history; 2A refuse with PO_MASTER_CHANGED when a factor or Currency scale changed; 3A non-locking Item reads), plus the fix for TASK-016 returning stored-scale amounts. TASK-017 submit must revalidate every master strictly and decide whether Item and Supplier reads need locking reads; open for the Supplier owner: transactional reads of a Supplier address by ID and of supplier_sku_refs. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018's client work follows on the same task: services/purchasing.js, useCommandEvent, PurchaseOrderForm and PurchaseOrderLineEditor, validated in a real browser on a private route because pages arrive in TASK-020. PO_MASTER_CHANGED needs folding into §5.7 and a client message in TASK-021. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }

@@ -10,9 +10,9 @@ import { eventId, onlyFields, positiveId } from "./purchasingValidation.js";
 import { toBaseQuantity } from "./quantityMath.js";
 
 // Serial 唔支援；DB CHECK 亦只收呢三個，所以就算係容許照存嘅舊 Line 都要擋（設計 §4.6）。
-const TRACKING = ["none", "batch", "batch_expiry"];
+export const TRACKING = ["none", "batch", "batch_expiry"];
 // 地址快照白名單同上限（§4.5）：地址行、國家、電話；唔存 label、notes。
-const ADDRESS = ["addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone"];
+export const ADDRESS = ["addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone"];
 const ADDRESS_MAX_BYTES = 2048;
 const LINE_COLUMNS = ["id", "purchase_order_id", "line_number", "sku_id", "sku_code_snapshot", "sku_name_snapshot",
   "tracking_policy_snapshot", "inventory_tracked_snapshot", "minimum_receipt_life_days_snapshot", "base_uom_id", "base_uom_code_snapshot",
