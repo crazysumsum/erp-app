@@ -74,6 +74,40 @@ export class SalesFulfillmentService {
     const read=async tx=>{this.#transaction(tx);await this.#actor(tx);const data=await this.#readOrder(tx,orderId);if(!["CONFIRMED","PARTIALLY_FULFILLED"].includes(data.header.status))mismatch();return this.#projection(tx,data,options.atMs,true);};
     const tx=this.context?.get()?.databaseTransaction;return tx?read(tx):this.database.withTransaction(read);
   }
+  // Fulfillment resolves terminal reversal replay first; this advisory read is only for a new attempt.
+  // Current CAS is still revalidated in the RC lock/apply path.
+  async getShipmentReversalScope(request){
+    fields(request,"salesOrderId,shipmentId,originalConfirmationEventId");
+    const source={salesOrderId:integer(request.salesOrderId),shipmentId:integer(request.shipmentId),originalConfirmationEventId:event(request.originalConfirmationEventId)};
+    if(this.context?.get()?.databaseTransaction||this.database?.context?.get()?.databaseTransaction)throw new TypeError("Independent Sales reversal read transaction required");
+    return this.database.withTransaction(async tx=>{
+      this.#transaction(tx);if(getActiveTransactionIsolation(tx)!=="REPEATABLE READ")mismatch();
+      const actor=await this.#actor(tx);
+      if(!actor.permissions.includes("fulfillment.reverse"))throw new ApplicationError("Fresh Fulfillment reverse permission required",{code:"FORBIDDEN",statusCode:403});
+      const [[journal]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=?",[source.originalConfirmationEventId]);
+      if(!journal)mismatch();
+      const original=normalizeSalesFulfillmentIntent(json(journal.recovery_payload)?.intent);
+      if(original.purpose!=="SHIPMENT_CONFIRMED"||original.eventId!==source.originalConfirmationEventId||original.salesOrderId!==source.salesOrderId||original.shipmentId!==source.shipmentId)mismatch();
+      const completed=this.#completed(journal,original),data=await this.#readOrder(tx,source.salesOrderId);
+      if(!["COMPLETED","PARTIALLY_FULFILLED","CLOSED"].includes(data.header.status)||Number(data.header.version)<completed.result.version)mismatch();
+      const mappings=new Map();
+      for(const row of data.mappings){const id=dbInteger(row.inventory_reservation_id);if(mappings.has(id))mismatch();mappings.set(id,row);}
+      const inventoryMembers=new Map(completed.payload.inventoryMembers.map(member=>[member.claimId,member]));
+      const lines=original.lines.map((line,index)=>{
+        const row=data.lines.find(row=>dbInteger(row.id)===line.salesOrderLineId);
+        if(!row||Number(row.version)<completed.result.lines[index].version||BigInt(dbInteger(row.fulfilled_base_quantity,false))<BigInt(line.baseQuantity))mismatch();
+        return {salesOrderLineId:line.salesOrderLineId,observedVersion:version(Number(row.version)),baseQuantity:line.baseQuantity,reservations:line.reservations.map(member=>{
+          const mapping=mappings.get(member.inventoryReservationId),originalMember=inventoryMembers.get(member.claimId);
+          if(!mapping||dbInteger(mapping.sales_order_line_id)!==line.salesOrderLineId||!originalMember)mismatch();
+          const consumedBaseQuantity=dbInteger(mapping.consumed_base_quantity,false),outstandingBaseQuantity=dbInteger(mapping.outstanding_base_quantity,false),inventoryVersionFloor=version(Number(mapping.inventory_version));
+          if(BigInt(consumedBaseQuantity)<BigInt(member.baseQuantity)||inventoryVersionFloor<=member.expectedVersion)mismatch();
+          return {claimId:member.claimId,salesReservationMappingId:dbInteger(mapping.id),inventoryReservationId:member.inventoryReservationId,baseQuantity:member.baseQuantity,
+            originalInventoryOperationId:originalMember.inventoryOperationId,consumedBaseQuantity,outstandingBaseQuantity,inventoryVersionFloor};
+        })};
+      });
+      return freeze({...source,customerId:dbInteger(data.header.customer_id),warehouseId:dbInteger(data.header.fulfillment_warehouse_id),status:data.header.status,observedVersion:version(Number(data.header.version)),lines});
+    },{isolationLevel:"REPEATABLE READ"});
+  }
   async #readOrder(tx,orderId){
     const [[header]]=await tx.query("SELECT * FROM sales_orders WHERE id=?",[orderId]);if(!header)mismatch();
     const [lines]=await tx.query("SELECT * FROM sales_order_lines WHERE sales_order_id=? ORDER BY id",[orderId]);
