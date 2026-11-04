@@ -85,9 +85,9 @@ async function loadOptions() {
   optionsError.value = "";
   try {
     const [currencies, paymentTerms] = await Promise.all([purchasing.lookupCurrencies({ signal }), purchasing.lookupPaymentTerms({ signal })]);
-    if (!signal.aborted) Object.assign(options, { currencies, paymentTerms });
+    Object.assign(options, { currencies, paymentTerms });
   } catch (error) {
-    if (!signal.aborted) optionsError.value = error.message || "未能載入貨幣及付款條款";
+    optionsError.value = error.message || "未能載入貨幣及付款條款";
   }
 }
 onMounted(loadOptions);

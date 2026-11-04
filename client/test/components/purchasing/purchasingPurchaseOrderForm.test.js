@@ -151,6 +151,26 @@ describe("TC-003 PO form", () => {
     expect(purchasing.createPurchaseOrder).not.toHaveBeenCalled();
   });
 
+  it("修改：換 Supplier 唔蓋已儲存嘅貨幣同條款，但地址跟新 Supplier", async () => {
+    await mountForm({ document: draft });
+    await pick("供應商 *", supplierB);
+    expect(select("貨幣 *").props("modelValue")).toBe("HKD");
+    expect(select("付款條款（選填）").props("modelValue")).toBe(42);
+    expect(wrapper.find('[data-testid="ordering-address"]').text()).toContain("3 Road");
+  });
+
+  it("舊搜尋遲返嚟唔會蓋住新結果", async () => {
+    let finishOld;
+    purchasing.lookupSuppliers.mockImplementationOnce(() => new Promise((resolve) => { finishOld = () => resolve([supplierA]); })).mockResolvedValueOnce([supplierB]);
+    await mountForm();
+    const run = (q) => new Promise((resolve) => { select("供應商 *").vm.$emit("filter", q, (apply) => { apply(); resolve(); }, () => {}); });
+    select("供應商 *").vm.$emit("filter", "old", (apply) => apply(), () => {});
+    await run("new");
+    finishOld();
+    await flushPromises();
+    expect(select("供應商 *").props("options")).toEqual([supplierB]);
+  });
+
   it("零價要原因先送得；有價就唔送原因", async () => {
     purchasing.updatePurchaseOrder.mockResolvedValue(saved);
     await mountForm({ document: draft });
