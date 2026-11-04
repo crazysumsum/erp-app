@@ -24,3 +24,7 @@ Built on 2026-11-04 on top of the HD-019 lookups. No schema change, manifest edi
 11 private Playwright scenarios passed against the real API and MySQL on a temporary uncommitted route, at 1440, 768 and 375px: create, save and submit; Supplier defaults; barcode; keyboard-only add, reorder and delete; preview against server totals, including half-up and JPY; a lost response retried with the same `eventId` creating one PO; version conflict with copy and reload; dirty leave and `beforeunload`; validation; failed option loads with retry. No unexpected console errors or failed requests.
 
 `AppShell` opens its drawer on load below 1024px, and its backdrop covers the page until dismissed. This affects every page and is not part of this task.
+
+## CI admission
+
+Sam approved on 2026-11-04: 「全部批准，我作為project owner 批準你幫我發digest」. The scope is 2 new client test files (`client/test/services/purchasing.test.js`, `client/test/components/purchasing/purchasingPurchaseOrderForm.test.js`; 26 case definitions running 38 times) and the `PurchaseOrderForm.vue` support pin, on every PR and main push in the existing client job, in `.github/test-admissions/purchasing-task018.json`. Browser e2e stays with TASK-020. He also authorized publishing this receipt's digest once, as project owner.
