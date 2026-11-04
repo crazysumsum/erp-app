@@ -1,31 +1,28 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 227,
+  "revision": 228,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-033",
+  "current_task": "TASK-032",
   "baseline": {
-    "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
-    "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
-    "code_commit": "e26841c57a04acf43493c77209344cf795d4daac",
-    "source_fingerprint": "48c132eecf07a4a3621c70e06161985c3f31d913987bc3fe6b10da8ca5ea3972",
-    "worktree": "/private/tmp/erp-customer-operations-readiness",
-    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+    "design": "6b158f0c747be7c93f4db94edb59708dbc922ca8a23f51ad88412c7bd60600a0",
+    "plan": "b918832b54a840e34a60c1e8b95e5de07017b50ad265623a82687be8c3f11186",
+    "code_commit": "246e73603a495c249d7eeb877901f7234fefe3b7",
+    "source_fingerprint": "2e4a65d40ce8202d57815342f4bccdf2ee97a6c5565f270ae1e0ccb85fd52ad1",
+    "worktree": "/private/tmp/erp-customer-task032-readiness",
+    "default_commit": "d434a85767045613ac6d7a64ed81742bc6937fc9",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-pr244-integrated-KPWDDe-active",
-    "owner": "/root Customer PR250 integration",
+    "instance_id": "customer-task032-no-active-runtime",
+    "owner": "/root Customer TASK032",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "ownedKPWDDe/mysql loopback13369;erp_customer_pr244_integrated;ephemeralfixtureadminprivateadmin.json;87+new0087 migrations actually88 records expectedverify",
-      "customer-file-root": "Existingtests ownedsyntheticroots,fixtures only",
-      "customer-import-root": "OriginalTC042ownedspool underthisworktree managedroot; cleanuprequired aftertest",
-      "web-port": "ActualCustomerPlaywright5204ended;currentTC042ephemeralapplication/proxy ports owned"
+      "workspace": "/private/tmp/erp-customer-task032-readiness",
+      "execution": "C1 handoff01 PASS; original C2 FAIL retained; C2 handoff02 PASS, app/owned MySQL/schema/socket/root cleaned; no new runtime; former PR244 runtime record remains in Git history"
     },
     "lease_ref": null
   },
@@ -2110,6 +2107,63 @@
         "docs/sales_order_management/testing/04_defect_register.md"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-021",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-04; actual Sam PM human turn01a1a544-148d-7753-8ecc-7bbc7e9db6e2/user01a1a544-14f2-7600-8900-69bd5dcd3623/question call_c8b597c64378488eb9e206ab4bbe4d15 item0: 批准兩檔、Draft PR 及一次 CI; verified actual question binds exact6b158f0c/b918832b and manifest1154b814/plan1e935c0c; keep Draft, one natural eight-shard functional CI, stop/report failure, merge separately decided.",
+      "recorded_at": "2026-11-04T06:38:08Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "6b158f0c747be7c93f4db94edb59708dbc922ca8a23f51ad88412c7bd60600a0",
+      "code_commit": "246e73603a495c249d7eeb877901f7234fefe3b7",
+      "scope": [
+        "TASK-032",
+        "TC-075",
+        "exact-two-support-inputs",
+        "Draft PR and one existing eight-shard functional CI; no merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-021",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-04; actual Sam PM human turn01a1a544-148d-7753-8ecc-7bbc7e9db6e2/user01a1a544-14f2-7600-8900-69bd5dcd3623/question call_c8b597c64378488eb9e206ab4bbe4d15 item0: 批准兩檔、Draft PR 及一次 CI; verified actual question binds exact6b158f0c/b918832b and manifest1154b814/plan1e935c0c; keep Draft, one natural eight-shard functional CI, stop/report failure, merge separately decided.",
+      "recorded_at": "2026-11-04T06:38:08Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b918832b54a840e34a60c1e8b95e5de07017b50ad265623a82687be8c3f11186",
+      "code_commit": "246e73603a495c249d7eeb877901f7234fefe3b7",
+      "scope": [
+        "TASK-032",
+        "TC-075",
+        "exact-two-support-inputs",
+        "Draft PR and one existing eight-shard functional CI; no merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-053",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-04; actual Sam PM human turn01a1a544-148d-7753-8ecc-7bbc7e9db6e2/user01a1a544-14f2-7600-8900-69bd5dcd3623/question call_c8b597c64378488eb9e206ab4bbe4d15 item0: 批准兩檔、Draft PR 及一次 CI; verified actual question binds exact6b158f0c/b918832b and manifest1154b814/plan1e935c0c; keep Draft, one natural eight-shard functional CI, stop/report failure, merge separately decided.",
+      "recorded_at": "2026-11-04T06:38:08Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b918832b54a840e34a60c1e8b95e5de07017b50ad265623a82687be8c3f11186",
+      "code_commit": "246e73603a495c249d7eeb877901f7234fefe3b7",
+      "scope": [
+        "TASK-032",
+        "TC-075",
+        "exact-two-support-inputs",
+        "Draft PR and one existing eight-shard functional CI; no merge"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2987,6 +3041,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-074",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer TASK032",
+      "reviewer": "/root/task032_final_review",
+      "reviewed_baseline": "6147aa00f4e3b155281c55aa704092217bd48f8d7694b63f72a7b5368f65e5d8",
+      "source_ref": "Actual independent read-only APPROVE C0/H0/M0; integrated246e7360 retains exact three product SHA and same two support blobs; final receipt/approval bookkeeping composition review remains pending; not human/CI/merge authorization.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -5543,5 +5609,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Validate missing historical Sales-defect-report authorization record and unchanged exact DESIGN/PLAN/source fingerprint; commit necessary bookkeeping correction, publish existing DraftPR244, require all13normalCI on new exacthead and actual separate final review. Existing e268 local fullcoverage/originalTC042/capacity/client/browser proofs apply only unchanged executablefp48c; do not call old-headCI new-headPASS. Freshfetchmain before merge and integrate/reverify any movement. Sam-authorized normalmerge only; noadmin/bypass. Then observe actualmerge and clean only owned runtime/worktree/topicbranch. SchedulerPAUSED,full030/031/032/downstream/UAT/operations/release acceptanceBLOCKED; DEF033001RETESTuntilfinalgates. Priorfailure/waiver/approvalalias evidence preserved."
+  "next_safe_action": "Keep BLOCKED for production provider delivery and pending publication gates. Independent CI administrator must verify/register exact customer-task032-support receipt and report readback. Then normal static admission, sole Customer publisher Draft PR and one natural functional eight-shard CI; stop/report first failure, no automatic retry, no merge. Do not replay historical PR244 actions or C1/C2/F1."
 }
