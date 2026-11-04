@@ -2,11 +2,13 @@ import { RequestValidator } from "../../framework/validation/requestValidator.js
 import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
+import { ItemLookupService } from "../../modules/item/ItemLookupService.js";
 import { normalizePurchasingConfig } from "../../modules/purchasing/normalizePurchasingConfig.js";
 import { PurchaseOrderService } from "../../modules/purchasing/PurchaseOrderService.js";
 import { PurchasingAuditService } from "../../modules/purchasing/PurchasingAuditService.js";
 import { PurchasingInquiryService } from "../../modules/purchasing/PurchasingInquiryService.js";
 import { purchasingError } from "../../modules/purchasing/purchasingErrors.js";
+import { PurchasingLookupService } from "../../modules/purchasing/PurchasingLookupService.js";
 import { PurchasingOperationService } from "../../modules/purchasing/PurchasingOperationService.js";
 import { PurchasingSequenceService } from "../../modules/purchasing/PurchasingSequenceService.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
@@ -160,6 +162,50 @@ export const PURCHASE_ORDER_DETAIL_RESPONSE = Object.freeze(object({
   })
 }));
 
+const SEARCH = { type: "string", maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f-\\u009f]*$" };
+const LOOKUP_QUERY = {
+  suppliers: { q: SEARCH, skuId: ID }, skus: { q: SEARCH, barcode: SEARCH }, warehouses: { q: SEARCH }, buyers: { q: SEARCH },
+  supplierDefaults: {}, currencies: {}, paymentTerms: {}
+};
+const lookupValidators = Object.fromEntries(Object.entries(LOOKUP_QUERY).map(([kind, properties]) => [kind,
+  queryValidator.compile({ query: { type: "object", additionalProperties: false, properties } }, `Purchasing ${kind} lookup query`)]));
+
+export function purchasingLookupQuery(req, kind) {
+  const request = { query: structuredClone(req.input.query) };
+  validated(lookupValidators[kind], request, "query");
+  const { q, ...rest } = request.input.query;
+  return { ...rest, ...(q === undefined ? {} : { q: q.trim() }) };
+}
+
+export const PURCHASING_SUPPLIER_ID_PARAMS = PURCHASE_ORDER_ID_PARAMS;
+const listOf = (item) => object({ items: { type: "array", maxItems: 100, items: item } });
+const CURRENCY_CHOICE = object({ code: TEXT, name: TEXT, decimalPlaces: { type: "integer", minimum: 0, maximum: 4 } });
+const PAYMENT_TERM_CHOICE = object({ id: ID, ...PAYMENT_TERM.properties });
+const ADDRESS_CHOICE = object({ id: ID, ...ADDRESS.properties });
+export const PURCHASING_LOOKUP_RESPONSE = Object.freeze({
+  suppliers: listOf(object({ supplierId: ID, supplierCode: TEXT, supplierName: TEXT, displayName: TEXT, defaultCurrencyCode: TEXT, defaultPaymentTermId: OPTIONAL_ID })),
+  supplierDefaults: object({ supplierId: ID, currency: CURRENCY_CHOICE, paymentTerm: { anyOf: [{ type: "null" }, PAYMENT_TERM_CHOICE] }, orderingAddress: { anyOf: [{ type: "null" }, ADDRESS_CHOICE] } }),
+  skus: listOf(object({ skuId: ID, skuCode: TEXT, skuName: NULLABLE_TEXT, itemName: TEXT, inventoryTracked: { type: "boolean" }, trackingPolicy: TEXT,
+    minimumReceiptLifeDays: { type: ["integer", "null"] }, baseUomCode: TEXT,
+    uoms: { type: "array", minItems: 1, items: object({ skuUomId: ID, uomCode: TEXT, uomName: TEXT, toBaseFactor: ID, isBase: { type: "boolean" }, isDefaultPurchase: { type: "boolean" } }) } })),
+  currencies: listOf(CURRENCY_CHOICE), paymentTerms: listOf(PAYMENT_TERM_CHOICE),
+  warehouses: listOf(object({ id: ID, code: TEXT, name: TEXT })), buyers: listOf(object({ id: ID, label: TEXT }))
+});
+
+/** HD-019：Supplier 預設值要經 Business Master 驗，同建立 PO 一樣嘅 provider 接線。 */
+function providers(services, logger) {
+  const database = services.require("mysqldatabase"), time = services.require("time");
+  const businessMaster = new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
+  const lookup = new BusinessMasterLookupProvider({ provider: businessMaster, readiness: new BusinessMasterReadinessService({ database, checkerIds: ["purchasing"] }) });
+  return { database, time, businessMaster, lookup, items: new ItemLookupService({ database, logger, time }) };
+}
+
+export function purchasingLookupService(services, logger) {
+  const { database, time, lookup, items } = providers(services, logger);
+  return new PurchasingLookupService({ database, time, items, businessMaster: lookup,
+    suppliers: new SupplierLookupService({ database, logger, time, businessMaster: lookup, items }) });
+}
+
 export function purchasingInquiryService(services, logger) {
   const database = services.require("mysqldatabase"), time = services.require("time");
   return new PurchasingInquiryService({ database, logger, time, suppliers: new SupplierLookupService({ database, logger, time }) });
@@ -167,13 +213,11 @@ export function purchasingInquiryService(services, logger) {
 
 /** 真 provider 接線（HD-015）：Supplier 用 Business Master 驗預設 Currency／Payment Term；Item 喺 service 入面用 transaction 連線讀。 */
 export function purchaseOrderService(services, logger) {
-  const database = services.require("mysqldatabase"), time = services.require("time");
-  const businessMaster = new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
+  const { database, time, businessMaster, lookup } = providers(services, logger);
   const config = normalizePurchasingConfig(services.config.purchasing);
   return new PurchaseOrderService({
     database, logger, time, businessMaster, config,
-    suppliers: new SupplierLookupService({ database, logger, time, businessMaster: new BusinessMasterLookupProvider({
-      provider: businessMaster, readiness: new BusinessMasterReadinessService({ database, checkerIds: ["purchasing"] }) }) }),
+    suppliers: new SupplierLookupService({ database, logger, time, businessMaster: lookup }),
     sequences: new PurchasingSequenceService(), operations: new PurchasingOperationService(),
     audit: new PurchasingAuditService({ auditDetailMaxBytes: config.auditDetailMaxBytes })
   });
