@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-04 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你幫我發digest\", answering the consolidated proposals for the AppShell narrow-screen drawer fix, option A (1 new functional case and the AppShell.vue support pin), and a one-time project-owner authorization for the agent to publish this receipt's digest",
+  "purpose": "The app drawer starts closed on narrow screens so its backdrop does not block the page on load, and the menu button opens it",
+  "data": "No database or network: the existing mounted AppShell with fixture pages and Quasar Screen width set to 375. No fixture files",
+  "concurrency": "1",
+  "repetitions": "1",
+  "thresholds": "All cases pass; coverage floors unchanged",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing client test job",
+  "cost": "Measured locally: 10 ms for the new case. CI not measured. No new job and no capacity",
+  "files": [
+    {
+      "path": "client/test/framework/layout/AppShell.test.js",
+      "mode": "100644",
+      "blob": "5b00e78a2745ab1520a4b3cf9302ce9405a43f0a",
+      "kind": "functional",
+      "cases": [
+        "渲染子路由嘅元件",
+        "Sidebar 顯示由 pages prop 算出嚟嘅菜單項目",
+        "窄畫面載入時 drawer 收埋，撳選單按鈕先開",
+        "撳 Topbar 嘅選單按鈕會切換 drawer 開關"
+      ]
+    },
+    {
+      "path": "client/src/framework/layout/AppShell.vue",
+      "mode": "100644",
+      "blob": "d5e54e2ffd9dd57e3f121984121372d0c671bab7",
+      "kind": "support"
+    }
+  ]
+}
