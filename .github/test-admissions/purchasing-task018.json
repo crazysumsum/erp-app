@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-04 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你幫我發digest\", answering the consolidated proposals for TASK-018 (2 new client test files, 26 case definitions running 38 times, and the PurchaseOrderForm.vue support pin), and a one-time project-owner authorization for the agent to publish this receipt's digest",
+  "purpose": "The Purchasing client service sends eventId as Idempotency-Key and forwards AbortSignal; useCommandEvent keeps the same payload and eventId while an outcome is unknown; the PO form keeps user-changed defaults, previews amounts the same as the real server math, preserves input on field errors and version conflicts, guards dirty leave, and submits with the same eventId on retry",
+  "data": "No database or network: mocked services and small inline objects. The preview cases import the real server moneyMath and quantityMath. No fixture files",
+  "concurrency": "1",
+  "repetitions": "1",
+  "thresholds": "All cases pass; coverage floors unchanged",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing client test job",
+  "cost": "Measured locally: under 1 s for both files. CI not measured, estimated under 1 s added. No new job and no capacity",
+  "files": [
+    {
+      "path": "client/test/services/purchasing.test.js",
+      "mode": "100644",
+      "blob": "5275166b7c64d25712f2931a3ba9070f6a6b3a55",
+      "kind": "functional",
+      "cases": [
+        "create、update、submit、copy 用 eventId 做 Idempotency-Key，body 原封不動",
+        "列表映射 DataTable，去走空 filter；detail 同 lookup 轉發 AbortSignal",
+        "明確結果之後下一次係新意圖、新 eventId",
+        "reset 之後唔會再用舊 intent",
+        "結果未確定（%j）就保留原 payload 同 eventId (it.each, 5 rows)"
+      ]
+    },
+    {
+      "path": "client/test/components/purchasing/purchasingPurchaseOrderForm.test.js",
+      "mode": "100644",
+      "blob": "544c62b72f6f928c9fb283ea5629d38c944b34f3",
+      "kind": "functional",
+      "cases": [
+        "Total 係已 round Line Amount 之和；factor 換算同 server 一樣，唔整除就回 null",
+        "建立：帶入 Supplier 預設、預設 Buyer 係自己，只送可編輯欄位",
+        "用戶改過嘅貨幣同條款，換 Supplier 都唔蓋；未改過嘅照帶；地址一定跟新 Supplier",
+        "舊 Supplier 嘅預設遲返嚟唔會蓋住新 Supplier",
+        "預設值失效只係提示，用戶可以手動揀；Supplier 冇地址就唔送舊地址 ID",
+        "關閉主要地址之後唔送地址，再開返就送",
+        "修改：保留 Line ID 同 version，唔帶 Supplier 預設；Buyer 保持原本嗰位",
+        "修改：換 Supplier 唔蓋已儲存嘅貨幣同條款，但地址跟新 Supplier",
+        "舊搜尋遲返嚟唔會蓋住新結果",
+        "零價要原因先送得；有價就唔送原因",
+        "新增、排序、刪除都係按鈕；同 SKU 重複加都係新一行",
+        "條碼：搵到就揀，搵唔到提示；SKU 摘要顯示 Base UOM、tracking、效期",
+        "結果未確定：鎖住輸入，重試送一模一樣嘅 eventId 同內容",
+        "欄位錯誤對返去欄位，輸入保留；下一次係新 eventId",
+        "Version conflict：顯示最新版本、保留輸入、可以複製；載入要確認",
+        "Dirty 離開要確認（route 切換、同 route 換 query、瀏覽器關閉）；儲存之後唔再問",
+        "客戶端驗證擋住：零數量、超精度、唔整除 Base、交期早過訂單日期、冇明細",
+        "提交：未儲存唔准，摘要顯示「確認後可收貨」，送 version 同 eventId；結果未確定用同一 eventId 重試",
+        "提交被拒顯示行號；Version conflict 關 dialog 走 stale 路徑",
+        "選項載入失敗有重試；搜尋失敗有提示",
+        "數量 %s × 單價 %s（%i 位） (it.each, 9 rows)"
+      ]
+    },
+    {
+      "path": "client/src/components/purchasing/PurchaseOrderForm.vue",
+      "mode": "100644",
+      "blob": "3ae16eed43faa70d5a09f03e62428086a5fc14b1",
+      "kind": "support"
+    }
+  ]
+}
