@@ -10,6 +10,9 @@ import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
 import { fulfillmentOperationHash } from "./fulfillmentOperationHash.js";
 import { getTransactionOutcome } from "../../services/mysqldatabase/MySqlDatabaseService.js";
+import { readShipmentReversalSnapshot } from "./shipmentReversalSnapshot.js";
+import { mapShipmentReversalSources } from "./shipmentReversalMapping.js";
+import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 
 const fail=code=>{throw fulfillmentError(code);};
 function terminal(operation){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
@@ -18,8 +21,8 @@ function pending(operation,reversal,shipmentVersion){
 }
 export class ShipmentReversalService {
  #startedAttempts=new WeakMap();
- constructor({database,time,downstreamRegistry,operationLeaseMs=60000}){
-  Object.assign(this,{database,time});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry});
+ constructor({database,time,downstreamRegistry,operationLeaseMs=60000,sales,inventoryLookup}){
+  Object.assign(this,{database,time,sales,inventoryLookup});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry});
  }
  // null is no trusted terminal result, never proof of absence or permission to write.
  async readReversalTerminal(shipmentId,input){
@@ -51,6 +54,34 @@ export class ShipmentReversalService {
    let now,expires;try{now=fulfillmentInteger(String(row.observed_now_ms),{positive:false});expires=fulfillmentInteger(String(row.lease_expires_at));}catch{return null;}
    return expires>now?started:null;
   });
+ }
+ // Preparation is advisory data only; it never preclaims, renews or grants the writer entry.
+ async prepareReversalReadOnly(shipmentId,input,started){
+  try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
+  const command=normalizeShipmentReversal(input),binding=this.#startedAttempts.get(started);
+  const replay=await this.readReversalTerminal(shipmentId,command);if(replay)return replay;
+  if(!binding||binding.request.target.id!==shipmentId||binding.payloadHash!==fulfillmentOperationHash({operationType:"REVERSE",target:{type:"SHIPMENT",id:shipmentId},payload:command}))return null;
+  const sales=this.sales,inventoryLookup=this.inventoryLookup;
+  if(typeof sales?.getShipmentReversalScope!=="function"||typeof inventoryLookup?.getFulfillmentReversalPreparationInTransaction!=="function")return null;
+  const observed=await this.readStartedReversal(started);if(observed!==started)return observed;
+  try{
+   const snapshot=await readShipmentReversalSnapshot(this.database,shipmentId);
+   const salesScope=await sales.getShipmentReversalScope({salesOrderId:String(snapshot.root.sales_order_id),shipmentId,originalConfirmationEventId:snapshot.shipment.confirmation_event_id});
+   if(!salesScope)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+   const originalInventoryOperationIds=[...new Set(snapshot.issues.map(row=>String(row.inventory_operation_id)))];
+   const inventoryScope=await this.transactions.withTransaction(tx=>inventoryLookup.getFulfillmentReversalPreparationInTransaction(tx,{shipmentId,originalInventoryOperationIds}));
+   if(!inventoryScope)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+   const preparation=mapShipmentReversalSources(snapshot,salesScope,inventoryScope);
+   const current=await this.readStartedReversal(started);if(current!==started)return current;
+   return Object.freeze({outcome:"REVERSING",operationId:binding.operationId,eventId:command.eventId,preparation});
+  }catch(error){
+   const completed=await this.readReversalTerminal(shipmentId,command);if(completed)return completed;
+   let cause=error;const visited=new Set();
+   while(cause instanceof ApplicationError&&cause.cause instanceof Error&&!visited.has(cause)){visited.add(cause);cause=cause.cause;}
+   if(!(error instanceof ApplicationError)||error.statusCode===403||visited.has(cause)||cause instanceof TypeError||cause instanceof SyntaxError||
+      !(cause instanceof ApplicationError)&&(!cause.code||String(cause.code).startsWith("ERR_")))throw error;
+   return null;
+  }
  }
  async startReversal(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
