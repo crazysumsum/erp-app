@@ -14,6 +14,6 @@ export class UpdatePurchaseOrderHandler extends BaseRequestHandler {
     this.orders = purchaseOrderService(services, this.logger);
   }
   async execute(req) {
-    return this.response(await this.orders.update({ ...purchaseOrderCommand(req, true), purchaseOrderId: Number(req.input.params.id) }));
+    return this.response(await this.orders.update({ ...purchaseOrderCommand(req, "update"), purchaseOrderId: Number(req.input.params.id) }));
   }
 }

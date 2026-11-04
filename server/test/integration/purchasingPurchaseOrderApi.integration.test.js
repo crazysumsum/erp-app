@@ -145,3 +145,54 @@ integrationTest("Update 經 HTTP 回 200；舊 version 409 只回 currentVersion
   const [[{ count }]] = await db.query("SELECT COUNT(*) count FROM purchase_orders WHERE created_by = ?", [created.viewer]);
   assert.equal(Number(count), 0);
 });
+
+integrationTest("List 同 Detail 經 HTTP：view 讀到過咗 response schema 嘅安全 projection；mgmt 冇 view 403、冇 token 401、唔存在 404", async (t) => {
+  const { url, body, created, token, viewToken } = await setup(t), input = body({ supplierReference: `REF-${randomUUID()}` });
+  const { body: { data: po } } = await request(`${url}/api/v1/purchase-orders/create`, { token, key: input.eventId, body: input });
+  const get = (path, options) => request(`${url}/api/v1/purchase-orders${path}`, { method: "GET", ...options });
+
+  const list = await get(`?supplierId=${created.supplier}&status=DRAFT&hasOutstanding=false&pageSize=5&q=${encodeURIComponent(input.supplierReference)}`, { token: viewToken });
+  assert.equal(list.status, 200, JSON.stringify(list.body));
+  assert.deepEqual([list.body.data.total, list.body.data.page, list.body.data.pageSize, list.body.data.items[0].id], [1, 1, 5, po.id]);
+  assert.deepEqual([list.body.data.items[0].totalAmount, list.body.data.items[0].allowedActions], ["2.5000", []]);
+
+  const detail = await get(`/${po.id}`, { token: viewToken });
+  assert.equal(detail.status, 200, JSON.stringify(detail.body));
+  assert.deepEqual([detail.body.data.number, detail.body.data.lines[0].orderedBaseQuantity, detail.body.data.lines[0].lineAmount], [po.number, "2", "2.5000"]);
+  assert.deepEqual(detail.body.data.currentMasterDifferences, { supplier: null, lines: [] });
+
+  const bad = await get("?sortBy=password_hash", { token: viewToken });
+  assert.deepEqual([bad.status, bad.body.error.code, bad.body.error.details], [400, "PURCHASING_INPUT_INVALID", { field: "sortBy" }]);
+  const missing = await get(`/${Number.MAX_SAFE_INTEGER}`, { token: viewToken });
+  assert.deepEqual([missing.status, missing.body.error.code], [404, "PURCHASE_ORDER_NOT_FOUND"]);
+  assert.equal((await get(`/${po.id}`, { token })).status, 403, "六個權限互不繼承：mgmt 唔包 view");
+  assert.equal((await get("", { token })).status, 403);
+  assert.equal((await get(`/${po.id}`)).status, 401);
+  assert.equal((await get("")).status, 401);
+});
+
+integrationTest("Copy 經 HTTP 回 201 同新編號；同 key replay；只有 view 403、冇 token 401、唔存在 404", async (t) => {
+  const { db, url, body, token, viewToken } = await setup(t), input = body();
+  const { body: { data: po } } = await request(`${url}/api/v1/purchase-orders/create`, { token, key: input.eventId, body: input });
+  const path = `${url}/api/v1/purchase-orders/${po.id}/copy`, eventId = randomUUID(), payload = { eventId };
+
+  const copy = await request(path, { token, key: eventId, body: payload });
+  assert.equal(copy.status, 201, JSON.stringify(copy.body));
+  assert.notEqual(copy.body.data.id, po.id);
+  assert.notEqual(copy.body.data.number, po.number);
+  assert.deepEqual([copy.body.data.status, copy.body.data.version, copy.body.data.warnings], ["DRAFT", 1, []]);
+  const replay = await request(path, { token, key: eventId, body: payload });
+  assert.deepEqual([replay.status, replay.body.data], [201, copy.body.data]);
+
+  const extra = randomUUID();
+  const refused = await request(path, { token, key: extra, body: { eventId: extra, supplierId: 1 } });
+  assert.deepEqual([refused.status, refused.body.error.code], [400, "PURCHASING_INPUT_INVALID"]);
+  const other = randomUUID();
+  assert.equal((await request(path, { token: viewToken, key: other, body: { eventId: other } })).status, 403);
+  assert.equal((await request(path, { key: other, body: { eventId: other } })).status, 401);
+  const missing = await request(`${url}/api/v1/purchase-orders/${Number.MAX_SAFE_INTEGER}/copy`, { token, key: other, body: { eventId: other } });
+  assert.deepEqual([missing.status, missing.body.error.code], [404, "PURCHASE_ORDER_NOT_FOUND"]);
+
+  const [[{ count }]] = await db.query("SELECT COUNT(*) count FROM purchase_orders WHERE id IN (?)", [[po.id, copy.body.data.id]]);
+  assert.equal(Number(count), 2);
+});
