@@ -10,6 +10,7 @@ import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
 
 const fail=code=>{throw fulfillmentError(code);};
+function terminal(operation){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
 function pending(operation,reversal,shipmentVersion){
  return Object.freeze({outcome:"REVERSING",operationId:operation.operationId,eventId:operation.eventId,correlationId:operation.correlationId,statusUrl:`/api/v1/fulfillment-operations/by-event/${operation.eventId}`,retryAfterSeconds:2,reversal:Object.freeze({id:String(reversal.id),number:reversal.reversal_number,version:Number(reversal.version)}),shipmentVersion});
 }
@@ -17,13 +18,21 @@ export class ShipmentReversalService {
  constructor({database,time,downstreamRegistry,operationLeaseMs=60000}){
   Object.assign(this,{database,time});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry});
  }
+ // null is no trusted terminal result, never proof of absence or permission to write.
+ async readReversalTerminal(shipmentId,input){
+  try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
+  return this.transactions.withTransaction(async tx=>{
+   const replay=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId,command:input});
+   return replay?terminal(replay):null;
+  });
+ }
  async startReversal(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
   const command=normalizeShipmentReversal(input),number=await this.sequence.reserveNumber({documentType:"REVERSAL"});
   const request={eventId:command.eventId,operationType:"REVERSE",target:{type:"SHIPMENT",id:shipmentId},payload:command,leaseOwner:randomUUID(),correlationId:randomUUID()};
   return this.transactions.withTransaction(async tx=>{
    const operation=await this.operations.claimInTransaction(tx,request);
-   if(operation.replay){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
+   if(operation.replay)return terminal(operation);
    const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.reverse");
    if(!operation.created){
     const [[reversal]]=await tx.query("SELECT * FROM shipment_reversals WHERE event_id=?",[command.eventId]);

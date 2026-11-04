@@ -4,6 +4,7 @@ import { FULFILLMENT_OPERATION_TYPES,FULFILLMENT_STATUSES,SHIPMENT_STATUSES } fr
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError,FULFILLMENT_ERROR_STATUS } from "./fulfillmentErrors.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
+import { normalizeShipmentReversal } from "./shipmentReversalCommand.js";
 const uuid=value=>typeof value==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(value);
 const successfulStatus=Object.freeze({CREATE:"DRAFT",UPDATE:"DRAFT",ALLOCATE:"PICKING",REALLOCATE:"PICKING",PICK:"PICKED",CANCEL:"CANCELLED",SHIPMENT_CREATE:"DRAFT",SHIPMENT_UPDATE:"DRAFT",SHIPMENT_CANCEL:"CANCELLED",SHIP:"SHIPPED",REVERSE:"REVERSED",EXPORT:"QUEUED"});
 const createTypes=new Set(["CREATE","SHIPMENT_CREATE","EXPORT"]);
@@ -111,6 +112,24 @@ export class FulfillmentOperationService {
     const decoded=this.#decode(row);
     if(decoded.status==="IN_PROGRESS")return null;
     if(decoded.status==="SUCCEEDED"&&decoded.result.version!==after+1)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    const {leaseOwner:_leaseOwner,...safe}=decoded;return safe;
+  }
+  async getShipmentReversalReplayInTransaction(tx,input){
+    fields(input,["shipmentId","command"]);fulfillmentInteger(input.shipmentId);
+    const command=normalizeShipmentReversal(input.command),actor=await this.#actor(tx,"REVERSE");
+    const [[row]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=?",[command.eventId]);
+    if(!row)return null;
+    if(typeof row.payload_hash!=="string"||!/^[0-9a-f]{64}$/u.test(row.payload_hash)||!uuid(row.correlation_id))throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    const hash=fulfillmentOperationHash({operationType:"REVERSE",target:{type:"SHIPMENT",id:input.shipmentId},payload:command});
+    if(row.operation_type!=="REVERSE"||row.target_type!=="SHIPMENT"||String(row.target_id)!==input.shipmentId||String(row.initiated_by)!==String(actor.id)||row.payload_hash!==hash)conflict();
+    let decoded;
+    try{
+      if(["SUCCEEDED","FAILED"].includes(row.status))fulfillmentInteger(String(row.completed_at),{positive:false});
+      if(row.status==="SUCCEEDED"&&row.public_error_details!==null)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+      decoded=this.#decode(row);
+    }catch{throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");}
+    if(decoded.status==="IN_PROGRESS")return null;
+    if(decoded.status==="SUCCEEDED"&&decoded.result.version!==command.version+2)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
     const {leaseOwner:_leaseOwner,...safe}=decoded;return safe;
   }
   async getForActorInTransaction(tx,eventId){
