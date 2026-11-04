@@ -33,6 +33,8 @@ async function setup(t) {
   t.after(async () => {
     try {
       for (const id of [created.buyer, created.viewer].filter(Boolean)) {
+        // Trigger 唔准刪已確認 PO 嘅 Line，所以先返 DRAFT 先清得走。
+        await db.query("UPDATE purchase_orders SET status = 'DRAFT' WHERE created_by = ?", [id]);
         await db.query("DELETE FROM purchase_order_lines WHERE purchase_order_id IN (SELECT id FROM purchase_orders WHERE created_by = ?)", [id]);
         await db.query("DELETE FROM purchase_orders WHERE created_by = ?", [id]);
       }
@@ -154,11 +156,11 @@ integrationTest("List 同 Detail 經 HTTP：view 讀到過咗 response schema �
   const list = await get(`?supplierId=${created.supplier}&status=DRAFT&hasOutstanding=false&pageSize=5&q=${encodeURIComponent(input.supplierReference)}`, { token: viewToken });
   assert.equal(list.status, 200, JSON.stringify(list.body));
   assert.deepEqual([list.body.data.total, list.body.data.page, list.body.data.pageSize, list.body.data.items[0].id], [1, 1, 5, po.id]);
-  assert.deepEqual([list.body.data.items[0].totalAmount, list.body.data.items[0].allowedActions], ["2.5000", []]);
+  assert.deepEqual([list.body.data.items[0].totalAmount, list.body.data.items[0].allowedActions], ["2.50", []]);
 
   const detail = await get(`/${po.id}`, { token: viewToken });
   assert.equal(detail.status, 200, JSON.stringify(detail.body));
-  assert.deepEqual([detail.body.data.number, detail.body.data.lines[0].orderedBaseQuantity, detail.body.data.lines[0].lineAmount], [po.number, "2", "2.5000"]);
+  assert.deepEqual([detail.body.data.number, detail.body.data.lines[0].orderedBaseQuantity, detail.body.data.lines[0].lineAmount], [po.number, "2", "2.50"]);
   assert.deepEqual(detail.body.data.currentMasterDifferences, { supplier: null, lines: [] });
 
   const bad = await get("?sortBy=password_hash", { token: viewToken });
@@ -196,3 +198,33 @@ integrationTest("Copy 經 HTTP 回 201 同新編號；同 key replay；只有 vi
   const [[{ count }]] = await db.query("SELECT COUNT(*) count FROM purchase_orders WHERE id IN (?)", [[po.id, copy.body.data.id]]);
   assert.equal(Number(count), 2);
 });
+
+integrationTest("Submit 經 HTTP 回 200 同 outcome；同 key replay；唔准嘅欄位 400、view 403、冇 token 401、舊 version 409；確認咗之後唔再改得", async (t) => {
+  const { db, url, body, token, viewToken } = await setup(t), input = body();
+  const { body: { data: po } } = await request(`${url}/api/v1/purchase-orders/create`, { token, key: input.eventId, body: input });
+  const path = `${url}/api/v1/purchase-orders/${po.id}/submit`, eventId = randomUUID(), payload = { eventId, version: 1 };
+
+  const anotherEvent = randomUUID();
+  assert.equal((await request(path, { token: viewToken, key: anotherEvent, body: { eventId: anotherEvent, version: 1 } })).status, 403);
+  assert.equal((await request(path, { key: anotherEvent, body: { eventId: anotherEvent, version: 1 } })).status, 401);
+  const withApprover = await request(path, { token, key: anotherEvent, body: { eventId: anotherEvent, version: 1, assignedApproverId: 1 } });
+  assert.deepEqual([withApprover.status, withApprover.body.error.code], [400, "PURCHASING_INPUT_INVALID"]);
+  const staleEvent = randomUUID();
+  const stale = await request(path, { token, key: staleEvent, body: { eventId: staleEvent, version: 9 } });
+  assert.deepEqual([stale.status, stale.body.error.code, stale.body.error.details], [409, "VERSION_CONFLICT", { currentVersion: 1 }]);
+
+  const submitted = await request(path, { token, key: eventId, body: payload });
+  assert.equal(submitted.status, 200, JSON.stringify(submitted.body));
+  assert.deepEqual(submitted.body.data, { id: po.id, number: po.number, status: "CONFIRMED", outcome: "CONFIRMED", version: 2, warnings: [], replayed: false });
+  const replay = await request(path, { token, key: eventId, body: payload });
+  assert.deepEqual([replay.status, replay.body.data], [200, submitted.body.data]);
+
+  const detail = await request(`${url}/api/v1/purchase-orders/${po.id}`, { method: "GET", token: viewToken });
+  assert.deepEqual([detail.status, detail.body.data.status, detail.body.data.hasOutstanding, detail.body.data.lines[0].outstandingBaseQuantity], [200, "CONFIRMED", true, "2"]);
+  const edit = body({ version: 2 });
+  const refused = await request(`${url}/api/v1/purchase-orders/${po.id}/update`, { token, key: edit.eventId, body: edit });
+  assert.deepEqual([refused.status, refused.body.error.code], [409, "PO_STATE_CONFLICT"]);
+  const [[header]] = await db.query("SELECT status, version FROM purchase_orders WHERE id = ?", [po.id]);
+  assert.deepEqual({ ...header }, { status: "CONFIRMED", version: 2 });
+});
+
