@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "decision": "Actual Sam answer in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, human turn 01a1a544-148d-7753-8ecc-7bbc7e9db6e2 / user message 01a1a544-14f2-7600-8900-69bd5dcd3623, question call_c8b597c64378488eb9e206ab4bbe4d15 item0: 批准兩檔、Draft PR 及一次 CI. Question binds manifest1154b814, plan1e935c0c, DESIGN6b158f0c and PLANb918832b, latest-main reconciliation, one existing eight-shard normal functional CI, no new routine cases or lowered floors, stop/report failure and merge separately decided. Full hashes are in the Customer decision record. Independent CI administrator must verify and register this receipt digest externally; this file is not self-authorization.",
+  "purpose": "Admit exactly two non-discovered Customer scope/checkpoint documents accompanying the reviewed shared registry startup/consumer wiring. No production deletion enablement or whole TC075 acceptance.",
+  "data": "No new test data, fixture, case, assertion or workload. Manifest adds two exact source paths to source/allowed scope and keeps startup approval-required; plan adds PARTIAL/production-BLOCKED checkpoint/link. Original requirements, DoD and tests remain unchanged.",
+  "concurrency": "Existing eight MySQL functional shards, serial within each shard; no increase, capacity workload or private C1/C2/F1 replay.",
+  "repetitions": "One natural admitted functional CI on the published Draft PR composition. No automatic retry, manual dispatch or new schedule.",
+  "thresholds": "All existing functional, permission, transaction, idempotency, recovery, browser, coverage, lint, build and security gates remain. Server global92/83/90 and every existing per-file/client floor unchanged; merge separately decided.",
+  "trigger": "After independent external digest registration and normal static admission, designated Customer publisher opens Draft PR for one natural existing eight-shard functional CI. Keep Draft; first failure stops for report. No CI/UAT/NFR bypass.",
+  "cost": "No added cases/jobs/rows/workers/repetitions compared with main. Candidate CI time and runner-minutes unmeasured; rough10–15 minute critical-path estimate follows the current eight-shard operating target, not a guarantee. No extra run to estimate.",
+  "files": [
+    { "path": "docs/customer_management/00_module_manifest.json", "mode": "100644", "blob": "1154b814a4a93ffb0a81e39e432e32c9fa3c96f9", "kind": "support" },
+    { "path": "docs/customer_management/05_development_tasks.md", "mode": "100644", "blob": "1e935c0c4322dae808b6e67efee59d55ac27906e", "kind": "support" }
+  ]
+}

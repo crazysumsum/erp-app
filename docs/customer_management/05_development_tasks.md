@@ -914,6 +914,8 @@ Manual invoice Active-only; existing shipment/AR/return continues; refund bank a
 
 ## TASK-032 — Complete archive/delete/open-matter Provider registry and degraded-mode behavior
 
+2026-11-04 checkpoint: **PARTIAL / production integration still BLOCKED**. The local candidate wires startup observation and actual archive/delete handlers to the same registry. Scoped C1, C2 and Fulfillment F1 developer evidence is available; no rerun or whole TC-075 acceptance follows. Required production-provider descriptors/instances and deployment remain undelivered. See [the source-bound checkpoint and publication plan](implementation/task032-reference-startup-candidate.md#integrated-local-checkpoint--2026-11-04). Original acceptance criteria and DoD below remain unchanged.
+
 ### Goal
 
 Complete archive/delete/open-matter Provider registry and degraded-mode behavior.

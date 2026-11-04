@@ -199,6 +199,11 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["time"]
     },
     {
+      name: "customer.references",
+      lifecycle: "singleton",
+      dependencies: []
+    },
+    {
       name: "job.customerAttachmentRecovery",
       lifecycle: "singleton",
       dependencies: ["scheduler", "mysqldatabase", "time", "filetypes"]

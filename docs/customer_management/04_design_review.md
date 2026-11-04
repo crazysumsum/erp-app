@@ -1,5 +1,17 @@
 # Customer Management Design Review
 
+## TASK-032 exact human decision — 2026-11-04
+
+Sam explicitly selected `批准兩檔、Draft PR 及一次 CI` in PM chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, human turn `01a1a544-148d-7753-8ecc-7bbc7e9db6e2`, user message `01a1a544-14f2-7600-8900-69bd5dcd3623`, question `call_c8b597c64378488eb9e206ab4bbe4d15` item0. Customer independently read the actual question and answer before recording this decision; it is not inferred from TL source review or an unanswered proposal.
+
+- Approved exact DESIGN: `6b158f0c747be7c93f4db94edb59708dbc922ca8a23f51ad88412c7bd60600a0`; PLAN: `b918832b54a840e34a60c1e8b95e5de07017b50ad265623a82687be8c3f11186`.
+- Exact support inputs: manifest mode100644/blob `1154b814a4a93ffb0a81e39e432e32c9fa3c96f9`; task plan mode100644/blob `1e935c0c4322dae808b6e67efee59d55ac27906e`. The question's short hashes resolve uniquely to these reviewed bytes and hashes; no contents or thresholds were changed after approval.
+- Scope: two exact added product paths and TASK032 partial checkpoint; latest-main reconciliation, independent trusted admission registration, Draft PR and **one** natural existing eight-shard functional CI. No new routine case, scale or relaxed gate; first failure stops. Customer is the sole publisher after registration/static admission confirmation. Keep Draft; merge requires a separate decision.
+- Original candidate `ef11e8a9` and integrated local `246e7360` retain their source/evidence history. Private C1/C2/F1 are not replayed or promoted to routine CI. Required production providers, deployed readiness, whole TC075, downstream acceptance, UAT and NFR remain unapproved/unproven as previously recorded.
+- Historical HD016 approval for13a77ed2/b390c588 is preserved for its original revision. The new human decision applies only to this specified continuation and does not authenticate future changed receipt/product/plan bytes.
+
+The author-prepared `.github/test-admissions/customer-task032-support.json` binds those two blobs. Only the independently assigned CI administrator may verify the decision, register its digest externally and report successful readback; writing the receipt does not grant admission. Approval/review/state bookkeeping is excluded from the DESIGN/PLAN hash inputs; it does not alter the approved two files.
+
 ## Current UI shared-root exception — HD-012 (proposal only)
 
 Sam authorized DEF-034002/DEF-027001 repair/verification/PRmerge. Current DESIGN9.1
