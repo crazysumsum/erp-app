@@ -1,6 +1,44 @@
 # Fulfillment implementation readiness
 
-## 當前：main PR306 已整合，完整本機驗證及獨立覆核通過，待新候選 CI（2026-10-30）
+## 當前：功能交付繼續，非功能驗證延至 UAT 後（2026-11-02）
+
+Sam 已批准 HD026 A。共用 DB 薄切片已實作 rollback 失敗 quarantine／destroy／不回 pool、保留原診斷並回 INDETERMINATE，以及按真正 transaction executor 保存不可變終局結果。獨立源碼覆核0C/H/M；原12案12PASS，相關既有9＋14案23PASS，均0FAIL／0SKIP、沒有增加交易嘗試或容量負載；targeted lint通過。原11PASS／1預期FAIL的RED保留。這只完成 DB 元件；雙owner原事件ABSENT／SUCCEEDED／UNKNOWN查證、可信lease fence與完整Recovery仍未完成，DEF029保持OPEN，不能宣稱完整P2。
+
+已直接核對 Sam 在 PM chat 的原訊息 `01a19a65-0902-74f1-b684-0fcb40f9f5e7`：所有非功能測試（包含已批本機／CI效能、容量、壓力）改為相關功能UAT後執行。保留全部案例、原資料量／並行數／門檻、20秒限制及後續owner；功能交付需所有TASK、受影響正確性回歸、必要review、coverage與當前功能CI。舊段落要求交付前容量Gate的時序由本項實際新指令取代，不把未執行項改成PASS，也不刪歷史失敗。方案75 B的22功能案／browser接線准入與首15案維持；三項新增P2容量未獲批准，亦不執行。UAT後由Fulfillment owner提出其具體准入及相關diff，再按Sam實際決定處理。
+
+已整合 main `aae9c744` 於 `40c544a5`，未push／跑P2候選CI或建立PR。incoming容量router對新精確handler namespaces仍有分類缺口，DEF030 OPEN；且既有workflow可能因共享DB／router變更啟動容量jobs。PM已通知中央PR318合併main b7886a85，P2會直接fetch／影響覆核／整合，不等待中央處理或UAT；推送前仍須實際核對新准入receipt與分流，不能靠舊receipt觸發NFR。可獨立繼續TASK030查詢／文件及HD026 owner／Recovery、Confirm、client／UI；本次P2仍只授權完成後draft PR，沒有P2合併授權。
+
+## 當前：內部原子出貨及Create鎖循環已驗證，Recovery／完整P2仍待完成（2026-10-30）
+
+已無衝突整合main41fb於99cf743b。內部PhaseB可同交易完成Issue／Reservation consume／Sales／Claims／Shipment快照及原operation SUCCEEDED；兩項小型native成功／24表rollback＋原事件恢復已通過。另以雙連線先實際重現Create／Confirm的Customer-X／Sales-FK-S deadlock，再提前Create必要Sales父行S鎖；修正後race1PASS及原2項必要回歸PASS，均0FAIL／0SKIP。獨立結果覆核0C/H/M，receipt SHA42d6cf8e…94f7b1，DEF028僅此鎖循環可關閉。原RED、兩輪posting前功能失敗與較早PASS均保留各自實際FP／HEAD／PLAN，不重標。這些仍是2pool／10秒小型功能fixture，不能宣稱5,000容量或完整P2已通過。
+
+Sam已實際選方案75 B：准入精確22個功能案例及既有browser step／PM協調；三項新增本地容量情境仍未批准、不執行。PM已收到browser shared scope協調；後續整合須保留其最新容量分流，不能帶回舊無條件容量steps。TASK024–027仍IN_PROGRESS；未開放Confirm endpoint，永久失敗／未知結果Recovery、查詢、client、UI、文件、完整驗證及當前候選CI仍待完成，尚未push／建立PR。全部安全／coverage／100/50/5000／20秒及真正容量／效能失敗立即停報保留。
+
+### 前一個實作checkpoint
+
+已本地保存Draft `20c1ac97`、精確15案helper機械搬移 `4196f995`、parent-bound lookup `7d3c4259`、內部durable intent及immutable terminal witness `4cc23d38`；未push／觸發P2候選CI或建立PR。Lookup私有真MySQL／HTTP1PASS，PhaseA私有真MySQL3PASS，均0FAIL／0SKIP；實際raw XML及artifact hashes已由獨立reviewer `/root/p2_confirmation_review` 核對0C/H/M，receipt SHA `50a59e04…2af4f`。Lookup原執行FP `5af186e2…246be70`、PhaseA原FP `15145868…bfdeb6a`保持原綁定；helper機械搬移／新PhaseA source的影響bridge不冒稱lookup重跑。這些是小型功能證據，native fixture實際2pool／10秒，不能宣稱5,000容量／20秒最大量級或完整P2 Gate通過。
+
+TASK024／025／026仍IN_PROGRESS，未開放Confirm endpoint，PhaseB／Recovery／查詢／client／UI／文件仍待完成。最新main已fetch至`41fb488a`，包含Purchasing與既有14項Fulfillment容量分流／CI准入規則；整合影響覆核中。方案75只屬其餘新增案例／負載及成本提案，未獲實際批准，不納入常規CI或執行新容量負載。所有安全檢查、原20秒、既有案例／coverage及容量失敗即停報要求保留。
+
+Sam已實際批准HD025 A：精確decimal string、KG/G，保留全部安全／100/50/5000／20秒。DESIGN a2f36f11…fad9d、PLAN7882d19a…1a7c3已對齊，明確P2授權及獨立review0C/H/M，舊批准／evidence未重標或刪除。TASK024/025 IN_PROGRESS，其餘P2尚待執行，未宣稱完整DoD。
+
+已實作strict重量及Draft命令、Draft create/update/cancel、基本detail與4支HTTP handlers。pure加既有canonical回歸9PASS；小型native6PASS/0FAIL/0SKIP（13.754s）；私有actualHTTP3PASS/0FAIL/0SKIP（6.818s），包含拒絕weight Number coercion及撤權前置於cached/domain replay。Snapshot只Confirm保存；Draft line/header確認快照維持空值。提交成功後讀取失敗保留SUCCEEDED，原事件重試及fresh403均通過。這些不是capacity/P95/20秒最大量級／完整P2 Gate通過。
+
+兩次native fixture timestamp與三次HTTP app-config準備失敗原件全部保留；沒有容量／效能逾時，不繞過schema／config／crypto guard。專用MySQL26.7使用原128MiB/100MiB，native小fixture實際2pool/10s較嚴格，HTTP app保持10pool/20s。
+
+開發途中收到並直接核實Sam在project manager chat的新規則：任何新增常規CI案例須先明確成本說明及實際批准。方案73已獨立覆核0C/H/M，CI-P2-DRAFT-001已收到Sam實際A批准，僅4個新test檔的15案可納入既有常規CI；後續新增仍須具體先批。既有case／coverage未刪減，新job/step/100/5000/UI負載或sharedCIrouting均未新增。後續PhaseB/Recovery方向見74，仍須具體security/slice覆核及新案例准入，不因新增method本身重問已有P2授權。
+
+## 歷史：P2 開發入口（2026-10-30）
+
+Sam 已授權按已批准 PHASE-003 計劃開發 TASK-024–033，保留全部安全檢查、100行／每行50／總數5000及20秒限制；任何容量或效能失敗立即停下報告。所有Task、獨立覆核、完整驗證及新候選CI通過後才建立draft PR；本次授權不包含P2合併。
+
+P1 PR297已實際合併，merge `5febef80f83ba0ff87bc5bf6117aff254cbdcbb7`。合併後main CI41004788896已由GitHub實際確認13/13 jobs SUCCESS，包括四個native shards、merged coverage、client、真P1 browser與Sales容量；沒有拿合併前CI替代。Fresh fetch確認origin/main仍為5feb，專用分支 `codex/fulfillment-p2-shipment`／worktree `.worktrees/fulfillment-p2` 從該基準建立。
+
+P1最終state337、原始typed evidence及全部歷史由已驗證完整archive恢復至此worktree；run內容與執行來源未改、未重標PASS。P1清理已由實際receipt確認。P2入口PLAN_READY為LOCAL_CHECKS_PASS／0 issues；尚無P2 product Task完成，尚未配置DB／帳號／ports或執行容量測試。
+
+獨立入口覆核已完成：唯一未決HD025重量公開契約，1 Medium；其具體方案及72工程準備均0C/H/M，receipt SHA3f8529b9…ff373d。尚未實作P2產品或執行容量測試。Harness要求open重大決策時總state記BLOCKED／resume IMPLEMENTING；僅此受影響契約待決，其餘工程準備仍可進行。待實際決定後按2A Draft／地址、2B durable intent／原子出貨、2C Recovery／查詢、2D client／UI／列印順序交付。既有schema與各provider介面是權威，涉及新重大契約／資料語意須先具體覆核並取得必要決定。P3 Reversal仍受capability gate限制。
+
+## 歷史：P1 main整合驗證（2026-10-30）
 
 Sam 已授權在最新 main 整合、必要驗證、獨立覆核及新候選 CI 全部通過後，將 PR297 轉正式並合併；原「暫不合併」已被此指令取代。全部安全檢查、5,000 筆容量及20秒交易限制不變，任何容量／效能失敗立即停報。
 

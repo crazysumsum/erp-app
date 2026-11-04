@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-03 in Claude Code session f804490c on the TASK-014 CI admission proposal: \"我作為project owner 批準你幫我發digest\", approving the proposed scope and a one-time project-owner authorization for the agent to publish this receipt's digest; recorded in docs/purchasing_receiving_management/implementation/P1_task014_po_draft_service.md. Adds two new files only; receipts purchasing-task012 and purchasing-task013 stay valid with all their pins unchanged",
+  "purpose": "PO Draft create/update allocates a unique number, computes snapshots, base quantities and amounts on the server, refuses client totals and snapshots, newly chosen ineligible Supplier/SKU/UOM/address/warehouse/buyer/currency, stale versions, foreign child IDs and non-Draft POs, tolerates unchanged masters that later became ineligible with a warning, replays the same event and rejects a different payload, keeps operation, audit and PO all-or-nothing, writes REJECTED audit for 4xx refusals, and serializes two same-version updates on the PO row lock",
+  "data": "A few rows per case. Seven integration cases run inside one outer transaction rolled back at the end (service transactions become SAVEPOINTs), on month 2099-11. The concurrency case commits minimal masters (HKD, no Payment Term), deletes its POs and masters afterwards, and leaves its operation and audit rows plus one purchasing_document_sequences row in a random month after 2100 (those tables refuse DELETE). The projection file needs no database. No fixture files",
+  "concurrency": "One case runs two concurrent update transactions plus a third lock-holding connection and a read-only performance_schema probe through DB_ADMIN_USER; all others one transaction",
+  "repetitions": "1",
+  "thresholds": "All cases pass",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing server test jobs",
+  "cost": "Measured locally: integration file about 0.26 s, projection file about 0.07 s wall time. CI not measured, estimated under one second. No new job and no capacity",
+  "files": [
+    {
+      "path": "server/test/integration/purchasingPurchaseOrders.integration.test.js",
+      "mode": "100644",
+      "blob": "5da906e85ff6c1153c18cb513bd89cbdcb7d037c",
+      "kind": "functional",
+      "cases": [
+        "create 拎月度編號、server 計快照同金額、operation 同 Audit 一齊寫，而 Inventory 唔郁",
+        "同一 eventId 同內容 replay 唔會再建；唔同內容係衝突並寫 REJECTED audit",
+        "update 完整取代 Lines：保留 ID、重排、刪除、新增，重算 Total 同 version",
+        "update 拒絕過時 version、外來 child ID、非 Draft 同唔存在嘅 PO，乜都唔改並寫 REJECTED audit",
+        "新揀嘅 Supplier、SKU、UOM、地址、倉、Buyer 同 Currency 一定要當下合格；冇 Supplier-SKU relation 唔阻",
+        "Update 時冇郁而之後先失效嘅 Supplier／SKU 照存並回 warning；新揀或者換咗就拒絕（HD-015 1B）",
+        "Audit 失敗令成單 rollback；權限過時被拒；REJECTED audit 寫唔到就記 security log",
+        "兩個人同時用同一 version 保存：PO 行鎖令第二個人收到 VERSION_CONFLICT，唔會覆蓋（AC-010）"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingProjections.test.js",
+      "mode": "100644",
+      "blob": "bb62883d29becaebd05960288950097570521647",
+      "kind": "functional",
+      "cases": [
+        "選填欄位省略即係清空；數量同單價正規化成固定 scale",
+        "Client 計嘅 total、快照、factor、Base quantity 同 status 一律係未知欄位",
+        "零價一定要 5～500 字原因；非零價唔收原因（BR-011、AC-008）",
+        "錯誤指出邊一行邊個欄位；交期唔可以早過 Order Date；Line ID 唔可以重複",
+        "Header 欄位、Currency 格式同 Line 數上限"
+      ]
+    }
+  ]
+}

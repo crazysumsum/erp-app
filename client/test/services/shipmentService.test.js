@@ -1,0 +1,28 @@
+import {it,expect,vi} from "vitest";
+vi.mock("@/framework/http/HttpClient.js",()=>({httpClient:{get:vi.fn(),post:vi.fn()}}));
+import {httpClient} from "@/framework/http/HttpClient.js";
+const modules=import.meta.glob("../../src/services/shipment.js",{eager:true});
+
+it("CLIENT-CONTRACT: Shipment wire identities, exact weight and malformed outcome rejection without resubmission",async()=>{
+ const module=modules["../../src/services/shipment.js"];expect(module,"The approved Shipment client service must exist").toBeDefined();
+ const shipment=module.default,eventId="c2e7f6b5-5b56-46f9-83cc-0ce21382bd8c",correlationId="b5e03d47-e9fc-4b17-9d78-d19f06897a6e",signal=new AbortController().signal;
+ expect(module.service.name).toBe("shipment");
+ const body=Object.freeze({eventId,shippingAddressId:6,shippingAddressVersion:1,totalWeight:"1.250000",weightUom:"KG"}),draft={outcome:{id:"9",number:"SHP-261102-000001",status:"DRAFT",version:1},shipment:{id:"9",fulfillmentId:"8",status:"DRAFT",version:1}};
+ httpClient.post.mockResolvedValue(draft);await expect(shipment.createDraft("8",body,{signal})).resolves.toBe(draft);expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/fulfillments/8/shipments/create",{idempotent:true,idempotencyKey:eventId,body,signal});
+ httpClient.post.mockResolvedValue({...draft,outcome:{...draft.outcome,version:2},shipment:{...draft.shipment,version:2}});await shipment.updateDraft("9",{...body,version:1,idempotencyKey:"transport-key"},{signal});expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/shipments/9/update",{idempotent:true,idempotencyKey:"transport-key",body:{...body,version:1},signal});
+ httpClient.post.mockResolvedValue({...draft,outcome:{...draft.outcome,status:"CANCELLED",version:2},shipment:{...draft.shipment,status:"CANCELLED",version:2}});await shipment.cancelDraft("9",{eventId,version:1},{signal});expect(httpClient.post.mock.lastCall[0]).toBe("/api/v1/shipments/9/cancel");
+ const page={items:[],total:0,page:2,pageSize:20,hasMore:false};httpClient.get.mockResolvedValue(page);await expect(shipment.listShipments({page:"2",rowsPerPage:20,filter:" SHP-1 ",status:["DRAFT","SHIPPING"],signal})).resolves.toBe(page);expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/shipments",{params:{page:2,pageSize:20,sortBy:"lastBusinessUpdatedAt",descending:true,q:"SHP-1",status:["DRAFT","SHIPPING"]},signal});
+ httpClient.get.mockResolvedValue({shipment:{id:"9",status:"DRAFT",version:1}});await shipment.getShipment("9",{issueAfterId:"100",historyBeforeSequence:9,signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/shipments/9",{params:{issueAfterId:"100",historyBeforeSequence:9},signal});
+ httpClient.get.mockResolvedValue({items:[]});await shipment.listShippingAddresses("2","8",{signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/fulfillment-lookups/customers/2/shipping-addresses",{params:{fulfillmentId:8},signal});await shipment.listShippingContacts("2","8",{signal});expect(httpClient.get.mock.lastCall[0]).toBe("/api/v1/fulfillment-lookups/customers/2/shipping-contacts");
+ httpClient.get.mockResolvedValue({id:"9",status:"SHIPPED"});await shipment.getDeliveryNote("9",{signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/shipments/9/delivery-note",{signal});
+ const confirmed={outcome:"SHIPPED",shipment:{...draft.shipment,status:"SHIPPED",version:3},inventoryMovementIds:["100"],salesOrder:{id:"1"}};httpClient.post.mockResolvedValue(confirmed);await expect(shipment.confirm("9",{eventId,version:1},{signal})).resolves.toBe(confirmed);
+ const statusUrl=`/api/v1/fulfillment-operations/by-event/${eventId}`,pending={outcome:"SHIPPING",operationId:"77",eventId,correlationId,statusUrl,retryAfterSeconds:2};httpClient.post.mockResolvedValue(pending);await expect(shipment.confirm("9",{eventId,version:1},{signal})).resolves.toBe(pending);expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/shipments/9/confirm",{idempotent:true,idempotencyKey:eventId,body:{eventId,version:1},signal});
+ const operation={operationId:"77",eventId,correlationId,status:"IN_PROGRESS"};httpClient.get.mockResolvedValue(operation);await expect(shipment.getOperation(eventId,{signal})).resolves.toBe(operation);expect(httpClient.get).toHaveBeenLastCalledWith(statusUrl,{signal});
+ const posts=httpClient.post.mock.calls.length;expect(()=>shipment.createDraft("8",{...body,totalWeight:1.25})).toThrow(TypeError);expect(()=>shipment.getShipment("8/../../users")).toThrow(TypeError);expect(()=>shipment.getOperation("../users")).toThrow(TypeError);expect(httpClient.post.mock.calls.length).toBe(posts);
+ httpClient.post.mockResolvedValue({...pending,statusUrl:"/api/v1/users"});await expect(shipment.confirm("9",{eventId,version:1})).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});expect(httpClient.post.mock.calls.length).toBe(posts+1);
+ httpClient.get.mockResolvedValue({...operation,eventId:"00000000-0000-0000-0000-000000000000"});await expect(shipment.getOperation(eventId)).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
+ httpClient.post.mockResolvedValue({...confirmed,shipment:{...draft.shipment}});await expect(shipment.confirm("9",{eventId,version:1})).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
+ httpClient.get.mockResolvedValue({...operation,status:"SUCCEEDED",result:{id:"9"}});await expect(shipment.getOperation(eventId)).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
+ httpClient.post.mockResolvedValue(draft);await expect(shipment.cancelDraft("9",{eventId,version:1})).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
+ expect(body.totalWeight).toBe("1.250000");
+});

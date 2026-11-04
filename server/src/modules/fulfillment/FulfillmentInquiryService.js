@@ -9,7 +9,7 @@ export function fulfillmentAllowedActions(header, permissions, pending) {
   if (permissions.includes("fulfillment.operation") && !pending && header.active_shipment_id === null) {
     if (header.status === "DRAFT") actions.push("update", "allocate", "cancel");
     if (header.status === "PICKING") actions.push("reallocate", "pickConfirm", "cancel");
-    if (header.status === "PICKED") actions.push("cancel");
+    if (header.status === "PICKED") actions.push("cancel", "createShipment");
   }
   if (header.allocated_at !== null) actions.push("printPickList");
   return actions;

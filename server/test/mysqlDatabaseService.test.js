@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getTransactionOutcome,
   MySqlDatabaseOperationError,
   MySqlDatabaseService
 } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
@@ -273,10 +274,12 @@ test("a commit slower than the deadline is cut off, and no rollback chases it", 
     logger: silentLogger,
     context
   });
+  let actualTransaction;
 
   await assert.rejects(
     () =>
       database.withTransaction(async (transaction) => {
+        actualTransaction = transaction;
         await transaction.execute("UPDATE orders SET status = ?", ["created"]);
         return "committed";
       }),
@@ -285,6 +288,7 @@ test("a commit slower than the deadline is cut off, and no rollback chases it", 
 
   // destroy 而不是 release：這條連線上可能還有一個沒收掉的交易。
   assert.deepEqual(calls, ["begin", "commit", "destroy"]);
+  assert.deepEqual(getTransactionOutcome(actualTransaction), { state: "INDETERMINATE" });
 });
 
 test("a commit that fits inside the deadline still commits normally", async () => {

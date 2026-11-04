@@ -20,6 +20,15 @@ export function validateSalesOrderQuery(input={}){
  for(const prefix of ["orderDate","updated"])if(query[prefix+"From"]!==undefined&&query[prefix+"To"]!==undefined&&query[prefix+"From"]>query[prefix+"To"])throw salesError("SALES_INPUT_INVALID",{field:prefix});
  return query;
 }
+export function validateSalesAuditQuery(input={}) {
+ const fields=["page","pageSize","targetType","targetId","action","actorId","occurredFrom","occurredTo","sortBy","descending"];
+ if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).some(key=>!fields.includes(key)))throw salesError("SALES_INPUT_INVALID");
+ const query={...input,page:input.page??1,pageSize:input.pageSize??20,sortBy:input.sortBy??"occurredAt",descending:input.descending??true};
+ if(!Number.isSafeInteger(query.page)||query.page<1||!Number.isSafeInteger(query.pageSize)||query.pageSize<1||query.pageSize>100||!Number.isSafeInteger((query.page-1)*query.pageSize)||query.sortBy!=="occurredAt"||typeof query.descending!=="boolean")throw salesError("SALES_INPUT_INVALID");
+ for(const key of ["actorId","targetId","occurredFrom","occurredTo"])if(query[key]!==undefined&&(!Number.isSafeInteger(query[key])||query[key]<(key.startsWith("occurred")?0:1)))throw salesError("SALES_INPUT_INVALID",{field:key});
+ if(query.targetType!==undefined&&!["ORDER","QUOTATION","IMPORT_JOB","EXPORT_JOB","ARCHIVE_BATCH"].includes(query.targetType)||query.action!==undefined&&(typeof query.action!=="string"||query.action.length>80)||query.occurredFrom!==undefined&&query.occurredTo!==undefined&&query.occurredFrom>query.occurredTo)throw salesError("SALES_INPUT_INVALID");
+ return query;
+}
 export function salesOrderWhere(query){
  const clauses=[],values=[];
  for(const [field,column] of [["number","sales_order_number"],["customerId","customer_id"],["warehouseId","fulfillment_warehouse_id"],["hasBackorder","has_backorder"]])if(query[field]!==undefined){clauses.push(`${column}=?`);values.push(query[field]);}
@@ -43,6 +52,17 @@ export class SalesInquiryService{
    const [rows]=page.length?await tx.query(`SELECT ${summarySelect} FROM sales_orders WHERE id IN (${page.map(()=>"?").join(",")})`,page.map(row=>row.id)):[[]];
    const byId=new Map(rows.map(row=>[String(row.id),row]));
    return {items:page.map(row=>toSalesOrderSummary(byId.get(String(row.id)))),total:Number(count.total),page:query.page,pageSize:query.pageSize};});
+ }
+ async listAudit({claims,input={}}) {
+  const query=validateSalesAuditQuery(input),clauses=[],values=[];
+  for(const [key,column] of [["targetType","target_type"],["targetId","target_id"],["actorId","actor_user_id"],["action","action"]])if(query[key]!==undefined){clauses.push(`${column}=?`);values.push(query[key]);}
+  for(const [key,op] of [["occurredFrom",">="],["occurredTo","<="]])if(query[key]!==undefined){clauses.push(`occurred_at${op}?`);values.push(query[key]);}
+  const where=clauses.length?" WHERE "+clauses.join(" AND "):"",direction=query.descending?"DESC":"ASC";
+  return this.database.withTransaction(async tx=>{
+   await requireSalesActor(tx,claims,"sales.view");const [[count]]=await tx.query(`SELECT COUNT(*) AS total FROM sales_audit_logs${where}`,values);
+   const [rows]=await tx.query(`SELECT id,occurred_at,actor_user_id,actor_label,action,target_type,target_id,target_number,outcome,reason,event_id FROM sales_audit_logs${where} ORDER BY occurred_at ${direction},id ${direction} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
+   return {items:rows.map(row=>({id:Number(row.id),occurredAt:Number(row.occurred_at),actorId:row.actor_user_id===null?null:Number(row.actor_user_id),actorLabel:row.actor_label,action:row.action,targetType:row.target_type,targetId:row.target_id===null?null:Number(row.target_id),targetNumber:row.target_number,outcome:row.outcome,reason:row.reason,eventId:row.event_id})),total:Number(count.total),page:query.page,pageSize:query.pageSize};
+  });
  }
  async get({claims,id}){if(!Number.isSafeInteger(id)||id<1)throw salesError("SALES_INPUT_INVALID",{field:"id"});
   return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),detail=await readSalesOrderDetail(tx,id);

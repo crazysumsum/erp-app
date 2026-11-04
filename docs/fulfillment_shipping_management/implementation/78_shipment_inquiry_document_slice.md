@@ -1,0 +1,37 @@
+# TASK030 — Shipment inquiry and document slice
+
+Status: implementation preparation under the approved P2 plan; no completion/CI/capacity claim. HD026 affects failure/Recovery/Confirm, not this read model. Proposal75 B admits the exact two inquiry/document functional cases and two-line small fixtures; no new case/job/load is requested.
+
+## Read contracts
+
+- Preserve the existing Draft command response. Expand only GET Shipment detail to the approved full read model: basic Shipment fields, immutable parent IDs/numbers, selected logistics/child references, complete≤100 Lines, current address/Contact selection for Draft, confirmed address/Contact snapshots for historical states, bounded≤100 Issue/history pages, original confirmation event and server allowedActions. Never merge multiple child sets with a Cartesian join. Read history/current snapshots without updating business timestamps.
+- GET `/api/v1/shipments` follows the specified q/SO/Customer/Warehouse/status[]/Shipment-date/carrier/tracking/sort/direction/page/pageSize filters. q resolves exact Shipment or indexed SO number; Tracking is exact. No free-text full-history fuzzy scan, unlisted arbitrary sort or custom SQL. Strict scalar IDs/booleans, calendar date bounds, status arrays with no duplicates, pageSize≤100, stable same-direction ID tie break. Use existing server pagination conventions; do not invent a lower record cap or omit matching rows silently.
+- GET `/api/v1/shipments/:id/delivery-note` returns one complete common immutable snapshot projection for Delivery Note and Packing List presentation. Preserve all≤100 Lines including zero quantity and every≤5000 Issue bucket, exact quantity/owner reconciliation and stable line/bucket order. Only SHIPPED or clearly watermarked historical REVERSED facts are printable; DRAFT/SHIPPING/REVERSING/CANCELLED refuse an effective delivery document. The generated safe filename uses validated system Shipment number, not addresses/carrier/tracking.
+- Every read needs fresh view permission. Commands remain independently fresh view+operation; allowedActions only advertises implemented P2 actions (Draft update/cancel/confirm, confirmed document print), never P3 Reverse. A pending/current state must not advertise another new Confirmation. Draft display may use the parent Fulfillment's retained SKU/customer snapshots while confirmed detail/document uses actual confirmation snapshots.
+
+## Consistency, privacy and audit
+
+List/detail use a fresh consistent read transaction as existing Fulfillment inquiry does, with explicit fresh authorization and strict DTO projections. No Customer banking/commercial price/tax/cost data is selected. Document retrieval uses the existing Sales-parent→Fulfillment→Shipment shared-lock pattern and complete child reads, then a technical PRINT audit and final fresh view check in the same RC transaction. No business timestamp, version, Inventory or Sales quantity is changed by a read/print.
+
+Use handler strict request/response envelopes, fixed private/no-store success headers and no-store error defaults under the already approved framework policy. Raw strings are data only; actual Vue templates use escaped interpolation and A4 print CSS with a visible historical-state warning. No v-html or user-supplied filename.
+
+## Two admitted functional cases
+
+1. SHIPMENT-INQUIRY-DOCUMENT: one SO, two SKU Lines, two Balance buckets; original5+2 reserved,3+2 picked. One real internal Confirmation, exact list filters/parent navigation/bounded detail/immutable common document projection. At most8 reads as approved. No timing distribution or large load.
+2. SHIPMENT-DOCUMENT-SAFETY: a separate fixture at the same small scale; refusal before Confirmation, then one real Confirmation, safe literal XSS snapshots/filename/privacy/no-store/fresh permission and unchanged business facts/timestamps on print. At most4 document/detail reads as approved; no extra business attempts.
+
+Use existing native/HTTP fixture helpers and real app startup. The helper belongs in an already discovered helper file, not a new empty auto-discovered testcase. Source/native fixture/strict schemas and exact test discovery require independent review before execution. The actual browser/A4 result belongs to TASK033 and its separately admitted real Playwright flows, not these API cases. Full5000 document/capacity proof remains a held later gate; no performance claim follows from these small cases.
+
+## Implementation clarification and resumed policy
+
+List sort allowlist follows existing Fulfillment field names: lastBusinessUpdatedAt (default descending), createdAt, shippedAt, shipmentDate, shipmentNumber, id. Page defaults1/pageSize20, maximum100, same-direction primary-ID tie-break; each request returns an RR-consistent count and bounded page. Exact q uses Shipment number or first resolves unique Sales number to its ownerID; no arbitrary SQL sort/search. Carrier/tracking are exact. The approved generic Shipment server pagination uses page/offset (no new cursor contract). Status accepts one value or repeated status query values, rejects duplicates/unknowns; calendar dates and scalar integer/boolean syntax are strict. Draft command responses are preserved; only GET detail expands. Detail address/contact for unconfirmed work comes from the existing owner-scoped single-ID Customer shipping read assertion, without row locks (null only for known CUSTOMER_PARTY_NOT_FOUND; provider errors propagate); historical detail/documents always use confirmation snapshots.
+
+Sam's actual global PM-chat userMessage01a19a65-0902-74f1-b684-0fcb40f9f5e7 defers every nonfunctional local/CI test until related UAT; these two already-admitted small two-line correctness/document cases are functional. Do not execute large document/capacity scenarios or claim their PASS. Required functional review/coverage/current CI and actual browser behavior remain delivery gates.
+
+## Actual read-component evidence
+
+Six source files were independently reviewed0C/H/M (source receipt2bd01517196e721717f4e4f3c30dedb74f1388d40deb5b88093544b970f8928f). An initial bounded-read finding was fixed by replacing Customer-wide list-and-find with the existing single-ID owner read assertions. No Customer provider change was needed. Draft allowedActions advertises only update/cancel until the real public Confirm route is implemented; planned reverse is not advertised.
+
+The single admitted exact2 native/HTTP run61ccefef2621 passed2/2,0FAIL/0SKIP/not-run/timeout, followed by the directly affected existing3 Draft HTTP regressions148510a69811 passed3/3 with the same source fingerprint f01530f83d07d93d3d70e2d972f70fcf5db1369a56bf51fc754cae9d06647bdb, actual precommitHEAD731e3864 and PLAN7882d19a. Independent raw-result receipts2579dd7961124ec80469cfe6b02fd6b64b319d86432b9c653c29fd53b9516379 and3d5ed1f028f55297694e2fbe768391d1b5dabbde41354ddb714363c73a8d30b0 verified the exact counts/artifact hashes/baseline. No exact2 rerun, new case/load or NFR was used. Targeted ESLint and diff check passed.
+
+Local component commit5b59938668add0265d05c767859257615fe2d4cb contains only those six source files. Postcommit observed fingerprint equals the actual test fingerprint; old runs retain their original HEAD. The private runtime was safely resumed on the original UUID/datadir with actualPID21872, original settings, no DDL/reset and no unexpected schema. Full TASK030/P2, Recovery/Confirm/public client/UI/A4 real-browser/coverage and current functional CI remain open; these API results do not replace them.

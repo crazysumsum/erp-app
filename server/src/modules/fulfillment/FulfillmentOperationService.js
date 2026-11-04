@@ -1,3 +1,4 @@
+import { assertShipmentConfirmationHistory } from "./shipmentConfirmationWitness.js";
 import { fulfillmentOperationHash } from "./fulfillmentOperationHash.js";
 import { FULFILLMENT_OPERATION_TYPES,FULFILLMENT_STATUSES,SHIPMENT_STATUSES } from "./fulfillmentConstants.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
@@ -96,6 +97,22 @@ export class FulfillmentOperationService {
   }
   succeedInTransaction(tx,{request,result}){return this.#complete(tx,request,safeResult(result),null);}
   failKnownRolledBackInTransaction(tx,{request,publicErrorCode,publicErrorDetails={}}){return this.#complete(tx,request,null,{code:publicErrorCode,details:decodeDetails(publicErrorCode,publicErrorDetails)});}
+  async getShipmentConfirmationReplayInTransaction(tx,input){
+    fields(input,["eventId","shipmentId","version"]);
+    const intent=Object.freeze({eventId:input.eventId,shipmentId:input.shipmentId,version:input.version});
+    if(!uuid(intent.eventId)||!Number.isSafeInteger(intent.version)||intent.version<1||intent.version>4294967295)throw new TypeError("Invalid Shipment public intent");
+    fulfillmentInteger(intent.shipmentId);
+    const actor=await this.#actor(tx,"SHIP"),[[row]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[intent.eventId]);
+    if(!row)return null;
+    if(row.operation_type!=="SHIP"||row.target_type!=="SHIPMENT"||String(row.target_id)!==intent.shipmentId||String(row.initiated_by)!==String(actor.id))conflict();
+    if(typeof row.payload_hash!=="string"||!/^[0-9a-f]{64}$/u.test(row.payload_hash)||!uuid(row.correlation_id))throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    const [history]=await tx.query("SELECT shipment_id,event_id,action,from_status,to_status,actor_user_id,version_after FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action='CONFIRM_START' LIMIT 2",[intent.shipmentId,intent.eventId]);
+    const after=assertShipmentConfirmationHistory(history,{...intent,actorId:actor.id});
+    const decoded=this.#decode(row);
+    if(decoded.status==="IN_PROGRESS")return null;
+    if(decoded.status==="SUCCEEDED"&&decoded.result.version!==after+1)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    const {leaseOwner:_leaseOwner,...safe}=decoded;return safe;
+  }
   async getForActorInTransaction(tx,eventId){
     if(!uuid(eventId))throw new TypeError("Invalid Fulfillment event");
     const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.view");

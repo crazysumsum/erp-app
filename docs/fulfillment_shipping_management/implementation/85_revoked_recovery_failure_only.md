@@ -1,0 +1,20 @@
+# TASK029 — revoked original-actor failure-only recovery
+
+Status: bounded component saved in local `b3cc7b9f`, independently reviewed0C/H/M and verified with the first approved RECOVERY-REVOKED-FAILURE scenario plus affected functional regression. The whole Recovery job, TASK029/DEF029/P2 and current-candidate CI remain open. HD026A/HD027A/proposal75B are unchanged; no new public/owner contract, test admission or NFR execution is inferred.
+
+## Actual authority and atomic effects
+
+The expired inspection creates a private WeakMap capability only after the genuine registered invocation/current framework lease, exact original operation X, original event/hash/actor/target/history, complete Inventory/Sales ABSENT and complete local/counter/source proof all hold in the actual same RC transaction. A copied result, JSON flag, constructor actor label or another transaction cannot reuse it. It does not assert a fabricated ROLLED_BACK attempt.
+
+Revoked cleanup consumes that same capability and rechecks the actual runtime, original expired nonce/due state and genuine directory ineligibility. Only an exact affectedRows1 compare-and-set to a fresh failure-only nonce permits local terminalization; it does not mint ordinary started state or an original-actor posting context. Another fresh ineligibility check, remaining lease budget and final DB-clock/hash/nonce/actor/target CAS remain. Unknown directory or owner facts, restored eligibility, abort, partial source/schema, foreign capability or lost fence refuse and roll back/preserve pending.
+
+Only Shipment DRAFT/version/confirmation link, CONFIRM_FAIL history, FAILED Audit and the original operation FAILED are changed atomically. No Inventory/Sales/Claims quantity, reservation release, Issue, replacement actor or compensating write exists in this branch. The existing live permanent-failure path retains its actual ROLLED_BACK proof and fresh ordinary actor guard while sharing the same local terminal DML. Both eligible/revoked expired CAS use UPDATE-time DB clock for next_attempt_at as well as expiry, so an earlier clock sample cannot silently bypass a future due time.
+
+## Preserved actual developer evidence
+
+- `revoked-recovery-private-eb08222cc901/result.json`: expected exact1RED,0PASS/1FAIL/0SKIP,exit1/no timeout; SHIPPING versus DRAFT atline27 before the missing path. Later assertions were not reached and are not described as passed.
+- `revoked-recovery-private-bd4e42fde21d/result.json`: exact1PASS/0FAIL/0SKIP,exit0/no timeout at HEAD53b00170/source fingerprint `9012d57ada8a64c5c19886965ca032949bd4f19a4e19e2f05b2762c245f2ada5`. One small SO/SKU/Line/Balance, one initial PhaseA and one actual registered worker execution. Verifies DRAFTv3, original operation FAILED/attempt2/clearedlease/permission-denied code,17-table full equality including Sales mapping/Inventory/allClaims, no Issue, original actor in history/Audit and scheduler runs1/drain.
+- Necessary affected regression on the same source: `permanent-failure-private-d9bd870132e7/result.json` exact1PASS and `restart-recovery-private-7f1cb54814b6/result.json` exact1PASS, both exit0/no timeout. The unchanged ordinary PhaseB2 was not rerun; its earlier source-bound report remains separate.
+- Independent source/actual-results closure `independent-p2-revoked-failure-only-thin-source-actual-results-closure-review.json` SHA `7bac9198ab588af9f02443a18e2790ea9a5ce68ca88dd6fcbb6f94eddc201060`,0C/H/M. Raw reports keep original commit/spec/fingerprint; local product commit is an exact byte bridge.
+
+These are private bounded functional developer checks outside routine discovery. They do not prove interrupted failure recording, deterministic backoff/exhaustion, two-worker contention, abort/renewal/unknown-outcome scenarios, public Confirm/client/UI/Playwright or full P2 readiness. Those remain required within the already approved finite functional budgets. All nonfunctional validation remains after related UAT, with the original20-second ceiling and safety checks retained.
