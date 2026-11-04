@@ -153,12 +153,12 @@ jobs:
 
   server-tests:
     needs: admission
-    name: Server coverage shard (${{ matrix.shard }}/4)
+    name: Server coverage shard (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     services: &mysql_services
       mysql:
         image: mysql:26.7.0
@@ -267,11 +267,11 @@ jobs:
           } finally {await db.end();}
           NODE
           capacity_pattern="$(NODE_V8_COVERAGE= node .github/scripts/capacity-runner.mjs server-pattern)"
-          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=coverage/shard/functional-tests.xml
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/8 --test-skip-pattern="$capacity_pattern" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=coverage/shard/functional-tests.xml
 
       - name: Record candidate and shard identity
         working-directory: server
-        run: node ../.github/scripts/merge-server-coverage.test.mjs record ${{ matrix.shard }} 4
+        run: node ../.github/scripts/merge-server-coverage.test.mjs record ${{ matrix.shard }} 8
 
       # Keep the existing P1 exact2 gate and approved P2 exact2 gate in the same browser step.
       - name: Install Chromium for real Fulfillment browser flows
@@ -379,7 +379,7 @@ jobs:
         id: inventory_native_merge
         env:
           COVERAGE_SHARD_ROOT: ${{ github.workspace }}/server/coverage/shards
-          COVERAGE_SHARD_TOTAL: "4"
+          COVERAGE_SHARD_TOTAL: "8"
         run: npm run test:coverage:merge --workspace server
 
       - name: Finalize Inventory native merge proof
