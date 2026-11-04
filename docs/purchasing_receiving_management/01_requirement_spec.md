@@ -37,7 +37,7 @@ Purchasing負責記錄對供應商的正式採購意圖及商業條件；Receivi
 - 一個PO Line可拆成多個收貨明細，分別指定Lot、Expiry Date、Warehouse、Bin及Stock Status。
 - Goods Receipt先保存為Draft；確認後整張原子過帳Inventory，且不得直接修改或刪除。
 
-為避免未確認細節被當成既定決策，本文件在§18.2明列系統編號、單PO收貨、零單價、交期／預設Warehouse及Receipt Reversal五項簡化假設。§18.3原列的六項待確認Gate中，OPEN-001～005已按`03_design_spec.md`§0.2的方案由ERP Product Owner（Sam）批准關閉，結論已回寫至BR-038、BR-039及§18.3；OPEN-006（上線切換資料及責任人）仍未決，阻擋Go-Live但不阻擋設計及開發。
+為避免未確認細節被當成既定決策，本文件在§18.2明列系統編號、單PO收貨、零單價、交期／預設Warehouse及Receipt Reversal五項簡化假設。§18.3原列的六項待確認Gate中，OPEN-001～005已按`03_design_spec.md`§0.2的方案由ERP Product Owner（Sam）批准關閉，結論已回寫至BR-038、BR-039及§18.3；OPEN-006（上線切換資料及責任人）已於2026-11-03由Sam決定按全新系統上線（HD-006），結論見§18.3。
 
 ### 0.4 文件版本紀錄
 
@@ -999,9 +999,9 @@ OPEN-001～005已於Harness 2.0對齊時由ERP Product Owner（Sam）按`03_desi
 | OPEN-003 | Currency金額精度、rounding規則及Unit Price最大位數。 | DECIDED | Unit Price最多4位小數；Line Amount按Currency小數位以`ROUND_HALF_UP`計算；PO Total為已round Line Amount之和；GR只保存PO價格快照不改價。金額在API使用decimal string，在程式使用整數縮放／BigInt，不使用binary float。 |
 | OPEN-004 | PO／GR Number顯示格式及序列政策。 | DECIDED | PO為`PO-YYYYMM-000001`、GR為`GR-YYYYMM-000001`；各文件類型每月重置，首次保存Draft時產生，取消後不可重用，需要transaction-safe monthly sequence table。 |
 | OPEN-005 | Purchase Order列印採browser print或正式PDF artifact。 | DECIDED | 本期只提供A4 browser print，使用者可自行另存PDF；系統不產生或保存PDF artifact，不新增PDF library、檔案表、電郵或範本引擎。 |
-| OPEN-006 | 首批未完成PO、切換日期、舊系統Previously Received及Inventory Opening對賬責任人。 | OPEN | 未決。不阻擋核心設計及開發，但阻擋正式Go-Live；相關驗收工作見§16及`05_development_tasks.md` PHASE-005。 |
+| OPEN-006 | 首批未完成PO、切換日期、舊系統Previously Received及Inventory Opening對賬責任人。 | DECIDED | 按全新系統上線：只導入Customer、Supplier、Item及Inventory紀錄，不導入任何PO、GR、Reversal、Previously Received數量或Purchasing Audit歷史，所以沒有要遷移的未完成PO及要對賬的舊收貨量；Opening Stock由Inventory紀錄導入負責對賬；上線日期於release時決定，Go-Live簽核在`TASK-044`的`RELEASE_APPROVAL`以人工批准記錄（HD-006）。 |
 
-OPEN-006未決期間，Go-Live相關Task及UAT簽核須保持`BLOCKED`，不得以假設資料代替。已關閉的OPEN-001～005屬已批准業務規則，任何變更須先修訂本文件及`03_design_spec.md`並重新取得批准。
+OPEN-001～006均已關閉；Go-Live仍須完成§16的UAT及release簽核，不得以假設資料代替。已關閉的OPEN-001～006屬已批准業務規則，任何變更須先修訂本文件及`03_design_spec.md`並重新取得批准。
 
 ---
 

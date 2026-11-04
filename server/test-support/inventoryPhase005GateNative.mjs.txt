@@ -720,7 +720,7 @@ print(json.dumps({'suite_id':sid,'raw_path':latest['path'],'raw_sha256':m.file_h
       await fs.writeFile(lcovPath, `TN:SYNTHETIC_VERIFIER_ONLY\nSF:${sourceFile}\nDA:2,1\nLF:1\nLH:1\nend_of_record\n`, { flag: "wx", mode: 0o600 });
       const lcovText = await fs.readFile(lcovPath, "utf8"), lcovSha256 = sha(lcovText), parts = [];
       assert.ok(lcovText.includes(`SF:${sourceFile}\n`));
-      for (let shard = 1; shard <= 4; shard += 1) {
+      for (let shard = 1; shard <= 8; shard += 1) {
         const file = path.join(directory, `synthetic-part-${shard}.json`);
         await fs.writeFile(file, JSON.stringify({ claim: "SYNTHETIC_VERIFIER_ONLY", shard, nonce }) + "\n", { flag: "wx", mode: 0o600 });
         parts.push({ shard, sha256: sha(await fs.readFile(file)), run_id: "1", attempt: 1, commit });
@@ -730,7 +730,7 @@ print(json.dumps({'suite_id':sid,'raw_path':latest['path'],'raw_sha256':m.file_h
         inputs: { claim: "SYNTHETIC_VERIFIER_ONLY", sourceFile: sha(await fs.readFile(sourceFile)), lcovSha256, recorderHash } };
       const after = structuredClone(before);
       const record = buildMergeRecord({ before, after, outcome: { exitCode: 0, signal: null }, lcovSha256, parts });
-      assert.equal(record.lcovSha256, sha(await fs.readFile(lcovPath))); assert.equal(record.parts.length, 4);
+      assert.equal(record.lcovSha256, sha(await fs.readFile(lcovPath))); assert.equal(record.parts.length, 8);
       const changedPath = path.join(directory, "changed-lcov.info");
       await fs.writeFile(changedPath, lcovText.replace("DA:2,1", "DA:2,0"), { flag: "wx", mode: 0o600 });
       const changedHash = sha(await fs.readFile(changedPath)); assert.notEqual(changedHash, record.lcovSha256);
