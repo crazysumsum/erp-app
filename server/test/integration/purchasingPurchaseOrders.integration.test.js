@@ -619,3 +619,26 @@ integrationTest("copy 遇到不可採購 Supplier、冇 Line 剩低或者唔存�
     await assert.rejects(copy(source.id, { ...f.claims, permissions: [] }), coded("PERMISSION_STALE"));
   });
 });
+
+integrationTest("copy 逐個條件剔走唔合格嘅 Line：UOM 停用、唔再追蹤庫存、改咗 serial、factor 改咗換唔到整數", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const source = await orders.create({ claims: f.claims, input: body(f, { lines: [
+      { skuId: f.skuA, purchaseSkuUomId: f.boxA, orderedQuantity: "0.5", unitPrice: "1" }, { skuId: f.skuB, purchaseSkuUomId: f.eachB, orderedQuantity: "1", unitPrice: "1" }] }) });
+    for (const [sql, restore] of [
+      [["UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [f.box]], ["UPDATE item_uoms SET status = 'active' WHERE id = ?", [f.box]]],
+      [["UPDATE item_skus SET inventory_tracked = 0 WHERE id = ?", [f.skuA]], ["UPDATE item_skus SET inventory_tracked = 1 WHERE id = ?", [f.skuA]]],
+      [["UPDATE item_skus SET tracking_policy = 'serial' WHERE id = ?", [f.skuA]], ["UPDATE item_skus SET tracking_policy = 'batch_expiry' WHERE id = ?", [f.skuA]]],
+      [["UPDATE item_sku_uoms SET to_base_factor = 7 WHERE id = ?", [f.boxA]], ["UPDATE item_sku_uoms SET to_base_factor = 24 WHERE id = ?", [f.boxA]]]
+    ]) {
+      await tx.query(...sql);
+      const result = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID() } });
+      assert.deepEqual(result.warnings, [{ code: "COPY_LINE_DROPPED", lineNumber: 1 }], sql[0]);
+      assert.deepEqual((await lines(tx, result.id)).map((row) => row.sku_id), [f.skuB], sql[0]);
+      await tx.query(...restore);
+    }
+    const clean = await orders.copy({ claims: f.claims, purchaseOrderId: source.id, input: { eventId: randomUUID() } });
+    assert.deepEqual([clean.warnings, (await lines(tx, clean.id)).length], [[], 2], "主檔復原就兩行都抄");
+  });
+});

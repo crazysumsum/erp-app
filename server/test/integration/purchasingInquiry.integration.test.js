@@ -195,10 +195,11 @@ integrationTest("q 搵 PO 編號、Supplier code／名稱、SKU code／名稱、
 integrationTest("Outstanding 只計已確認、收緊貨嘅 PO（HD-017 4A）；進度分開計，超收唔抵銷其他行，風險有文字碼", async (t) => {
   await inRollback(database(t), async (tx) => {
     const f = await masters(tx), inquiry = service(tx);
-    const draft = await f.order({ lines: [{ sku: f.skuA, unitPrice: "0.0000", zeroPriceReason: "免費樣品" }] });
+    const draft = await f.order({ expected_delivery_date: "2099-11-01", lines: [{ sku: f.skuA, unitPrice: "0.0000", zeroPriceReason: "免費樣品" }] });
     const confirmed = await f.order({ status: "CONFIRMED", expected_delivery_date: "2099-11-14",
       lines: [{ sku: f.skuA, ordered: 10, net: 4, reversed: 1, closed: 2 }, { sku: f.skuB, ordered: 5, net: 8 }] });
     const onTime = await f.order({ status: "PARTIALLY_RECEIVED", expected_delivery_date: "2099-11-14", lines: [{ sku: f.skuA, net: 1, date: "2099-11-15" }] });
+    const flagCleared = await f.order({ status: "CONFIRMED", has_outstanding: 0, lines: [{ sku: f.skuA, net: 10, date: "2099-11-01" }, { sku: f.skuB, date: "2099-11-20" }] });
     const received = await f.order({ status: "FULLY_RECEIVED", has_outstanding: 0, lines: [{ sku: f.skuA, net: 10 }] });
     const cancelled = await f.order({ status: "CANCELLED", lines: [{ sku: f.skuA }] });
     const inactive = await f.order({ supplierId: f.inactiveSupplier, lines: [{ sku: f.skuA }] });
@@ -206,7 +207,7 @@ integrationTest("Outstanding 只計已確認、收緊貨嘅 PO（HD-017 4A）；
     const list = (input) => inquiry.list({ claims: f.manager.claims, input: { sortBy: "number", descending: false, ...input } });
 
     assert.deepEqual(ids(await list({ supplierId: f.supplierA, hasOutstanding: true })), [confirmed.id, onTime.id]);
-    assert.deepEqual(ids(await list({ supplierId: f.supplierA, hasOutstanding: false })), [draft.id, received.id, cancelled.id]);
+    assert.deepEqual(ids(await list({ supplierId: f.supplierA, hasOutstanding: false })), [draft.id, flagCleared.id, received.id, cancelled.id]);
 
     const items = new Map((await list({ supplierId: f.supplierA })).items.map((item) => [item.id, item]));
     const of = (id) => { const { hasOutstanding, outstandingBaseQuantity, netReceivedBaseQuantity, orderedBaseQuantity, closedRemainingBaseQuantity, lineCount, risks } = items.get(id);
@@ -216,6 +217,7 @@ integrationTest("Outstanding 只計已確認、收緊貨嘅 PO（HD-017 4A）；
     assert.deepEqual(of(confirmed.id), { hasOutstanding: true, outstandingBaseQuantity: "4", netReceivedBaseQuantity: "12", orderedBaseQuantity: "15",
       closedRemainingBaseQuantity: "2", lineCount: 2, risks: ["OVERDUE", "OVER_RECEIVED"] }, "(10-4-2)+max(5-8,0)，唔係 15-12-2");
     assert.deepEqual(of(onTime.id).risks, [], "Line 交期蓋過表頭：今日到期未算逾期");
+    assert.deepEqual(of(flagCleared.id).risks, [], "過咗期嗰行已經收齊，未收嗰行未到期");
     assert.deepEqual(of(received.id).risks, [], "收齊就唔係逾期");
     assert.deepEqual(of(cancelled.id).outstandingBaseQuantity, "0");
     assert.deepEqual((await list({ supplierId: f.inactiveSupplier })).items.find((item) => item.id === inactive.id).risks, ["INACTIVE_MASTER"]);
@@ -280,9 +282,51 @@ integrationTest("詳情回交易快照同逐行進度，目前主資料另外放
     });
     assert.deepEqual(changed.allowedActions, [], "只有 view 冇動作");
 
+    // 每一種分別單獨都要報。
+    const differences = async () => (await inquiry.get({ claims: f.manager.claims, id: po.id })).currentMasterDifferences;
+    await tx.query("UPDATE suppliers SET supplier_name = ?, status = 'active' WHERE id = ?", [`Name${f.tag} a`, f.supplierA]);
+    await tx.query("UPDATE item_skus SET sku_name = ?, status = 'active' WHERE id = ?", [f.skuB.name, f.skuB.id]);
+    assert.deepEqual(await differences(), { supplier: null, lines: [] });
+    for (const sql of ["supplier_name = 'Other'", "status = 'inactive'", "supplier_code = 'OTHER-CODE'"]) {
+      const [[before]] = await tx.query("SELECT supplier_code, supplier_name, status FROM suppliers WHERE id = ?", [f.supplierA]);
+      await tx.query(`UPDATE suppliers SET ${sql} WHERE id = ?`, [f.supplierA]);
+      assert.notEqual((await differences()).supplier, null, sql);
+      await tx.query("UPDATE suppliers SET ? WHERE id = ?", [before, f.supplierA]);
+    }
+    for (const sql of ["sku_name = 'Other'", "sku_code = 'OTHER-CODE'", "status = 'inactive'"]) {
+      const [[before]] = await tx.query("SELECT sku_code, sku_name, status FROM item_skus WHERE id = ?", [f.skuA.id]);
+      await tx.query(`UPDATE item_skus SET ${sql} WHERE id = ?`, [f.skuA.id]);
+      assert.deepEqual((await differences()).lines.map((line) => line.skuId), [f.skuA.id], sql);
+      await tx.query("UPDATE item_skus SET ? WHERE id = ?", [before, f.skuA.id]);
+    }
+    await tx.query("UPDATE items SET status = 'inactive' WHERE id = (SELECT item_id FROM item_skus WHERE id = ?)", [f.skuA.id]);
+    assert.deepEqual((await differences()).lines.map((line) => line.itemStatus), ["inactive", "inactive"], "Item 停用，佢嘅 SKU 全部報");
+    await tx.query("UPDATE items SET status = 'active' WHERE id = (SELECT item_id FROM item_skus WHERE id = ?)", [f.skuA.id]);
+
     const draft = await inquiry.get({ claims: f.manager.claims, id: (await f.order({ supplierId: f.supplierB, lines: [{ sku: f.skuA }] })).id });
     assert.deepEqual(draft.allowedActions, ["edit", "copy"]);
     assert.deepEqual([draft.hasOutstanding, draft.lines[0].outstandingBaseQuantity], [false, "0"], "Draft 未有嘢要收");
+  });
+});
+
+integrationTest("名稱配中超過 100 個時，完全相符嘅 Supplier code 同 SKU code 唔會畀上限截走", async (t) => {
+  await inRollback(database(t), async (tx) => {
+    const f = await masters(tx), inquiry = service(tx), prefix = `Cap${f.tag}`;
+    const supplierRows = Array.from({ length: 100 }, (_, index) => [`${prefix}-${index}`, `${prefix}-${index}`.toLowerCase(), `N${index}`, `n${index}`, "HKD", "active", NOW, NOW]);
+    await tx.query("INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code, status, created_at, updated_at) VALUES ?", [supplierRows]);
+    const [{ insertId: exactSupplier }] = await tx.query("INSERT INTO suppliers SET ?", [{ supplier_code: prefix, supplier_code_key: prefix.toLowerCase(), supplier_name: "Exact", supplier_name_key: "exact",
+      default_currency_code: "HKD", status: "active", created_at: NOW, updated_at: NOW }]);
+    const [[{ item_id: item }]] = await tx.query("SELECT item_id FROM item_skus WHERE id = ?", [f.skuA.id]);
+    const skuRows = Array.from({ length: 100 }, (_, index) => [item, `${prefix}-${index}`, `S${index}`, "active", NOW, NOW]);
+    await tx.query("INSERT INTO item_skus (item_id, sku_code, sku_name, status, created_at, updated_at) VALUES ?", [skuRows]);
+    const [{ insertId: exactSku }] = await tx.query("INSERT INTO item_skus SET ?", [{ item_id: item, sku_code: prefix, sku_name: "Exact", status: "active", created_at: NOW, updated_at: NOW }]);
+    const [[{ uom }]] = await tx.query("SELECT uom_id AS uom FROM item_sku_uoms WHERE id = ?", [f.skuA.mapping]);
+    const [{ insertId: mapping }] = await tx.query("INSERT INTO item_sku_uoms SET ?", [{ sku_id: exactSku, uom_id: uom, to_base_factor: 1, is_base: 1, created_at: NOW, updated_at: NOW }]);
+
+    const bySupplier = await f.order({ supplierId: Number(exactSupplier) });
+    const bySku = await f.order({ supplierId: f.supplierB, lines: [{ sku: { id: Number(exactSku), mapping: Number(mapping), code: prefix, name: "Exact" } }] });
+    const found = ids(await inquiry.list({ claims: f.manager.claims, input: { q: prefix, sortBy: "number", descending: false } }));
+    assert.deepEqual(found, [bySupplier.id, bySku.id]);
   });
 });
 
