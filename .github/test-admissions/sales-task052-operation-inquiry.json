@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "decision": "Sam actual user reply 01a1a544-14f2-7600-8900-69bd5dcd3623 in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, call_c8b597c64378488eb9e206ab4bbe4d15 item 1 (second question), 2026-11-04: \"批准准入、Draft PR 及一次 CI\". Approves the existing TC-022 exact Git blob 28f9c11f08df9c935302cdf56dfe4c6e8c003663, an independent Draft PR and one natural existing eight-shard functional CI after latest-main/pin verification. Failure stops without retry; merge is separately decided. Earlier exact file/local-once approval: call_bd9e4eb0df654598adc08e8fbc043e1d. This receipt does not authorize its author to register a digest.",
+  "purpose": "Preserve Confirm view+mgmt preflight and distinguish by-event view preflight. The operation service still checks a fresh original actor and the original command permission, allowing own Import lookup with view+import and no mgmt. Only the existing handler metadata expectation is aligned; all other existing assertions remain.",
+  "data": "Same 3 existing pure handler/schema cases, same existing constant input and fake handler objects; no database, HTTP, fixture rows or additional samples. The previous two equality evaluations remain two. No new test registration or case name.",
+  "concurrency": "Existing eight server coverage shards, each test concurrency1. No new job, step, worker or data concurrency.",
+  "repetitions": "One authorized natural Draft PR functional CI; existing file/cases execute through normal sharding. No automatic rerun or retry.",
+  "thresholds": "All original assertions, global coverage lines92/branches83/functions90 and all39 per-file floors unchanged. Existing catalog keeps capacity outside routine CI.",
+  "trigger": "Existing routine correctness discovery of this exact approved file version. This publication decision permits one independent Draft PR and its one natural eight-shard functional CI only; no main push, manual dispatch, retry, capacity, UAT or merge action is granted here.",
+  "cost": "Assertion workload unchanged; incremental runtime estimated near zero, not newly measured. Reference main59c6e740 run41762836822 took11m15 and68.53 observed job-min, not billing or this candidate result. Proposed full routine CI estimated12-25min/60-100job-min; actual queue time and monetary cost unknown. Latest main d434a857 also contains its independently admitted Purchasing TASK017 cases; no Sales workload increase.",
+  "files": [
+    {
+      "path": "server/test/sales/phase2/salesConfirmationHandlers.test.js",
+      "mode": "100644",
+      "blob": "28f9c11f08df9c935302cdf56dfe4c6e8c003663",
+      "kind": "functional",
+      "cases": [
+        "TC-022 confirm body preserves types and rejects authoritative/surplus fields",
+        "TC-022 confirm and by-event handlers declare exact namespace, write authorization and bounded response contracts",
+        "TC-022 confirm 202 sets Retry-After, retains original event, and fresh preflight precedes framework replay"
+      ]
+    }
+  ]
+}
