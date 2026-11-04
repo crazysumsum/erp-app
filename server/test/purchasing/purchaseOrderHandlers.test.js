@@ -7,6 +7,7 @@ import { CopyPurchaseOrderHandler } from "../../src/handlers/purchase-orders/cop
 import { CreatePurchaseOrderHandler } from "../../src/handlers/purchase-orders/createPurchaseOrderHandler.js";
 import { GetPurchaseOrderHandler } from "../../src/handlers/purchase-orders/getPurchaseOrderHandler.js";
 import { ListPurchaseOrdersHandler } from "../../src/handlers/purchase-orders/listPurchaseOrdersHandler.js";
+import { SubmitPurchaseOrderHandler } from "../../src/handlers/purchase-orders/submitPurchaseOrderHandler.js";
 import { UpdatePurchaseOrderHandler } from "../../src/handlers/purchase-orders/updatePurchaseOrderHandler.js";
 import { PURCHASE_ORDER_CREATE_INPUT, PURCHASE_ORDER_UPDATE_INPUT } from "../../src/handlers/purchasing/purchasingSchemas.js";
 import { PurchaseOrderService } from "../../src/modules/purchasing/PurchaseOrderService.js";
@@ -32,7 +33,8 @@ function handler(Handler) {
   const result = { id: 41, number: "PO-202611-000001", status: "DRAFT", version: 1, warnings: [], replayed: false };
   instance.orders = { create: async (command) => { calls.push(["create", command]); return result; },
     update: async (command) => { calls.push(["update", command]); return { ...result, version: 2 }; },
-    copy: async (command) => { calls.push(["copy", command]); return result; } };
+    copy: async (command) => { calls.push(["copy", command]); return result; },
+    submit: async (command) => { calls.push(["submit", command]); return { ...result, status: "CONFIRMED", outcome: "CONFIRMED", version: 2 }; } };
   return { instance, calls };
 }
 
@@ -184,3 +186,27 @@ test("Copy metadata 同 create 一樣要 mgmt 同 idempotency；body 只收 even
   await assert.rejects(instance.execute(request({ eventId }, { params: { id: "41" }, key: randomUUID() })), invalid("eventId"));
   assert.deepEqual(calls, []);
 });
+
+test("Submit metadata：POST、mgmt、idempotency、200；body 只收 eventId 同 version，來源 ID 嚟自 path", async () => {
+  assert.deepEqual([SubmitPurchaseOrderHandler.handlerName, SubmitPurchaseOrderHandler.api.method, SubmitPurchaseOrderHandler.api.path, SubmitPurchaseOrderHandler.api.authType],
+    ["submitPurchaseOrder", "POST", "/api/v1/purchase-orders/:id/submit", undefined]);
+  assert.deepEqual(SubmitPurchaseOrderHandler.api.authorizationPolicies, [{ name: "hasPermission", options: { permissions: ["purchasing.mgmt"] } }]);
+  assert.deepEqual(SubmitPurchaseOrderHandler.api.idempotency, { enabled: true });
+  assert.deepEqual(Object.keys(SubmitPurchaseOrderHandler.api.responseSchema), ["200"]);
+
+  const { instance, calls } = handler(SubmitPurchaseOrderHandler), eventId = randomUUID(), params = { id: "41" };
+  const response = await instance.execute(request({ eventId, version: 3 }, { params }));
+  assert.deepEqual([response.statusCode, response.data.outcome], [200, "CONFIRMED"]);
+  assert.deepEqual(calls, [["submit", { claims: { sub: "9", roles: ["buyer"], permissions: ["purchasing.mgmt"] }, input: { eventId, version: 3 }, purchaseOrderId: 41,
+    context: { requestId: "req-1", correlationId: "corr-1", ip: "127.0.0.1" } }]]);
+  calls.length = 0;
+
+  for (const field of ["assignedApproverId", "status", "requestNote", "outcome"]) {
+    await assert.rejects(instance.execute(request({ eventId, version: 3, [field]: 1 }, { params })), invalid("body"), field);
+  }
+  await assert.rejects(instance.execute(request({ eventId }, { params })), invalid("version"));
+  await assert.rejects(instance.execute(request({ eventId, version: "3" }, { params })), invalid("version"));
+  await assert.rejects(instance.execute(request({ eventId, version: 3 }, { params, key: randomUUID() })), invalid("eventId"));
+  assert.deepEqual(calls, []);
+});
+

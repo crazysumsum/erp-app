@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { documentTotal, formatAmount, lineAmount, normalizeUnitPrice } from "../../src/modules/purchasing/moneyMath.js";
+import { documentTotal, formatAmount, lineAmount, storedAmount, normalizeUnitPrice } from "../../src/modules/purchasing/moneyMath.js";
 
 const code = (expected, field) => (error) => error.code === expected && error.statusCode === 400 &&
   (field === undefined || error.publicDetails?.field === field);
@@ -98,3 +98,16 @@ test("TC-002 one formatter emits every amount at the fixed Currency scale", () =
   assert.equal(lineAmount("1", "1.1", 2), formatAmount(110n, 2));
   for (const bad of [-1n, 1, "1", null]) assert.throws(() => formatAmount(bad, 2), TypeError, String(bad));
 });
+
+test("DB 金額轉返 Currency scale（HD-009）；多餘小數或者形狀唔啱係資料錯誤，唔會靜靜截走", () => {
+  assert.equal(storedAmount("376.5000", 2), "376.50");
+  assert.equal(storedAmount("377.0000", 0), "377");
+  assert.equal(storedAmount("0.0000", 3), "0.000");
+  assert.equal(storedAmount("1.2345", 4), "1.2345");
+  assert.equal(storedAmount("999999999999999999999.0000", 2), "999999999999999999999.00");
+  assert.throws(() => storedAmount("376.5100", 1), TypeError);
+  assert.throws(() => storedAmount("376.5000", 0), TypeError);
+  for (const value of ["376.5", "376", 376.5, null, "-1.0000"]) assert.throws(() => storedAmount(value, 2), TypeError, String(value));
+  assert.throws(() => storedAmount("1.0000", 5), TypeError);
+});
+

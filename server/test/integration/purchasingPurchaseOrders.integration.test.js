@@ -642,3 +642,187 @@ integrationTest("copy 逐個條件剔走唔合格嘅 Line：UOM 停用、唔再�
     assert.deepEqual([clean.warnings, (await lines(tx, clean.id)).length], [[], 2], "主檔復原就兩行都抄");
   });
 });
+
+integrationTest("submit 審批關閉：完整 Draft 直接 CONFIRMED，寫目前快照、確認人同 Audit；Inventory 唔郁，replay 唔重做（AC-011）", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const draft = await orders.create({ claims: f.claims, input: body(f) });
+    const [lineA, lineB] = await lines(tx, draft.id), inventory = await inventoryCounts(tx);
+    await tx.query("UPDATE suppliers SET supplier_name = 'Renamed Supplier' WHERE id = ?", [f.supplierA]);
+    await tx.query("UPDATE item_skus SET sku_name = 'Renamed SKU' WHERE id = ?", [f.skuA]);
+    const [[{ version: policyVersion }]] = await tx.query("SELECT version FROM purchasing_settings WHERE id = 1");
+
+    const input = { eventId: randomUUID(), version: 1 }, context = { requestId: "req-s", correlationId: "corr-s", ip: "127.0.0.1" };
+    const result = await orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input, context });
+    assert.deepEqual(result, { id: draft.id, number: draft.number, status: "CONFIRMED", version: 2, outcome: "CONFIRMED", warnings: [], replayed: false });
+
+    const header = await order(tx, draft.id), confirmed = await lines(tx, draft.id);
+    assert.deepEqual([header.status, header.version, header.confirmed_at, header.confirmed_by, header.updated_by, header.has_outstanding, header.has_confirmed_receipt],
+      ["CONFIRMED", 2, NOW, f.actorId, f.actorId, 1, 0]);
+    assert.equal(header.supplier_name_snapshot, "Renamed Supplier", "確認時寫目前快照");
+    assert.equal(header.total_amount, "30.0200");
+    assert.deepEqual(confirmed.map((row) => row.id), [lineA.id, lineB.id], "Line ID 唔變");
+    assert.deepEqual(confirmed.map((row) => [row.sku_name_snapshot, row.version, Number(row.ordered_base_quantity), row.line_amount]),
+      [["Renamed SKU", 2, 72, "30.0200"], ["SKU b", 2, 2, "0.0000"]]);
+    assert.deepEqual(await inventoryCounts(tx), inventory, "Inventory 零效果");
+
+    const audit = (await audits(tx, f.actorId)).at(-1);
+    assert.deepEqual([audit.action, audit.outcome, audit.target_id, audit.target_label], ["purchase_order.confirmed", "SUCCEEDED", draft.id, draft.number]);
+    assert.deepEqual(audit.detail, { version: 2, lineCount: 2, totalAmount: "30.02", currencyCode: f.currency, policyVersion: Number(policyVersion) });
+    const operation = (await operationsOf(tx, f.actorId)).at(-1);
+    assert.deepEqual([operation.command_type, operation.source_document_id], ["SUBMIT_PURCHASE_ORDER", String(draft.id)]);
+
+    const replay = await orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input });
+    assert.deepEqual(replay, { ...result, replayed: true });
+    assert.equal((await order(tx, draft.id)).version, 2, "Replay 唔再 +1");
+    await assert.rejects(orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input: { eventId: input.eventId, version: 9 } }), coded("PURCHASING_EVENT_CONFLICT"));
+
+    // 確認之後商業內容凍結，update 同再 submit 都係 PO_STATE_CONFLICT。
+    await assert.rejects(orders.update({ claims: f.claims, purchaseOrderId: draft.id, input: editable(f, { version: 2 }, confirmed) }), coded("PO_STATE_CONFLICT"));
+    await assert.rejects(orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input: { eventId: randomUUID(), version: 2 } }), coded("PO_STATE_CONFLICT"));
+  });
+});
+
+integrationTest("submit 嚴格重驗已保存嘅值：Draft 期間失效嘅主檔全部成張拒絕，寫 REJECTED Audit，PO 唔郁（FR-PO-018）", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const draft = await orders.create({ claims: f.claims, input: body(f) });
+    const submit = () => orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input: { eventId: randomUUID(), version: 1 } });
+    const failing = [
+      ["UPDATE suppliers SET status = 'suspended' WHERE id = ?", [f.supplierA], "UPDATE suppliers SET status = 'active' WHERE id = ?", "SUPPLIER_NOT_PURCHASABLE", "supplierId"],
+      ["UPDATE item_skus SET purchasable = 0 WHERE id = ?", [f.skuB], "UPDATE item_skus SET purchasable = 1 WHERE id = ?", "SKU_NOT_PURCHASABLE", "lines.1.skuId"],
+      ["UPDATE item_skus SET inventory_tracked = 0 WHERE id = ?", [f.skuA], "UPDATE item_skus SET inventory_tracked = 1 WHERE id = ?", "SKU_NOT_PURCHASABLE", "lines.0.skuId"],
+      ["UPDATE item_skus SET tracking_policy = 'serial' WHERE id = ?", [f.skuB], "UPDATE item_skus SET tracking_policy = 'none' WHERE id = ?", "SKU_NOT_PURCHASABLE", "lines.1.skuId"],
+      ["UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [f.box], "UPDATE item_uoms SET status = 'active' WHERE id = ?", "SKU_NOT_PURCHASABLE", "lines.0.purchaseSkuUomId"],
+      ["UPDATE currencies SET status = 'INACTIVE' WHERE code = ?", [f.currency], "UPDATE currencies SET status = 'ACTIVE' WHERE code = ?", "CURRENCY_NOT_ACTIVE", undefined],
+      ["UPDATE payment_terms SET status = 'INACTIVE' WHERE id = ?", [f.paymentTerm], "UPDATE payment_terms SET status = 'ACTIVE' WHERE id = ?", "PAYMENT_TERM_NOT_ACTIVE", undefined],
+      ["UPDATE inventory_warehouses SET status = 'INACTIVE' WHERE id = ?", [f.warehouse], "UPDATE inventory_warehouses SET status = 'ACTIVE' WHERE id = ?", "WAREHOUSE_INVALID", "defaultReceivingWarehouseId"],
+      ["UPDATE users SET status = 'disabled' WHERE id = ?", [f.buyer], "UPDATE users SET status = 'active' WHERE id = ?", "PURCHASING_INPUT_INVALID", "buyerId"],
+      ["UPDATE supplier_address_purposes SET is_primary = 0 WHERE address_id = ?", [f.primaryAddress], "UPDATE supplier_address_purposes SET is_primary = 1 WHERE address_id = ?", "PURCHASING_INPUT_INVALID", "orderingAddressId"]
+    ];
+    for (const [breakSql, params, restoreSql, code, field] of failing) {
+      await tx.query(breakSql, params);
+      await assert.rejects(submit(), (error) => {
+        assert.equal(error.code, code, breakSql);
+        assert.equal(error.publicDetails?.field, field, breakSql);
+        return true;
+      });
+      const header = await order(tx, draft.id);
+      assert.deepEqual([header.status, header.version, header.confirmed_at], ["DRAFT", 1, null], breakSql);
+      await tx.query(restoreSql, params);
+    }
+    const rejected = (await audits(tx, f.actorId)).filter((row) => row.outcome === "REJECTED");
+    assert.deepEqual(rejected.map((row) => [row.action, row.detail.code]), failing.map((entry) => ["purchase_order.confirmed", entry[3]]));
+    await tx.query("UPDATE purchase_order_lines SET zero_price_reason = '' WHERE purchase_order_id = ? AND unit_price = 0", [draft.id]);
+    await assert.rejects(submit(), coded("ZERO_PRICE_REASON_REQUIRED", { field: "lines.1.zeroPriceReason" }));
+    await tx.query("UPDATE purchase_order_lines SET zero_price_reason = '免費樣品 sample' WHERE purchase_order_id = ? AND unit_price = 0", [draft.id]);
+    assert.equal((await submit()).status, "CONFIRMED", "全部復原就確認到");
+  });
+});
+
+integrationTest("submit 遇到保存後改咗嘅換算或者 Currency 小數位就拒絕（HD-018 2A）；重新保存睇到新數字先確認到", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const draft = await orders.create({ claims: f.claims, input: body(f) });
+    const submit = (version) => orders.submit({ claims: f.claims, purchaseOrderId: draft.id, input: { eventId: randomUUID(), version } });
+
+    await tx.query("UPDATE currencies SET decimal_places = 3 WHERE code = ?", [f.currency]);
+    await assert.rejects(submit(1), coded("PO_MASTER_CHANGED", { field: "currencyCode" }));
+    await tx.query("UPDATE currencies SET decimal_places = 2 WHERE code = ?", [f.currency]);
+
+    await tx.query("UPDATE item_sku_uoms SET to_base_factor = 12 WHERE id = ?", [f.boxA]);
+    await assert.rejects(submit(1), coded("PO_MASTER_CHANGED", { field: "lines.0.purchaseSkuUomId" }));
+    assert.equal((await lines(tx, draft.id))[0].ordered_base_quantity, 72, "拒絕之後保存嘅數量唔變");
+
+    const rows = await lines(tx, draft.id);
+    await orders.update({ claims: f.claims, purchaseOrderId: draft.id, input: editable(f, { version: 1 }, rows) });
+    assert.equal((await lines(tx, draft.id))[0].ordered_base_quantity, 36, "重新保存用新換算");
+    assert.equal((await submit(2)).status, "CONFIRMED");
+  });
+});
+
+integrationTest("submit 拒絕舊 version、唔存在嘅 PO、未知欄位同撤咗嘅權限；審批開住就唔可以直接確認；設定 row 唔見就 fail closed", async (t) => {
+  const db = database(t);
+  await inRollback(db, async (tx) => {
+    const f = await masters(tx), orders = service(db, tx);
+    const draft = await orders.create({ claims: f.claims, input: body(f) });
+    const submit = (input = {}, id = draft.id, claims = f.claims) => orders.submit({ claims, purchaseOrderId: id, input: { eventId: randomUUID(), version: 1, ...input } });
+    const unchanged = async () => assert.deepEqual([(await order(tx, draft.id)).status, (await order(tx, draft.id)).version], ["DRAFT", 1]);
+
+    await assert.rejects(submit({ version: 5 }), coded("VERSION_CONFLICT", { currentVersion: 1 }));
+    await assert.rejects(submit({}, Number.MAX_SAFE_INTEGER), coded("PURCHASE_ORDER_NOT_FOUND"));
+    await assert.rejects(submit({}, 0), coded("PURCHASING_INPUT_INVALID", { field: "purchaseOrderId" }));
+    await assert.rejects(submit({ version: "1" }), coded("PURCHASING_INPUT_INVALID", { field: "version" }));
+    await assert.rejects(submit({ eventId: "NOPE" }), coded("PURCHASING_INPUT_INVALID", { field: "eventId" }));
+    for (const field of ["assignedApproverId", "status", "requestNote"]) {
+      await assert.rejects(submit({ [field]: 1 }), (error) => error.code === "PURCHASING_INPUT_INVALID", field);
+    }
+    await unchanged();
+
+    await tx.query("UPDATE purchasing_settings SET require_po_approval = 1 WHERE id = 1");
+    await assert.rejects(submit(), coded("PO_APPROVAL_REQUIRED"));
+    await unchanged();
+    await tx.query("UPDATE purchasing_settings SET require_po_approval = 0 WHERE id = 1");
+
+    const [[settings]] = await tx.query("SELECT * FROM purchasing_settings WHERE id = 1");
+    await tx.query("DELETE FROM purchasing_settings WHERE id = 1");
+    await assert.rejects(submit(), coded("PURCHASING_DEPENDENCY_UNAVAILABLE"));
+    await tx.query("INSERT INTO purchasing_settings SET ?", [settings]);
+    await unchanged();
+
+    await tx.query("DELETE rp FROM role_permissions rp JOIN user_roles ur ON ur.role_id = rp.role_id WHERE ur.user_id = ?", [f.actorId]);
+    await assert.rejects(submit({}, draft.id, { ...f.claims, permissions: [] }), coded("PERMISSION_STALE"));
+    await unchanged();
+  });
+});
+
+integrationTest("Submit 同 Update 同時用同一 version：PO 行鎖令輸嗰個收到 VERSION_CONFLICT，唔會確認到舊內容", async (t) => {
+  const db = database(t), f = await committedMasters(db);
+  const month = Date.UTC(2100 + Math.floor(Math.random() * 7900), 6, 15);
+  const clock = new SystemTimeService({ config: { application: { timeZone: "Asia/Hong_Kong" } }, options: { clock: () => new Date(month) } });
+  const businessMaster = new BusinessMasterProvider({ database: db, repository: new BusinessMasterRepository() });
+  const po = new PurchaseOrderService({ database: db, logger: silent, time: clock, businessMaster, audit: new PurchasingAuditService({ auditDetailMaxBytes: 8192 }),
+    suppliers: new SupplierLookupService({ database: db, logger: silent, time: clock }), sequences: new PurchasingSequenceService(),
+    operations: new PurchasingOperationService(), config: normalizePurchasingConfig() });
+  const draft = (notes) => ({ eventId: randomUUID(), supplierId: f.supplierId, currencyCode: "HKD", orderDate: "2099-11-15",
+    buyerId: f.actorId, notes, lines: [{ skuId: f.skuId, purchaseSkuUomId: f.skuUomId, orderedQuantity: "1", unitPrice: "1" }] });
+  const blocker = await db.pool.getConnection();
+  const observer = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
+    socketPath: process.env.DB_SOCKET_PATH, user: process.env.DB_ADMIN_USER, password: process.env.DB_ADMIN_PASSWORD });
+  let id = null;
+  try {
+    ({ id } = await po.create({ claims: f.claims, input: draft("v1") }));
+    await blocker.query("START TRANSACTION");
+    await blocker.query("SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE", [id]);
+    const settle = (promise) => promise.then((value) => ({ value }), (error) => ({ error }));
+    const outcomes = [settle(po.submit({ claims: f.claims, purchaseOrderId: id, input: { eventId: randomUUID(), version: 1 } })),
+      settle(po.update({ claims: f.claims, purchaseOrderId: id, input: { ...draft("edited"), version: 1 } }))];
+    const limit = Date.now() + 10000;
+    for (;;) {
+      const [[{ waits }]] = await observer.query(`SELECT COUNT(*) waits FROM performance_schema.data_lock_waits w
+        JOIN performance_schema.data_locks l ON l.engine_lock_id = w.blocking_engine_lock_id
+        WHERE l.object_schema = ? AND l.object_name = 'purchase_orders'`, [process.env.DB_NAME]);
+      if (Number(waits) >= 2) break;
+      assert.ok(Date.now() < limit, "Submit 同 Update 都要等緊 PO 行鎖");
+      await delay(20);
+    }
+    await blocker.query("COMMIT");
+    const [submitted, updated] = await Promise.all(outcomes);
+    const [[header]] = await db.query("SELECT status, version, notes FROM purchase_orders WHERE id = ?", [id]);
+    assert.equal(Boolean(submitted.value) !== Boolean(updated.value), true, JSON.stringify([submitted.error?.code, updated.error?.code]));
+    const loser = submitted.error ?? updated.error;
+    assert.ok(["VERSION_CONFLICT", "PO_STATE_CONFLICT"].includes(loser.code), loser.code);
+    assert.deepEqual({ ...header }, submitted.value ? { status: "CONFIRMED", version: 2, notes: "v1" } : { status: "DRAFT", version: 2, notes: "edited" });
+  } finally {
+    await blocker.query("ROLLBACK").catch(() => {});
+    blocker.release();
+    await observer.end();
+    // Trigger 唔准刪已確認 PO 嘅 Line，所以先返 DRAFT 先清得走。
+    if (id) await db.query("UPDATE purchase_orders SET status = 'DRAFT' WHERE id = ?", [id]);
+    await f.cleanup();
+  }
+});
+

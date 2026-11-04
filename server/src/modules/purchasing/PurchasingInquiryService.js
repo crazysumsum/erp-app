@@ -33,7 +33,7 @@ const nullableId = (value) => value === null ? null : Number(value);
 const nonNegative = (value) => value > 0n ? value : 0n;
 const placeholders = (values) => values.map(() => "?").join(",");
 // allowedActions 只列已有 route 嘅動作；submit、cancel 等由落地嘅 Task 加。
-const allowedActions = (status, permissions) => !permissions.includes("purchasing.mgmt") ? [] : status === "DRAFT" ? ["edit", "copy"] : ["copy"];
+const allowedActions = (status, permissions) => !permissions.includes("purchasing.mgmt") ? [] : status === "DRAFT" ? ["edit", "submit", "copy"] : ["copy"];
 
 function listQuery(input) {
   const query = { page: 1, pageSize: 20, sortBy: "updatedAt", descending: true, ...input };

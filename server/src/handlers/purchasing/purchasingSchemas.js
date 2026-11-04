@@ -50,6 +50,9 @@ export const PURCHASE_ORDER_UPDATE_INPUT = Object.freeze(input(true));
 
 const EVENT_ID = input(false).properties.eventId;
 export const PURCHASE_ORDER_COPY_INPUT = Object.freeze({ type: "object", required: ["eventId"], additionalProperties: false, properties: { eventId: EVENT_ID } });
+// 審批人、status 都唔喺度，所以 client 送嚟一定被拒絕；審批開啟嘅欄位由 TASK-023 加。
+export const PURCHASE_ORDER_SUBMIT_INPUT = Object.freeze({ type: "object", required: ["eventId", "version"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID } });
 
 export const PURCHASE_ORDER_COMMAND_RESPONSE = Object.freeze({
   type: "object", required: ["id", "number", "status", "version", "warnings", "replayed"], additionalProperties: false,
@@ -62,12 +65,20 @@ export const PURCHASE_ORDER_COMMAND_RESPONSE = Object.freeze({
   }
 });
 
+const NUMBER = PURCHASE_ORDER_COMMAND_RESPONSE.properties.number;
+export const PURCHASE_ORDER_SUBMIT_RESPONSE = Object.freeze({
+  type: "object", required: ["id", "number", "status", "outcome", "version", "warnings", "replayed"], additionalProperties: false,
+  properties: { id: ID, number: NUMBER, status: { const: "CONFIRMED" }, outcome: { const: "CONFIRMED" }, version: ID,
+    warnings: { type: "array", maxItems: 0 }, replayed: { type: "boolean" } }
+});
+
 // 金額同數量係字串，唔可以畀框架 coerce；錯誤要係 §5.7 嘅 PURCHASING_INPUT_INVALID，所以喺 handler 自己驗（同 Sales 一樣）。
 const validator = new RequestValidator({ config: { enabled: true, allErrors: false, coerceTypes: false, useDefaults: false,
   removeAdditional: false, maxErrors: 1, includeErrorDetailsInResponse: false } });
 const validateCreate = validator.compile({ body: PURCHASE_ORDER_CREATE_INPUT }, "Purchase Order create body");
 const validateUpdate = validator.compile({ body: PURCHASE_ORDER_UPDATE_INPUT }, "Purchase Order update body");
 const validateCopy = validator.compile({ body: PURCHASE_ORDER_COPY_INPUT }, "Purchase Order copy body");
+const validateSubmit = validator.compile({ body: PURCHASE_ORDER_SUBMIT_INPUT }, "Purchase Order submit body");
 
 /** 錯誤只帶欄位路徑（例如 `lines.0.unitPrice`），唔帶值。 */
 function validated(validate, request, fallback) {
@@ -79,10 +90,10 @@ function validated(validate, request, fallback) {
   }
 }
 
-/** 驗 body 同 `Idempotency-Key`＝`eventId`（§5.1）。`kind` 係 create、update 或者 copy。 */
+/** 驗 body 同 `Idempotency-Key`＝`eventId`（§5.1）。`kind` 係 create、update、copy 或者 submit。 */
 export function purchaseOrderCommand(req, kind) {
   const body = req.input.body;
-  validated({ create: validateCreate, update: validateUpdate, copy: validateCopy }[kind], { body }, "body");
+  validated({ create: validateCreate, update: validateUpdate, copy: validateCopy, submit: validateSubmit }[kind], { body }, "body");
   if (req.get("Idempotency-Key") !== body.eventId) throw purchasingError("PURCHASING_INPUT_INVALID", { field: "eventId" });
   return { claims: req.auth.claims, input: body,
     context: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ip: req.ip ?? "" } };
@@ -114,7 +125,7 @@ const object = (properties) => ({ type: "object", required: Object.keys(properti
 const TEXT = { type: "string" }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
 const NULLABLE_TEXT = { type: ["string", "null"] }, NULLABLE_DATE = { type: ["string", "null"] };
 const AMOUNT = { type: "string", pattern: "^\\d+(?:\\.\\d{1,4})?$" }, BASE_QUANTITY = { type: "string", pattern: "^\\d+$" };
-const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "copy"] } };
+const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "submit", "copy"] } };
 const HEADER = {
   id: ID, number: { type: "string", pattern: "^PO-\\d{6}-\\d{6}$" }, status: { enum: STATUSES }, version: ID, supplierId: ID, supplierCode: TEXT, supplierName: TEXT,
   currencyCode: TEXT, orderDate: TEXT, expectedDeliveryDate: NULLABLE_DATE, buyerId: OPTIONAL_ID, buyerLabel: TEXT, supplierReference: TEXT, totalAmount: AMOUNT,
