@@ -76,10 +76,16 @@ export class ShipmentReversalService {
    return Object.freeze({outcome:"REVERSING",operationId:binding.operationId,eventId:command.eventId,preparation});
   }catch(error){
    const completed=await this.readReversalTerminal(shipmentId,command);if(completed)return completed;
+   if(!(error instanceof ApplicationError))throw error;
    let cause=error;const visited=new Set();
-   while(cause instanceof ApplicationError&&cause.cause instanceof Error&&!visited.has(cause)){visited.add(cause);cause=cause.cause;}
-   if(!(error instanceof ApplicationError)||error.statusCode===403||visited.has(cause)||cause instanceof TypeError||cause instanceof SyntaxError||
-      !(cause instanceof ApplicationError)&&(!cause.code||String(cause.code).startsWith("ERR_")))throw error;
+   while(cause instanceof ApplicationError){
+    if(cause.statusCode===403)throw cause;
+    if(visited.has(cause))throw error;
+    visited.add(cause);
+    if(!(cause.cause instanceof Error))return null;
+    cause=cause.cause;
+   }
+   if(cause instanceof TypeError||cause instanceof SyntaxError||!cause.code||String(cause.code).startsWith("ERR_"))throw error;
    return null;
   }
  }
