@@ -17,7 +17,9 @@ const props = defineProps({
 
 const session = useSessionStore();
 const menu = computed(() => buildMenu(props.pages, session));
-const drawerOpen = ref(true);
+// 由 false 開始：闊畫面 `show-if-above` 會自己打開並回寫 true；窄畫面先至聽呢個值，
+// 用 true 嘅話每次載入都會打開抽屜，遮罩擋住成頁。
+const drawerOpen = ref(false);
 </script>
 
 <template>
