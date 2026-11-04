@@ -115,13 +115,15 @@ export class FulfillmentOperationService {
     const {leaseOwner:_leaseOwner,...safe}=decoded;return safe;
   }
   async getShipmentReversalReplayInTransaction(tx,input){
-    fields(input,["shipmentId","command"]);fulfillmentInteger(input.shipmentId);
+    fields(input,["shipmentId","command"]);
+    const {shipmentId}=input;
+    fulfillmentInteger(shipmentId);
     const command=normalizeShipmentReversal(input.command),actor=await this.#actor(tx,"REVERSE");
     const [[row]]=await tx.query("SELECT * FROM fulfillment_operation_requests WHERE event_id=?",[command.eventId]);
     if(!row)return null;
     if(typeof row.payload_hash!=="string"||!/^[0-9a-f]{64}$/u.test(row.payload_hash)||!uuid(row.correlation_id))throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
-    const hash=fulfillmentOperationHash({operationType:"REVERSE",target:{type:"SHIPMENT",id:input.shipmentId},payload:command});
-    if(row.operation_type!=="REVERSE"||row.target_type!=="SHIPMENT"||String(row.target_id)!==input.shipmentId||String(row.initiated_by)!==String(actor.id)||row.payload_hash!==hash)conflict();
+    const hash=fulfillmentOperationHash({operationType:"REVERSE",target:{type:"SHIPMENT",id:shipmentId},payload:command});
+    if(row.operation_type!=="REVERSE"||row.target_type!=="SHIPMENT"||String(row.target_id)!==shipmentId||String(row.initiated_by)!==String(actor.id)||row.payload_hash!==hash)conflict();
     let decoded;
     try{
       if(["SUCCEEDED","FAILED"].includes(row.status))fulfillmentInteger(String(row.completed_at),{positive:false});

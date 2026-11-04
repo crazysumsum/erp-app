@@ -21,8 +21,9 @@ export class ShipmentReversalService {
  // null is no trusted terminal result, never proof of absence or permission to write.
  async readReversalTerminal(shipmentId,input){
   try{fulfillmentInteger(shipmentId);}catch{fail("FULFILLMENT_INPUT_INVALID");}
+  const command=normalizeShipmentReversal(input);
   return this.transactions.withTransaction(async tx=>{
-   const replay=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId,command:input});
+   const replay=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId,command});
    return replay?terminal(replay):null;
   });
  }
