@@ -52,7 +52,7 @@ export function mapShipmentReversalSources(snapshot,salesScope,inventoryScope){
       current.originalInventoryOperationId!==member.originalInventoryOperationId||originalOperations.has(member.originalInventoryOperationId)||claim.status!=="CONSUMED"||quantity(claim.active_claimed_quantity)!==0n||quantity(claim.reversed_quantity)!==0n)fail();
    sameQuantity(claim.consumed_quantity,member.baseQuantity,current.baseQuantity);
    const state=current.currentState,expectedVersion=version(current.expectedVersion);
-   if(!state||version(state.version)!==expectedVersion||version(member.inventoryVersionFloor)>expectedVersion||Number(claim.inventory_version)>expectedVersion||
+   if(!state||version(state.version)!==expectedVersion||version(member.inventoryVersionFloor)>expectedVersion||version(Number(claim.inventory_version))>expectedVersion||
       !["CONSUMED","PARTIALLY_CONSUMED"].includes(state.status)||quantity(state.originalQuantity)!==quantity(state.consumedQuantity)+quantity(state.releasedQuantity)+quantity(state.outstandingQuantity)||quantity(state.consumedQuantity)<quantity(member.baseQuantity))fail();
    sameQuantity(state.consumedQuantity,member.consumedBaseQuantity);sameQuantity(state.outstandingQuantity,member.outstandingBaseQuantity);
    usedClaims.add(member.claimId);usedReservations.add(member.inventoryReservationId);originalOperations.add(key(member.originalInventoryOperationId));
@@ -65,7 +65,7 @@ export function mapShipmentReversalSources(snapshot,salesScope,inventoryScope){
        key(allocation.fulfillment_id)!==key(root.id)||key(allocation.fulfillment_line_id)!==key(line.id)||key(allocation.claim_id)!==member.claimId||key(allocation.inventory_reservation_id)!==member.inventoryReservationId||allocation.status!=="CONSUMED")fail();
     sameQuantity(issue.issued_base_quantity,allocation.picked_base_quantity,leg.baseQuantity);bucketMatches(issue,allocation,leg.bucketSnapshot,line,root);
     const balanceId=key(issue.inventory_balance_id),expectedBalanceVersion=version(leg.expectedBalanceVersion),prior=balanceVersions.get(balanceId);
-    if(Number(allocation.balance_version)>expectedBalanceVersion||prior!==undefined&&prior!==expectedBalanceVersion)fail();
+    if(version(Number(allocation.balance_version))>expectedBalanceVersion||prior!==undefined&&prior!==expectedBalanceVersion)fail();
     balanceVersions.set(balanceId,expectedBalanceVersion);usedAllocations.add(leg.inventoryAllocationId);
     return {inventoryAllocationId:leg.inventoryAllocationId,shipmentIssueId:key(issue.id),originalMovementId:leg.originalMovementId,expectedBalanceVersion,baseQuantity:leg.baseQuantity};
    });
