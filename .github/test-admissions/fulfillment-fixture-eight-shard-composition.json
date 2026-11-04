@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam, 2026-11-04, exact ERP CI chat decision: 「批准 #329 的 3d2d1bce 八片整合方案，交 PM 等 #333 合併後核對最新 main，再安排准入、推送及首輪 CI；通過後由 PM 安排合併。」 Candidate 3d2d1bce340bf85b4b9428e418465fc6bc1b5c04, fixture blob 381485af13b0f207ffb910dc7af5b2b19ef04bfc, eight-shard workflow blob 956e5c7b52b5c950b6b16e5c96a7471e77c7c7ed. Independent admission verification and PM push/merge window required after #333.",
+  "decision": "Sam, 2026-11-04, exact ERP CI chat decision: 「批准 #329 的 3d2d1bce 八片整合方案，交 PM 等 #333 合併後核對最新 main，再安排准入、推送及首輪 CI；通過後由 PM 安排合併。」 Candidate 3d2d1bce340bf85b4b9428e418465fc6bc1b5c04, fixture blob 381485af13b0f207ffb910dc7af5b2b19ef04bfc, eight-shard workflow blob 956e5c7b52b5c950b6b16e5c96a7471e77c7c7ed. Independent admission verification and PM push/merge window required after #333. PM relayed Sam PM-chat decision call_a69329c8676344eb959985f5ab9c8231, exact selection 「批准八片准入及一次 PR CI」. This limits the next validation to one natural admitted PR CI after #333 and PM release; merge is a separate decision.",
   "purpose": "Compose the already-reviewed Fulfillment migration-baseline reuse with the already-approved eight-shard functional workflow. UUID/data isolation, real rollback and cleanup, original global/per-file coverage and P1/P2 gates remain required.",
   "data": "Existing framework schema, migration seeds and ledger. Same synthetic case data, row counts and fault scenarios. One in-memory logical dump per participating test-file process and one restore into each subsequent fresh database.",
   "concurrency": "Eight existing independent MySQL server shards approved in #330. Tests remain serial within each shard; each fixture creates its own UUID database and connections. Snapshot cache is local to each test-file Node process.",
   "repetitions": "Each functional test file executes once in its existing assigned shard. No added cases, data, test repetitions, runner jobs or dispatches relative to the eight-shard main.",
   "thresholds": "All existing functional and rollback assertions. Server coverage lines/branches/functions 92/83/90 percent, original per-file floors, client coverage and aggregate/evidence gates. Observe natural PR first results against mean <= 10 minutes and maximum <= 15 minutes.",
-  "trigger": "Existing admitted PR, main push, schedule and functional dispatch routes. Existing capacity exclusions apply. Optimization activates only for GITHUB_JOB=server-tests and SALES_CAPACITY_SEPARATE_STEP=1; the subsequent real P1/P2 browser step follows its existing fixture path.",
-  "cost": "No new runner or job relative to eight-shard main. Participating test-file processes perform one logical dump before case data; subsequent fixture calls restore into fresh UUID databases. Existing four-shard evidence shows functional safety, but incremental speed and peak memory on the eight-shard composition are unmeasured. Use the normal approved PR/main runs; no load test or extra sample runs.",
+  "trigger": "One natural admitted PR CI after #333 merge, fresh main/remote-head checks, independent receipt registration and PM release. No retry or additional dispatch on failure. Merge and subsequent main validation are separate decisions. Existing capacity exclusions apply. Optimization activates only for GITHUB_JOB=server-tests and SALES_CAPACITY_SEPARATE_STEP=1; the real P1/P2 browser step follows its existing fixture path.",
+  "cost": "No new runner or job relative to eight-shard main. Participating test-file processes perform one logical dump before case data; subsequent fixture calls restore into fresh UUID databases. Existing four-shard evidence remains applicable to that older tree; speed and peak memory of the eight-shard composition are unmeasured. Use only the approved first natural PR CI; no load test or extra sample runs.",
   "files": [
     {
       "path": "server/test/sales/phase4/salesFulfillmentFixtures.js",
@@ -18,5 +18,11 @@
         "Existing Sales/Fulfillment functional integration families using salesFulfillmentFixture directly or via aggregate, lifecycle and P1 fixtures. No new registrations."
       ]
     }
-  ]
+  ],
+  "workflow_binding": {
+    "path": ".github/workflows/ci.yml",
+    "mode": "100644",
+    "blob": "956e5c7b52b5c950b6b16e5c96a7471e77c7c7ed",
+    "admission_receipt": ".github/test-admissions/eight-mysql-shards-p2-composition.json"
+  }
 }
