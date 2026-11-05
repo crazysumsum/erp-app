@@ -43,7 +43,7 @@
     "TASK-015": "DONE",
     "TASK-016": "DONE",
     "TASK-017": "DONE",
-    "TASK-018": "PENDING",
+    "TASK-018": "DONE",
     "TASK-019": "PENDING",
     "TASK-020": "PENDING",
     "TASK-021": "PENDING",
@@ -770,9 +770,17 @@
       "idempotency_key": "purchasing-hd019-pr337-merge-20261104",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit d9c4a267f92fa25e39784c7aa47b7693296c1ed0, verified as an ancestor of origin/main; admitted CI run 41791119711 attempt 1 completed success on the dispatched merge a4a96f44 of head 778d9ce82a547e75be2b8a12ccf6bf72fb839976 with origin/main 591634bb (capacity jobs skipped by the post-UAT rule); pre-merge gate read the parents through the API, and the merged commit has the same parents and tree feae8920"
+    },
+    {
+      "id": "EXT-019",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/339 -> main",
+      "idempotency_key": "purchasing-task018-pr339-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit d65051a3ecf17d95bc7d805e0638d9e2a0266825 verified ancestor of origin/main; admitted CI run 41805145568 attempt 1 success on dispatched merge 4d015829 of head 9a736c3e544b5b96de9e1780b8c4cdc40075183b with origin/main 86ac62a4, capacity jobs skipped, same parents and tree 7f1ded66"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018's client work is on claude/purchasing-task018-form, recorded in implementation/P1_task018_po_form.md and validated in a real browser on a private route; both PRs wait for Sam's CI admission decision. TASK-020 adds the page and formal e2e. PO_MASTER_CHANGED needs folding into §5.7 and a client message in TASK-021. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-020 adds the page and formal e2e. PO_MASTER_CHANGED needs folding into §5.7 and a client message in TASK-021. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }
