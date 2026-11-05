@@ -36,3 +36,7 @@ Print output was generated as PDF and inspected. It is A4 (595×842pt). A 100-li
 ## Tests
 
 Two new files in `client/test/pages/purchasing/`, plus 2 new case definitions in the TASK-019 file. Services are mocked; the edit page uses the real form. Mutation sweep of 47 mutants: 1 survived, and it is RED after adding a case. The client suite is 1213 tests, passing; build and lint pass.
+
+## CI admission
+
+Sam approved on 2026-11-05: 「全部批准選A，我作為project owner 批準你發digest，CI綠了就merge」. The scope is 2 new client test files and 2 new case definitions in the TASK-019 file (23 new definitions running 36 times), the unchanged re-pin of the TASK-019 cases and pins that the detail page change invalidated, and support pins for the create, edit and print pages, on every PR and main push in the existing client job, in `.github/test-admissions/purchasing-task020.json`. Option A means no routine browser e2e; browser tests wait for TEST_AND_VERIFY. He also authorized publishing this receipt's digest once, as project owner.
