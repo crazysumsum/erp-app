@@ -28,3 +28,11 @@ No test or page depends on the old wording.
 ## Tests
 
 `client/test/pages/purchasing/purchasingNavigationErrors.test.js`, using the real discovered pages, `buildMenu`, `validatePages` and `HttpClient`. Mutation sweep of 12 mutants: all RED. The client suite is 1223 tests, passing; build and lint pass.
+
+## APR-010 — shared files
+
+Sam approved on 2026-11-05: 「全部批准，我作為project owner 批準你發digest，CI綠了就merge」, answering the proposal to add the `purchasingReceiving` group to `client/config/menu.js`, add the Purchasing messages to `client/src/framework/http/errorMessages.js`, and change the shared `CONCURRENT_OPERATION` and `UOM_CONVERSION_INVALID` wording as above.
+
+## CI admission
+
+The same decision covers 1 new client test file (8 case definitions running 10 times), the unchanged re-pin of the TASK-019 and TASK-020 cases and pins that the list page change invalidated, and a support pin for `menu.js`, on every PR and main push in the existing client job, in `.github/test-admissions/purchasing-task021.json`. He also authorized publishing this receipt's digest once, as project owner.
