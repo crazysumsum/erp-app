@@ -32,3 +32,7 @@ Built on 2026-11-05 from main `d65051a3`. No schema change, manifest edit or new
 ## Tests
 
 `client/test/pages/purchasing/purchasingPurchaseOrderPages.test.js`, mocked services, real `useCommandEvent`. Mutation sweep of 44 mutants: 3 survived the first pass; 2 became RED with added cases. The third, the `page > 0` guard, is equivalent because QTable already clamps the page.
+
+## CI admission
+
+Sam approved on 2026-11-05: 「全部批准，我作為project owner 批準你幫我發digest，CI綠了就merge」. The scope is 1 new client test file (23 case definitions running 31 times) and support pins for the two pages and `PurchaseOrderProgress.vue`, on every PR and main push in the existing client job, in `.github/test-admissions/purchasing-task019.json`. Browser e2e stays with TASK-020. He also authorized publishing this receipt's digest once, as project owner.
