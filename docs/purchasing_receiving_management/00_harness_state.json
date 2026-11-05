@@ -312,6 +312,25 @@
         "Approved on 2026-11-05 with the TASK-021 proposal, including the shared CONCURRENT_OPERATION and UOM_CONVERSION_INVALID wording"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-011",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#apr-011--migration-scope",
+      "recorded_at": "2026-11-05T11:39:17+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-022",
+        "server/database/migrations/0117_create_purchase_order_approvals.js",
+        "server/database/migrations/0118_create_purchase_order_status_history.js",
+        "Approved on 2026-11-05 with the TASK-022 schema proposal, including the added CHECK constraints, the DELETE-rejecting trigger and the 1MiB snapshot cap (HD-020 A)"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -643,6 +662,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_hd019_po_form_lookups.md#hd-019"
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "question": "Design 4.7 caps approval_snapshot at 64KiB, but a valid 100-line PO can exceed it, so a legitimate large PO could not be submitted with approval on. Raise the cap, keep it and reject, or drop notes from the snapshot?",
+      "affected_ids": [
+        "TASK-022",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#hd-020"
     }
   ],
   "external_actions": [
