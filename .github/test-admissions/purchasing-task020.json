@@ -1,0 +1,119 @@
+{
+ "version": 1,
+ "decision": "Sam's explicit decision of 2026-11-05 in Claude Code session f804490c: \"全部批准選A，我作為project owner 批準你發digest，CI綠了就merge\", answering the consolidated proposal for TASK-020 (2 new client test files and 2 new case definitions in the TASK-019 file, 23 new case definitions running 36 times; the unchanged re-pin of the TASK-019 cases and pins invalidated by the detail page change; support pins for the create, edit and print pages; no routine browser e2e, option A), and a one-time project-owner authorization for the agent to publish this receipt's digest",
+ "purpose": "The PO create and edit pages require view and mgmt, show save warnings, keep the form mounted while re-reading, handle version conflict, dirty leave and submit outcome, and refuse non-editable documents; the print page uses the transaction snapshot, allows only permitted statuses, marks a Draft on every page and declares A4 CSS with a repeating header; the TASK-019 list and detail behaviour stays pinned",
+ "data": "No database or network: mocked services and small inline objects, at most 100 in-memory lines. No fixture files",
+ "concurrency": "1",
+ "repetitions": "1",
+ "thresholds": "All cases pass; coverage floors unchanged",
+ "trigger": "Routine correctness regression on every PR and push to main, in the existing client test job",
+ "cost": "Measured locally: about 0.6 s for the three files together. CI not measured, estimated under 1 s added. No new job and no capacity",
+ "files": [
+  {
+   "path": "client/test/pages/purchasing/purchasingPurchaseOrderEditor.test.js",
+   "mode": "100644",
+   "blob": "72b4bbb6f588986a2f130cf2a5657a1f3d797d2c",
+   "kind": "functional",
+   "cases": [
+    "要 view 同 mgmt；採購員預設目前用戶；新單冇 document",
+    "儲存後取代歷史去編輯頁，warning 用文字顯示",
+    "要 view 同 mgmt；Draft 帶入 server 值",
+    "儲存：帶版本、重新讀取但表單唔 unmount，warning 有提示",
+    "儲存後重新讀取失敗：有訊息可重試，唔會留低舊版本繼續改",
+    "提交成功去詳情頁",
+    "版本衝突：輸入保留；確認後載入最新版本",
+    "改咗未存：離開要確認，拒絕就留低",
+    "%s：唔出表單，只有返回詳情 (it.each, 2 rows)",
+    "唔合法嘅 id %s 唔會打 API (it.each, 3 rows)",
+    "讀取失敗可重試"
+   ]
+  },
+  {
+   "path": "client/test/pages/purchasing/purchasingPurchaseOrderPages.test.js",
+   "mode": "100644",
+   "blob": "02b901e52a6bd5ccb7a193af6afad9a4eb36f2be",
+   "kind": "functional",
+   "cases": [
+    "只要 purchasing.view；無 mgmt 唔見新增同編輯，預設按更新時間倒序",
+    "mgmt 見新增；編輯跟 server 嘅 allowedActions",
+    "URL 還原全部 filter、頁碼同排序；未知 key 唔會送去 server",
+    "排序欄同頁碼唔合法就用預設",
+    "搜尋寫入 URL 並回到第 1 頁；清除篩選清走",
+    "供應商 ID 只接受安全正整數",
+    "舊 filter 嘅回應遲到，唔會蓋住新結果",
+    "風險有文字；進度同未收顯示 server 嘅準確數字",
+    "讀取失敗顯示重試，重試成功；空結果有提示",
+    "進度條 %s／%s 係 %s，超收唔超過 100%% (it.each, 6 rows)",
+    "只有 view：就算 server 有 action 都唔出寫入按鈕",
+    "mgmt：按鈕跟 server；非 Draft 冇編輯",
+    "%s 列印入口：%s（Viewer 都有） (it.each, 5 rows)",
+    "快照同目前主資料分開；冇分別就冇目前主資料區",
+    "每行分開顯示全部 Base 數量；零價同超收有文字；備註唔當 HTML",
+    "多行進度用 BigInt 加總，超過 2^53 都準",
+    "唔合法嘅 id %s 唔會打 API (it.each, 4 rows)",
+    "讀取失敗可重試，唔會出舊資料",
+    "權限變咗就重新讀，按鈕跟新權限",
+    "轉 PO 時舊回應遲到唔會蓋住新 PO",
+    "複製要先確認；取消就唔發",
+    "複製成功去新 PO，並顯示每個 warning",
+    "結果未確定：保留同一 eventId 重試，唔再問確認；期間唔可以開新複製",
+    "結果未確定時轉去另一張 PO：banner 清走，唔會用舊 eventId 複製新 PO",
+    "明確拒絕：留喺原頁，下次係新 eventId"
+   ]
+  },
+  {
+   "path": "client/test/pages/purchasing/purchasingPurchaseOrderPrint.test.js",
+   "mode": "100644",
+   "blob": "9bc2b595465675e37a964d4db4857ea6dfd48ef2",
+   "kind": "functional",
+   "cases": [
+    "purchasing.view 就可以印；內容用交易快照，唔用目前主資料",
+    "語意 table，100 行都喺度；PO 編號喺重複嘅表頭入面",
+    "%s 係正式版本，冇水印 (it.each, 4 rows)",
+    "Draft 有水印同文字，掣寫明係草稿",
+    "%s 唔准印 (it.each, 2 rows)",
+    "撳掣用瀏覽器列印，唔打任何 API",
+    "冇值就寫未設定；備註當文字",
+    "唔合法嘅 id %s 唔會打 API (it.each, 3 rows)",
+    "讀取失敗可重試，唔會出列印掣",
+    "列印 CSS：A4、表頭每頁重現、行唔切開、藏起 app 外框"
+   ]
+  },
+  {
+   "path": "client/src/pages/purchasing/PurchaseOrdersPage.vue",
+   "mode": "100644",
+   "blob": "2a66df8d61741ccc72f8832a2f4687d2fe4437f9",
+   "kind": "support"
+  },
+  {
+   "path": "client/src/pages/purchasing/PurchaseOrderDetailPage.vue",
+   "mode": "100644",
+   "blob": "9b8756a1e642c53a8b1dde8bad12e4c79a5fb67c",
+   "kind": "support"
+  },
+  {
+   "path": "client/src/pages/purchasing/PurchaseOrderCreatePage.vue",
+   "mode": "100644",
+   "blob": "ae34b43a3fcff83e55112943697cbf3f70c1df51",
+   "kind": "support"
+  },
+  {
+   "path": "client/src/pages/purchasing/PurchaseOrderEditPage.vue",
+   "mode": "100644",
+   "blob": "c8ab1aa97dc8a9f523d5eecc6ad2744c38f85055",
+   "kind": "support"
+  },
+  {
+   "path": "client/src/pages/purchasing/PurchaseOrderPrintPage.vue",
+   "mode": "100644",
+   "blob": "25509da64ad43f3ac3083ae69ae5f8bd618c4dd8",
+   "kind": "support"
+  },
+  {
+   "path": "client/src/components/purchasing/PurchaseOrderProgress.vue",
+   "mode": "100644",
+   "blob": "6448d69a80dde53cfdae2b0f5f90081d80055dcd",
+   "kind": "support"
+  }
+ ]
+}
