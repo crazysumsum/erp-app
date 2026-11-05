@@ -25,6 +25,12 @@ point or turn on this factory automatically. An adopter retains its other existi
 service factories and options. Without selecting this factory, the existing empty
 default and custom `serviceOptions` / overrides continue to behave as before.
 
+The discovery scope must include the original `customer.references` registration.
+A same-name `serviceOverrides` entry takes precedence over a factory. If discovery
+omits this service, or an override supersedes it, selecting the factory does not
+prove this composition was instantiated. Preserve those existing container rules;
+adoption must verify the actual selected instance rather than infer it from options.
+
 The selected factory resolves `mysqldatabase` through the same container's existing
 async service access, so the real database service finishes initialization before
 the reader is constructed. It returns the original `CustomerReferenceService`
