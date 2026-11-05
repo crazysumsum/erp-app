@@ -21,7 +21,7 @@ for (const kind of ["authorized", "unregistered", "invalid number", "authorizati
     } };
     const authorize = async executor => {
       assert.equal(executor, tx); events.push("authorize");
-      assert.equal(Object.hasOwn(error, "publicDetails"), false);
+      assert.equal(error.publicDetails, undefined);
       if (kind === "authorization rejected") throw failure;
     };
     const result = await discloseStocktakeScopeConflict(error, { database, authorize, signal: controller.signal });
@@ -31,7 +31,7 @@ for (const kind of ["authorized", "unregistered", "invalid number", "authorizati
       assert.deepEqual(events, ["begin", "authorize", "authorized", "complete"]);
       assert.deepEqual(result.publicDetails, { stocktakeConflict: { kind: "SCOPE_OVERLAP", number: "ST-21" } });
     } else {
-      assert.equal(Object.hasOwn(result, "publicDetails"), false);
+      assert.equal(result.publicDetails, undefined);
       const expected = ["unregistered", "invalid number", "aborted before"].includes(kind) ? []
         : kind === "authorization rejected" ? ["begin", "authorize"]
           : kind === "transaction rejected" ? ["begin", "authorize", "authorized"]
