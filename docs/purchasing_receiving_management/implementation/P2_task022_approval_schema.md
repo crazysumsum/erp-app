@@ -1,6 +1,6 @@
 # TASK-022 — Approval and status history schema and services
 
-**Status: not verified on MySQL.** Local MySQL is on hold until the PM gives notice. The migrations, triggers, CHECK constraints and integration tests have not run.
+**Status: code complete; PR not opened.** Verified on a private MySQL on 2026-11-05: migrations from empty, 12 integration cases, and a 66-mutant sweep with all survivors fixed. The local full suite was stopped before finishing, so CI is the full functional evidence.
 
 Built on 2026-11-05 from main `b1d98732`. Design §3.3, §4.4, §4.7, §4.8, §4.16, §8.3; FR-SET, FR-APPROVAL, AC-001～002, AC-012～017; `TC-004`, `TC-009`.
 
@@ -22,3 +22,7 @@ Sam chose option A. §4.7 caps `approval_snapshot` at 64KiB. The proposal estima
 ## Open question for TASK-023
 
 §5.4 gives the settings update `jwt-device-password`; TASK-023's criteria say `jwt-password`.
+
+## Unapproved capacity execution
+
+On 2026-11-05 the local `npm run test:coverage` ran from 13:50 to 14:10 HKT and was stopped when the PM asked about its scope. That command has no capacity exclusion; only CI skips the catalog. It executed 28 catalog cases with no approval from Sam: 26 passed and 2 failed in under 1 ms, so those 2 measured nothing. The cases are in Fulfillment (100 lines and 5000 members), Sales TC-032 (50 users), Suppliers' 100-contender LOCAL-083 and the 50 MiB upload TC-004. Earlier full-suite results in this module's records came from the same command, and are not capacity evidence either. The results are not used as capacity evidence, and no threshold or test changed.
