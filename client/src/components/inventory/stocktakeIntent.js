@@ -1,5 +1,6 @@
 import { shallowReactive, shallowRef } from "vue";
 import { ERROR_CODE_MESSAGES } from "@/framework/http/errorMessages.js";
+import { stocktakeConflict } from "./stocktakeConflict.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
 const ACTION_STATUS = { create: "DRAFT", update: "DRAFT", start: "COUNTING", count: "COUNTING", add_line: "COUNTING",
@@ -17,7 +18,9 @@ export function stocktakeError(error) {
   const safe = new Error(known ? ERROR_CODE_MESSAGES[error.code] : "無法完成操作；請核對原結果，未自動重送。");
   if (known) safe.code = error.code;
   if (Number.isSafeInteger(error?.status) && error.status >= 400 && error.status <= 599) safe.status = error.status;
-  // Only messages from the existing translation whitelist may reach FormPanel.
+  const conflictMessage = known ? stocktakeConflict(error, safe) : null;
+  if (conflictMessage) safe.message = conflictMessage;
+  // Validation details still use only the existing translation whitelist.
   if (Array.isArray(error?.details)) {
     const messages = new Set(Object.values(ERROR_CODE_MESSAGES));
     const details = error.details.filter(row => plain(row) && row.location === "body" && typeof row.path === "string" &&
