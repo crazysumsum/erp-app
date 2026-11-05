@@ -1,5 +1,5 @@
 <script>
-export const page = { name: "purchase-orders", path: "/purchasing/purchase-orders", title: "採購單", requires: { permissions: ["purchasing.view"] } };
+export const page = { name: "purchase-orders", path: "/purchasing/purchase-orders", title: "採購單", requires: { permissions: ["purchasing.view"] }, menu: { group: "purchasingReceiving", icon: "receipt_long", order: 10 } };
 </script>
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
