@@ -216,6 +216,14 @@ describe("TASK-019 PO 詳情", () => {
     await flushPromises();
     expect(wrapper.find("h1").text()).toBe(row.number);
   });
+  it("權限變咗就重新讀，按鈕跟新權限", async () => {
+    await open("/purchasing/purchase-orders/8", MANAGE);
+    expect(button("複製")).toBeDefined();
+    useSessionStore().user = { id: 1, permissions: VIEW, roles: [] };
+    await flushPromises();
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+    expect(button("複製")).toBeUndefined();
+  });
   it("轉 PO 時舊回應遲到唔會蓋住新 PO", async () => {
     let resolve;
     purchasing.getPurchaseOrder.mockImplementationOnce(() => new Promise((done) => { resolve = done; }));
