@@ -8,6 +8,7 @@
   "scope": {
     "source_paths": [
       "server/src/modules/customer/**",
+      "server/src/modules/fulfillment/FulfillmentCustomerReferenceProvider.js",
       "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/src/modules/businessMaster/BusinessMasterProvider.js",
       "server/src/modules/businessMaster/BusinessMasterRepository.js",
@@ -90,6 +91,7 @@
       "client/src/framework/ui/DataTable.vue"
     ],
     "approval_required_paths": [
+      "server/src/modules/fulfillment/FulfillmentCustomerReferenceProvider.js",
       "server/src/framework/application/createApplication.js",
       "server/src/modules/businessMaster/BusinessMasterProvider.js",
       "server/src/modules/businessMaster/BusinessMasterRepository.js",
@@ -201,6 +203,16 @@
         "version": "observed-main-design; BLOCKED pending real Invoicing/AR consumer",
         "source": "docs/invoicing_accounts_receivable_management/03_system_design_spec.md",
         "sha256": "7f992059b26d3ed96f14868c056073a88247a6073e92c7eddf5605048faf799b",
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      },
+      {
+        "module_id": "fulfillment-shipping-management",
+        "id": "fulfillment-customer-references",
+        "version": "v1",
+        "source": "server/src/modules/fulfillment/FulfillmentCustomerReferenceProvider.js",
+        "sha256": "5bfe1ff0dbd222f376b3708393d1c1d158776789ead58704d3566c82cb1868d8",
         "regression_suites": [
           "customer-server-technical"
         ]
