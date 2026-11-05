@@ -25,6 +25,22 @@ Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2,
 
 TASK-024 lists only pages, but its screens need routes no task delivers: `GET /api/v1/purchase-order-approvals/mine` (§5.2), `GET /api/v1/purchasing-lookups/approvers` (§5.5), and approval data in the detail response. `allowedActions` also lacks approve, reject and withdraw. Same kind of gap as HD-019.
 
-## Mutation sweep and CI admission
+## Handoff: paused at Sam's request, 2026-11-05
 
-Pending.
+Relayed by the PM. Wait for Sam to explicitly resume; a heartbeat is not authorization.
+
+**Candidate:** local branch `claude/purchasing-task023-approval-api`, worktree `.worktrees/purchasing-task023-approval-api`, based on main `d18a6951`. Not pushed, no PR, no CI run.
+
+**Verified:** `server/test/purchasing/*.test.js` (67 tests), three convention test files (8 cases), lint, boundary and traceability, all without a database.
+
+**Not verified:**
+- `server/test/integration/purchasingApprovalCommands.integration.test.js`, which has never run.
+- The changed cleanups in `purchasingPurchaseOrderApi.integration.test.js` and `purchasingPurchaseOrders.integration.test.js`.
+- A mutation sweep has not been done.
+
+**Open dependencies:**
+- HD-021, Sam: `jwt-device-password` (recommended, in the code) or `jwt-password` for the settings update.
+- PM: a local MySQL slot. Use a private instance and targeted files only, never bare `npm run test:coverage`.
+- Sam: CI admission, after verification. The gate currently lists about 20 inputs, because changing pinned test files invalidated earlier receipts.
+
+**Only next step on resume:** once Sam has decided HD-021 and the PM has granted a slot, run the integration files above on a private MySQL.
