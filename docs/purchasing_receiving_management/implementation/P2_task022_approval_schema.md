@@ -26,3 +26,11 @@ Sam chose option A. §4.7 caps `approval_snapshot` at 64KiB. The proposal estima
 ## Unapproved capacity execution
 
 On 2026-11-05 the local `npm run test:coverage` ran from 13:50 to 14:10 HKT and was stopped when the PM asked about its scope. That command has no capacity exclusion; only CI skips the catalog. It executed 28 catalog cases with no approval from Sam: 26 passed and 2 failed in under 1 ms, so those 2 measured nothing. The cases are in Fulfillment (100 lines and 5000 members), Sales TC-032 (50 users), Customer's 100-contender LOCAL-083 and the 50 MiB upload TC-004. Earlier full-suite results in this module's records came from the same command, and are not capacity evidence either. The results are not used as capacity evidence, and no threshold or test changed.
+
+## APR-012 — error messages
+
+Sam approved on 2026-11-05: 「全部批准，我作為project owner 批準你發digest，CI綠了就merge」, covering the `PO_APPROVER_INVALID`, `SELF_APPROVAL_DENIED` and `APPROVAL_ASSIGNEE_MISMATCH` messages in `client/src/framework/http/errorMessages.js`. The same decision accepted the recommendation on the capacity note above: no rerun or retroactive approval, and the Fulfillment, Sales and Customer owners are told these results do not count.
+
+## CI admission
+
+The same decision covers 2 new server test files with 17 case definitions, on every PR and main push in the existing server coverage jobs, in `.github/test-admissions/purchasing-task022.json`. He also authorized publishing this receipt's digest once, as project owner.
