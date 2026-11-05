@@ -112,7 +112,7 @@ integrationTest("TASK-022 trigger：只可以 PENDING 開始、提交資料不�
   const db = await connect(t);
   await inRollback(db, async () => {
     const f = await fixture(db), po = await f.order();
-    for (const overrides of [{ status: "APPROVED", decided_at: NOW }, { decided_by: f.approver.id }, { decision_reason: "早已決定" }, { version: 2 }]) {
+    for (const overrides of [{ status: "APPROVED" }, { status: "APPROVED", decided_at: NOW }, { decided_by: f.approver.id }, { decision_reason: "早已決定" }, { version: 2 }]) {
       await dbRejects(db.query("INSERT INTO purchase_order_approvals SET ?", [f.approvalRow(po, overrides)]), "ER_SIGNAL_EXCEPTION");
     }
     const id = await f.insert("purchase_order_approvals", f.approvalRow(po));
@@ -155,6 +155,7 @@ integrationTest("TASK-022 狀態歷史只可以新增，順序唯一，值受 CH
     const [rows] = await db.query("SELECT sequence_no, from_status, to_status, action, actor_user_id, actor_label, purchase_order_version_after, event_id FROM purchase_order_status_history WHERE purchase_order_id = ? ORDER BY sequence_no", [po]);
     assert.deepEqual(rows.map((row) => Number(row.sequence_no)), [1, 2]);
     assert.deepEqual([rows[0].from_status, rows[0].to_status, rows[0].action, Number(rows[0].actor_user_id), rows[0].actor_label, Number(rows[0].purchase_order_version_after), rows[0].event_id], ["", "DRAFT", "CREATE", f.maker.id, f.maker.username, 1, event]);
+    assert.deepEqual([rows[1].from_status, rows[1].to_status], ["DRAFT", "CONFIRMED"]);
     await dbRejects(db.query("INSERT INTO purchase_order_status_history SET ?", [historyRow(po, { sequence_no: 2 })]), "ER_DUP_ENTRY");
     await dbRejects(db.query("INSERT INTO purchase_order_status_history SET ?", [historyRow(po, { sequence_no: 3, action: "OTHER" })]), "ER_CHECK_CONSTRAINT_VIOLATED", "chk_po_status_history_action");
     await dbRejects(db.query("INSERT INTO purchase_order_status_history SET ?", [historyRow(po, { sequence_no: 3, to_status: "OTHER" })]), "ER_CHECK_CONSTRAINT_VIOLATED", "chk_po_status_history_to");
@@ -266,6 +267,10 @@ integrationTest("TASK-022 設定：預設關、要權限、版本 CAS、replay�
     const [audits] = await db.query("SELECT action, outcome, target_type, target_id, purchase_order_id, reason, detail FROM purchasing_audit_logs WHERE actor_user_id = ? AND outcome = 'SUCCEEDED'", [f.admin.id]);
     assert.equal(audits.length, 1);
     assert.deepEqual([audits[0].action, audits[0].target_type, Number(audits[0].target_id), audits[0].purchase_order_id, audits[0].reason], ["purchasing.setting.updated", "SETTING", 1, null, input.reason]);
+    const [[operation]] = await db.query("SELECT result_type, result_id, source_document_type FROM purchasing_operation_requests WHERE event_id = ?", [input.eventId]);
+    assert.deepEqual([operation.result_type, operation.result_id, operation.source_document_type], ["SETTING", "1", "SETTING"]);
+    const [[refused]] = await db.query("SELECT target_type, target_id, purchase_order_id FROM purchasing_audit_logs WHERE actor_user_id = ? AND outcome = 'REJECTED' AND action = 'purchasing.setting.updated' ORDER BY id LIMIT 1", [f.admin.id]);
+    assert.deepEqual([refused.target_type, Number(refused.target_id), refused.purchase_order_id], ["SETTING", 1, null]);
     const [[unchanged]] = await db.query("SELECT status, version FROM purchase_orders WHERE id = ?", [po]);
     assert.deepEqual([unchanged.status, Number(unchanged.version)], ["PENDING_APPROVAL", 2]);
   });
