@@ -46,7 +46,7 @@
     "TASK-018": "DONE",
     "TASK-019": "DONE",
     "TASK-020": "DONE",
-    "TASK-021": "PENDING",
+    "TASK-021": "DONE",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
@@ -813,9 +813,17 @@
       "idempotency_key": "purchasing-task020-pr341-merge-20261105",
       "status": "CONFIRMED",
       "source_ref": "merge commit 52d2af5b0e52c32337dd1b8aa4fd7a6d4e60659a verified ancestor of origin/main; admitted CI run 41952767619 attempt 1 success on dispatched merge 688cccf4 of head 3d0636f91fefc440ddb472c264577384cc283f68 with origin/main 64dc0904, capacity jobs skipped, same parents and tree 61c2584c"
+    },
+    {
+      "id": "EXT-022",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/342 -> main",
+      "idempotency_key": "purchasing-task021-pr342-merge-20261105",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit b1d987326926f3cd465304a9665fdbe6e42db1d3 verified ancestor of origin/main; admitted CI run 41958641179 attempt 1 success on dispatched merge 671da507 of head 9bbba42fcf6f680df55a5ad76e9bc458ccdf9f58 with origin/main 52d2af5b, capacity jobs skipped, same parents and tree e4ac13db"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021's menu entry and messages are on claude/purchasing-task021-nav, recorded in implementation/P1_task021_nav_errors.md, with APR-010 and CI admission approved by Sam on 2026-11-05. PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021 is DONE (PR #342, implementation/P1_task021_nav_errors.md). PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }
