@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 229,
+  "revision": 231,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -2164,6 +2164,64 @@
         "Draft PR and one existing eight-shard functional CI; no merge"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-022",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-05; actual direct Sam Customer chat approval of DESIGN98d2dc41/PLAN76f21869 and TL3cases/12variants/15stubqueries; corroborated PM human turn01a1aa3f-11a8-71d3-898c-1207e30ad6c1/user01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3/questioncall_d78049a77dcf42e1b7aa3b8972f76def. One DraftPR/naturalfunctionalCI, merge separately decided.",
+      "recorded_at": "2026-11-05T05:52:27.369359Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a",
+      "code_commit": "23c2f46cd77c9508ddca0fd5a5ce2c74c87d761e",
+      "scope": [
+        "TASK-032",
+        "server/src/modules/fulfillment/FulfillmentCustomerReferenceProvider.js",
+        "server/test/customerReferenceComposition.test.js",
+        "three cases / twelve fixed variants / fifteen stub queries; one Draft PR natural functional CI; no merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-022",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-05; actual direct Sam Customer chat approval of DESIGN98d2dc41/PLAN76f21869 and TL3cases/12variants/15stubqueries; corroborated PM human turn01a1aa3f-11a8-71d3-898c-1207e30ad6c1/user01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3/questioncall_d78049a77dcf42e1b7aa3b8972f76def. One DraftPR/naturalfunctionalCI, merge separately decided.",
+      "recorded_at": "2026-11-05T05:52:27.369359Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40",
+      "code_commit": "23c2f46cd77c9508ddca0fd5a5ce2c74c87d761e",
+      "scope": [
+        "TASK-032",
+        "server/src/modules/fulfillment/FulfillmentCustomerReferenceProvider.js",
+        "server/test/customerReferenceComposition.test.js",
+        "three cases / twelve fixed variants / fifteen stub queries; one Draft PR natural functional CI; no merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-054",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-05; actual direct Sam Customer chat approval of DESIGN98d2dc41/PLAN76f21869 and TL3cases/12variants/15stubqueries; corroborated PM human turn01a1aa3f-11a8-71d3-898c-1207e30ad6c1/user01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3/questioncall_d78049a77dcf42e1b7aa3b8972f76def. One DraftPR/naturalfunctionalCI, merge separately decided. TL and PM actual follow-up confirm exact new receipt path is necessary governance exception; automated boundary OUTSIDE_MODULE remains disclosed, no manifest expansion.",
+      "recorded_at": "2026-11-05T05:52:27.369359Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40",
+      "code_commit": "23c2f46cd77c9508ddca0fd5a5ce2c74c87d761e",
+      "scope": [
+        "TASK-032",
+        "server/src/modules/fulfillment/FulfillmentCustomerReferenceProvider.js",
+        "server/test/customerReferenceComposition.test.js",
+        "three cases / twelve fixed variants / fifteen stub queries; one Draft PR natural functional CI; no merge",
+        ".github/test-admissions/customer-task032-composition.json: exact governance receipt necessary to approved formal admission; TL/PM confirmed, no broader .github authority"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -4058,6 +4116,17 @@
       "source_ref": "04_design_review.md#task-032-partial-provider-candidate--2026-11-05-baseline-decision-pending; actual PM permits only local narrow canonical preparation; TL permits static mainimpact checks, no runtime replay. Freshmainb1d98732 incoming22 exactPurchasingpaths, noCustomer/Fulfillment/framework/serverconfig source changes; source781 nativeproof retained only for same2modulebytes. Proposed DESIGN98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a/PLAN76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40 require explicit disposition; no newapproval entry fabricated.",
       "actor": "/root Customer local canonical preparation only",
       "observed_at": "2026-11-05T03:44:02Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK032 approved three functional cases /12variants /15stubqueries; no native replay",
+      "code_commit": "23c2f46cd77c9508ddca0fd5a5ce2c74c87d761e",
+      "spec_baseline": "98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a",
+      "source_fingerprint": "8fdcafe2610b3795ce5d7e7ecac68dc2c5019f2c6e9db00ef55ef580758c64c7",
+      "status": "PASS",
+      "source_ref": "New test working-tree bytes; actual node --test --test-concurrency=1 --import ./test-support/testEnv.js test/customerReferenceComposition.test.js exit0,3passed/0failed/0skipped,duration75.109416ms; exact finalblob recorded in admission/review; notCI orwholeTC075.",
+      "actor": "/root Customer",
+      "observed_at": "2026-11-05T05:52:27.369359Z"
     }
   ],
   "pending_decisions": [
@@ -4333,8 +4402,8 @@
         "DES-020",
         "TC-075"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "04_design_review.md#task-032-exact-human-decision--2026-11-05; actual direct Sam Customer chat approval of DESIGN98d2dc41/PLAN76f21869 and TL3cases/12variants/15stubqueries; corroborated PM human turn01a1aa3f-11a8-71d3-898c-1207e30ad6c1/user01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3/questioncall_d78049a77dcf42e1b7aa3b8972f76def. One DraftPR/naturalfunctionalCI, merge separately decided."
     }
   ],
   "external_actions": [
@@ -5681,5 +5750,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK032PARTIAL/BLOCKED: final local integrated metadata/source review and PM disposition of proposed98d2/76f2 DESIGN/PLAN/adoption boundary. TL requires minimal directly-loaded routine regression proposal for2newmodules; no testcase/testinput/admission/PRCI/push/merge authority yet. Independentadmin must bind exact protectedblobs after realapproval. Keeped792 privatePASS consumed/no replay; retainotherprovider/history/rootwriter/archive enablement blocks and alloldfailures/waivers."
+  "next_safe_action": "Independent exact test/approval metadata review, trusted exact-blob/support admission and readback, then sole publisher one independent DraftPR/natural functionalCI. Stop/report firstfailure. No merge; full downstream acceptance BLOCKED."
 }

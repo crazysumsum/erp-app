@@ -1,5 +1,15 @@
 # Customer Management Design Review
 
+## TASK-032 exact human decision — 2026-11-05
+
+Sam directly approved DESIGN `98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a`, PLAN `76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40`, and TL's three-case / twelve-variant / fifteen-stub-query routine regression proposal in this Customer chat. The PM independently confirms the same decision in human turn `01a1aa3f-11a8-71d3-898c-1207e30ad6c1`, user `01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3`, question `call_d78049a77dcf42e1b7aa3b8972f76def`: `批准候選、三案及一次 Draft PR CI`.
+
+The approval covers the exact owner-reviewed Fulfillment reader adoption, existing opt-in composition, unchanged manifest/task-plan candidate and one new test file `server/test/customerReferenceComposition.test.js`. Its three named cases use twelve fixed variants, fifteen in-memory query calls and two factory resolutions, serially once each, without DB, app, HTTP, network or browser. Existing global 92/83/90 and all thirty-nine individual coverage floors remain unchanged; no job or schedule is added. Native v4 evidence remains bound to its original source and is not rerun. Local targeted execution passed 3/3, zero skips, on 2026-11-05; it is functional developer evidence, not full downstream acceptance or CI coverage.
+
+Customer remains sole publisher. Independent review and the trusted administrator's exact-blob admission/readback precede one independent Draft PR and one natural existing functional CI batch. Stop/report the first failure without automatic retry. **Merge requires a separate decision.** Four absent providers, retained history, root-lock/writer serialization and full downstream integration acceptance remain BLOCKED. The pending labels below preserve the earlier proposal state; this new decision answers HD-019 without rewriting historical approvals or native evidence.
+
+The module path checker still reports exactly `OUTSIDE_MODULE` for `.github/test-admissions/customer-task032-composition.json`; its raw result is not PASS. TL and PM explicitly confirm this single governance receipt is necessary within Sam's formal admission authorization. The exact-path exception is recorded without broadening `.github` access, changing the approved manifest/baselines, modifying CI/controller/floors or granting the author external digest administration. Independent administrator verification remains mandatory.
+
 ## TASK-032 partial provider candidate — 2026-11-05 (baseline decision pending)
 
 This is a prepared adoption candidate, not a new human DESIGN/PLAN approval.
