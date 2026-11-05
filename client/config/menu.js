@@ -31,6 +31,12 @@ const menuConfig = {
       order: 300
     },
     {
+      name: "purchasingReceiving",
+      label: "採購與收貨",
+      icon: "shopping_cart",
+      order: 350
+    },
+    {
       name: "customers",
       label: "客戶管理",
       icon: "groups",
