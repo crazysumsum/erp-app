@@ -24,6 +24,12 @@ Customer 的 trusted composition 必須把完整清單和已交付實例分開�
 
 Fulfillment owner 已在其項目 chat `01a15862-9933-7e50-8e10-4015cf35d078` 獨立覆核上述來源及 reader SHA-256 `5bfe1ff0dbd222f376b3708393d1c1d158776789ead58704d3566c82cb1868d8`，同意按此界線交 Customer，Critical／High／Medium 均為零。既有 TC-026 registry 測試 5/5、語法及 ESLint 通過；一次私有 SQLite 記憶體功能核對涵蓋零筆、兩類同 ID、跨客戶過濾、雙路重疊、搬至歸檔、缺表及全域 UNKNOWN。原生 MySQL driver、正式組裝、coverage 及部署驗收仍待交接後進行。TASK-034 的五案沒有執行這個 reader。
 
+## 2026-11-05 Customer 私有原生 checkpoint
+
+上述段落保留來源交付時的證據邊界。其後 Customer 本機來源 `781dd9be` 在 Sam 直接批准及 PM 獨佔 GO 下，只執行已審 v4 一次；`ed792df` 的六項觀察通過，實際程序 exit0。真實 MySQL 四個空來源表回報 Fulfillment NO_REFERENCE/0，但完整五域中其餘四方缺席，整體仍 UNKNOWN／啟動 NOT_READY；同一 app、DB 與 singleton 上的封存及設備簽章／密碼刪除各一次 HTTP 都回409，客戶前後不變。自有 schema／程序／資料根已清理，時段已釋放。
+
+完整 source-bound 授權、精確證據摘要與限制見 [Customer scoped native checkpoint](task032-partial-composition-candidate.md#scoped-native-checkpoint--2026-11-05)。只引用私有證據的識別與 hash，不複製 runner 或 raw log。這不是原生正數／歷史搬移全案例、coverage、目標營運環境保留歷史、UAT 或正式全域組裝驗收；source-only review 與本次 private PASS 不授權新 baseline、常規案例、CI、發布或合併。兩份來源的 owner／SHA、五域必需集合及啟用前根鎖／writer／archive 保護均不變。
+
 ## 出貨沖銷的獨立依賴
 
 S1 的沖銷另用設計基線 `6cc959d1:tasks/shipment-reversal-downstream-contract.md`。Returns 須交付每筆實收對原出庫 Issue 的分攤及其寫入入口；Invoicing／AR 須交付逐來源的開票 claim、有效貸項及待處理事項。兩個 owner 的 writer 及沖銷均取同一 Fulfillment 根、再取 S1 排他鎖，以同一 READ COMMITTED 交易查證。出兩件已實收一件要阻止全張回補；未貸清的 S1 發票來源亦要阻止。未能核實任何一方仍回 503。現行 Inventory 的客退入庫入口只接受 R1 來源，並無完整 S1 分攤；AR 在此基線只有規格。兩者待真來源及環境採用，公開沖銷保持關閉。
