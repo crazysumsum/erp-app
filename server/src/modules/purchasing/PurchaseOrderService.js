@@ -3,10 +3,12 @@ import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { documentTotal, lineAmount } from "./moneyMath.js";
+import { PurchaseApprovalService } from "./PurchaseApprovalService.js";
+import { appendStatusHistory } from "./purchaseOrderStatusHistory.js";
 import { nextPurchaseOrderStatus } from "./purchaseOrderStateMachine.js";
 import { purchasingError } from "./purchasingErrors.js";
 import { draftProjection } from "./purchasingProjections.js";
-import { eventId, onlyFields, positiveId } from "./purchasingValidation.js";
+import { eventId, onlyFields, positiveId, reason as validReason, shortNote } from "./purchasingValidation.js";
 import { toBaseQuantity } from "./quantityMath.js";
 
 // Serial 唔支援；DB CHECK 亦只收呢三個，所以就算係容許照存嘅舊 Line 都要擋（設計 §4.6）。
@@ -19,7 +21,12 @@ const LINE_COLUMNS = ["id", "purchase_order_id", "line_number", "sku_id", "sku_c
   "purchase_sku_uom_id", "purchase_uom_code_snapshot", "uom_to_base_factor_snapshot", "ordered_quantity", "ordered_base_quantity",
   "unit_price", "line_amount", "zero_price_reason", "expected_delivery_date", "line_note", "version", "created_at", "updated_at"];
 
-const AUDIT_ACTION = Object.freeze({ CREATE: "purchase_order.created", UPDATE: "purchase_order.updated", COPY: "purchase_order.copied", SUBMIT: "purchase_order.confirmed" });
+const AUDIT_ACTION = Object.freeze({ CREATE: "purchase_order.created", UPDATE: "purchase_order.updated", COPY: "purchase_order.copied", SUBMIT: "purchase_order.confirmed",
+  APPROVE: "purchase_order.approved", REJECT: "purchase_order.rejected", WITHDRAW_APPROVAL: "purchase_order.approval_withdrawn" });
+// 審批決定：狀態機動作同 status history 動作。
+const DECISION = Object.freeze({ APPROVE: { transition: "APPROVE", history: "APPROVE" }, REJECT: { transition: "REJECT", history: "REJECT" },
+  WITHDRAW_APPROVAL: { transition: "WITHDRAW_APPROVAL", history: "WITHDRAW" } });
+const REQUIRED_PERMISSIONS = Object.freeze({ APPROVE: ["purchasing.view", "purchasing.approval"], REJECT: ["purchasing.view", "purchasing.approval"] });
 
 const invalid = (field) => purchasingError("PURCHASING_INPUT_INVALID", { field });
 
@@ -47,11 +54,11 @@ function addressSnapshot(address) {
  * 冇業務寫入嘅 4xx 拒絕另開短 transaction 寫 REJECTED audit（§4.15）。
  */
 export class PurchaseOrderService {
-  constructor({ database, logger, time, suppliers, businessMaster, sequences, operations, audit, config }) {
+  constructor({ database, logger, time, suppliers, businessMaster, sequences, operations, audit, config, approvals = new PurchaseApprovalService() }) {
     if (!database || !logger || !time || !suppliers || !businessMaster || !sequences || !operations || !audit || !config) {
       throw new TypeError("PurchaseOrderService requires all of its dependencies");
     }
-    Object.assign(this, { database, logger, time, suppliers, businessMaster, sequences, operations, audit, config });
+    Object.assign(this, { database, logger, time, suppliers, businessMaster, sequences, operations, audit, config, approvals });
   }
 
   /** `claims` 係 JWT claims（sub、roles、permissions）；`context` 係 requestId、correlationId、ip。 */
@@ -68,16 +75,35 @@ export class PurchaseOrderService {
     return this.#command({ kind: "COPY", claims, purchaseOrderId, input, context });
   }
 
-  /** Client 只送 eventId 同 version，唔可以指定 approver 或者 status（§5.2）。 */
+  /** 審批開住先要 assignedApproverId 同（選填）requestNote；status 一律唔收（§5.2）。 */
   submit({ claims, purchaseOrderId, input, context = {} }) {
     return this.#command({ kind: "SUBMIT", claims, purchaseOrderId, input, context });
+  }
+
+  approve({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "APPROVE", claims, purchaseOrderId, input, context });
+  }
+
+  reject({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "REJECT", claims, purchaseOrderId, input, context });
+  }
+
+  withdrawApproval({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "WITHDRAW_APPROVAL", claims, purchaseOrderId, input, context });
   }
 
   #request({ kind, input }) {
     if (kind === "COPY") return { eventId: eventId(onlyFields(input, ["eventId"], "body").eventId) };
     if (kind === "SUBMIT") {
-      const { eventId: event, version } = onlyFields(input, ["eventId", "version"], "body");
-      return { eventId: eventId(event), version: positiveId(version, "version") };
+      const { eventId: event, version, assignedApproverId, requestNote } = onlyFields(input, ["eventId", "version", "assignedApproverId", "requestNote"], "body");
+      return { eventId: eventId(event), version: positiveId(version, "version"),
+        ...(assignedApproverId === undefined ? {} : { assignedApproverId: positiveId(assignedApproverId, "assignedApproverId") }),
+        ...(requestNote === undefined ? {} : { requestNote: shortNote(requestNote, "requestNote") }) };
+    }
+    if (Object.hasOwn(DECISION, kind)) {
+      const { eventId: event, version, reason } = onlyFields(input, ["eventId", "version", "reason"], "body");
+      return { eventId: eventId(event), version: positiveId(version, "version"),
+        ...(reason === undefined && kind !== "REJECT" ? {} : { reason: validReason(reason) }) };
     }
     return draftProjection(input, { maxLines: this.config.maxPurchaseOrderLines, update: kind === "UPDATE" });
   }
@@ -86,7 +112,8 @@ export class PurchaseOrderService {
     try {
       if (command.kind !== "CREATE") positiveId(command.purchaseOrderId, "purchaseOrderId");
       const request = this.#request(command);
-      return await this.operations.run(this.database, (tx) => command.kind === "SUBMIT" ? this.#submit(tx, command, request) : this.#save(tx, command, request));
+      return await this.operations.run(this.database, (tx) => command.kind === "SUBMIT" ? this.#submit(tx, command, request)
+        : Object.hasOwn(DECISION, command.kind) ? this.#decide(tx, command, request) : this.#save(tx, command, request));
     } catch (error) {
       if (error instanceof ApplicationError && error.statusCode >= 400 && error.statusCode < 500) await this.#rejected(command, error);
       throw error;
@@ -96,7 +123,7 @@ export class PurchaseOrderService {
   /** §2.5 第 1、2 步：actor freshness，再 claim event。 */
   async #claim(tx, { kind, claims, purchaseOrderId, context }, request, nowMs) {
     const fresh = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
-    if (!fresh.permissions.includes("purchasing.mgmt")) throw permissionStaleError();
+    if (!(REQUIRED_PERMISSIONS[kind] ?? ["purchasing.mgmt"]).every((permission) => fresh.permissions.includes(permission))) throw permissionStaleError();
     const actor = { id: fresh.id, username: fresh.username };
     const trace = { requestId: context.requestId, correlationId: context.correlationId };
     const claim = await this.operations.claim(tx, {
@@ -137,6 +164,7 @@ export class PurchaseOrderService {
     await tx.query(`INSERT INTO purchase_order_lines (${LINE_COLUMNS.join(", ")}) VALUES ?`,
       [lines.map((row) => LINE_COLUMNS.map((column) => column === "purchase_order_id" ? id : row[column]))]);
 
+    if (!current) await appendStatusHistory(tx, { purchaseOrderId: id, fromStatus: "", toStatus: "DRAFT", action: "CREATE", version, eventId: request.eventId, actor, nowMs });
     const summary = { id, number: number.number, status: "DRAFT", version };
     await this.audit.record(tx, { actor, action: AUDIT_ACTION[kind], targetId: id, targetLabel: number.number,
       detail: { version, lineCount: lines.length, totalAmount: header.total_amount, currencyCode: header.currency_code,
@@ -147,8 +175,8 @@ export class PurchaseOrderService {
   }
 
   /**
-   * 審批關閉時直接確認（§3.3、§8.3；HD-018）：同 create 一樣嚴格重驗已保存嘅值，唔再容忍 Draft 期間失效嘅主檔；通過就寫目前快照再轉 CONFIRMED。
-   * Line 一定要喺表頭離開 DRAFT 之前寫（§4.16 trigger）。Status History 由 TASK-022 跟張表一齊加（HD-018 1A）。
+   * 提交（§3.3、§8.3；HD-018）：同 create 一樣嚴格重驗已保存嘅值，唔再容忍 Draft 期間失效嘅主檔；通過就寫目前快照。審批關閉直接 CONFIRMED，
+   * 開住就轉 PENDING_APPROVAL 兼建立審批快照。Line 一定要喺表頭離開 DRAFT 之前寫（§4.16 trigger）。
    * Item 係非鎖定讀（HD-018 3A，同 Sales 一樣）：確認嗰一刻先停用嘅 SKU 可能照過，收貨時嘅 SKU 例外規則會再驗。
    */
   async #submit(tx, command, request) {
@@ -158,37 +186,75 @@ export class PurchaseOrderService {
 
     const [[policy]] = await tx.query("SELECT require_po_approval, version FROM purchasing_settings WHERE id = 1 LOCK IN SHARE MODE");
     if (!policy) throw purchasingError("PURCHASING_DEPENDENCY_UNAVAILABLE");
-    const current = await this.#lockDraft(tx, id, { version: request.version, lines: [] }, "CONFIRM");
-    // TASK-023 先有審批流程；喺嗰之前審批開住就只可以拒絕，唔可以繞過去直接確認。
-    if (policy.require_po_approval) throw purchasingError("PO_APPROVAL_REQUIRED");
+    const needsApproval = Boolean(policy.require_po_approval);
+    const current = await this.#lockDraft(tx, id, { version: request.version, lines: [] }, needsApproval ? "SUBMIT_FOR_APPROVAL" : "CONFIRM");
+    if (needsApproval && request.assignedApproverId === undefined) throw purchasingError("PO_APPROVAL_REQUIRED");
+    if (!needsApproval) for (const field of ["assignedApproverId", "requestNote"]) if (request[field] !== undefined) throw invalid(field);
 
-    const stored = await this.#stored(tx, id);
-    const draft = draftProjection({ ...storedInput(stored), eventId: request.eventId, version: request.version,
-      lines: stored.lines.map((row) => ({ id: Number(row.id), ...storedLineInput(row) })) }, { maxLines: this.config.maxPurchaseOrderLines, update: true });
-    const warnings = [], places = Number(stored.currency_decimal_places_snapshot);
-    const header = await this.#header(tx, draft, current, nowMs, warnings, { strict: true });
-    const lines = await this.#lines(tx, draft, current, header.currency_decimal_places_snapshot, nowMs, warnings, { strict: true });
-    // 數量、單價同小數位都冇變，金額就唔會變；所以只要驗 Base quantity 同小數位。
-    if (header.currency_decimal_places_snapshot !== places) throw purchasingError("PO_MASTER_CHANGED", { field: "currencyCode" });
-    lines.forEach((line, index) => {
-      if (String(line.ordered_base_quantity) !== String(stored.lines[index].ordered_base_quantity)) throw purchasingError("PO_MASTER_CHANGED", { field: `lines.${index}.purchaseSkuUomId` });
-    });
-    header.subtotal_amount = header.total_amount = documentTotal(lines.map((row) => row.line_amount), places);
+    const { header, lines } = await this.#revalidated(tx, id, request, current, nowMs);
+    header.subtotal_amount = header.total_amount = documentTotal(lines.map((row) => row.line_amount), header.currency_decimal_places_snapshot);
 
     await tx.query("DELETE FROM purchase_order_lines WHERE purchase_order_id = ?", [id]);
     await tx.query(`INSERT INTO purchase_order_lines (${LINE_COLUMNS.join(", ")}) VALUES ?`,
       [lines.map((row) => LINE_COLUMNS.map((column) => column === "purchase_order_id" ? id : row[column]))]);
     const version = request.version + 1, status = current.nextStatus;
     // #lockDraft 鎖住 PO 兼驗咗 version，所以呢度唔使再 CAS。
-    await tx.query("UPDATE purchase_orders SET ?, status = ?, version = ?, confirmed_at = ?, confirmed_by = ? WHERE id = ?",
-      [{ ...header, updated_at: nowMs, updated_by: actor.id, updated_by_label: actor.username }, status, version, nowMs, actor.id, id]);
+    await tx.query("UPDATE purchase_orders SET ? WHERE id = ?", [{ ...header, updated_at: nowMs, updated_by: actor.id, updated_by_label: actor.username, status, version,
+      ...(needsApproval ? {} : { confirmed_at: nowMs, confirmed_by: actor.id }) }, id]);
+    if (needsApproval) {
+      await this.approvals.requestInTransaction(tx, { purchaseOrderId: id, version, settingsVersion: Number(policy.version), actor,
+        approverId: request.assignedApproverId, note: request.requestNote ?? "", nowMs });
+    }
+    await appendStatusHistory(tx, { purchaseOrderId: id, fromStatus: "DRAFT", toStatus: status, action: needsApproval ? "SUBMIT" : "CONFIRM", version, eventId: request.eventId, actor, nowMs });
 
     const summary = { id, number: current.po_number, status, version };
-    await this.audit.record(tx, { actor, action: AUDIT_ACTION.SUBMIT, targetId: id, targetLabel: current.po_number,
-      detail: { version, lineCount: lines.length, totalAmount: header.total_amount, currencyCode: header.currency_code, policyVersion: Number(policy.version) },
+    await this.audit.record(tx, { actor, action: needsApproval ? "purchase_order.submitted" : AUDIT_ACTION.SUBMIT, targetId: id, targetLabel: current.po_number,
+      detail: { version, lineCount: lines.length, totalAmount: header.total_amount, currencyCode: header.currency_code, policyVersion: Number(policy.version),
+        ...(needsApproval ? { assignedApproverId: request.assignedApproverId } : {}) },
       nowMs, ip: context.ip, ...trace });
     await this.operations.complete(tx, { operationId, result: summary, nowMs });
-    return { ...summary, outcome: status, warnings, replayed: false };
+    return { ...summary, outcome: status, warnings: [], replayed: false };
+  }
+
+  /** 批准、拒絕、撤回（§3.3、§8.3）。一路鎖住 PO，所以批准同撤回只有一個贏；任何失效都 rollback，申請保留 PENDING。批准直接 CONFIRMED，唔再寫快照：PO 喺 Pending 期間已凍結。 */
+  async #decide(tx, command, request) {
+    const { kind, purchaseOrderId: id, context } = command, nowMs = this.time.nowMs();
+    const { actor, operationId, replay } = await this.#claim(tx, command, request, nowMs);
+    if (replay) return { ...replay, replayed: true };
+
+    const current = await this.#lockDraft(tx, id, { version: request.version, lines: [] }, DECISION[kind].transition);
+    const reason = request.reason ?? "", status = current.nextStatus, version = request.version + 1;
+    const decision = { purchaseOrderId: id, actor, reason, nowMs };
+    if (kind === "APPROVE") {
+      await this.approvals.approveInTransaction(tx, { ...decision, version: request.version });
+      await this.#revalidated(tx, id, request, current, nowMs);
+    } else if (kind === "REJECT") await this.approvals.rejectInTransaction(tx, { ...decision, version: request.version });
+    else await this.approvals.withdrawInTransaction(tx, decision);
+
+    await tx.query("UPDATE purchase_orders SET ? WHERE id = ?", [{ status, version, updated_at: nowMs, updated_by: actor.id, updated_by_label: actor.username,
+      ...(kind === "APPROVE" ? { confirmed_at: nowMs, confirmed_by: actor.id } : {}) }, id]);
+    await appendStatusHistory(tx, { purchaseOrderId: id, fromStatus: current.status, toStatus: status, action: DECISION[kind].history, reason, version, eventId: request.eventId, actor, nowMs });
+
+    const summary = { id, number: current.po_number, status, version };
+    await this.audit.record(tx, { actor, action: AUDIT_ACTION[kind], targetId: id, targetLabel: current.po_number, reason, detail: { version }, nowMs, ip: context.ip,
+      requestId: context.requestId, correlationId: context.correlationId });
+    await this.operations.complete(tx, { operationId, result: summary, nowMs });
+    return { ...summary, replayed: false };
+  }
+
+  /** 用已保存嘅值重驗 Supplier、SKU、UOM、Currency；數量、單價同小數位都冇變，金額就唔會變，所以只要驗 Base quantity 同小數位。 */
+  async #revalidated(tx, id, request, current, nowMs) {
+    const stored = await this.#stored(tx, id);
+    const draft = draftProjection({ ...storedInput(stored), eventId: request.eventId, version: request.version,
+      lines: stored.lines.map((row) => ({ id: Number(row.id), ...storedLineInput(row) })) }, { maxLines: this.config.maxPurchaseOrderLines, update: true });
+    const warnings = [];
+    const header = await this.#header(tx, draft, current, nowMs, warnings, { strict: true });
+    const lines = await this.#lines(tx, draft, current, header.currency_decimal_places_snapshot, nowMs, warnings, { strict: true });
+    if (header.currency_decimal_places_snapshot !== Number(stored.currency_decimal_places_snapshot)) throw purchasingError("PO_MASTER_CHANGED", { field: "currencyCode" });
+    lines.forEach((line, index) => {
+      if (String(line.ordered_base_quantity) !== String(stored.lines[index].ordered_base_quantity)) throw purchasingError("PO_MASTER_CHANGED", { field: `lines.${index}.purchaseSkuUomId` });
+    });
+    return { header, lines };
   }
 
   /** 已保存嘅 editable values。 */

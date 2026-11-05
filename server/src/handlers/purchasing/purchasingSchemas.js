@@ -5,6 +5,7 @@ import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessM
 import { ItemLookupService } from "../../modules/item/ItemLookupService.js";
 import { normalizePurchasingConfig } from "../../modules/purchasing/normalizePurchasingConfig.js";
 import { PurchaseOrderService } from "../../modules/purchasing/PurchaseOrderService.js";
+import { PurchasingSettingsService } from "../../modules/purchasing/PurchasingSettingsService.js";
 import { PurchasingAuditService } from "../../modules/purchasing/PurchasingAuditService.js";
 import { PurchasingInquiryService } from "../../modules/purchasing/PurchasingInquiryService.js";
 import { purchasingError } from "../../modules/purchasing/purchasingErrors.js";
@@ -23,6 +24,8 @@ export const PURCHASE_ORDER_ID_PARAMS = Object.freeze({ type: "object", required
 // 設計 §5.2：Draft 寫入只要 purchasing.mgmt（六個權限互不繼承，§6.1）。
 export const PURCHASE_ORDER_WRITE_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["purchasing.mgmt"] } });
 export const PURCHASE_ORDER_READ_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["purchasing.view"] } });
+export const PURCHASE_ORDER_DECISION_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["purchasing.view", "purchasing.approval"] } });
+export const PURCHASING_SETTINGS_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["purchasing.settings"] } });
 
 // 快照、factor、Base quantity、金額同 status 唔喺 properties，additionalProperties:false 會拒絕（§5.2）。
 const line = (update) => ({
@@ -52,9 +55,19 @@ export const PURCHASE_ORDER_UPDATE_INPUT = Object.freeze(input(true));
 
 const EVENT_ID = input(false).properties.eventId;
 export const PURCHASE_ORDER_COPY_INPUT = Object.freeze({ type: "object", required: ["eventId"], additionalProperties: false, properties: { eventId: EVENT_ID } });
-// 審批人、status 都唔喺度，所以 client 送嚟一定被拒絕；審批開啟嘅欄位由 TASK-023 加。
+// status 唔喺度，所以 client 送嚟一定被拒絕。審批開住先要 assignedApproverId，關咗送嚟 service 會拒絕（§5.2）。
 export const PURCHASE_ORDER_SUBMIT_INPUT = Object.freeze({ type: "object", required: ["eventId", "version"], additionalProperties: false,
-  properties: { eventId: EVENT_ID, version: ID } });
+  properties: { eventId: EVENT_ID, version: ID, assignedApproverId: ID, requestNote: { type: "string", maxLength: 500 } } });
+const REASON = { type: "string", maxLength: 2000 }, PASSWORD = { type: "string", minLength: 1, maxLength: 1024 };
+// Password 只畀 auth strategy 用；purchaseOrderCommand 唔會交畀 service，亦唔入 operation hash（§2.7）。
+export const PURCHASE_ORDER_APPROVE_INPUT = Object.freeze({ type: "object", required: ["eventId", "version", "password"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID, reason: REASON, password: PASSWORD } });
+export const PURCHASE_ORDER_REJECT_INPUT = Object.freeze({ type: "object", required: ["eventId", "version", "reason", "password"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID, reason: REASON, password: PASSWORD } });
+export const PURCHASE_ORDER_WITHDRAW_APPROVAL_INPUT = Object.freeze({ type: "object", required: ["eventId", "version"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID, reason: REASON } });
+export const PURCHASING_SETTINGS_UPDATE_INPUT = Object.freeze({ type: "object", required: ["eventId", "version", "requirePoApproval", "reason", "password"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID, requirePoApproval: { type: "boolean" }, reason: REASON, password: PASSWORD } });
 
 export const PURCHASE_ORDER_COMMAND_RESPONSE = Object.freeze({
   type: "object", required: ["id", "number", "status", "version", "warnings", "replayed"], additionalProperties: false,
@@ -70,8 +83,20 @@ export const PURCHASE_ORDER_COMMAND_RESPONSE = Object.freeze({
 const NUMBER = PURCHASE_ORDER_COMMAND_RESPONSE.properties.number;
 export const PURCHASE_ORDER_SUBMIT_RESPONSE = Object.freeze({
   type: "object", required: ["id", "number", "status", "outcome", "version", "warnings", "replayed"], additionalProperties: false,
-  properties: { id: ID, number: NUMBER, status: { const: "CONFIRMED" }, outcome: { const: "CONFIRMED" }, version: ID,
+  properties: { id: ID, number: NUMBER, status: { enum: ["CONFIRMED", "PENDING_APPROVAL"] }, outcome: { enum: ["CONFIRMED", "PENDING_APPROVAL"] }, version: ID,
     warnings: { type: "array", maxItems: 0 }, replayed: { type: "boolean" } }
+});
+export const PURCHASE_ORDER_DECISION_RESPONSE = Object.freeze({
+  type: "object", required: ["id", "number", "status", "version", "replayed"], additionalProperties: false,
+  properties: { id: ID, number: NUMBER, status: { enum: ["CONFIRMED", "DRAFT"] }, version: ID, replayed: { type: "boolean" } }
+});
+export const PURCHASING_SETTINGS_RESPONSE = Object.freeze({
+  type: "object", required: ["requirePoApproval", "version", "updatedAt", "updatedByLabel"], additionalProperties: false,
+  properties: { requirePoApproval: { type: "boolean" }, version: ID, updatedAt: { type: "integer", minimum: 0 }, updatedByLabel: { type: "string" } }
+});
+export const PURCHASING_SETTINGS_UPDATE_RESPONSE = Object.freeze({
+  type: "object", required: ["requirePoApproval", "version", "replayed"], additionalProperties: false,
+  properties: { requirePoApproval: { type: "boolean" }, version: ID, replayed: { type: "boolean" } }
 });
 
 // 金額同數量係字串，唔可以畀框架 coerce；錯誤要係 §5.7 嘅 PURCHASING_INPUT_INVALID，所以喺 handler 自己驗（同 Sales 一樣）。
@@ -81,6 +106,10 @@ const validateCreate = validator.compile({ body: PURCHASE_ORDER_CREATE_INPUT }, 
 const validateUpdate = validator.compile({ body: PURCHASE_ORDER_UPDATE_INPUT }, "Purchase Order update body");
 const validateCopy = validator.compile({ body: PURCHASE_ORDER_COPY_INPUT }, "Purchase Order copy body");
 const validateSubmit = validator.compile({ body: PURCHASE_ORDER_SUBMIT_INPUT }, "Purchase Order submit body");
+const validateApprove = validator.compile({ body: PURCHASE_ORDER_APPROVE_INPUT }, "Purchase Order approve body");
+const validateReject = validator.compile({ body: PURCHASE_ORDER_REJECT_INPUT }, "Purchase Order reject body");
+const validateWithdraw = validator.compile({ body: PURCHASE_ORDER_WITHDRAW_APPROVAL_INPUT }, "Purchase Order approval withdraw body");
+const validateSettings = validator.compile({ body: PURCHASING_SETTINGS_UPDATE_INPUT }, "Purchasing settings update body");
 
 /** 錯誤只帶欄位路徑（例如 `lines.0.unitPrice`），唔帶值。 */
 function validated(validate, request, fallback) {
@@ -95,9 +124,11 @@ function validated(validate, request, fallback) {
 /** 驗 body 同 `Idempotency-Key`＝`eventId`（§5.1）。`kind` 係 create、update、copy 或者 submit。 */
 export function purchaseOrderCommand(req, kind) {
   const body = req.input.body;
-  validated({ create: validateCreate, update: validateUpdate, copy: validateCopy, submit: validateSubmit }[kind], { body }, "body");
+  validated({ create: validateCreate, update: validateUpdate, copy: validateCopy, submit: validateSubmit, approve: validateApprove, reject: validateReject,
+    withdrawApproval: validateWithdraw, settings: validateSettings }[kind], { body }, "body");
   if (req.get("Idempotency-Key") !== body.eventId) throw purchasingError("PURCHASING_INPUT_INVALID", { field: "eventId" });
-  return { claims: req.auth.claims, input: body,
+  const input = Object.hasOwn(body, "password") ? Object.fromEntries(Object.entries(body).filter(([key]) => key !== "password")) : body;
+  return { claims: req.auth.claims, input,
     context: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ip: req.ip ?? "" } };
 }
 
@@ -209,6 +240,12 @@ export function purchasingLookupService(services, logger) {
 export function purchasingInquiryService(services, logger) {
   const database = services.require("mysqldatabase"), time = services.require("time");
   return new PurchasingInquiryService({ database, logger, time, suppliers: new SupplierLookupService({ database, logger, time }) });
+}
+
+export function purchasingSettingsService(services, logger) {
+  const database = services.require("mysqldatabase"), time = services.require("time");
+  const { auditDetailMaxBytes } = normalizePurchasingConfig(services.config.purchasing);
+  return new PurchasingSettingsService({ database, logger, time, operations: new PurchasingOperationService(), audit: new PurchasingAuditService({ auditDetailMaxBytes }) });
 }
 
 /** 真 provider 接線（HD-015）：Supplier 用 Business Master 驗預設 Currency／Payment Term；Item 喺 service 入面用 transaction 連線讀。 */
