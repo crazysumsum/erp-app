@@ -194,7 +194,7 @@ integrationTest("TASK-022 批准同拒絕：只有指定審批人，自己唔批
     await assert.rejects(approve(f.maker), coded("SELF_APPROVAL_DENIED"));
     await assert.rejects(approve(f.other), coded("APPROVAL_ASSIGNEE_MISMATCH"));
     await assert.rejects(approve(f.approver, 1), coded("VERSION_CONFLICT"));
-    await assert.rejects(service.rejectInTransaction(db, { purchaseOrderId: po, version: 2, actor: f.other, reason: "唔應該批", nowMs: NOW }), coded("APPROVAL_ASSIGNEE_MISMATCH"));
+    await assert.rejects(service.rejectInTransaction(db, { purchaseOrderId: po, version: 2, actor: f.other, reason: "唔應該由我拒絕", nowMs: NOW }), coded("APPROVAL_ASSIGNEE_MISMATCH"));
     assert.deepEqual(await approve(f.approver), { id, status: "APPROVED" });
     const [[row]] = await db.query("SELECT status, decided_at, decided_by, version FROM purchase_order_approvals WHERE id = ?", [id]);
     assert.deepEqual([row.status, Number(row.decided_at), Number(row.decided_by), Number(row.version)], ["APPROVED", NOW + 1, f.approver.id, 2]);
