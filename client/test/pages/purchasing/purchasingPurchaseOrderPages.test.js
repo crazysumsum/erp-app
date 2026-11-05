@@ -73,7 +73,7 @@ describe("TASK-019 PO 列表", () => {
   });
   it("排序欄同頁碼唔合法就用預設", async () => {
     await open("/purchasing/purchase-orders?sortBy=password&page=-1");
-    expect(purchasing.listPurchaseOrders).toHaveBeenCalledWith(expect.objectContaining({ page: 1, sortBy: "updatedAt" }));
+    expect(purchasing.listPurchaseOrders).toHaveBeenNthCalledWith(1, expect.objectContaining({ page: 1, sortBy: "updatedAt" }));
   });
   it("搜尋寫入 URL 並回到第 1 頁；清除篩選清走", async () => {
     const router = await open("/purchasing/purchase-orders?page=2");
@@ -137,7 +137,7 @@ describe("TASK-019 PO 列表", () => {
     await open("/purchasing/purchase-orders?q=none");
     expect(wrapper.text()).toContain("沒有符合條件的採購單");
   });
-  it.each([["4", "10", 0.4], ["1", "3", 0.33], ["25", "10", 1], [HUGE, HUGE, 1], ["0", HUGE, 0]])("進度條 %s／%s 係 %s，超收唔超過 100%%", (received, ordered, value) => {
+  it.each([["4", "10", 0.4], ["1", "3", 0.33], ["25", "10", 1], [HUGE, HUGE, 1], ["0", HUGE, 0], ["9007199254740992", HUGE, 0.99]])("進度條 %s／%s 係 %s，超收唔超過 100%%", (received, ordered, value) => {
     const progress = mount(PurchaseOrderProgress, { props: { received, ordered }, global: { plugins: [Quasar] } });
     expect(progress.findComponent({ name: "QLinearProgress" }).props("value")).toBe(value);
     expect(progress.text()).toContain(`${received}／${ordered}`);
@@ -256,6 +256,22 @@ describe("TASK-019 PO 詳情", () => {
     expect(second[1].eventId).toBe(first[1].eventId);
     expect(confirm).toHaveBeenCalledTimes(1);
     expect(router.currentRoute.value.path).toBe("/purchasing/purchase-orders/20");
+  });
+  it("結果未確定時轉去另一張 PO：banner 清走，唔會用舊 eventId 複製新 PO", async () => {
+    purchasing.copyPurchaseOrder.mockRejectedValueOnce(Object.assign(new Error("timeout"), { code: "TIMEOUT" }));
+    purchasing.copyPurchaseOrder.mockResolvedValueOnce({ id: 20, number: "PO-202611-000020", status: "DRAFT", version: 1, replayed: false, warnings: [] });
+    const router = await open("/purchasing/purchase-orders/8", MANAGE);
+    await button("複製").trigger("click");
+    await flushPromises();
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...detail, id: 9, number: "PO-202611-000009" });
+    await router.push("/purchasing/purchase-orders/9");
+    await flushPromises();
+    expect(wrapper.text()).not.toContain("複製結果尚未確認");
+    await button("複製").trigger("click");
+    await flushPromises();
+    const [first, second] = purchasing.copyPurchaseOrder.mock.calls;
+    expect(second[0]).toBe(9);
+    expect(second[1].eventId).not.toBe(first[1].eventId);
   });
   it("明確拒絕：留喺原頁，下次係新 eventId", async () => {
     purchasing.copyPurchaseOrder.mockRejectedValueOnce(Object.assign(new Error("供應商不可採購"), { code: "SUPPLIER_NOT_PURCHASABLE", status: 409 }));
