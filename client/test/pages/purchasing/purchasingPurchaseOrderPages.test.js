@@ -168,6 +168,11 @@ describe("TASK-019 PO 詳情", () => {
     await open("/purchasing/purchase-orders/8", MANAGE);
     expect(button("複製")).toBeUndefined();
   });
+  it.each([["DRAFT", true], ["CONFIRMED", true], ["CLOSED", true], ["PENDING_APPROVAL", false], ["CANCELLED", false]])("%s 列印入口：%s（Viewer 都有）", async (status, shown) => {
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...detail, status });
+    await open("/purchasing/purchase-orders/8");
+    expect(button("列印")?.attributes("href")).toBe(shown ? "/purchasing/purchase-orders/8/print" : undefined);
+  });
   it("快照同目前主資料分開；冇分別就冇目前主資料區", async () => {
     await open("/purchasing/purchase-orders/8");
     expect(wrapper.text()).toContain("S3 — 快照供應商");

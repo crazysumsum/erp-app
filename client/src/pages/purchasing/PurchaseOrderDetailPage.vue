@@ -2,37 +2,33 @@
 export const page = { name: "purchase-order-detail", path: "/purchasing/purchase-orders/:id", title: "採購單詳情", requires: { permissions: ["purchasing.view"] } };
 </script>
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import PurchaseOrderProgress from "@/components/purchasing/PurchaseOrderProgress.vue";
-import { copyWarning, statusColors, statusLabels, timestamp } from "@/components/purchasing/purchaseOrderPresentation.js";
+import { addressText, printKind, statusColors, statusLabels, timestamp, warningText } from "@/components/purchasing/purchaseOrderPresentation.js";
 import { isZeroPrice } from "@/components/purchasing/purchasingEditorMath.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
+import { usePurchaseOrder } from "@/composables/purchasing/usePurchaseOrder.js";
 import { confirm } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import purchasing from "@/services/purchasing.js";
 
-const route = useRoute(), router = useRouter(), session = useSessionStore();
-const document = ref(null), loading = ref(false), error = ref(""), copying = ref(false);
+const router = useRouter(), session = useSessionStore(), copying = ref(false);
 const copyCommand = useCommandEvent();
-let controller;
+const { document, loading, error, load } = usePurchaseOrder({ onLoad: copyCommand.reset });
 
 const actions = computed(() => (session.permissions.includes("purchasing.mgmt") ? document.value?.allowedActions ?? [] : []));
 const sum = (field) => document.value.lines.reduce((total, line) => total + BigInt(line[field]), 0n).toString();
 const master = computed(() => document.value?.currentMasterDifferences);
-const address = computed(() => {
-  const value = document.value?.orderingAddress;
-  return value ? [value.addressLine1, value.addressLine2, value.addressLine3, value.city, value.stateRegion, value.postalCode, value.countryCode].filter(Boolean).join(", ") : "未設定";
-});
 const overview = computed(() => {
   const value = document.value;
   return [
-    ["供應商快照", `${value.supplierCode} — ${value.supplierName}`], ["訂購地址快照", address.value],
+    ["供應商快照", `${value.supplierCode} — ${value.supplierName}`], ["訂購地址快照", addressText(value.orderingAddress)],
     ["貨幣", `${value.currencyCode} — ${value.currencyName}`], ["付款條款快照", value.paymentTerm ? `${value.paymentTerm.code} — ${value.paymentTerm.name}` : "未設定"],
     ["訂單日期", value.orderDate], ["預計交貨日", value.expectedDeliveryDate || "未設定"],
     ["預設收貨倉", value.defaultWarehouseCode || "未設定"], ["採購員", value.buyerLabel || "未設定"],
@@ -54,33 +50,13 @@ const columns = [
 const BASE_ROWS = [["Ordered", "orderedBaseQuantity"], ["Gross Received", "grossReceivedBaseQuantity"], ["Reversed", "reversedBaseQuantity"], ["Net Received", "netReceivedBaseQuantity"],
   ["Outstanding", "outstandingBaseQuantity"], ["Over-received", "overReceivedBaseQuantity"], ["Closed Remaining", "closedRemainingBaseQuantity"]];
 
-async function load() {
-  controller?.abort();
-  controller = new AbortController();
-  const { signal } = controller, id = String(route.params.id);
-  document.value = null; error.value = ""; loading.value = true;
-  copyCommand.reset();
-  // route param 會 decode：`..%2F` 砌入 API path 會打到第二條 route，所以唔係正整數就唔發。
-  if (!/^[1-9]\d*$/u.test(id)) { error.value = "找不到此採購單。"; loading.value = false; return; }
-  try {
-    const value = await purchasing.getPurchaseOrder(id, { signal });
-    if (!signal.aborted) document.value = value;
-  } catch (failure) {
-    if (!signal.aborted) error.value = failure.message || "載入採購單失敗";
-  } finally {
-    if (!signal.aborted) loading.value = false;
-  }
-}
-watch([() => route.params.id, () => session.user?.id, () => session.permissions.join("|")], load, { immediate: true });
-onBeforeUnmount(() => controller?.abort());
-
 async function copy() {
   const { id, number } = document.value;
   copying.value = true;
   try {
     const result = await copyCommand.run({}, (body) => purchasing.copyPurchaseOrder(id, body));
     notifySuccess(`已由 ${number} 複製為 ${result.number}。`);
-    result.warnings.forEach((warning) => notifyWarning(copyWarning(warning)));
+    result.warnings.forEach((warning) => notifyWarning(warningText(warning)));
     await router.push(`/purchasing/purchase-orders/${result.id}`);
   } catch (failure) {
     if (!copyCommand.uncertain.value) notifyError(failure.message || "複製失敗");
@@ -98,7 +74,7 @@ async function askCopy() {
     <PageHeader :title="document?.number ?? '採購單詳情'" subtitle="交易快照不因主資料變更而改變；目前主資料另區顯示。" />
     <div class="q-px-md q-pb-md">
       <q-skeleton v-if="loading" type="rect" aria-label="載入採購單" />
-      <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load" /><q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" /></template></q-banner>
+      <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load()" /><q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" /></template></q-banner>
       <template v-else-if="document">
         <q-banner v-if="copyCommand.uncertain.value" role="status" class="bg-warning text-dark q-mb-md">複製結果尚未確認；請重試同一操作以確認結果，不會重複建立。<template #action><q-btn flat label="重試確認結果" :loading="copying" @click="copy" /></template></q-banner>
         <div class="row items-center q-gutter-sm q-mb-md">
@@ -106,6 +82,7 @@ async function askCopy() {
           <span>版本 {{ document.version }}</span>
           <q-btn v-if="actions.includes('edit')" label="編輯草稿" :to="`/purchasing/purchase-orders/${document.id}/edit`" />
           <q-btn v-if="actions.includes('copy')" label="複製" :loading="copying" :disable="copyCommand.uncertain.value" @click="askCopy" />
+          <q-btn v-if="printKind(document.status)" label="列印" :to="`/purchasing/purchase-orders/${document.id}/print`" />
           <q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" />
         </div>
         <q-card flat bordered class="q-mb-md">

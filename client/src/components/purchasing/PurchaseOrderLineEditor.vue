@@ -62,14 +62,14 @@ const amount = (line) => previewLineAmount(line.orderedQuantity, line.unitPrice,
 </script>
 
 <template>
-  <section aria-labelledby="po-lines-heading">
+  <section class="po-lines" aria-labelledby="po-lines-heading">
     <h2 id="po-lines-heading" class="text-h6 q-ma-none q-my-md">明細（{{ modelValue.length }}／{{ MAX_LINES }}）</h2>
     <q-banner v-if="error || fieldError('lines')" role="alert" class="bg-negative text-white q-mb-md">{{ error || fieldError('lines') }}</q-banner>
     <div class="row q-col-gutter-md q-mb-md">
       <div class="col-12 col-md-5"><q-select v-model="selectedSku" label="搜尋貨品" :options="skus" :option-label="row => `${row.skuCode} — ${row.skuName ?? row.itemName}`" use-input input-debounce="250" :loading="loading" outlined dense @filter="(q, update) => lookup({ q }, update)"><template #no-option><q-item><q-item-section>沒有符合條件的可採購貨品；請縮小搜尋。</q-item-section></q-item></template></q-select></div>
       <div class="col-12 col-md-3"><q-input v-model="barcode" label="條碼（精確搜尋）" maxlength="190" outlined dense @keydown.enter.prevent="barcode.trim() && scan()"><template #append><q-btn flat dense label="搜尋條碼" :disable="!barcode.trim()" @click="scan" /></template></q-input></div>
       <div class="col-12 col-md-3"><q-select v-model="selectedUom" label="採購單位" :options="selectedSku?.uoms ?? []" option-value="skuUomId" :option-label="uomOption" emit-value map-options outlined dense /></div>
-      <div class="col-12 col-md-1"><q-btn label="新增明細" no-wrap :disable="!chosenUom || modelValue.length >= MAX_LINES" @click="addLine" /></div>
+      <div class="col-12 col-md-auto"><q-btn label="新增明細" no-wrap :disable="!chosenUom || modelValue.length >= MAX_LINES" @click="addLine" /></div>
     </div>
     <p v-if="selectedSku" class="text-caption" data-testid="sku-summary">可採購；基本單位 {{ selectedSku.baseUomCode }}；追蹤：{{ TRACKING[selectedSku.trackingPolicy] ?? selectedSku.trackingPolicy }}<template v-if="selectedSku.minimumReceiptLifeDays !== null">；最短收貨效期 {{ selectedSku.minimumReceiptLifeDays }} 天</template></p>
     <p v-if="message" role="status">{{ message }}</p>
@@ -95,10 +95,11 @@ const amount = (line) => previewLineAmount(line.orderedQuantity, line.unitPrice,
 </template>
 
 <style scoped>
-/* 同一份 DOM：窄屏係 card，1024px 以上排成一行 grid，所以唔使兩份 markup，亦唔會有頁面級橫向捲動（§7.3、§7.9）。 */
+/* 同一份 DOM：窄屏係 card，夠闊先排成一行 grid，所以唔使兩份 markup，亦唔會有頁面級橫向捲動（§7.3、§7.9）。睇內容闊度唔睇視窗：1024px 開住側欄淨低 724px。 */
+.po-lines { container-type: inline-size; }
 .po-line { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--app-border); border-radius: 4px; }
 .po-line__actions { display: flex; gap: .25rem; }
-@media (min-width: 1024px) {
+@container (min-width: 60rem) {
   .po-line { grid-template-columns: minmax(10rem, 2fr) minmax(6rem, 1fr) minmax(7rem, 1fr) minmax(6rem, 1fr) minmax(9rem, 1fr) minmax(8rem, 1.5fr) auto; align-items: start; }
   .po-line__wide { grid-column: 1 / -1; }
 }
