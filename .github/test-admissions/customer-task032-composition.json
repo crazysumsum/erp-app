@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "decision": "Sam direct Customer chat 2026-11-05: 批准 DESIGN98d2dc41、PLAN76f21869，以及 TL 三案／12變體／15次stub query常規回歸提案；獨立PR/一次正常CI，合併另決. Corroborated actual PM human turn01a1aa3f-11a8-71d3-898c-1207e30ad6c1/user01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3/questioncall_d78049a77dcf42e1b7aa3b8972f76def: 批准候選、三案及一次 Draft PR CI.",
+  "purpose": "Directly load the opt-in Customer factory and owner-reviewed Fulfillment reader to close their routine functional coverage blind spot; partial composition must retain four missing owners as UNKNOWN. Exact approved DESIGN98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a/PLAN76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40.",
+  "data": "Single test file; three cases, twelve fixed variants: 2 factory options, 2 driver aggregate forms, 8 uncertainty/invalid-input variants. Fifteen in-memory stub query calls, two factory resolutions. Zero real SQL, DB, app, network, HTTP or browser. Native v4 not repeated.",
+  "concurrency": "1; each variant sequentially awaited; no additional job or shard",
+  "repetitions": "1 per fixed variant; no retries",
+  "thresholds": "All three cases/twelve variants pass. Both new modules present in raw V8/LCOV; unchanged global lines92/branches83/functions90 and all39 individual floors. Failure stops/reports; no case expansion or floor relaxation.",
+  "trigger": "Existing routine functional server discovery and coverage on PR/main; no new job, schedule or dispatch. This publication authorizes one independent Draft PR natural CI batch; merge separately decided.",
+  "cost": "Estimate before execution: isolated file <=3s, case bodies <1s, CI critical-path increment0-3s and <0.1 runner-minute/run; queue/currency cost and merged coverage change unknown. Local targeted actual3/3 PASS total75.109416ms; no load used to estimate.",
+  "files": [
+    {
+      "path": "server/test/customerReferenceComposition.test.js",
+      "mode": "100644",
+      "blob": "55717f9fbc4c633f2c2f0657a53decb19ff57a0e",
+      "kind": "functional",
+      "cases": [
+        "TC-032 partial composition keeps missing owners UNKNOWN on the resolved database",
+        "TC-032 Fulfillment reader preserves reference count and watermark across driver numeric forms",
+        "TC-032 Fulfillment uncertainty never becomes an unreferenced customer"
+      ]
+    },
+    {
+      "path": "docs/customer_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "9df3ae494e30be5eb28f99be5a4076f583e7b141",
+      "kind": "support"
+    },
+    {
+      "path": "docs/customer_management/05_development_tasks.md",
+      "mode": "100644",
+      "blob": "7309ee95cecb93fb62287506662ef528dc4fb45e",
+      "kind": "support"
+    }
+  ]
+}
