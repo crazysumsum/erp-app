@@ -1,5 +1,35 @@
 # Customer Management Design Review
 
+## TASK-032 partial provider candidate — 2026-11-05 (baseline decision pending)
+
+This is a prepared adoption candidate, not a new human DESIGN/PLAN approval.
+Observed candidate hashes are DESIGN
+`98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a`
+and PLAN `76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40`.
+They change because the manifest binds one exact owner-reviewed Fulfillment source,
+consumed ABI and approval-required adoption path, and TASK-032 gains a partial
+checkpoint. Requirements, design behavior, test definitions and thresholds are
+unchanged. Historical approvals below retain their exact original hashes and scope.
+
+Actual Sam question `call_d0449f49205e4fb0bdf20d1110b038db`, human turn
+`01a1a96d-bf11-7b80-8f7a-d0712fcffff0` / message
+`01a1a96d-bf5b-70c3-9b4f-5b3bc1290b5a` in PM chat authorized
+`批准 v4 一次，排在 Inventory 之後`. Customer directly verified the original
+question/answer, the exact TL review and the later PM exclusive GO before the
+single successful native run. This is scoped runtime authority for781dd9be/v4,
+not approval of these new hashes, routine cases, test admission, PR CI or merge.
+The [source-bound checkpoint](implementation/task032-partial-composition-candidate.md#scoped-native-checkpoint--2026-11-05)
+records actual six-observation PASS and verified cleanup without copying private data.
+
+PM separately permitted local canonical preparation and exact source adoption;
+TL accepted static impact reconciliation with fresh main `b1d98732`. Neither is
+recorded as a new human baseline decision. Independent source review for781dd9be
+and owner review for2abe4015 remain source-specific evidence. Final integrated
+composition review, formal baseline disposition, exact protected-input admission,
+minimum directly loaded functional-regression approval and a new normal PR/CI
+publication boundary remain pending. TASK-032 is PARTIAL; four missing providers,
+production history, root-lock/writer and archive rules still block formal enablement.
+
 ## TASK-032 exact human decision — 2026-11-04
 
 Sam explicitly selected `批准兩檔、Draft PR 及一次 CI` in PM chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, human turn `01a1a544-148d-7753-8ecc-7bbc7e9db6e2`, user message `01a1a544-14f2-7600-8900-69bd5dcd3623`, question `call_c8b597c64378488eb9e206ab4bbe4d15` item0. Customer independently read the actual question and answer before recording this decision; it is not inferred from TL source review or an unanswered proposal.

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 228,
+  "revision": 229,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,20 +9,20 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-032",
   "baseline": {
-    "design": "6b158f0c747be7c93f4db94edb59708dbc922ca8a23f51ad88412c7bd60600a0",
-    "plan": "b918832b54a840e34a60c1e8b95e5de07017b50ad265623a82687be8c3f11186",
-    "code_commit": "246e73603a495c249d7eeb877901f7234fefe3b7",
-    "source_fingerprint": "2e4a65d40ce8202d57815342f4bccdf2ee97a6c5565f270ae1e0ccb85fd52ad1",
-    "worktree": "/private/tmp/erp-customer-task032-readiness",
-    "default_commit": "d434a85767045613ac6d7a64ed81742bc6937fc9",
+    "design": "98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a",
+    "plan": "76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40",
+    "code_commit": "90c87c1719d650970fc212a46336328c7dca0dff",
+    "source_fingerprint": "1ed302f5e68cf9d8a4fc1e939e5456a5e47c5d5cef10b5b29aef042a0a1a30ed",
+    "worktree": "/private/tmp/erp-customer-task032-composition",
+    "default_commit": "b1d987326926f3cd465304a9665fdbe6e42db1d3",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-task032-no-active-runtime",
+    "instance_id": "customer-task032-composition-no-active-runtime",
     "owner": "/root Customer TASK032",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-task032-readiness",
-      "execution": "C1 handoff01 PASS; original C2 FAIL retained; C2 handoff02 PASS, app/owned MySQL/schema/socket/root cleaned; no new runtime; former PR244 runtime record remains in Git history"
+      "workspace": "/private/tmp/erp-customer-task032-composition",
+      "execution": "ed792df fixed privatev4 consumed once; actual exit0/stdoutPASS, app/admin/observer closed, owned daemon normalexit0, schema dropped/root absent, PM slot released; no active DB/app/port/file runtime"
     },
     "lease_ref": null
   },
@@ -3054,6 +3054,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-075",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer TASK032 composition",
+      "reviewer": "/root/task032_final_review",
+      "reviewed_baseline": "55d10957577147820cdc32fd26b34211a5065b1e0ef26fb5d0de2164e12ec941",
+      "source_ref": "Actual separate read-only APPROVE C0/H0/M0 at source781dd9be/treea0e1134b: full5descriptors, original singleton, sameinitializedDB, no4placeholder/default/override/discovery weakening; adoptedreader SHA5bfe unchanged. Source-only review is not final newmetadatahead review, humanbaseline orCI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4024,6 +4036,28 @@
       "subject": "Integrated preliminary scoped developer checks; remaining full gates pending",
       "status": "PASS",
       "source_ref": "implementation/pr250-integration-report.md;83native0skip/26units0skip/112clientfiles905tests/20actualPlaywright0skip PASS; lint/build/highseverityaudit gatePASS1existingLOW. No formal downstreamacceptance. CurrentTC042private replay preservesoriginal10k50/50MiB via62706bed^ moduledironlyrelocation; exactcomparisonPASS SHAoriginaleffe7785/replayf2e4bf3a,active91931 noCPUheavyparallel. Fullservercoverage/finalCI/review notPASSyet."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK032 scoped private native composition/refusal once:6observationsPASS, not fullTC075/UAT/coverage",
+      "code_commit": "781dd9be1242fe50b0cf8cadeba88e3d1280911d",
+      "spec_baseline": "6b158f0c747be7c93f4db94edb59708dbc922ca8a23f51ad88412c7bd60600a0",
+      "source_fingerprint": "55d10957577147820cdc32fd26b34211a5065b1e0ef26fb5d0de2164e12ec941",
+      "status": "PASS",
+      "source_ref": "implementation/task032-partial-composition-candidate.md#scoped-native-checkpoint--2026-11-05; actual Sam PM human turn01a1a96d-bf11-7b80-8f7a-d0712fcffff0/user01a1a96d-bf5b-70c3-9b4f-5b3bc1290b5a/question call_d0449f49205e4fb0bdf20d1110b038db approved only781dd9be/v4 once afterInventory; PMGO actualturn01a1a988-7324-7f91-88ec-38626627b246/toolcall exec-77a9bc7c-e39e-47cb-9bb2-285c039dfd4e; source-verified external authoritya9a923ec/grant81b1a24a; completion ed792df SHA256bfa7564d2cc2bddb6f017fab120d934a77a9c5ed884371232bc0e06f01e01169 and actualsession60465/chunkab58ab exit0/stdoutPASS. This is not newbaseline/testadmission/CI/publication/merge approval.",
+      "actor": "/root Customer executed once under actualSam approval and PM exclusiveGO",
+      "observed_at": "2026-11-05T03:04:01.754Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Prepared integrated source/metadata candidate: new observed D/P are not human-approved; finalcompositionreview/coverage/admission/currentheadCI pending",
+      "code_commit": "90c87c1719d650970fc212a46336328c7dca0dff",
+      "spec_baseline": "98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a",
+      "source_fingerprint": "1ed302f5e68cf9d8a4fc1e939e5456a5e47c5d5cef10b5b29aef042a0a1a30ed",
+      "status": "PENDING",
+      "source_ref": "04_design_review.md#task-032-partial-provider-candidate--2026-11-05-baseline-decision-pending; actual PM permits only local narrow canonical preparation; TL permits static mainimpact checks, no runtime replay. Freshmainb1d98732 incoming22 exactPurchasingpaths, noCustomer/Fulfillment/framework/serverconfig source changes; source781 nativeproof retained only for same2modulebytes. Proposed DESIGN98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a/PLAN76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40 require explicit disposition; no newapproval entry fabricated.",
+      "actor": "/root Customer local canonical preparation only",
+      "observed_at": "2026-11-05T03:44:02Z"
     }
   ],
   "pending_decisions": [
@@ -4289,6 +4323,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam current user: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Salesowner-only minimal deliverygroup exception; nootherP4/Fulfillment/CI/independentreview/security/contractwaiver and noCustomerproductscopeexpansion."
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "question": "Prepared for PM disposition, not yet a human answer: accept candidate DESIGN98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a/PLAN76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40 and exactFulfillmentprovider adoption boundary for the opt-in partialTASK032 slice? Scope adds exactsource/consumedABI/approvalrequired and truthful scopednativecheckpoint only, no automaticenablement or transaction change. Historical6b/b918 and Samv4privateonce decision cannot be rewritten as these newbaseline approvals. Separately, minimum directly loaded functionalregression/testinputs and one newnaturalPRCI/publication require applicable exact approval/admission. Continue only localreview until dispositions are verified.",
+      "affected_ids": [
+        "TASK-032",
+        "DES-020",
+        "TC-075"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -5507,6 +5553,30 @@
       "idempotency_key": "customer-pr250-final-local129",
       "status": "CONFIRMED",
       "source_ref": "Original10k50TC0422PASS0FAIL0SKIP841393ms,p95=90.535542ms/4045samples,excludedFailures0,808208ms<30min,all6reconciliation0,schedulerfailures/timeouts0; original50MiBmemoryassertionsPASS. Raw SHAfd2bc4f5010a3e8dc9229d431f5e4a14bb7dba6bdd9a231aaac02241fa68867e,actual independent review receipt6286534578. Fullserver3478tests3340PASS0FAIL138existingconditionalSKIP571362ms,94.12/86.58/93.51and38floorsPASS,SHA47a33eb0c3a9c6f10aa9dfb261be8e58b3915e2d34b68e04630161ebe1f7917d. Separatetransfers Salescapacity2PASS0skip8233ms SHA2d8738d236979ee7a5a66185d8ba0bae1220995276793c3431e52e5709969601;50MiB100000rowprecheck3PASS0skip12279ms SHA2490dfb7c960c535e6703a373791dbbc71996b68002579c530ca6022ad0d5a00. OPEN Node11close-listenerwarning retained,no suppression,no memoryleak/Customer attribution; notwarningfree. Conditional skips notPASS/noformaloverallgateclaim. Finalboundary found missing historicSalesdocscopeapproval; APPROVAL-SCOPE052 records actualSam request, no content/scope change. Allrawlogs retainedKPWDDe; schedulerPAUSED,fullDownstreamBLOCKED,waiversnottechnicalPASS. Finalindependentreview/newmetadataheadCI/freshmain/normalmerge+cleanupstillpending."
+    },
+    {
+      "id": "EXT-TASK032-NATIVE-V4",
+      "kind": "PRIVATE_NATIVE_FUNCTIONAL_RUN",
+      "target": "781dd9be/v4 recipe73c23559; singlecaseed792df; sixobservations/twoPOST/0businesschange",
+      "idempotency_key": "native-composition-once:781dd9be1242fe50b0cf8cadeba88e3d1280911d",
+      "status": "CONFIRMED",
+      "source_ref": "implementation/task032-partial-composition-candidate.md#scoped-native-checkpoint--2026-11-05; actual Sam PM human turn01a1a96d-bf11-7b80-8f7a-d0712fcffff0/user01a1a96d-bf5b-70c3-9b4f-5b3bc1290b5a/question call_d0449f49205e4fb0bdf20d1110b038db approved only781dd9be/v4 once afterInventory; PMGO actualturn01a1a988-7324-7f91-88ec-38626627b246/toolcall exec-77a9bc7c-e39e-47cb-9bb2-285c039dfd4e; source-verified external authoritya9a923ec/grant81b1a24a; completion ed792df SHA256bfa7564d2cc2bddb6f017fab120d934a77a9c5ed884371232bc0e06f01e01169 and actualsession60465/chunkab58ab exit0/stdoutPASS. This is not newbaseline/testadmission/CI/publication/merge approval."
+    },
+    {
+      "id": "EXT-TASK032-NATIVE-V4-CLEANUP",
+      "kind": "RUNTIME_CLEANUP",
+      "target": "ed792df ownedapp/daemon/schema/root; exclusivePMslot",
+      "idempotency_key": "native-composition-cleanup:781dd9be1242fe50b0cf8cadeba88e3d1280911d",
+      "status": "CONFIRMED",
+      "source_ref": "Actual process60465 exit0/chunkab58ab stdoutPASS, resourcesclosed/pending0/daemonrequestednormalexit0null/schemaDropped/rootRemoved; separatefilesystemabsence readback; completionSHA bfa7564d2cc2bddb6f017fab120d934a77a9c5ed884371232bc0e06f01e01169. Rawresult deliberatelyPENDING_PROCESS_EXIT plus independent tool exitproof, once retained consumed; PM notified/released, no retry."
+    },
+    {
+      "id": "EXT-TASK032-MAIN-INTEGRATION",
+      "kind": "LOCAL_SOURCE_INTEGRATION",
+      "target": "90c87c1719d650970fc212a46336328c7dca0dff includes mainb1d987326926f3cd465304a9665fdbe6e42db1d3",
+      "idempotency_key": "customer032-integrate-b1d98732-on-781",
+      "status": "CONFIRMED",
+      "source_ref": "TL allowed only staticimpact verification. Merge90c87c17 parents6362c5c5/b1d98732; exact22incomingPurchasingpaths (earlier21count corrected), unchangedCustomer/Fulfillment/framework/serverconfig/floor/workflowbytes. FactorySHAcb1d90bb/readerSHA5bfe unchanged; no rerun/test/CI/push. Onlylocal candidate, newbaseline/publication stillpending."
     }
   ],
   "evidence_files": [
@@ -5536,7 +5606,9 @@
     "implementation/hd016-isolated-load-results.json",
     "implementation/independent-readiness-recheck-20261016.md",
     "implementation/independent-readiness-recheck-20261016-results.json",
-    "implementation/pr250-integration-report.md"
+    "implementation/pr250-integration-report.md",
+    "implementation/task032-fulfillment-source-handoff.md",
+    "implementation/task032-partial-composition-candidate.md"
   ],
   "defects": [
     {
@@ -5609,5 +5681,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Keep BLOCKED for production provider delivery and pending publication gates. Independent CI administrator must verify/register exact customer-task032-support receipt and report readback. Then normal static admission, sole Customer publisher Draft PR and one natural functional eight-shard CI; stop/report first failure, no automatic retry, no merge. Do not replay historical PR244 actions or C1/C2/F1."
+  "next_safe_action": "TASK032PARTIAL/BLOCKED: final local integrated metadata/source review and PM disposition of proposed98d2/76f2 DESIGN/PLAN/adoption boundary. TL requires minimal directly-loaded routine regression proposal for2newmodules; no testcase/testinput/admission/PRCI/push/merge authority yet. Independentadmin must bind exact protectedblobs after realapproval. Keeped792 privatePASS consumed/no replay; retainotherprovider/history/rootwriter/archive enablement blocks and alloldfailures/waivers."
 }
