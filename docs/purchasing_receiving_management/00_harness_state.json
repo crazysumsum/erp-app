@@ -46,7 +46,7 @@
     "TASK-018": "DONE",
     "TASK-019": "DONE",
     "TASK-020": "DONE",
-    "TASK-021": "PENDING",
+    "TASK-021": "DONE",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
@@ -310,6 +310,43 @@
         "client/config/menu.js",
         "client/src/framework/http/errorMessages.js",
         "Approved on 2026-11-05 with the TASK-021 proposal, including the shared CONCURRENT_OPERATION and UOM_CONVERSION_INVALID wording"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-011",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#apr-011--migration-scope",
+      "recorded_at": "2026-11-05T11:39:17+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-022",
+        "server/database/migrations/0117_create_purchase_order_approvals.js",
+        "server/database/migrations/0118_create_purchase_order_status_history.js",
+        "Approved on 2026-11-05 with the TASK-022 schema proposal, including the added CHECK constraints, the DELETE-rejecting trigger and the 1MiB snapshot cap (HD-020 A)"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-012",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#apr-012--error-messages",
+      "recorded_at": "2026-11-05T14:12:53+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-022",
+        "client/src/framework/http/errorMessages.js",
+        "Approved on 2026-11-05 with the TASK-022 proposal, covering three new Purchasing approval messages"
       ],
       "expires_at": null
     }
@@ -643,6 +680,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_hd019_po_form_lookups.md#hd-019"
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "question": "Design 4.7 caps approval_snapshot at 64KiB, but a valid 100-line PO can exceed it, so a legitimate large PO could not be submitted with approval on. Raise the cap, keep it and reject, or drop notes from the snapshot?",
+      "affected_ids": [
+        "TASK-022",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#hd-020"
     }
   ],
   "external_actions": [
@@ -813,9 +861,17 @@
       "idempotency_key": "purchasing-task020-pr341-merge-20261105",
       "status": "CONFIRMED",
       "source_ref": "merge commit 52d2af5b0e52c32337dd1b8aa4fd7a6d4e60659a verified ancestor of origin/main; admitted CI run 41952767619 attempt 1 success on dispatched merge 688cccf4 of head 3d0636f91fefc440ddb472c264577384cc283f68 with origin/main 64dc0904, capacity jobs skipped, same parents and tree 61c2584c"
+    },
+    {
+      "id": "EXT-022",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/342 -> main",
+      "idempotency_key": "purchasing-task021-pr342-merge-20261105",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit b1d987326926f3cd465304a9665fdbe6e42db1d3 verified ancestor of origin/main; admitted CI run 41958641179 attempt 1 success on dispatched merge 671da507 of head 9bbba42fcf6f680df55a5ad76e9bc458ccdf9f58 with origin/main 52d2af5b, capacity jobs skipped, same parents and tree e4ac13db"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021's menu entry and messages are on claude/purchasing-task021-nav, recorded in implementation/P1_task021_nav_errors.md, with APR-010 and CI admission approved by Sam on 2026-11-05. PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021 is DONE (PR #342, implementation/P1_task021_nav_errors.md). TASK-022's schema and services are on claude/purchasing-task022-approval, recorded in implementation/P2_task022_approval_schema.md, with APR-011, APR-012, HD-020 A and CI admission approved by Sam on 2026-11-05. TASK-023 connects the services to commands and routes, starts writing status history, and must resolve jwt-device-password against jwt-password for the settings update. Do not run bare npm run test:coverage locally: it executes the capacity catalog. PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }

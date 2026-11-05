@@ -6,7 +6,8 @@ const ACTIONS = Object.freeze({
   "purchase_order.created": { target: "PO", fields: DOCUMENT },
   "purchase_order.updated": { target: "PO", fields: DOCUMENT },
   "purchase_order.copied": { target: "PO", fields: [...DOCUMENT, "sourcePurchaseOrderId"] },
-  "purchase_order.confirmed": { target: "PO", fields: [...DOCUMENT, "policyVersion"] }
+  "purchase_order.confirmed": { target: "PO", fields: [...DOCUMENT, "policyVersion"] },
+  "purchasing.setting.updated": { target: "SETTING", fields: ["requirePoApproval", "version"] }
 });
 // 冇業務寫入嘅拒絕結果（§4.15）：同名 action 加 outcome REJECTED；同 event 唔同內容另用 operation_conflict（§12.2）。
 const REJECTABLE = new Set([...Object.keys(ACTIONS), "purchasing.operation_conflict"]);
@@ -28,6 +29,7 @@ function detailFor(fields, detail) {
   for (const [key, value] of Object.entries(detail)) {
     if (key === "totalAmount") { if (typeof value !== "string" || !AMOUNT.test(value)) throw new TypeError("Invalid Purchasing audit amount"); }
     else if (key === "currencyCode") { if (typeof value !== "string" || !CURRENCY_CODE.test(value)) throw new TypeError("Invalid Purchasing audit currency"); }
+    else if (key === "requirePoApproval") { if (typeof value !== "boolean") throw new TypeError("Invalid Purchasing audit flag"); }
     else if (key === "lineCount") { if (!Number.isSafeInteger(value) || value < 1 || value > 100) throw new TypeError("Invalid Purchasing audit count"); }
     else positive(value);
   }
@@ -61,11 +63,11 @@ export class PurchasingAuditService {
   async recordRejected(connection, { actorId, action, targetId = null, code, nowMs, requestId = "", correlationId = "", ip = "" }) {
     if (!REJECTABLE.has(action) || typeof code !== "string" || !ERROR_CODE.test(code)) throw new TypeError("Unsupported Purchasing rejected audit");
     if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError("Invalid Purchasing audit timestamp");
-    const target = targetId === null ? null : positive(targetId);
+    const target = targetId === null ? null : positive(targetId), targetType = ACTIONS[action]?.target ?? "PO";
     const [row] = await connection.execute(`INSERT INTO purchasing_audit_logs
       (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, purchase_order_id, detail, request_id, correlation_id, ip)
-      SELECT ?, id, username, ?, 'REJECTED', 'PO', ?, ?, ?, ?, ?, ? FROM users WHERE id = ?`,
-    [nowMs, action, target, target, JSON.stringify({ code }), bounded(requestId, 64, { ascii: true, empty: true }),
+      SELECT ?, id, username, ?, 'REJECTED', ?, ?, ?, ?, ?, ?, ? FROM users WHERE id = ?`,
+    [nowMs, action, targetType, target, targetType === "PO" ? target : null, JSON.stringify({ code }), bounded(requestId, 64, { ascii: true, empty: true }),
       bounded(correlationId, 64, { ascii: true, empty: true }), bounded(ip, 45, { ascii: true, empty: true }), positive(actorId)]);
     if (Number(row.affectedRows) !== 1) throw new TypeError("Purchasing rejected audit actor not found");
   }
