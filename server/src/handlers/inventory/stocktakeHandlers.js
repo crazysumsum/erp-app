@@ -9,6 +9,7 @@ import { InventoryStocktakeExportService } from "../../modules/inventory/Invento
 import { InventoryAuditService } from "../../modules/inventory/InventoryAuditService.js";
 import { createStocktakeExportAudit } from "../../modules/inventory/inventoryStocktakeExportAudit.js";
 import { inventoryError } from "../../modules/inventory/inventoryErrors.js";
+import { discloseStocktakeScopeConflict } from "../../modules/inventory/inventoryStocktakeConflict.js";
 import { issueInventoryHighRiskContext, checkInventoryHighRiskContext, consumeInventoryHighRiskContext } from "../../modules/inventory/inventoryHighRiskContext.js";
 import { issueInventoryStocktakeCancelContext, checkInventoryStocktakeCancelContext, consumeInventoryStocktakeCancelContext } from "../../modules/inventory/inventoryStocktakeCancelContext.js";
 import { EMPTY, VIEW_POLICY, OPERATION_POLICY, ADJUST_POLICY } from "./inventorySchemas.js";
@@ -123,7 +124,11 @@ class StocktakeWriteHandler extends StocktakeHandler {
         throw error;
       });
       return this.response(result);
-    } catch (error) { await this.auditFailure(req, error); throw error; }
+    } catch (error) {
+      await this.auditFailure(req, error);
+      throw await discloseStocktakeScopeConflict(error, { database: this.database,
+        authorize: tx => this.currentGuard(req)(tx, { locking: true }), signal: req.requestTimeout?.signal });
+    }
   }
 }
 

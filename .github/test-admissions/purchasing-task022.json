@@ -1,0 +1,46 @@
+{
+ "version": 1,
+ "decision": "Sam's explicit decision of 2026-11-05 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你發digest，CI綠了就merge\", answering the consolidated proposal for TASK-022 (2 new server test files with 17 case definitions, purchaseApprovalService.test.js and purchasingApprovals.integration.test.js), and a one-time project-owner authorization for the agent to publish this receipt's digest",
+ "purpose": "Each PO has at most one pending approval; decided approvals and status history cannot change or be deleted; the snapshot cap is 1MiB; only the assigned approver decides, self-approval and stale versions are refused; approval requires both people still valid and the snapshot still matching; settings use permission, version, replay protection and Audit",
+ "data": "Small inline rows inside a rolled-back transaction on CI's existing MySQL. At most one roughly 900KB snapshot in one case, and an in-memory 100-line snapshot in the unit file. No fixture files",
+ "concurrency": "1",
+ "repetitions": "1",
+ "thresholds": "All cases pass; coverage floors unchanged",
+ "trigger": "Routine correctness regression on every PR and push to main, in the existing server coverage jobs",
+ "cost": "Measured locally: under 1 s for both files together. CI not measured. No new job and no capacity workload",
+ "files": [
+  {
+   "path": "server/test/purchasing/purchaseApprovalService.test.js",
+   "mode": "100644",
+   "blob": "fd9cf553364118687b6d9155a7b2bfd6ce02cd55",
+   "kind": "functional",
+   "cases": [
+    "快照解開 JSON 欄位，大數字保持字串，缺付款條款同零價有提示",
+    "hash 唔受 JSON 欄位次序影響，但任何商業內容變都會變",
+    "HD-020：最長嘅合法 100 行快照超過舊 64KiB，但喺 1MiB 之內",
+    "提交：審批人唔可以係自己、ID 要合法；拒絕一定要原因；全部喺打 DB 之前",
+    "設定：未知欄位、非布林值、短原因喺 DB 之前拒絕，並寫 REJECTED audit"
+   ]
+  },
+  {
+   "path": "server/test/integration/purchasingApprovals.integration.test.js",
+   "mode": "100644",
+   "blob": "d4f58dcfef9841a846b2695b420db0dc3c27ada1",
+   "kind": "functional",
+   "cases": [
+    "TASK-022 兩張表嘅 migration 可以重跑，trigger 齊晒",
+    "TASK-022 每張 PO 最多一個待審批；決定之後可以再提交",
+    "TASK-022 CHECK：狀態、決定時間、拒絕原因、hash 同快照大小",
+    "TASK-022 trigger：只可以 PENDING 開始、提交資料不可改、已決定凍結、唔准刪",
+    "TASK-022 刪 user 只清 FK，姓名快照留低；有審批嘅 PO 刪唔到",
+    "TASK-022 狀態歷史只可以新增，順序唯一，值受 CHECK 限制",
+    "TASK-022 提交審批：保存版本、快照同 hash；審批人要係另一名 Active 兼有權限",
+    "TASK-022 批准同拒絕：只有指定審批人，自己唔批得，舊版本唔批得",
+    "TASK-022 批准前人員失效：保留 PENDING，要撤回再提交",
+    "TASK-022 PO 內容同快照分開就唔批得",
+    "TASK-022 撤回只限提交人；取消 PO 令申請失效；冇待審批就衝突",
+    "TASK-022 設定：預設關、要權限、版本 CAS、replay、Audit，唔改任何 PO"
+   ]
+  }
+ ]
+}
