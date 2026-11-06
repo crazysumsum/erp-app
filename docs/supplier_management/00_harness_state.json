@@ -1,29 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 516,
+  "revision": 517,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
     "plan": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
-    "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
-    "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-uat",
-    "default_commit": "3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc",
-    "mode_entry_commit": "3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc"
+    "code_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
+    "source_fingerprint": "a4bf06a3f8770efb864327eb3ba88707ed3a030b031ae81241e33475a259b4cf",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider",
+    "default_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
+    "mode_entry_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f"
   },
   "runtime": {
-    "instance_id": "supplier-t51-scratch-mysqld-3450",
+    "instance_id": "supplier-sku-refs-provider",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-uat (claude/supplier-limited-uat, cut from main 3b9ef58d)",
-      "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
-      "web-port": "3021 (UAT API) and 5216 (UAT client), started and stopped by the supplier-uat-browser suite (Playwright webServer)"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider (claude/supplier-sku-refs-provider, cut from main b28a7d88)"
     },
     "lease_ref": null
   },
@@ -8118,6 +8116,17 @@
       "source_ref": "Checked 2026-11-02: the original screenshots under /tmp/supplier-management-uat-artifacts/34753d87 were lost when /tmp was cleaned, so the junit attachment paths of evidence/20261030T093238-52ea32e0c5b7 point at nothing; the 99 compressed copies on the private review page are the only copies left and are what the Product Owner reviewed (per-case counts match the junit; UAT-040-01, UAT-042-02 and UAT-054-04 are byte-identical, each the expected 冇權限 page). The branch merged main aae9c744 (PR #313: .github/scripts, ci.yml, AGENTS.md, docs/ci-capacity-routing.md; no server or client code), so the accepted behaviour is the tested one; the harness nonetheless counts the run stale (SOURCE_CHANGED; verify_gate UAT_EXECUTION reports it missing).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-02T00:56:38+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Limited business UAT records (PR #314) merged to main",
+      "code_commit": "983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15",
+      "spec_baseline": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
+      "status": "PASS",
+      "source_ref": "PR #314 merged as 983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15 at 2026-11-02T01:21:29Z on the Product Owner's word ('CI己通過'), head 98eb47524eeb, CI run 41369884736. Recorded in the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-02T01:21:29Z"
     }
   ],
   "pending_decisions": [
@@ -10268,6 +10277,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-30: 'B'. Supersedes HD-161 1A for execution: the agent runs supplier-uat-browser at stage UAT; business acceptance stays with the Product Owner, from the report and evidence. The manual UAT servers (3021, 5216) were stopped first; uatServer.mjs dropped its scratch database erp_t51_rh_uat92f7bb0e and its fixture file."
+    },
+    {
+      "id": "HD-163",
+      "impact": "MAJOR",
+      "question": "Purchasing HD-015 2C leaves supplier_sku_ref_id NULL and the Supplier Item Code empty until Supplier offers a read on the caller's transaction. Purchasing accepted findSkuRefsInTransaction in its H1 handoff (commit 1d206f9a). Continue this one change? (A) Re-enter IMPLEMENT for this change only; add 1 no-DB case to server/test/supplierLookupService.test.js and 1 real-MySQL case to server/test/integration/supplierSkuLookup.integration.test.js (1 connection, 1 transaction, 2 Suppliers, 3 SKUs, 1 repetition, exact equality; routine server tests, no new job); one push and one PR, merge still on 'CI 已通過'. (B) Only the no-DB case. (C) Defer. Not included: two-connection trials, the address read, the stale-read question on getPurchaseDefaultsInTransaction, formal runs, capacity.",
+      "affected_ids": [
+        "TASK-052",
+        "TC-137"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Human in the Supplier chat, 2026-11-06: 'A', in reply to the Decision Required above. The admission procedure needs this checked as Sam's verifiable decision by the trusted approval administrator; a feature agent does not approve its own receipt. Also folded: the TL ruling .worktrees/tech-lead-handoffs/h1-supplier-receiving-contract-20261106.md (sha256 3a6e4d4c...), relayed by the PM on Sam's approval of the handoff, and the PM's and the human's word to fold its text into 03 §6.8 ('授權併入本地候選，只改文件，唔跑任何嘢')."
     }
   ],
   "external_actions": [
@@ -10870,6 +10890,22 @@
       "idempotency_key": "mode-change-512",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-30: '按你建議，開始做提早有限度嘅 business UAT' then '照建議' (HD-161: 1A Product Owner tests and accepts, 2A local UAT environment, 3A results recorded in a private checklist page, 4A REPORT_ONLY, 5 one records PR at the end). Limited UAT before Technical Acceptance on main 3b9ef58d (PR #309 merge)."
+    },
+    {
+      "id": "MERGE-PR-314",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#314",
+      "idempotency_key": "supplier-merge-pr-314",
+      "status": "CONFIRMED",
+      "source_ref": "Merged as 983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15; worktree and branches claude/supplier-limited-uat removed after the merge."
+    },
+    {
+      "id": "MODE-CHANGE-517",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-517",
+      "status": "CONFIRMED",
+      "source_ref": "HD-163"
     }
   ],
   "evidence_files": [
@@ -11973,5 +12009,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Limited UAT records PR (claude/supplier-limited-uat): merge main, independent review, then put the push's CI scope (computed with .github/scripts/sales-import-capacity.mjs) to the Product Owner and push only on his approval (AGENTS.md); CI; merge on his word. After that: Technical Acceptance remains blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance. Follow-up: reword 03 §11.5 with the next change to 03."
+  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; independent review; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a post-UAT formal run on main. Purchasing re-pins Supplier 03 once after the merge."
 }
