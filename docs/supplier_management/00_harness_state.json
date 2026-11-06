@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 524,
+  "revision": 525,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-052",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
-    "code_commit": "ff3acfa2249a600d00c1980b1d75b5809308d2fa",
+    "code_commit": "c127d4c8e19dc2b61a8bdfd663d8f18957d959dd",
     "source_fingerprint": "9ff0ee44acdf132a97bf19ff3e4f6f9018d4442fec08525d162304dfb7c5f63c",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider",
     "default_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
@@ -3187,6 +3187,42 @@
       "baseline_kind": "PLAN",
       "baseline_sha256": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
       "code_commit": "3963d6e0ed8e2766d10cbecd64c96462520c5485",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-164-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259.",
+      "recorded_at": "2026-11-06T07:11:54Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
+      "code_commit": "c127d4c8e19dc2b61a8bdfd663d8f18957d959dd",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-164-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259.",
+      "recorded_at": "2026-11-06T07:11:54Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+      "code_commit": "c127d4c8e19dc2b61a8bdfd663d8f18957d959dd",
       "scope": [
         "supplier-management",
         "TASK-052",
@@ -10383,8 +10419,8 @@
         "TC-137",
         "HD-163"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259. Does not re-affirm the 14 approvals on old baselines."
     }
   ],
   "external_actions": [
@@ -12106,5 +12142,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; HD-164 (DESIGN and PLAN approval on the final baselines), asked through the PM, answered and recorded before the push, because only one push and one CI run are approved; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance; the 41 limited-UAT acceptances are not formal UAT. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run. Purchasing re-pins Supplier 03 once after the merge."
+  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; HD-164 answered. Wait for the TL's actual admission read-back of the receipt digest, re-check latest main, head and source versions, then one ordinary push, one PR and one existing functional CI; TC-137's MySQL case runs only in that CI; any failure is reported first and not re-run; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance; the 41 limited-UAT acceptances are not formal UAT. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run. Purchasing re-pins Supplier 03 once after the merge."
 }
