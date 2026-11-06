@@ -94,18 +94,34 @@ export class PurchasingLookupService {
   /** HD-019 2A：Active 而有 purchasing.mgmt 嘅用戶，只回 ID 同 label；label 同 PO 嘅 buyer_label 同一個寫法。 */
   async buyers({ claims, q = "" }) {
     await this.#actor(claims);
+    return { items: await this.#usersWith("purchasing.mgmt", q) };
+  }
+
+  /**
+   * §5.5：Active 而有 purchasing.approval 嘅用戶，排除自己。HD-022 a：表單要知審批開咗未（§7.3），但 FR-SET-003 只准 purchasing.settings 睇設定頁，
+   * 所以呢度只回呢一個布林值。提交時 service 會喺 transaction 入面再讀當刻政策同驗審批人。
+   */
+  async approvers({ claims, q = "" }) {
+    const { id } = await this.#actor(claims);
+    const [[policy]] = await this.database.query("SELECT require_po_approval FROM purchasing_settings WHERE id = 1");
+    if (!policy) throw purchasingError("PURCHASING_DEPENDENCY_UNAVAILABLE");
+    return { requireApproval: Boolean(policy.require_po_approval), items: await this.#usersWith("purchasing.approval", q, id) };
+  }
+
+  async #usersWith(permission, q, excludeId = null) {
     const term = q ? prefix(q) : null;
     const [rows] = await this.database.query(`SELECT u.id, COALESCE(NULLIF(u.display_name, ''), u.username) AS label FROM users u
-      WHERE u.status = 'active'${term ? " AND (u.username LIKE ? ESCAPE '!' OR u.display_name LIKE ? ESCAPE '!')" : ""}
+      WHERE u.status = 'active'${excludeId === null ? "" : " AND u.id <> ?"}${term ? " AND (u.username LIKE ? ESCAPE '!' OR u.display_name LIKE ? ESCAPE '!')" : ""}
         AND EXISTS (SELECT 1 FROM user_roles ur JOIN role_permissions rp ON rp.role_id = ur.role_id JOIN permissions p ON p.id = rp.permission_id
-          WHERE ur.user_id = u.id AND p.name = 'purchasing.mgmt')
-      ORDER BY label, u.id LIMIT ?`, [...(term ? [term, term] : []), MAX_ROWS]);
-    return { items: rows.map((row) => ({ id: Number(row.id), label: row.label })) };
+          WHERE ur.user_id = u.id AND p.name = ?)
+      ORDER BY label, u.id LIMIT ?`, [...(excludeId === null ? [] : [excludeId]), ...(term ? [term, term] : []), permission, MAX_ROWS]);
+    return rows.map((row) => ({ id: Number(row.id), label: row.label }));
   }
 
   /** Read path 都要 token 同 DB 權限一致（同 PurchasingInquiryService 一樣）。 */
   async #actor(claims) {
     const fresh = await assertActorFresh(this.database, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
     if (!fresh.permissions.includes("purchasing.mgmt")) throw permissionStaleError();
+    return fresh;
   }
 }

@@ -91,8 +91,10 @@ export const PURCHASE_ORDER_DECISION_RESPONSE = Object.freeze({
   properties: { id: ID, number: NUMBER, status: { enum: ["CONFIRMED", "DRAFT"] }, version: ID, replayed: { type: "boolean" } }
 });
 export const PURCHASING_SETTINGS_RESPONSE = Object.freeze({
-  type: "object", required: ["requirePoApproval", "version", "updatedAt", "updatedByLabel"], additionalProperties: false,
-  properties: { requirePoApproval: { type: "boolean" }, version: ID, updatedAt: { type: "integer", minimum: 0 }, updatedByLabel: { type: "string" } }
+  type: "object", required: ["requirePoApproval", "version", "updatedAt", "updatedByLabel", "history"], additionalProperties: false,
+  properties: { requirePoApproval: { type: "boolean" }, version: ID, updatedAt: { type: "integer", minimum: 0 }, updatedByLabel: { type: "string" },
+    history: { type: "array", maxItems: 50, items: { type: "object", required: ["requirePoApproval", "version", "reason", "actorLabel", "occurredAt"], additionalProperties: false,
+      properties: { requirePoApproval: { type: "boolean" }, version: ID, reason: { type: "string" }, actorLabel: { type: "string" }, occurredAt: { type: "integer", minimum: 0 } } } } }
 });
 export const PURCHASING_SETTINGS_UPDATE_RESPONSE = Object.freeze({
   type: "object", required: ["requirePoApproval", "version", "replayed"], additionalProperties: false,
@@ -147,6 +149,14 @@ export const PURCHASE_ORDER_LIST_QUERY = Object.freeze({
 const queryValidator = new RequestValidator({ config: { enabled: true, allErrors: false, coerceTypes: true, useDefaults: false,
   removeAdditional: false, maxErrors: 1, includeErrorDetailsInResponse: false } });
 const validateList = queryValidator.compile({ query: PURCHASE_ORDER_LIST_QUERY }, "Purchase Order list query");
+const validateMyApprovals = queryValidator.compile({ query: { type: "object", additionalProperties: false,
+  properties: { page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 }, q: { type: "string", maxLength: 190 }, supplierId: ID } } }, "My Purchase Order approvals query");
+
+export function myApprovalsRequest(req) {
+  const request = { query: structuredClone(req.input.query) };
+  validated(validateMyApprovals, request, "query");
+  return { claims: req.auth.claims, input: request.input.query };
+}
 
 export function purchaseOrderListRequest(req) {
   const request = { query: structuredClone(req.input.query) };
@@ -158,12 +168,17 @@ const object = (properties) => ({ type: "object", required: Object.keys(properti
 const TEXT = { type: "string" }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
 const NULLABLE_TEXT = { type: ["string", "null"] }, NULLABLE_DATE = { type: ["string", "null"] };
 const AMOUNT = { type: "string", pattern: "^\\d+(?:\\.\\d{1,4})?$" }, BASE_QUANTITY = { type: "string", pattern: "^\\d+$" };
-const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "submit", "copy"] } };
+const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "submit", "copy", "approve", "reject", "withdraw"] } };
 const HEADER = {
   id: ID, number: { type: "string", pattern: "^PO-\\d{6}-\\d{6}$" }, status: { enum: STATUSES }, version: ID, supplierId: ID, supplierCode: TEXT, supplierName: TEXT,
   currencyCode: TEXT, orderDate: TEXT, expectedDeliveryDate: NULLABLE_DATE, buyerId: OPTIONAL_ID, buyerLabel: TEXT, supplierReference: TEXT, totalAmount: AMOUNT,
   hasOutstanding: { type: "boolean" }, createdAt: TIME, updatedAt: TIME, allowedActions: ACTIONS
 };
+export const MY_APPROVALS_RESPONSE = Object.freeze(object({
+  items: { type: "array", maxItems: 100, items: object({ approvalId: ID, purchaseOrderId: ID, number: HEADER.number, purchaseOrderVersion: ID, supplierCode: TEXT, supplierName: TEXT, currencyCode: TEXT,
+    totalAmount: AMOUNT, requestedByLabel: TEXT, requestNote: TEXT, requestedAt: TIME }) },
+  total: { type: "integer", minimum: 0 }, page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 }
+}));
 export const PURCHASE_ORDER_LIST_RESPONSE = Object.freeze(object({
   items: { type: "array", maxItems: 100, items: object({ ...HEADER, lineCount: { type: "integer", minimum: 1, maximum: 100 }, orderedBaseQuantity: BASE_QUANTITY,
     netReceivedBaseQuantity: BASE_QUANTITY, outstandingBaseQuantity: BASE_QUANTITY, closedRemainingBaseQuantity: BASE_QUANTITY,
@@ -181,8 +196,19 @@ const PO_LINE = object({
   netReceivedBaseQuantity: BASE_QUANTITY, outstandingBaseQuantity: BASE_QUANTITY, overReceivedBaseQuantity: BASE_QUANTITY,
   closedRemainingBaseQuantity: BASE_QUANTITY, closeReason: TEXT, version: ID
 });
+const APPROVAL_SUMMARY = { id: ID, status: TEXT, purchaseOrderVersion: ID, requestedByLabel: TEXT, approverLabel: TEXT, requestNote: TEXT, decisionReason: TEXT, requestedAt: TIME, decidedAt: NULLABLE_TIME };
+const APPROVAL_SNAPSHOT = object({
+  number: TEXT, supplier: object({ id: ID, code: TEXT, name: TEXT }), orderingAddress: { anyOf: [{ type: "null" }, ADDRESS] },
+  currency: object({ code: TEXT, name: TEXT, decimalPlaces: { type: "integer", minimum: 0, maximum: 4 } }), paymentTerm: { anyOf: [{ type: "null" }, PAYMENT_TERM] },
+  orderDate: TEXT, expectedDeliveryDate: NULLABLE_DATE, defaultWarehouseCode: TEXT, buyerLabel: TEXT, supplierReference: TEXT, notes: TEXT, subtotalAmount: TEXT, totalAmount: TEXT,
+  warnings: { type: "array", uniqueItems: true, items: TEXT },
+  lines: { type: "array", minItems: 1, maxItems: 100, items: object({ lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, purchaseUomCode: TEXT, orderedQuantity: TEXT, baseUomCode: TEXT,
+    orderedBaseQuantity: BASE_QUANTITY, unitPrice: TEXT, lineAmount: TEXT, zeroPriceReason: TEXT, expectedDeliveryDate: NULLABLE_DATE, lineNote: TEXT }) }
+});
 export const PURCHASE_ORDER_DETAIL_RESPONSE = Object.freeze(object({
-  ...HEADER, orderingAddressId: OPTIONAL_ID, orderingAddress: { anyOf: [{ type: "null" }, ADDRESS] }, currencyName: TEXT,
+  ...HEADER, approval: { anyOf: [{ type: "null" }, object({ ...APPROVAL_SUMMARY, snapshot: APPROVAL_SNAPSHOT })] }, approvalHistory: { type: "array", items: object(APPROVAL_SUMMARY) },
+  statusHistory: { type: "array", items: object({ sequenceNo: ID, fromStatus: TEXT, toStatus: TEXT, action: TEXT, reason: TEXT, version: ID, actorLabel: TEXT, occurredAt: TIME }) },
+  orderingAddressId: OPTIONAL_ID, orderingAddress: { anyOf: [{ type: "null" }, ADDRESS] }, currencyName: TEXT,
   currencyDecimalPlaces: { type: "integer", minimum: 0, maximum: 4 }, paymentTermId: OPTIONAL_ID, paymentTerm: { anyOf: [{ type: "null" }, PAYMENT_TERM] },
   defaultReceivingWarehouseId: OPTIONAL_ID, defaultWarehouseCode: TEXT, notes: TEXT, subtotalAmount: AMOUNT, hasConfirmedReceipt: { type: "boolean" },
   createdByLabel: TEXT, updatedByLabel: TEXT, confirmedAt: NULLABLE_TIME, closedAt: NULLABLE_TIME, cancelledAt: NULLABLE_TIME,
@@ -196,7 +222,7 @@ export const PURCHASE_ORDER_DETAIL_RESPONSE = Object.freeze(object({
 const SEARCH = { type: "string", maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f-\\u009f]*$" };
 const LOOKUP_QUERY = {
   suppliers: { q: SEARCH, skuId: ID }, skus: { q: SEARCH, barcode: SEARCH }, warehouses: { q: SEARCH }, buyers: { q: SEARCH },
-  supplierDefaults: {}, currencies: {}, paymentTerms: {}
+  supplierDefaults: {}, currencies: {}, paymentTerms: {}, approvers: { q: SEARCH }
 };
 const lookupValidators = Object.fromEntries(Object.entries(LOOKUP_QUERY).map(([kind, properties]) => [kind,
   queryValidator.compile({ query: { type: "object", additionalProperties: false, properties } }, `Purchasing ${kind} lookup query`)]));
@@ -220,7 +246,8 @@ export const PURCHASING_LOOKUP_RESPONSE = Object.freeze({
     minimumReceiptLifeDays: { type: ["integer", "null"] }, baseUomCode: TEXT,
     uoms: { type: "array", minItems: 1, items: object({ skuUomId: ID, uomCode: TEXT, uomName: TEXT, toBaseFactor: ID, isBase: { type: "boolean" }, isDefaultPurchase: { type: "boolean" } }) } })),
   currencies: listOf(CURRENCY_CHOICE), paymentTerms: listOf(PAYMENT_TERM_CHOICE),
-  warehouses: listOf(object({ id: ID, code: TEXT, name: TEXT })), buyers: listOf(object({ id: ID, label: TEXT }))
+  warehouses: listOf(object({ id: ID, code: TEXT, name: TEXT })), buyers: listOf(object({ id: ID, label: TEXT })),
+  approvers: object({ requireApproval: { type: "boolean" }, items: { type: "array", maxItems: 100, items: object({ id: ID, label: TEXT }) } })
 });
 
 /** HD-019：Supplier 預設值要經 Business Master 驗，同建立 PO 一樣嘅 provider 接線。 */

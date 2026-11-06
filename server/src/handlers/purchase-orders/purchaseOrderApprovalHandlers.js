@@ -1,6 +1,6 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import {
-  EMPTY, PURCHASE_ORDER_DECISION_POLICY, PURCHASE_ORDER_DECISION_RESPONSE, PURCHASE_ORDER_ID_PARAMS, PURCHASE_ORDER_WRITE_POLICY, purchaseOrderCommand, purchaseOrderService
+  EMPTY, MY_APPROVALS_RESPONSE, myApprovalsRequest, purchasingInquiryService, PURCHASE_ORDER_DECISION_POLICY, PURCHASE_ORDER_DECISION_RESPONSE, PURCHASE_ORDER_ID_PARAMS, PURCHASE_ORDER_WRITE_POLICY, purchaseOrderCommand, purchaseOrderService
 } from "../purchasing/purchasingSchemas.js";
 
 class ApprovalHandler extends BaseRequestHandler {
@@ -11,6 +11,20 @@ class ApprovalHandler extends BaseRequestHandler {
 }
 const api = (action, authorization, description) => ({ method: "POST", path: `/api/v1/purchase-orders/:id/approval/${action}`, description, ...authorization, idempotency: { enabled: true },
   requestSchema: { params: PURCHASE_ORDER_ID_PARAMS, query: EMPTY, body: {} }, responseSchema: { 200: PURCHASE_ORDER_DECISION_RESPONSE } });
+
+/** 待我審批（§5.2）：只回指派畀自己嘅 Pending，由 service 按 DB 權限驗。 */
+export class ListMyPurchaseOrderApprovalsHandler extends BaseRequestHandler {
+  static handlerName = "listMyPurchaseOrderApprovals";
+  static api = { method: "GET", path: "/api/v1/purchase-order-approvals/mine", description: "List Purchase Order approvals assigned to me",
+    authorizationPolicies: [PURCHASE_ORDER_DECISION_POLICY], requestSchema: { params: EMPTY, query: {}, body: EMPTY }, responseSchema: { 200: MY_APPROVALS_RESPONSE } };
+  constructor(services = {}) {
+    super(services);
+    this.inquiry = purchasingInquiryService(services, this.logger);
+  }
+  async execute(req) {
+    return this.response(await this.inquiry.myApprovals(myApprovalsRequest(req)));
+  }
+}
 
 /** 審批係職責分離嘅正式決定，要再輸入密碼（§6.2）。Assigned approver 由 service 喺 transaction 入面驗。 */
 export class ApprovePurchaseOrderHandler extends ApprovalHandler {
