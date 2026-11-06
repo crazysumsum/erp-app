@@ -93,16 +93,23 @@ Sam's words, in this chat unless stated. Times are HKT on 2026-11-06.
 | 14:19 | "全部批准，我作為project owner 批準你發digest，CI綠了就merge" | The proposal then on the table: 4 new CI cases, the settings history assertions, the sweep, one digest for this receipt, merge on green CI |
 | 17:20 (relayed by the PM, call_7553be3498ab45f5bdb21bd4a55b3f1f) | "批准完整修補及本機整批一次" | Patch `032d52e1`, including the `purchasingInquiry` assertion change, and one local batch. The PM's relay states zero CI and push |
 
-**For the PM to confirm before any push:**
-1. Whether the 14:19 authorization still covers publishing, given that the 17:20 relay says zero CI and push. The author reads that as limited to the batch, which is not a decision.
-2. Whether the 14:19 receipt scope includes the two later test changes. The patched `purchasingInquiry` assertion and the added `lineAmount` check were not in the 14:19 proposal. Sam approved them at 17:20 as a patch, without saying they go into routine CI.
+The PM read Sam's wording in this chat with its context on 2026-11-06. The PM confirmed that the 14:19 publishing authorization stands, since a local batch without CI does not revoke it, and that the patch is approved. The trusted admission administrator independently checks the final receipt.
 
-## Prepared for publishing, not done
+## Admission receipt draft
 
-- **Main:** no drift; `origin/main` has no commits beyond this branch.
-- **Admission inputs:** 21 by reading the receipts, the same set as TASK-023's: 3 with changed content since `purchasing-task023.json` (`purchasingApprovalCommands`, `purchasingInquiry`, `purchaseOrderApprovalHandlers`) and 18 re-pins. The gate decides the final list.
-- **Remaining steps:** build the receipt, publish its digest, push, open the PR, merge on green CI.
+`.github/test-admissions/purchasing-task024-backend.json`, digest `9b21adb71a263d70520cd12b4909e92ad40505463335f2d1ed491eac648dd3b3`, not published. Built from `purchasing-task023.json`: the same 21 paths, with no file added or removed.
+
+| Input | Old blob | New blob | Change | Approved by |
+| --- | --- | --- | --- | --- |
+| `purchasingApprovalCommands.integration.test.js` | `f226c6d44d60` | `3d9a10255c7c` | 3 new cases, 6 to 9. Added settings history assertions in an existing case. | 14:19, and the added `lineAmount` check in the new detail case at 17:20 |
+| `purchaseOrderApprovalHandlers.test.js` | `803954df0fe0` | `c5c135626896` | 1 new case, 5 to 6. | 14:19 |
+| `purchasingInquiry.integration.test.js` | `f9f268425d6a` | `7e117ccf9b80` | Existing key-list assertion: adds `approval`, `approvalHistory`, `statusHistory`. No new case. | 17:20 |
+| The other 18 | Unchanged | Unchanged | Re-pin only, as in `purchasing-task023.json`. | Existing approvals |
+
+No new job, workflow, fixture file or capacity case. No increase in data, concurrency or repetitions for existing cases.
+
+**Beyond the approvals:** nothing found.
 
 ## Only next step
 
-The PM's confirmation of the two points above.
+The trusted admission administrator's check of this receipt.
