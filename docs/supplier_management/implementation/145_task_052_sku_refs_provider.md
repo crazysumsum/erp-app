@@ -17,7 +17,8 @@ The values are hints (Purchasing FR-PO-007). No code deletes these rows or chang
 
 ## Also in this change
 
-- 03 §6.8 follows the TL ruling `.worktrees/tech-lead-handoffs/h1-supplier-receiving-contract-20261106.md` (sha256 `3a6e4d4ce8aaf8dd7d212963cfc916aba51f70daa13a3b25c55c2765e1854956`): first supplied is the minimum and last the maximum, reversals never move them, a replay skips `verifySource`, a verifier refuses only by throwing, and Purchasing's dedicated instance injects it. No code change was needed.
+- 03 §6.8 states that `sourceLineId` is the GR line and not a physical detail. Supplier confirms this and the dedicated-instance injection, as the TL ruling asks.
+- 03 §6.8 also follows the TL ruling `.worktrees/tech-lead-handoffs/h1-supplier-receiving-contract-20261106.md` (sha256 `3a6e4d4ce8aaf8dd7d212963cfc916aba51f70daa13a3b25c55c2765e1854956`) in the rest: first supplied is the minimum and last the maximum, reversals never move them, a replay skips `verifySource`, a verifier refuses only by throwing, and Purchasing's dedicated instance injects it. No code change was needed.
 - 03 §11.5 takes the REV-141 L1 rewording, so Purchasing re-pins once.
 - Consumed Purchasing pin `366abb1f` -> `927ddc66` (`fbcbebeb`). The diff was read in full. It does not change Supplier behaviour: the composite FK needs `uq_supplier_addresses_owner`, which migration 0032 already has, and `recordSupply` is untouched. No acceptance run was repeated.
 

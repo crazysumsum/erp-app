@@ -35,6 +35,7 @@ T04–T24 SUP-CAP-01 Core ─┬→ T25–T31 Approval & Settings
 T31 Approval complete ────────────────────→ T45 activate-mode import
 T41–T42 Import migrations → Item migrations → T38 Supplier–SKU
 T24/T31/T37/T40/T49 ─────────────────────→ T50–T51 Release
+T40 ─────────────────────────────────────→ T52 Purchasing PO Line提示讀取
 ```
 
 ### 1.3 平行化規則
@@ -223,7 +224,7 @@ T24/T31/T37/T40/T49 ────────────────────
 | PHASE-001 | TASK-001～TASK-024 | Supplier Core、主檔children、生命周期、Business Master及downstream provider contracts可獨立驗收。 |
 | PHASE-002 | TASK-025～TASK-031 | 可配置啟用審批及Supplier-owned settings可獨立驗收。 |
 | PHASE-003 | TASK-032～TASK-037 | Bank資料受控寫入、查看、輪替及復原可獨立安全驗收。 |
-| PHASE-004 | TASK-038～TASK-051 | Supplier–SKU、Import／Export、容量及發布證據完成；全模組回歸通過。 |
+| PHASE-004 | TASK-038～TASK-052 | Supplier–SKU、Import／Export、容量及發布證據完成；全模組回歸通過。 |
 
 ### 2.3 Canonical requirement coverage manifest
 
@@ -1962,7 +1963,7 @@ Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未
 
 ### Outcome
 
-交付§2.2中`PHASE-004`的獨立業務結果，包含TASK-038至TASK-051。
+交付§2.2中`PHASE-004`的獨立業務結果，包含TASK-038至TASK-052。
 
 ### Entry criteria
 

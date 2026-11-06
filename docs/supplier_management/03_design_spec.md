@@ -984,7 +984,7 @@ Unknown property 一律 400，不保存成動態 setting。Response 顯示設定
 }
 ```
 
-`eventId`由Purchasing穩定產生，同一來源行重送沿用同值；`(source_type,source_id,source_line_id)`亦唯一。Service先以`supplier_supply_events.event_id`作durable fence，再upsert soft relation，`first_supplied_at`取最小值、`last_supplied_at`取最大值；重送回既有outcome，不重複audit，也不得把relation自動改成preferred。Projection失敗不回滾已提交GR，必須發低敏告警並由reconciliation按來源事件補回。
+`sourceLineId`為GR line（非physical detail）。`eventId`由Purchasing穩定產生，同一來源行重送沿用同值；`(source_type,source_id,source_line_id)`亦唯一。Service先以`supplier_supply_events.event_id`作durable fence，再upsert soft relation，`first_supplied_at`取最小值、`last_supplied_at`取最大值；重送回既有outcome，不重複audit，也不得把relation自動改成preferred。Projection失敗不回滾已提交GR，必須發低敏告警並由reconciliation按來源事件補回。
 
 來源由`verifySource(connection, command)`證明：未注入時回503 `SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE`；既有同內容事件直接replay，不呼叫verifier；成功為`Promise<void>`，拒絕必須throw。HTTP handler的instance不注入；Purchasing TASK-040以專用`SupplierRelationService` instance注入，此instance不屬`supplierCoreProvider`。收貨部分或全部反向不回退first／last，Supplier不提供undo。
 

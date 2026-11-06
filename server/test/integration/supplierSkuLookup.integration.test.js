@@ -302,9 +302,9 @@ integrationTest("TC-137 (SKU-009): TASK-052 (HD-163): SKU refs read only this Su
       "INSERT INTO supplier_sku_refs (supplier_id, sku_id, created_at, updated_at) VALUES (?, ?, ?, ?)", [owner, uncommittedSku, now, now]);
     const refs = await lookup().findSkuRefsInTransaction(tx, owner, [stoppedSku, otherSupplierSku, uncommittedSku, stoppedSku]);
     const [[stoppedRow]] = await tx.query("SELECT id FROM supplier_sku_refs WHERE supplier_id = ? AND sku_id = ?", [owner, stoppedSku]);
-    assert.deepEqual(new Map([...refs.entries()].sort(([a], [b]) => a - b)), new Map([
+    assert.deepEqual(refs, new Map([
       [stoppedSku, { relationId: Number(stoppedRow.id), relationshipStatus: "stopped", supplierItemCode: `${prefix}-Item`, lastSuppliedAt: 2_000 }],
       [uncommittedSku, { relationId: Number(insert.insertId), relationshipStatus: "alternative", supplierItemCode: "", lastSuppliedAt: null }]
-    ].sort(([a], [b]) => a - b)));
+    ]));
   });
 });
