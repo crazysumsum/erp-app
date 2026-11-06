@@ -1,6 +1,6 @@
 # TASK-023 — Settings and approval command APIs
 
-**Status: not verified on MySQL.** Local MySQL is waiting for the PM's notice. `purchasingApprovalCommands.integration.test.js` and the changed cleanups in the two existing integration files have not run.
+**Status: built and verified on a private MySQL. No mutation sweep, CI or PR yet.** See the handoff below.
 
 Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2, §5.4, §6.2, §8.3; FR-SET, FR-APPROVAL, SEC-006～009, AC-012～017; `TC-004`, `TC-001`.
 
@@ -12,6 +12,10 @@ Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2,
 | `POST /api/v1/purchase-orders/:id/approval/withdraw` | jwt, `purchasing.mgmt` | Submitter only; `DRAFT`. |
 | `GET /api/v1/purchasing-settings` | jwt, `purchasing.settings` | Current value and version. |
 | `POST /api/v1/purchasing-settings/update` | jwt-device-password, `purchasing.settings` | Version, reason and replay protection. |
+
+## HD-021
+
+Sam chose option A on 2026-11-06: the settings update uses `jwt-device-password`, as design §3.3, §5.4 and §6.2 say. The setting can turn off PO approval, so changing it needs an approved device, a session and the password. The code and tests already do this. TASK-023's criteria in `05_development_tasks.md` still say `jwt-password` and are corrected at the plan's next revision, so the plan baseline is unchanged now.
 
 ## Choices within the design
 
@@ -44,8 +48,7 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- HD-021: `jwt-device-password` (recommended, in the code) or `jwt-password` for the settings update.
 - A mutation sweep needs its own authorization and a PM MySQL slot.
 - Sam: CI admission, after verification. The gate currently lists about 20 inputs, because changing pinned test files invalidated earlier receipts.
 
-**Only next step:** get the HD-021 answer.
+**Only next step:** Sam's decision on the mutation sweep and CI admission proposal.
