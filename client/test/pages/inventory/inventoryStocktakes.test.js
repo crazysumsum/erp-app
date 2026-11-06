@@ -208,6 +208,40 @@ describe("TASK040 Stocktake client foundation", () => {
   });
 });
 
+describe("DEF012 authorized stocktake conflict projection", () => {
+  it.each([
+    { label: "valid hint", kind: "valid" },
+    { label: "repeated safe projection", kind: "repeat" },
+    { label: "wrong code", kind: "code" },
+    { label: "wrong status", kind: "status" },
+    { label: "extra details key", kind: "extra" },
+    { label: "invalid stocktake number", kind: "number" },
+    { label: "untrusted server message", kind: "message" }
+  ])("DEF012 client $label", async ({ kind }) => {
+    vi.clearAllMocks();
+    const { stocktakeError } = await helpers();
+    const original = { status: 409, code: "STOCKTAKE_STATE_CONFLICT", message: "SELECT secret ST-999",
+      details: { stocktakeConflict: { kind: "SCOPE_OVERLAP", number: "ST-21" } } };
+    if (kind === "code") original.code = "VERSION_CONFLICT";
+    if (kind === "status") original.status = 403;
+    if (kind === "extra") original.details.extra = "secret";
+    if (kind === "number") original.details.stocktakeConflict.number = "ST-0";
+    if (kind === "message") delete original.details;
+    const first = stocktakeError(original);
+    const safe = kind === "repeat" ? stocktakeError(first) : first;
+    if (kind === "valid" || kind === "repeat") {
+      expect(safe.message).toBe("所選庫位已屬於另一張未完成盤點（其中一張：ST-21）。請到盤點管理查詢；由具權限人員處理原單或改選範圍，再重新準備。未自動重送。");
+      expect(safe.code).toBe("STOCKTAKE_STATE_CONFLICT"); expect(safe.status).toBe(409);
+      if (kind === "repeat") { expect(safe).not.toBe(first); expect(safe.message).toBe(first.message); }
+    } else {
+      expect(safe.message).not.toContain("ST-21"); expect(safe.message).not.toContain("請到盤點管理查詢");
+    }
+    expect(safe.message).not.toContain("SELECT"); expect(safe.message).not.toContain("ST-999");
+    expect(safe.details).toBeUndefined();
+    expect(httpClient.get).not.toHaveBeenCalled(); expect(httpClient.post).not.toHaveBeenCalled();
+  });
+});
+
 const SUMMARY = { totalLines: 1, countedLines: 0, notFoundLines: 0, uncountedLines: 1, gainLines: 0, lossLines: 0, zeroLines: 0 };
 const HEADER = { id: 7, number: "ST-7", warehouseId: 1, status: "COUNTING", version: 2, scope: { items: [{ id: 1, binId: 2, binCodeCurrent: "BIN", statusCurrent: "ACTIVE" }], total: 1, page: 1, pageSize: 20 },
   progress: SUMMARY, varianceSummary: SUMMARY, varianceStage: "PREVIEW", reason: "" };
