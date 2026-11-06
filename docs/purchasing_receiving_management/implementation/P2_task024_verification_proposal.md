@@ -72,10 +72,10 @@ Counted from the fixtures and case code, not measured. A mutant usually stops it
 
 | Stage | Limit | How it is enforced |
 | --- | --- | --- |
-| Initialize, start, users and migrate | 60 s from start | Shared absolute deadline; nothing spawns once it has passed |
-| Batch | Until 180 s from start | Shared absolute deadline; each case at most 30 s and each process at most 45 s |
-| Clean-up | 30 s, ending by 210 s from start | Shutdown, then a kill of this instance's verified PID; state that stays unknown fails the batch |
-| **Whole slot** | **210 s** | The sum of the above |
+| Initialize, start, users and migrate | 60 s from start | Shared absolute deadline. Each process keeps 3 s of its deadline for termination and reaping, and nothing spawns without that time |
+| Batch | 120 s from the batch start, and never past 180 s from start | Shared absolute deadline; each case at most 30 s and each process at most 45 s |
+| Clean-up | 30 s, ending by 210 s from start | Reaps process groups first, then shutdown, then a kill of this instance's verified PID. Deletion and the final status check run inside this limit. Unknown state or an overrun fails the batch |
+| **Whole slot** | **210 s** | Checked at the end; success cannot be reported after it |
 | Request and transaction limits | Pinned, unchanged | Request 30 s, acquire 5 s, query 10 s, transaction 20 s |
 
 A limit being reached counts as a stop: clean up, report, and do not retry. Past runs suggest far less: on 2026-11-06 the 14:21 run took 17 s from start to clean-up with 23 cases.
@@ -83,11 +83,14 @@ A limit being reached counts as a stop: clean up, report, and do not retry. Past
 **Other boundaries**
 
 - **Bound at start:** the full commit that applies this patch and both tool hashes. The tools stop if any differs or the tree is dirty. Unchanged since `3a21c6db`: `PurchasingLookupService.js` `3cf96e9bf77b`, `PurchasingSettingsService.js` `42a4c343b5b1`, `purchasingSchemas.js` `ac92bcf4fd6e`.
-- **Tools:** `run024.mjs` `0f7c01d14b4229dfae416a2826c65d43c779b0e4fd2cdf6743e665649ab39761` and `sweep024.mjs` `c378f504949feea8dab006227151e0ad524f40b79989ee84cfc125eb43a95666`, in the session scratchpad. They were syntax-checked and their strings checked statically. They have never run, and a tool fault in the batch counts as INVALID and stops it.
+- **Tools:** `run024.mjs` and `sweep024.mjs` in the session scratchpad, with the hashes given to the PM. The runtime batch is NOT_RUN. The author earlier ran syntax checks and the `--static` mode on an older version; the tech lead classed that as a scope deviation and not as verification. The current version has not been checked or run, and a tool fault in the batch counts as INVALID and stops it. `--static` would refuse A7 until the patch is applied.
 - **Instance:** new and private, port 33619, socket `/private/tmp/m023/mysql.sock`, schema `erp_dev`. It starts only if no other `mysqld` is running and ports 3306 and 33619 are free. Every child gets a fixed environment, and the tools refuse a conflicting value or a `server/.env`. After migrating, they check the instance's port, socket, data directory and tables.
-- **What counts as caught:** a mutant counts only if exactly its named case failed, as a test code failure, with the expected error on the expected test line. The expected error is an `AssertionError`, except A11, which is a `TypeError` on `after.body.data.history[0]` only, because a failed response schema gives HTTP 500 without data. A7's service `TypeError` also becomes HTTP 500, so the test reports an `AssertionError` on `detail.status`. These two expectations come from reading the code and have not been observed. Anything else counts as INVALID.
+- **What counts as caught:** a mutant counts only if exactly its named case failed, as a test code failure, with the expected error on the expected test line, and the system log has no server error. The expected error is an `AssertionError`, except A11, which is a `TypeError` on `after.body.data.history[0]` only. Anything else counts as INVALID.
+- **A7 and A11 origin:** a 500 alone proves nothing, so each must also show exactly one logged server error in the application's existing system log: `RESPONSE_VALIDATION_FAILED` for the expected handler, with a `required` detail on `/approval/snapshot` (A7) or `/history/<n>/requirePoApproval` (A11). No request, fixture or case is added. These expectations come from reading the code and have not been observed.
+- **A7 mutant changed:** it now removes the `snapshot` field from the response, instead of setting the snapshot to null. A null made the service's `TypeError` reach the log only as a generic `DATABASE_TRANSACTION_FAILED`, because the log omits the cause, so its origin could not be proved. The rule it checks is the same: pending detail must return the snapshot.
 - **Stops:** the first failed case, a mutant not caught, an INVALID result, a dirty tree or a passed deadline. All exit non-zero and report attempted and NOT_RUN items.
-- **Clean-up:** the data directory is deleted only after the instance's own processes are confirmed gone and port 33619 is free. Otherwise the batch fails and the directory stays. Mutants are restored from the parent's bytes and their hash is checked.
+- **Clean-up:** process groups are reaped before a mutant is restored and before database clean-up. A group not proved gone is a failure needing manual reclaim, and the instance and directory stay. The data directory is deleted only after the instance's own processes are confirmed gone and port 33619 is free. Mutants are restored from the parent's bytes and their hash is checked.
+- **Result:** a received signal, an overrun or an interrupted case can never report success. An interrupted case shows as ATTEMPTED, not NOT_RUN.
 - **Report:** PID, socket, port, candidate, results and next step.
 
 ## After that
