@@ -1,0 +1,278 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-06 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你發digest，CI綠了就merge\", answering the consolidated proposal for the TASK-024 preparatory backend (HD-022): 4 new cases, 3 in purchasingApprovalCommands.integration.test.js and 1 in purchaseOrderApprovalHandlers.test.js; added history assertions in the existing settings case; a one-time project-owner authorization to publish this receipt's digest. Sam's decision relayed by the PM on 2026-11-06, call_7553be3498ab45f5bdb21bd4a55b3f1f: \"批准完整修補及本機整批一次\", covering reviewed patch 032d52e1 with the purchasingInquiry key-list change and the added lineAmount check in the new detail case. Other pinned files are unchanged re-pins of purchasing-task023.json",
+  "purpose": "The my-approvals list shows only the actor's pending approvals, oldest first, with paging and filters; PO detail returns the pending snapshot at Currency scale, with approval and status history, and decision actions follow the actor; approvers exclude the actor and carry requireApproval; settings show their change history. Existing approval, Inquiry and PO cases keep guarding the same behaviour",
+  "data": "A few rows per case: the same small fixtures as purchasing-task023.json, with up to 2 one-line POs in the new cases. No new fixture files and no increase to existing cases' data",
+  "concurrency": "1, except the existing case from purchasing-task023.json that sends approve and withdraw at once",
+  "repetitions": "1",
+  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing server coverage jobs",
+  "cost": "Measured locally on 2026-11-06: 12.5 s for purchasingApprovalCommands, purchasingInquiry and purchasingLookups together, 23 cases. The handler case was not timed separately. CI not measured. No new job and no capacity workload",
+  "files": [
+    {
+      "path": "docs/purchasing_receiving_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "c2977c19cac5c2086d8913ed223aa0bd7aa66d15",
+      "kind": "support"
+    },
+    {
+      "path": "docs/purchasing_receiving_management/03_design_spec.md",
+      "mode": "100644",
+      "blob": "61e5674ebf85c7baa315d81bbf25dad5f5ee21a8",
+      "kind": "support"
+    },
+    {
+      "path": "docs/purchasing_receiving_management/05_development_tasks.md",
+      "mode": "100644",
+      "blob": "9765696ac49c4e3be6606dab6a8dd7fe4c4b0c92",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/business-master/http.integration.test.js",
+      "mode": "100644",
+      "blob": "4ba449146ef832127b7e0575830336555f1613c6",
+      "kind": "functional",
+      "cases": [
+        "TC-012 real HTTP authentication and authorized admin flow"
+      ]
+    },
+    {
+      "path": "server/test/configuration.test.js",
+      "mode": "100644",
+      "blob": "8e04431c6fb165ddddca9e34efad6e9434b6e17c",
+      "kind": "functional",
+      "cases": [
+        "global configuration validation normalizes every configuration section"
+      ]
+    },
+    {
+      "path": "server/test/integration/supplierMigrationAcceptance.integration.test.js",
+      "mode": "100644",
+      "blob": "526330e0c78e22fcade0c9a252b556090da021e5",
+      "kind": "functional",
+      "cases": [
+        "TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingMoneyMath.test.js",
+      "mode": "100644",
+      "blob": "534d16b6f16d81b682d72b0a447474825b215513",
+      "kind": "functional",
+      "cases": [
+        "TC-002 Unit Price is a non-negative decimal string of at most 4 places",
+        "TC-002 Line Amount rounds HALF_UP at the Currency scale",
+        "TC-002 Line Amount does not inherit binary float error",
+        "TC-002 PO Total is the sum of already-rounded lines, not the rounded sum",
+        "TC-002 large products stay exact and an amount beyond DECIMAL(25,4) is rejected",
+        "TC-002 inputs are validated before any arithmetic",
+        "TC-002 one formatter emits every amount at the fixed Currency scale",
+        "DB 金額轉返 Currency scale（HD-009）；多餘小數或者形狀唔啱係資料錯誤，唔會靜靜截走"
+      ]
+    },
+    {
+      "path": "server/config/purchasing.js",
+      "mode": "100644",
+      "blob": "8c5661b6140cc260b4a49827e04b70fdb3b36210",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/integration/purchasingApprovalCommands.integration.test.js",
+      "mode": "100644",
+      "blob": "3d9a10255c7cd5ec8e2002a3f977e34fccb13378",
+      "kind": "functional",
+      "cases": [
+        "審批關閉：建單同確認都寫 status history；帶審批人被拒",
+        "審批開啟：一定要指定另一名有權限嘅人；提交後 PO 凍結；批准直接 Confirmed",
+        "拒絕同撤回都回 Draft，舊申請用唔返；可以再提交新申請",
+        "批准時主檔或人員失效：拒絕，申請保留 Pending，撤回之後改得返",
+        "批准同撤回同時發生：只有一個成功，結果一致",
+        "設定：讀要 settings 權限；改要裝置簽署同密碼；只影響之後嘅提交",
+        "待我審批：只回指派畀自己嘅 Pending，舊嘅排先；有分頁同篩選；要 view＋approval",
+        "詳情：待審批回完整快照；allowedActions 跟操作者；決定之後留歷史",
+        "審批人選項：要 mgmt；只有 approval 權限嘅人，排除自己；requireApproval 跟設定"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingInquiry.integration.test.js",
+      "mode": "100644",
+      "blob": "7e117ccf9b80608006fa6ab2f647bccd74285d0d",
+      "kind": "functional",
+      "cases": [
+        "列表預設按更新時間同 ID 倒序，分頁穩定；summary 係交易快照同安全欄位，allowedActions 跟 DB 權限",
+        "每個 filter 都會篩，日期範圍包頭包尾，條件之間係 AND",
+        "q 搵 PO 編號、Supplier code／名稱、SKU code／名稱、barcode 同 Supplier Reference，已停用主檔都搵到；通配符只係普通字",
+        "Outstanding 只計已確認、收緊貨嘅 PO（HD-017 4A）；進度分開計，超收唔抵銷其他行，風險有文字碼",
+        "列表 query 數量固定，唔跟 PO 同 Line 數量增加",
+        "詳情回交易快照同逐行進度，目前主資料另外放；只回有分別嘅，唔露 Supplier 內部欄位",
+        "名稱配中超過 100 個時，完全相符嘅 Supplier code 同 SKU code 唔會畀上限截走",
+        "唔存在嘅 ID 回一致 404；撤咗權嘅 token 讀唔到"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "059808a385499e34067c1b07a5d78dacf1bc70de",
+      "kind": "functional",
+      "cases": [
+        "TASK-011 migrations create the four tables in the approved shape and rerun as no-ops",
+        "TASK-011 the settings default is seeded only when missing and never overwrites a saved value",
+        "TASK-011 document sequences are isolated by type and month and bounded by CHECK",
+        "TASK-011 purchase order numbers, status and currency precision are enforced by the database",
+        "TASK-011 the ordering address must belong to the PO's Supplier, and deleted actors become NULL",
+        "TASK-011 purchase order lines enforce UOM ownership, bounds, the receipt identity and decimal precision",
+        "TASK-011 each migration creates exactly one table, so a failure points at one file"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingOperationAudit.integration.test.js",
+      "mode": "100644",
+      "blob": "67709e4dec8bd70bf924b61d71720ae698c01b40",
+      "kind": "functional",
+      "cases": [
+        "TASK-012 migrations create the operation, audit and trigger schema and rerun as no-ops",
+        "TASK-012 an operation is unique per document, line and event, and its identity is validated",
+        "TASK-012 an operation completes once, then its identity and outcome are frozen",
+        "TASK-012 audit rows are append-only, bounded, and keep working when an actor is deleted",
+        "TASK-012 a confirmed PO freezes its commercial fields but keeps lifecycle fields writable",
+        "TASK-012 lines of a non-DRAFT PO cannot be edited, added or removed, but projections can",
+        "TASK-012 document numbers only move forward and are never deleted",
+        "TASK-012 every PO and line column is classified once, triggers drift fails closed, and migrations only add"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingPurchaseOrderApi.integration.test.js",
+      "mode": "100644",
+      "blob": "a94ddeb102d40bc258c9137ed510d4d4ecf274a6",
+      "kind": "functional",
+      "cases": [
+        "Create 經 HTTP 回 201；同 key 同內容 replay、同 key 唔同內容 409；key 同 eventId 唔一致或者帶 client total 被拒",
+        "Update 經 HTTP 回 200；舊 version 409 只回 currentVersion；冇 purchasing.mgmt 403、冇 token 401",
+        "List 同 Detail 經 HTTP：view 讀到過咗 response schema 嘅安全 projection；mgmt 冇 view 403、冇 token 401、唔存在 404",
+        "Copy 經 HTTP 回 201 同新編號；同 key replay；只有 view 403、冇 token 401、唔存在 404",
+        "Submit 經 HTTP 回 200 同 outcome；同 key replay；唔准嘅欄位 400、view 403、冇 token 401、舊 version 409；確認咗之後唔再改得"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingPurchaseOrders.integration.test.js",
+      "mode": "100644",
+      "blob": "f26839c394b3302bf39f145f2efa7a33500547d8",
+      "kind": "functional",
+      "cases": [
+        "create 拎月度編號、server 計快照同金額、operation 同 Audit 一齊寫，而 Inventory 唔郁",
+        "同一 eventId 同內容 replay 唔會再建；唔同內容係衝突並寫 REJECTED audit",
+        "update 完整取代 Lines：保留 ID、重排、刪除、新增，重算 Total 同 version",
+        "update 拒絕過時 version、外來 child ID、非 Draft 同唔存在嘅 PO，乜都唔改並寫 REJECTED audit",
+        "新揀嘅 Supplier、SKU、UOM、地址、倉、Buyer 同 Currency 一定要當下合格；冇 Supplier-SKU relation 唔阻",
+        "Update 時冇郁而之後先失效嘅 Supplier／SKU 照存並回 warning；新揀或者換咗就拒絕（HD-015 1B）",
+        "Audit 失敗令成單 rollback；權限過時被拒；REJECTED audit 寫唔到就記 security log",
+        "兩個人同時用同一 version 保存：PO 行鎖令第二個人收到 VERSION_CONFLICT，唔會覆蓋（AC-010）",
+        "copy 建新編號、新 ID 嘅 Draft，唔抄狀態、進度同舊資格；來源唔郁，operation 同 Audit 指返來源",
+        "copy 只抄仍然合法嘅值：選填主檔清空、Buyer 換操作者、唔合格 Line 剔走，全部有 warning（HD-017 2A）",
+        "copy 遇到不可採購 Supplier、冇 Line 剩低或者唔存在嘅來源就成張拒絕，寫 REJECTED Audit；要 purchasing.mgmt",
+        "copy 逐個條件剔走唔合格嘅 Line：UOM 停用、唔再追蹤庫存、改咗 serial、factor 改咗換唔到整數",
+        "submit 審批關閉：完整 Draft 直接 CONFIRMED，寫目前快照、確認人同 Audit；Inventory 唔郁，replay 唔重做（AC-011）",
+        "submit 嚴格重驗已保存嘅值：Draft 期間失效嘅主檔全部成張拒絕，寫 REJECTED Audit，PO 唔郁（FR-PO-018）",
+        "submit 遇到保存後改咗嘅換算或者 Currency 小數位就拒絕（HD-018 2A）；重新保存睇到新數字先確認到",
+        "submit 拒絕舊 version、唔存在嘅 PO、未知欄位同撤咗嘅權限；審批開住就唔可以直接確認；設定 row 唔見就 fail closed",
+        "Submit 同 Update 同時用同一 version：PO 行鎖令輸嗰個收到 VERSION_CONFLICT，唔會確認到舊內容"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchaseOrderApprovalHandlers.test.js",
+      "mode": "100644",
+      "blob": "c5c135626896e6f5314722376f683d1524d44374",
+      "kind": "functional",
+      "cases": [
+        "Metadata：審批決定用 jwt-password＋view＋approval；撤回用 jwt＋mgmt；設定更新用 jwt-device-password",
+        "Handler 用真 service 組裝",
+        "批准、拒絕：password 唔會交畀 service；PO ID 嚟自 path；context 照傳",
+        "批准、拒絕、撤回：未知欄位、缺欄位、key 唔一致一律拒絕，唔會打 service",
+        "設定更新：password 唔會交畀 service；未知欄位拒絕",
+        "待我審批：GET、view＋approval；query 驗完先打 service，未知欄位拒絕"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchaseOrderHandlers.test.js",
+      "mode": "100644",
+      "blob": "4faa0aac7713c8509527b9ad1af48361118bc49a",
+      "kind": "functional",
+      "cases": [
+        "Handler metadata：POST、jwt、只要 purchasing.mgmt、開 idempotency、create 201／update 200",
+        "Handler 用真 provider 同 config 組 service：Supplier 接 Business Master，audit 上限跟 config",
+        "Create 將 JWT claims、原 body 同 request context 交畀 service，回 201",
+        "Update 要 version，PO ID 嚟自 path，回 200",
+        "Idempotency-Key 一定要同 eventId 逐字相同；冇 key 或者唔同都唔叫 service",
+        "Schema 拒絕 client total、快照、factor、Base quantity、status 同 line ID（create），錯誤帶欄位路徑",
+        "數量同金額要係原本嘅字串，唔會 coerce；其他型別錯誤都指出欄位",
+        "Read handler metadata：GET、jwt、只要 purchasing.view；唔開 idempotency，query 同 response 都係白名單",
+        "List 將 query 字串轉型先交畀 service；未知 filter、爛 enum、超上限一律 PURCHASING_INPUT_INVALID",
+        "Get 用 path 嘅 ID 同 JWT claims 叫 service",
+        "Copy metadata 同 create 一樣要 mgmt 同 idempotency；body 只收 eventId，來源 ID 嚟自 path，回 201",
+        "Submit metadata：POST、mgmt、idempotency、200；body 唔收 status 同 outcome，審批欄位驗類型，來源 ID 嚟自 path"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchaseOrderStateMachine.test.js",
+      "mode": "100644",
+      "blob": "5a3d4271ce02ab5a0be0c703b9fe1af062807771",
+      "kind": "functional",
+      "cases": [
+        "State machine 只准 §3.2 嘅轉換，其餘全部 PO_STATE_CONFLICT",
+        "State machine 拒絕未知狀態同 Object 原型上嘅名"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingBusinessMasterImpactChecker.test.js",
+      "mode": "100644",
+      "blob": "f7390e1b209e5d4bc4cd228b7f7fd00f7f01bdc7",
+      "kind": "functional",
+      "cases": [
+        "HD-013 open and historical counts follow the PO status a document is in",
+        "HD-013 no purchase_orders table means not installed, and no references means ready with zero counts",
+        "HD-013 the watermark changes when a referencing PO changes and only then",
+        "HD-013 unclassified statuses, malformed counts and invalid subjects fail closed",
+        "HD-013 every status the schema allows is classified exactly once"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingConfig.test.js",
+      "mode": "100644",
+      "blob": "812c57f53d21f92cda5463d62c583cde2e2dfe8a",
+      "kind": "functional",
+      "cases": [
+        "TASK-010 the defaults are the §12.1 values and the result is frozen",
+        "TASK-010 every setting must be a positive safe integer within its limit",
+        "TASK-010 unknown settings and schema-bound constants cannot be configured"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingProjections.test.js",
+      "mode": "100644",
+      "blob": "bb62883d29becaebd05960288950097570521647",
+      "kind": "functional",
+      "cases": [
+        "選填欄位省略即係清空；數量同單價正規化成固定 scale",
+        "Client 計嘅 total、快照、factor、Base quantity 同 status 一律係未知欄位",
+        "零價一定要 5～500 字原因；非零價唔收原因（BR-011、AC-008）",
+        "錯誤指出邊一行邊個欄位；交期唔可以早過 Order Date；Line ID 唔可以重複",
+        "Header 欄位、Currency 格式同 Line 數上限"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingValidation.test.js",
+      "mode": "100644",
+      "blob": "8759061ef14f898845f427ecc4f2c27c7e0e8ad6",
+      "kind": "functional",
+      "cases": [
+        "TASK-010 IDs are positive safe integers",
+        "TASK-010 eventId is a canonical lowercase UUID the Inventory provider will accept",
+        "TASK-010 dates are real calendar days in YYYY-MM-DD",
+        "TASK-010 reason is trimmed to 5..500 characters; notes and references are bounded free text",
+        "TASK-010 objects are allowlisted, so client totals, snapshots and status never get through",
+        "TASK-010 line and detail arrays need at least one item and respect the configured cap",
+        "TASK-010 errors carry a stable code and a field name, never the submitted value"
+      ]
+    }
+  ]
+}
