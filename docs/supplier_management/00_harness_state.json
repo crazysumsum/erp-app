@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 522,
+  "revision": 523,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
-    "code_commit": "439e8eb3308716e6864b324087e63e6507f4e883",
+    "code_commit": "6f22c8c46db8b64e4ebe474d2695e4f751ba6406",
     "source_fingerprint": "9ff0ee44acdf132a97bf19ff3e4f6f9018d4442fec08525d162304dfb7c5f63c",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider",
     "default_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
@@ -10365,7 +10365,7 @@
     {
       "id": "HD-164",
       "impact": "MAJOR",
-      "question": "Approve the Supplier design and plan on baselines design addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5 and plan 1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5? Three deltas since HD-163 'A': (1) 03 §6.8: sourceLineId is the GR line, first=min and last=max, reversals never move them, a replay skips verifySource, a verifier refuses only by throwing, Purchasing's dedicated instance injects it; 03 §8.7 gains findSkuRefsInTransaction; §11.5 rewording. (2) Plan: T52, TASK-052, TC-137, SKU-009. (3) One added write path, .github/test-admissions/supplier-task052-sku-refs.json. Merge needs this; the 14 approvals on old baselines and the capacity order are separate and only matter before a formal run.",
+      "question": "Approve the Supplier design and plan on baselines design addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5 and plan 1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5? Four deltas since HD-163 'A': (1) 03 §6.8: sourceLineId is the GR line, first=min and last=max, reversals never move them, a replay skips verifySource, a verifier refuses only by throwing, Purchasing's dedicated instance injects it; 03 §6.8 and §8.7 gain findSkuRefsInTransaction; §11.5 rewording. (2) Plan: T52, TASK-052, TC-137, SKU-009. (3) One added write path, .github/test-admissions/supplier-task052-sku-refs.json. (4) Consumed Purchasing design pin 366abb1f -> 927ddc66, from fbcbebeb; record 145 says no Supplier behaviour change. Merge needs this; the 14 approvals on old baselines and the capacity order are separate and only matter before a formal run.",
       "affected_ids": [
         "TASK-052",
         "TC-137",
@@ -12094,5 +12094,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. HD-164 (DESIGN and PLAN approval on the final baselines) is open with the decision-maker through the PM, and merge needs it. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance; the 41 limited-UAT acceptances are not formal UAT. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run. Purchasing re-pins Supplier 03 once after the merge."
+  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; HD-164 (DESIGN and PLAN approval on the final baselines), asked through the PM, answered and recorded before the push, because only one push and one CI run are approved; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance; the 41 limited-UAT acceptances are not formal UAT. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run. Purchasing re-pins Supplier 03 once after the merge."
 }
