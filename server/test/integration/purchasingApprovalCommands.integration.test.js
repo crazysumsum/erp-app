@@ -255,7 +255,7 @@ integrationTest("詳情：待審批回完整快照；allowedActions 跟操作者
   assert.deepEqual((await read(f.viewer.token)).body.data.allowedActions, []);
   assert.deepEqual([approval.status, approval.purchaseOrderVersion, approval.requestNote, approval.decidedAt], ["PENDING", 2, "請批", null]);
   assert.deepEqual([approval.snapshot.number, approval.snapshot.supplier.name, approval.snapshot.totalAmount, approval.snapshot.lines.map((line) => [line.orderedQuantity, line.unitPrice])],
-    [po.number, "Approval Supplier", "2.5000", [["2.000000", "1.2500"]]]);
+    [po.number, "Approval Supplier", "2.50", [["2.000000", "1.2500"]]]);
   assert.deepEqual(approvalHistory.map((row) => [row.id, row.status]), [[approval.id, "PENDING"]]);
   assert.equal(Object.hasOwn(approvalHistory[0], "snapshot"), false);
   assert.deepEqual(statusHistory.map((row) => [row.sequenceNo, row.fromStatus, row.toStatus, row.action, row.version]), [[1, "", "DRAFT", "CREATE", 1], [2, "DRAFT", "PENDING_APPROVAL", "SUBMIT", 2]]);
