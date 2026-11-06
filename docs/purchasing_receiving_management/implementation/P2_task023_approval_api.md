@@ -1,6 +1,6 @@
 # TASK-023 — Settings and approval command APIs
 
-**Status: built and verified on a private MySQL, with the mutation sweep complete. No CI or PR yet.** See the handoff below.
+**Status: merged in #347 (`b28a7d88`), admitted CI run 42171546833 green.**
 
 Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2, §5.4, §6.2, §8.3; FR-SET, FR-APPROVAL, SEC-006～009, AC-012～017; `TC-004`, `TC-001`.
 
@@ -56,24 +56,3 @@ Sam chose option A on 2026-11-06 ("選 A，全部批准"): added assertions in t
 **Third batch (2026-11-06, private MySQL, code at `c88ec18a`):** the baseline passed 6 of 6 with the new assertions. All 3 mutants were killed: approve audited as rejected, reject and withdraw audited as approved, decision operation never completed.
 
 **Sweep total:** all 19 mutants ran and all were killed, each by the handler tests or the integration file named above. Each mutant ran only against its targeted files, so this is not a full-suite result.
-
-## Handoff: resumed 2026-11-06
-
-Sam resumed the work, relayed by the PM, who granted the first local MySQL slot of the day.
-
-**Candidate:** local branch `claude/purchasing-task023-approval-api`, worktree `.worktrees/purchasing-task023-approval-api`, based on main `d18a6951`. Not pushed, no PR, no CI run.
-
-**Verified without a database (2026-11-05):** `server/test/purchasing/*.test.js` (67 tests), three convention test files (8 cases), lint, boundary and traceability.
-
-**Verified on a private MySQL (2026-11-06, code at `af1bc272`, 33619, fresh datadir, all migrations):** 28 of 28 passed, 0 skipped, in about 10 seconds, at concurrency 1.
-- `purchasingApprovalCommands.integration.test.js`: 6 of 6, the first run of this file.
-- `purchasingPurchaseOrderApi.integration.test.js`: 5 of 5.
-- `purchasingPurchaseOrders.integration.test.js`: 17 of 17.
-- None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
-
-**Not verified:**
-- No full suite and no CI. The concurrency case ran once.
-
-**Open dependencies:**
-
-**Only next step:** merge main, rebuild the admission list, build the receipt, publish its digest, push and open the PR.

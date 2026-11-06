@@ -1,6 +1,6 @@
 # TASK-024 preparatory backend
 
-**Status: built, not verified on MySQL, not pushed.** It sits on PR #347 (TASK-023) and goes in its own PR after #347 merges.
+**Status: built, not verified on MySQL, not pushed.** Based on main after #347 (TASK-023).
 
 ## HD-022
 
@@ -28,4 +28,4 @@ No schema change. `idx_po_approvals_assignee` and `idx_purchasing_audit_action` 
 
 ## Only next step
 
-Merge #347, then a PM MySQL slot.
+A PM MySQL slot for the three integration files.
