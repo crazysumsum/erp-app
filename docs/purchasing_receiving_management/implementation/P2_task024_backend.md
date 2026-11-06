@@ -44,6 +44,10 @@ If the sweep requires test changes beyond this scope, they go back to Sam first.
 | A10 | `requireApproval` follows the setting |
 | A11 | Settings history excludes failures |
 
+## Stopped run of 2026-11-06 14:21
+
+Code `3a21c6db`, private MySQL. 23 cases: 21 passed, 2 failed, so the sweep did not run. Clean-up finished at 14:22:10. See `P2_task024_verification_proposal.md`.
+
 ## Only next step
 
-A PM MySQL slot of about 8 minutes, for step 1 and the 10 database mutants.
+The PM's review of that proposal, then Sam's decision.
