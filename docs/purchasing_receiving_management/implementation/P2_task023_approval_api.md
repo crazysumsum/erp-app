@@ -51,6 +51,8 @@ Sam approved both follow-ups on 2026-11-06 ("全部批准，兩項都做"): one 
 
 Totals: 17 of 18 mutants ran, 16 killed, 1 survived, 1 not run.
 
+Sam chose option A on 2026-11-06 ("選 A，全部批准"): added assertions in two existing cases, with no new case, that a decision completes its operation row and that reject and withdraw write the right audit action. One added mutant checks the reject and withdraw assertion, so the plan is now 19. The assertions are written and have not run yet.
+
 ## Handoff: resumed 2026-11-06
 
 Sam resumed the work, relayed by the PM, who granted the first local MySQL slot of the day.
@@ -66,11 +68,10 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- The audit action mutant has not run, and the surviving operation mutant shows a real test gap.
+- The new assertions and the 3 remaining mutants have not run.
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- Sam, through the PM: whether to add assertions for the completed operation row and the reject and withdraw audit actions.
-- PM: a MySQL slot of about 3 minutes, for the corrected audit mutants and the surviving mutant.
+- PM: a MySQL slot of about 3 minutes, for one baseline and 3 mutants.
 
-**Only next step:** Sam's decision on those assertions, collected by the PM.
+**Only next step:** the PM's MySQL slot, then run the baseline and the 3 mutants.

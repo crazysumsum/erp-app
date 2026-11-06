@@ -130,6 +130,8 @@ integrationTest("審批開啟：一定要指定另一名有權限嘅人；提交
   assert.equal(Number(row.confirmed_by), f.approver.id);
   const [audits] = await f.db.query("SELECT action FROM purchasing_audit_logs WHERE purchase_order_id = ? AND outcome = 'SUCCEEDED' ORDER BY id", [po.id]);
   assert.deepEqual(audits.map((audit) => audit.action), ["purchase_order.created", "purchase_order.submitted", "purchase_order.approved"]);
+  const [[operation]] = await f.db.query("SELECT command_type, result_summary, completed_at FROM purchasing_operation_requests WHERE event_id = ?", [eventId]);
+  assert.deepEqual([operation.command_type, operation.result_summary, operation.completed_at === null], ["APPROVE_PURCHASE_ORDER", { id: po.id, number: po.number, status: "CONFIRMED", version: 3 }, false]);
 });
 
 integrationTest("拒絕同撤回都回 Draft，舊申請用唔返；可以再提交新申請", async (t) => {
@@ -150,6 +152,8 @@ integrationTest("拒絕同撤回都回 Draft，舊申請用唔返；可以再提
   assert.deepEqual([withdrawn.status, withdrawn.body.data.status, withdrawn.body.data.version], [200, "DRAFT", 5]);
   assert.deepEqual((await f.approvals(po.id)).map((row) => row.status), ["REJECTED", "WITHDRAWN"]);
   assert.deepEqual((await f.history(po.id)).map((row) => row[2]), ["CREATE", "SUBMIT", "REJECT", "SUBMIT", "WITHDRAW"]);
+  const [audits] = await f.db.query("SELECT action FROM purchasing_audit_logs WHERE purchase_order_id = ? AND outcome = 'SUCCEEDED' ORDER BY id", [po.id]);
+  assert.deepEqual(audits.map((audit) => audit.action), ["purchase_order.created", "purchase_order.submitted", "purchase_order.rejected", "purchase_order.submitted", "purchase_order.approval_withdrawn"]);
 });
 
 integrationTest("批准時主檔或人員失效：拒絕，申請保留 Pending，撤回之後改得返", async (t) => {
