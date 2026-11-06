@@ -23,7 +23,12 @@ No schema change. `idx_po_approvals_assignee` and `idx_purchasing_audit_action` 
 
 ## Verification plan
 
-Not started. New cases and the sweep need Sam's new approval; the TASK-023 approval does not carry over. MySQL needs a PM slot.
+Sam, as project owner, approved on 2026-11-06: "全部批准，我作為project owner 批準你發digest，CI綠了就merge". Scope, as proposed in chat:
+- 4 new routine CI cases: 3 in `purchasingApprovalCommands.integration.test.js`, 1 in `purchaseOrderApprovalHandlers.test.js`. Also the added history assertions in the settings case. No new job, no capacity workload, no timing threshold, every PR like other functional tests.
+- The 11-mutant sweep below, on a private MySQL in a slot from the PM.
+- Publishing this receipt's digest once, and merging once CI is green.
+
+If the sweep requires test changes beyond this scope, they go back to Sam first.
 
 1. **One run on a private MySQL:** `purchasingApprovalCommands`, `purchasingInquiry` and `purchasingLookups`. Stop at the first unexpected failure.
 2. **Mutation sweep, if approved:** 11 mutants, in the scratchpad script `sweep024.mjs`, against targeted files only. One needs no database.
@@ -41,4 +46,4 @@ Not started. New cases and the sweep need Sam's new approval; the TASK-023 appro
 
 ## Only next step
 
-Sam's decision on the CI admission and sweep proposal, and a PM MySQL slot.
+A PM MySQL slot of about 8 minutes, for step 1 and the 10 database mutants.
