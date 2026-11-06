@@ -52,6 +52,57 @@ Code `3a21c6db`, private MySQL. 23 cases: 21 passed, 2 failed, so the sweep did 
 
 Sam approved on 2026-11-06, relayed by the PM: "批准完整修補及本機整批一次". It covers patch `032d52e1`, including the `purchasingInquiry` assertion change, the two failed cases once each, and A2 to A11 once each, with A7 changed from `snapshot: null` to removing `response.snapshot`. Tools: `run024` `a9978fa1`, `sweep024` `21c97d05`. One isolated MySQL preparation, existing migrations, batch and clean-up, within the limits in `P2_task024_verification_proposal.md`. No retry and no CI or push from this approval. The other 21 PASS results and A1 stand.
 
+## Batch result
+
+Run once on 2026-11-06, 17:24:37 to 17:25:10 HKT, 33 s, at code `8b281b96f76f637a5319d57bce051788888510ef`, with `run024` `a9978fa126a1fdddc93f629b39f1d27377c0c799edc1cff11d21435bf8defb12` and `sweep024` `21c97d05c2d46973e0cff30e2c7e4ba46c6ea4c86a2958833e57cbd52f725b71`. Exit 0, no retry.
+
+```text
+17:24:37 start
+17:24:39 mysqld pid 51770 socket /private/tmp/m023/mysql.sock port 33619
+17:24:41 migrated
+17:24:44 C1 PASS
+17:24:44 C2 PASS
+17:24:46 A2 KILLED at line 235
+17:24:49 A3 KILLED at line 241
+17:24:51 A4 KILLED at line 227
+17:24:54 A5 KILLED at line 253
+17:24:56 A6 KILLED at line 254
+17:24:59 A7 KILLED at line 250
+17:25:01 A8 KILLED at line 281
+17:25:04 A9 KILLED at line 281
+17:25:06 A10 KILLED at line 286
+17:25:09 A11 KILLED at line 212
+17:25:10 cleanup done: own mysqld gone, socket gone, 33619 free, data directory deleted
+STOP REASON: none
+RESULT {"C1":"PASS","C2":"PASS","A2":"KILLED","A3":"KILLED","A4":"KILLED","A5":"KILLED","A6":"KILLED","A7":"KILLED","A8":"KILLED","A9":"KILLED","A10":"KILLED","A11":"KILLED"} attempted 12 not_run 0 tree_clean true cleanup_ok true elapsed_s 33
+```
+
+- **Sweep:** all 11 mutants killed, including A1 from 14:19 HKT.
+- **Origin of A7 and A11 in the system log:** the only two server errors in that window, both `RESPONSE_VALIDATION_FAILED`: `getPurchaseOrder` at `/approval/snapshot`, `getPurchasingSettings` at `/history/1/requirePoApproval`.
+- **Limits:** 63 request log entries against 100. PO and approval counts were not measured, and their static limits are 11 and 10.
+- **Release:** checked at 17:25:22 HKT: PID 51770 gone, no `mysqld`, ports 3306 and 33619 free, `/private/tmp/m023` gone, tree clean.
+- **Not proved:** this ran selected cases only. The other 21 PASS results come from `3a21c6db`, before the snapshot formatting. No full suite and no CI yet.
+
+## Approvals for publishing
+
+Sam's words, in this chat unless stated. Times are HKT on 2026-11-06.
+
+| Time | Words | Applies to |
+| --- | --- | --- |
+| 14:05 | "TASK-024 選 A＋a，全部批准" | HD-022: this backend PR, then the client PR; `requireApproval` in the approvers lookup |
+| 14:19 | "全部批准，我作為project owner 批準你發digest，CI綠了就merge" | The proposal then on the table: 4 new CI cases, the settings history assertions, the sweep, one digest for this receipt, merge on green CI |
+| 17:20 (relayed by the PM, call_7553be3498ab45f5bdb21bd4a55b3f1f) | "批准完整修補及本機整批一次" | Patch `032d52e1`, including the `purchasingInquiry` assertion change, and one local batch. The PM's relay states zero CI and push |
+
+**For the PM to confirm before any push:**
+1. Whether the 14:19 authorization still covers publishing, given that the 17:20 relay says zero CI and push. The author reads that as limited to the batch, which is not a decision.
+2. Whether the 14:19 receipt scope includes the two later test changes. The patched `purchasingInquiry` assertion and the added `lineAmount` check were not in the 14:19 proposal. Sam approved them at 17:20 as a patch, without saying they go into routine CI.
+
+## Prepared for publishing, not done
+
+- **Main:** no drift; `origin/main` has no commits beyond this branch.
+- **Admission inputs:** 21 by reading the receipts, the same set as TASK-023's: 3 with changed content since `purchasing-task023.json` (`purchasingApprovalCommands`, `purchasingInquiry`, `purchaseOrderApprovalHandlers`) and 18 re-pins. The gate decides the final list.
+- **Remaining steps:** build the receipt, publish its digest, push, open the PR, merge on green CI.
+
 ## Only next step
 
-The PM binds the final head and gives a slot, then the batch runs once.
+The PM's confirmation of the two points above.
