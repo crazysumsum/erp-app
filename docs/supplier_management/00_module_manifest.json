@@ -42,7 +42,8 @@
       "client/src/services/supplier*.js",
       "server/test/**",
       "client/test/**",
-      "client/e2e/**"
+      "client/e2e/**",
+      ".github/test-admissions/supplier-task052-sku-refs.json"
     ],
     "approval_required_paths": [
       ".gitignore",
