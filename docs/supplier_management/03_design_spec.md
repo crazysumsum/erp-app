@@ -970,6 +970,7 @@ Unknown property 一律 400，不保存成動態 setting。Response 顯示設定
 - `assertUsableInTransaction(connection, supplierId, { purpose, atMs })`（提交時原子重驗）
 - `getPurchaseDefaults(supplierId, { atMs })`（preflight相容wrapper）
 - `getPurchaseDefaultsInTransaction(connection, supplierId, { atMs })`（提交時原子讀取）
+- `findSkuRefsInTransaction(connection, supplierId, skuIds)`（PO Line的Supplier－SKU提示）
 
 `purpose: purchase`只接受Active；`history`接受所有未物理刪除狀態。無connection的wrapper只供selector／draft preflight，內部開bounded read transaction；PO提交／批准必須把自己的connection傳給`*InTransaction`版本，避免check與write之間的狀態競態。兩種版本使用同一domain helper及相同projection；`getPurchaseDefaults*`只回Supplier基本資料、ordering address、default Currency及Payment Term，絕不回Bank資料。Lookup service不自行認識所有Purchasing roles，呼叫方handler先以自己的permission授權。
 
@@ -983,7 +984,9 @@ Unknown property 一律 400，不保存成動態 setting。Response 顯示設定
 }
 ```
 
-`eventId`由Purchasing穩定產生，同一來源行重送沿用同值；`(source_type,source_id,source_line_id)`亦唯一。Service先以`supplier_supply_events.event_id`作durable fence，再upsert soft relation及以最大值更新`first_supplied_at`／`last_supplied_at`；重送回既有outcome，不重複audit，也不得把relation自動改成preferred。Projection失敗不回滾已提交GR，必須發低敏告警並由reconciliation按來源事件補回。
+`eventId`由Purchasing穩定產生，同一來源行重送沿用同值；`(source_type,source_id,source_line_id)`亦唯一。Service先以`supplier_supply_events.event_id`作durable fence，再upsert soft relation，`first_supplied_at`取最小值、`last_supplied_at`取最大值；重送回既有outcome，不重複audit，也不得把relation自動改成preferred。Projection失敗不回滾已提交GR，必須發低敏告警並由reconciliation按來源事件補回。
+
+來源由`verifySource(connection, command)`證明：未注入時回503 `SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE`；既有同內容事件直接replay，不呼叫verifier；成功為`Promise<void>`，拒絕必須throw。HTTP handler的instance不注入；Purchasing TASK-040以專用`SupplierRelationService` instance注入，此instance不屬`supplierCoreProvider`。收貨部分或全部反向不回退first／last，Supplier不提供undo。
 
 ### 6.9 Import／Export APIs
 
@@ -1243,6 +1246,7 @@ Supplier對下游公開的最小contract固定為：
 - `assertUsableInTransaction(connection, supplierId, { purpose, atMs })`：鎖定／重驗新交易資格；required provider未知或不可用時fail closed。
 - `listForSku(skuId, { q, page, pageSize })`：只回Active候選及排序理由，不回Bank資料。
 - `getPurchaseDefaultsInTransaction(connection, supplierId)`：回Currency／Payment Term reference及必要snapshot；不存在Payment Term時明確回`null`。
+- `findSkuRefsInTransaction(connection, supplierId, skuIds)`：在呼叫方transaction以普通讀取（不加鎖、不另借連線）讀取該Supplier的`supplier_sku_refs`；`skuIds`最多100個，可重複；空陣列回空Map且不查DB；回`Map<skuId, { relationId, relationshipStatus, supplierItemCode, lastSuppliedAt }>`，Map key及`relationId`均為number，`lastSuppliedAt`為epoch ms或`null`。Relation只作提示，不驗Supplier／SKU狀態；`stopped`照回，沒有relation的SKU不在Map內且不算錯誤。
 - `getOpenMatterStatusInTransaction(connection, supplierId)`：聚合已註冊下游providers，結果為`OPEN`、`CLEAR`或`UNKNOWN`；永久刪除／封存等安全操作不得把`UNKNOWN`當`CLEAR`。
 
 所有provider在startup registry宣告name、purpose、required capability及health/readiness；不允許Fulfillment、Purchasing、Receiving、Returns、AP或Payment自行複製Supplier狀態判斷。一般lookup永不包含Bank欄；未來Payment Bank contract按§8.4的高信任流程另行增加。
@@ -1664,7 +1668,7 @@ Bank audit detail只保存 changed field names、masked last four、status及 de
 基準資料：100,000 Suppliers；平均5 addresses、10 contacts、2 identifiers、2 masked bank rows；其中20%有SKU relations。以50名同時在線使用者執行代表性混合負載：
 
 - Supplier Code exact、name search、status／currency filter及detail的p95 < 2秒；for-SKU lookup的p95 < 3秒（NFR-005，HD-157）。
-- 10,000-row CSV precheck＋execution系統處理時間合計≤10分鐘，並保持線上query p95。
+- 10,000-row CSV precheck＋execution系統處理時間合計≤10分鐘；匯入期間線上一般操作p95 < 5秒（NFR-004，HD-158）。
 - Duplicate candidate query只讀bounded50 rows；不得掃描全部Supplier後在Node計算。
 - Bank list不讀ciphertext；reveal單筆decrypt不形成bulk decrypt endpoint。
 - Explain plan證明常用filter／sort使用設計索引，沒有因Address／Contact join令count膨脹。
