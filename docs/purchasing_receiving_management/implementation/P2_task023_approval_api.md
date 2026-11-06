@@ -42,7 +42,14 @@ Sam, as project owner, approved on 2026-11-06: "全部批准，我作為project 
 - Pending PO can be saved: survived the integration file and was killed only by `purchaseOrderStateMachine.test.js`. The integration case's title says the PO is frozen, but no case tries to update a pending PO over HTTP.
 - Not run, because Sam's approved scope does not name them: submit without an approver, approver sent with approval off, settings ignoring version, wrong audit action on a decision, decision operation not completed.
 
-Sam approved both follow-ups on 2026-11-06 ("全部批准，兩項都做"): one added assertion in the existing case that updating a pending PO returns `409 PO_STATE_CONFLICT`, with no new case, and running the 5 remaining mutants. The assertion is written and has not run yet.
+Sam approved both follow-ups on 2026-11-06 ("全部批准，兩項都做"): one added assertion in the existing case that updating a pending PO returns `409 PO_STATE_CONFLICT`, with no new case, and running the 5 remaining mutants. 
+
+**Second batch (2026-11-06, private MySQL, code at `11f582fe`):** the baseline passed 6 of 6 with the new assertion, so updating a pending PO over HTTP returns `409 PO_STATE_CONFLICT`.
+- Killed by the integration file: submit without an approver, approver sent with approval off, settings ignoring version, pending PO can be saved.
+- **Decision operation never completed: survived.** The approve replay in the test still returned 200. With this mutant, a replay reaching the service would get `CONCURRENT_OPERATION`, so the replay appears to be answered by the HTTP idempotency layer. No case checks that a decision completes its row in `purchasing_operation_requests`.
+- **Wrong audit action on a decision: not run.** The mutant's search string also matched the create path, so the sweep refused it. This was an error in the sweep script. The approve case asserts its audit action, but no case asserts the audit action for reject or withdraw.
+
+Totals: 17 of 18 mutants ran, 16 killed, 1 survived, 1 not run.
 
 ## Handoff: resumed 2026-11-06
 
@@ -59,10 +66,11 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- 5 service mutants have not run, and the new pending-PO assertion has not run.
+- The audit action mutant has not run, and the surviving operation mutant shows a real test gap.
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- PM: a MySQL slot of about 5 minutes.
+- Sam, through the PM: whether to add assertions for the completed operation row and the reject and withdraw audit actions.
+- PM: a MySQL slot of about 3 minutes, for the corrected audit mutants and the surviving mutant.
 
-**Only next step:** the PM's MySQL slot, then run the changed integration file and the 6 mutants.
+**Only next step:** Sam's decision on those assertions, collected by the PM.
