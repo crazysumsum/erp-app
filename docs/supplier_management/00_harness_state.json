@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 519,
+  "revision": 520,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "c5c7e6ca53d2e3a23b37f87c2b2066ff3d7d1dca9180656cf9d6184aa3c8cff6",
     "plan": "debdcb7de7bde174c0d531c203c314545f24d2d93ea80c2b41371650c5a8930d",
-    "code_commit": "dd67a460dbfef8f883387771a1c6406758a4d92a",
-    "source_fingerprint": "c865e4395630c52ca2084a282e9bee24b5d589f2d752ae9378301664005ae62b",
+    "code_commit": "a187912490d29dbecbc5a619620dbfd1b65958a8",
+    "source_fingerprint": "5d352e0125663de566a6f5ae56292686f77b18876ef515a117d674b4cf009b7b",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider",
     "default_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
     "mode_entry_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f"
@@ -3119,6 +3119,42 @@
         "server/scripts/smokeSupplierManagement.js",
         "server/package.json",
         "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-163-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Human in the Supplier chat, HD-163 A",
+      "decision": "APPROVED",
+      "source_ref": "Human answer 'A' in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-06, HD-163 A. The PM read the message and question at 14:29 and passes them to the trusted approval administrator as the decision source. Covers this revision only; it re-affirms no other approval.",
+      "recorded_at": "2026-11-06T14:40:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "c5c7e6ca53d2e3a23b37f87c2b2066ff3d7d1dca9180656cf9d6184aa3c8cff6",
+      "code_commit": "a187912490d29dbecbc5a619620dbfd1b65958a8",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-163-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Human in the Supplier chat, HD-163 A",
+      "decision": "APPROVED",
+      "source_ref": "Human answer 'A' in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-06, HD-163 A. The PM read the message and question at 14:29 and passes them to the trusted approval administrator as the decision source. Covers this revision only; it re-affirms no other approval.",
+      "recorded_at": "2026-11-06T14:40:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "debdcb7de7bde174c0d531c203c314545f24d2d93ea80c2b41371650c5a8930d",
+      "code_commit": "a187912490d29dbecbc5a619620dbfd1b65958a8",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
       ],
       "expires_at": null
     }
@@ -12010,5 +12046,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; re-record the DESIGN and PLAN approvals on the new baselines once the human's 'A' is confirmed as Sam's; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance. Non-functional capacity runs only after formal UAT, by explicit dispatch on main with an external grant; the 41 limited-UAT acceptances are not formal UAT. Purchasing re-pins Supplier 03 once after the merge."
+  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. APPROVAL-HD-163-DESIGN and -PLAN cover this revision only. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance; the 41 limited-UAT acceptances are not formal UAT. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run. Purchasing re-pins Supplier 03 once after the merge."
 }
