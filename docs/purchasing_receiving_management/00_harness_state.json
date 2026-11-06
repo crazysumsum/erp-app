@@ -42,11 +42,11 @@
     "TASK-014": "DONE",
     "TASK-015": "DONE",
     "TASK-016": "DONE",
-    "TASK-017": "PENDING",
-    "TASK-018": "PENDING",
-    "TASK-019": "PENDING",
-    "TASK-020": "PENDING",
-    "TASK-021": "PENDING",
+    "TASK-017": "DONE",
+    "TASK-018": "DONE",
+    "TASK-019": "DONE",
+    "TASK-020": "DONE",
+    "TASK-021": "DONE",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
@@ -93,11 +93,11 @@
         "DEC-001 through DEC-013",
         "OPEN-001 through OPEN-005 closed as DECIDED",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical; the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
         "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
         "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006.",
-        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed: design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals: \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed; design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals; \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
       ],
       "expires_at": null
     },
@@ -173,11 +173,11 @@
         "server/test/integration/migrations.integration.test.js",
         "Path entries are bare globs because the harness reads every scope entry containing a slash as a path pattern. The per-path reasons formerly written inline are in P0_contract_repin.md and P0_consumer_contract_gate.md",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical; the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
         "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004.",
         "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
         "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006.",
-        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed: design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals: \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed; design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals; \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
       ],
       "expires_at": null
     },
@@ -224,7 +224,7 @@
         "Approved on 2026-10-30 together with option A of the TASK-010 startup wiring question. Adds four lines to the configuration loader and the purchasing section to its section test, following the Fulfillment and Sales precedent",
         "Re-confirmed on 2026-11-02 for TASK-010 CI admission (design 600d9d58ff1c->84b5a22ef0ce, plan 5b8a282f8244->61dff2ac2dc2). The only change is one allowed write path for this module's own CI test admission receipts; a receipt grants nothing until the approval administrator publishes its digest. See REV-005.",
         "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006.",
-        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed: design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals: \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed; design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals; \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
       ],
       "expires_at": null
     },
@@ -247,7 +247,7 @@
         "server/database/migrations/0113_create_purchase_order_lines.js",
         "Approved on 2026-11-02 together with the TASK-011 schema proposal; four additive migrations, one table each",
         "Re-confirmed on 2026-11-02 for TASK-011 HD-013 (design 84b5a22ef0ce->08a08a3ddebb, plan 61dff2ac2dc2->d1c00718d37a). The only change is three shared files added to approval_required_paths so the Purchasing Business Master impact checker can be registered and two dependent tests adjusted; requirement, design and plan documents are byte-identical. See APR-008 and REV-006.",
-        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed: design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals: \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed; design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals; \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
       ],
       "expires_at": null
     },
@@ -268,7 +268,7 @@
         "server/test/business-master/http.integration.test.js",
         "server/test/integration/supplierMigrationAcceptance.integration.test.js",
         "Approved on 2026-11-02 with option A of the TASK-011 Business Master and Supplier MIG-006 decision; Sam asked for the Supplier test change to be made here",
-        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed: design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals: \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed; design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals; \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
       ],
       "expires_at": null
     },
@@ -290,7 +290,63 @@
         "server/database/migrations/0116_add_purchasing_immutability_triggers.js",
         "server/test/integration/supplierMigrationAcceptance.integration.test.js",
         "Approved on 2026-11-02 together with the TASK-012 schema proposal, including its three recommended additions",
-        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed: design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals: \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+        "Re-confirmed on 2026-11-03 for TASK-015 HD-016 (design 08a08a3ddebb->bedf5d1b349d, plan d1c00718d37a->7cca891a3c9f). Unlike the earlier pin-only passes the documents changed; design 9.3 places handlers by URL prefix and the manifest admits eight handler directories (HD-016), and HD-006 and HD-009..HD-015 were folded into the requirement, design and tasks. Sam reviewed it as REV-007 and re-confirmed all approvals; \"全部批准\". See docs/purchasing_receiving_management/implementation/P1_task015_po_draft_handlers.md#rev-007-and-re-confirmation."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-010",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task021_nav_errors.md#apr-010--shared-files",
+      "recorded_at": "2026-11-05T10:57:58+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-021",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "Approved on 2026-11-05 with the TASK-021 proposal, including the shared CONCURRENT_OPERATION and UOM_CONVERSION_INVALID wording"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-011",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#apr-011--migration-scope",
+      "recorded_at": "2026-11-05T11:39:17+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-022",
+        "server/database/migrations/0117_create_purchase_order_approvals.js",
+        "server/database/migrations/0118_create_purchase_order_status_history.js",
+        "Approved on 2026-11-05 with the TASK-022 schema proposal, including the added CHECK constraints, the DELETE-rejecting trigger and the 1MiB snapshot cap (HD-020 A)"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-012",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#apr-012--error-messages",
+      "recorded_at": "2026-11-05T14:12:53+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-022",
+        "client/src/framework/http/errorMessages.js",
+        "Approved on 2026-11-05 with the TASK-022 proposal, covering three new Purchasing approval messages"
       ],
       "expires_at": null
     }
@@ -612,6 +668,29 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task017_po_submit_confirm.md#hd-018"
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "question": "TASK-018's form needs Supplier, SKU, Currency, Payment Term, warehouse and Buyer choices and Supplier defaults, but no task builds the §5.5 lookups, the existing routes need Supplier or Inventory permissions, and the Buyer candidate rule and Supplier search without a SKU are undefined.",
+      "affected_ids": [
+        "TASK-018",
+        "TASK-020",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_hd019_po_form_lookups.md#hd-019"
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "question": "Design 4.7 caps approval_snapshot at 64KiB, but a valid 100-line PO can exceed it, so a legitimate large PO could not be submitted with approval on. Raise the cap, keep it and reject, or drop notes from the snapshot?",
+      "affected_ids": [
+        "TASK-022",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P2_task022_approval_schema.md#hd-020"
     }
   ],
   "external_actions": [
@@ -742,9 +821,57 @@
       "idempotency_key": "purchasing-task016-pr333-merge-20261104",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit ae54601f8dbd79055956c15c508d439dea98d864, verified as an ancestor of origin/main; admitted CI run 41757244336 attempt 1 completed success on the dispatched merge 18cb9944 of head 85a119714afc63a69040d05bd7afaf434fe523c0 with origin/main e5500fc9 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; pre-merge gate read the parents through the API, and the merged commit has the same parents and tree 555ce8c0"
+    },
+    {
+      "id": "EXT-017",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/334 -> main",
+      "idempotency_key": "purchasing-task017-pr334-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit d434a85767045613ac6d7a64ed81742bc6937fc9, verified as an ancestor of origin/main; admitted CI run 41766406647 attempt 1 completed success on the dispatched merge 2673b56f of head 82bdeb7b53a190d18ce28941206508aa932f273d with origin/main 59c6e740 (capacity jobs skipped by the post-UAT rule); Admitted PR CI SUCCESS; pre-merge gate read the parents through the API, and the merged commit has the same parents and tree d91bad4c"
+    },
+    {
+      "id": "EXT-018",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/337 -> main",
+      "idempotency_key": "purchasing-hd019-pr337-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit d9c4a267f92fa25e39784c7aa47b7693296c1ed0, verified as an ancestor of origin/main; admitted CI run 41791119711 attempt 1 completed success on the dispatched merge a4a96f44 of head 778d9ce82a547e75be2b8a12ccf6bf72fb839976 with origin/main 591634bb (capacity jobs skipped by the post-UAT rule); pre-merge gate read the parents through the API, and the merged commit has the same parents and tree feae8920"
+    },
+    {
+      "id": "EXT-019",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/339 -> main",
+      "idempotency_key": "purchasing-task018-pr339-merge-20261104",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit d65051a3ecf17d95bc7d805e0638d9e2a0266825 verified ancestor of origin/main; admitted CI run 41805145568 attempt 1 success on dispatched merge 4d015829 of head 9a736c3e544b5b96de9e1780b8c4cdc40075183b with origin/main 86ac62a4, capacity jobs skipped, same parents and tree 7f1ded66"
+    },
+    {
+      "id": "EXT-020",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/340 -> main",
+      "idempotency_key": "purchasing-task019-pr340-merge-20261105",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit 64dc0904759c2dc8fcd6b3db9004c8d06fc314c1 verified ancestor of origin/main; admitted CI run 41949084086 attempt 1 success on dispatched merge 93dbae91 of head 2b84affe6c7291eb044bc3f6a61f9539fdfb85b5 with origin/main d65051a3, capacity jobs skipped, same parents and tree 1e0dde7f"
+    },
+    {
+      "id": "EXT-021",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/341 -> main",
+      "idempotency_key": "purchasing-task020-pr341-merge-20261105",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit 52d2af5b0e52c32337dd1b8aa4fd7a6d4e60659a verified ancestor of origin/main; admitted CI run 41952767619 attempt 1 success on dispatched merge 688cccf4 of head 3d0636f91fefc440ddb472c264577384cc283f68 with origin/main 64dc0904, capacity jobs skipped, same parents and tree 61c2584c"
+    },
+    {
+      "id": "EXT-022",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/342 -> main",
+      "idempotency_key": "purchasing-task021-pr342-merge-20261105",
+      "status": "CONFIRMED",
+      "source_ref": "merge commit b1d987326926f3cd465304a9665fdbe6e42db1d3 verified ancestor of origin/main; admitted CI run 41958641179 attempt 1 success on dispatched merge 671da507 of head 9bbba42fcf6f680df55a5ad76e9bc458ccdf9f58 with origin/main 52d2af5b, capacity jobs skipped, same parents and tree e4ac13db"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-016 is DONE (PR #333, HD-017). TASK-017 is in progress on claude/purchasing-task017: Approval OFF submit and confirm with HD-018 answered (1A audit only until TASK-022 adds status history; 2A refuse with PO_MASTER_CHANGED when a factor or Currency scale changed; 3A non-locking Item reads), plus the fix for TASK-016 returning stored-scale amounts. TASK-017 submit must revalidate every master strictly and decide whether Item and Supplier reads need locking reads; open for the Supplier owner: transactional reads of a Supplier address by ID and of supplier_sku_refs. The confirm path must write line snapshots before switching the PO header out of DRAFT, because trg_po_lines_update freezes lines once the header leaves DRAFT. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 to fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021 is DONE (PR #342, implementation/P1_task021_nav_errors.md). TASK-022's schema and services are on claude/purchasing-task022-approval, recorded in implementation/P2_task022_approval_schema.md, with APR-011, APR-012, HD-020 A and CI admission approved by Sam on 2026-11-05. TASK-023 connects the services to commands and routes, starts writing status history, and must resolve jwt-device-password against jwt-password for the settings update. Do not run bare npm run test:coverage locally: it executes the capacity catalog. PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }

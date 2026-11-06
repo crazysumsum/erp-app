@@ -7,7 +7,8 @@ const COMMANDS = Object.freeze({
   CREATE_PURCHASE_ORDER: "PURCHASE_ORDER",
   UPDATE_PURCHASE_ORDER: "PURCHASE_ORDER",
   COPY_PURCHASE_ORDER: "PURCHASE_ORDER",
-  SUBMIT_PURCHASE_ORDER: "PURCHASE_ORDER"
+  SUBMIT_PURCHASE_ORDER: "PURCHASE_ORDER",
+  UPDATE_PURCHASING_SETTINGS: "SETTING"
 });
 const PO_STATUSES = ["DRAFT", "PENDING_APPROVAL", "CONFIRMED", "PARTIALLY_RECEIVED", "FULLY_RECEIVED", "CLOSED", "CANCELLED"];
 
@@ -60,6 +61,9 @@ export function purchasingPayloadHash(commandType, payload) {
 
 function safeResult(value) {
   const result = typeof value === "string" ? JSON.parse(value) : value;
+  if (result && Object.keys(result).sort().join(",") === "requirePoApproval,version" && typeof result.requirePoApproval === "boolean") {
+    return { requirePoApproval: result.requirePoApproval, version: identifier(result.version) };
+  }
   if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
       typeof result.number !== "string" || !/^PO-\d{6}-\d{6}$/u.test(result.number) || !PO_STATUSES.includes(result.status)) throw new TypeError("Invalid Purchasing operation result");
   identifier(result.id); identifier(result.version);
@@ -98,8 +102,9 @@ export class PurchasingOperationService {
 
   async complete(connection, { operationId, result, nowMs }) {
     const summary = safeResult(result);
-    const [row] = await connection.execute(`UPDATE purchasing_operation_requests SET result_type = 'PO', result_id = ?, result_summary = ?,
-      completed_at = ? WHERE id = ? AND completed_at IS NULL`, [String(summary.id), JSON.stringify(summary), timestamp(nowMs), identifier(operationId)]);
+    const [resultType, resultId] = summary.id ? ["PO", String(summary.id)] : ["SETTING", "1"];
+    const [row] = await connection.execute(`UPDATE purchasing_operation_requests SET result_type = ?, result_id = ?, result_summary = ?,
+      completed_at = ? WHERE id = ? AND completed_at IS NULL`, [resultType, resultId, JSON.stringify(summary), timestamp(nowMs), identifier(operationId)]);
     if (Number(row.affectedRows) !== 1) throw purchasingError("CONCURRENT_OPERATION");
   }
 

@@ -1,6 +1,6 @@
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { QDrawer, Quasar } from "quasar";
+import { QDrawer, Quasar, Screen } from "quasar";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { beforeEach, describe, expect, it } from "vitest";
 import AppShell from "@/framework/layout/AppShell.vue";
@@ -56,6 +56,23 @@ describe("AppShell", () => {
     const { wrapper } = await mountAppShell();
 
     expect(wrapper.text()).toContain("訂單管理");
+  });
+
+  it("窄畫面載入時 drawer 收埋，撳選單按鈕先開", async () => {
+    const width = Screen.width;
+    Screen.width = 375;
+    try {
+      const { wrapper } = await mountAppShell();
+      const drawer = wrapper.findComponent(QDrawer);
+
+      expect(drawer.props("modelValue")).toBe(false);
+
+      await wrapper.find('button[aria-label="開關側邊欄"]').trigger("click");
+
+      expect(drawer.props("modelValue")).toBe(true);
+    } finally {
+      Screen.width = width;
+    }
   });
 
   it("撳 Topbar 嘅選單按鈕會切換 drawer 開關", async () => {

@@ -1,5 +1,57 @@
 # Customer Management Design Review
 
+## TASK-032 exact human decision — 2026-11-05
+
+Sam directly approved DESIGN `98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a`, PLAN `76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40`, and TL's three-case / twelve-variant / fifteen-stub-query routine regression proposal in this Customer chat. The PM independently confirms the same decision in human turn `01a1aa3f-11a8-71d3-898c-1207e30ad6c1`, user `01a1aa3f-11f7-75c3-afa8-aa2dfa800ed3`, question `call_d78049a77dcf42e1b7aa3b8972f76def`: `批准候選、三案及一次 Draft PR CI`.
+
+The approval covers the exact owner-reviewed Fulfillment reader adoption, existing opt-in composition, unchanged manifest/task-plan candidate and one new test file `server/test/customerReferenceComposition.test.js`. Its three named cases use twelve fixed variants, fifteen in-memory query calls and two factory resolutions, serially once each, without DB, app, HTTP, network or browser. Existing global 92/83/90 and all thirty-nine individual coverage floors remain unchanged; no job or schedule is added. Native v4 evidence remains bound to its original source and is not rerun. Local targeted execution passed 3/3, zero skips, on 2026-11-05; it is functional developer evidence, not full downstream acceptance or CI coverage.
+
+Customer remains sole publisher. Independent review and the trusted administrator's exact-blob admission/readback precede one independent Draft PR and one natural existing functional CI batch. Stop/report the first failure without automatic retry. **Merge requires a separate decision.** Four absent providers, retained history, root-lock/writer serialization and full downstream integration acceptance remain BLOCKED. The pending labels below preserve the earlier proposal state; this new decision answers HD-019 without rewriting historical approvals or native evidence.
+
+The module path checker still reports exactly `OUTSIDE_MODULE` for `.github/test-admissions/customer-task032-composition.json`; its raw result is not PASS. TL and PM explicitly confirm this single governance receipt is necessary within Sam's formal admission authorization. The exact-path exception is recorded without broadening `.github` access, changing the approved manifest/baselines, modifying CI/controller/floors or granting the author external digest administration. Independent administrator verification remains mandatory.
+
+## TASK-032 partial provider candidate — 2026-11-05 (baseline decision pending)
+
+This is a prepared adoption candidate, not a new human DESIGN/PLAN approval.
+Observed candidate hashes are DESIGN
+`98d2dc4195ae7a1b9c18424e6da6d44bb8a3fddf365c1610f556d02dffdba15a`
+and PLAN `76f21869341d72f24a9efb041f34e81fa2a3ad40164f57beddb268efd2142a40`.
+They change because the manifest binds one exact owner-reviewed Fulfillment source,
+consumed ABI and approval-required adoption path, and TASK-032 gains a partial
+checkpoint. Requirements, design behavior, test definitions and thresholds are
+unchanged. Historical approvals below retain their exact original hashes and scope.
+
+Actual Sam question `call_d0449f49205e4fb0bdf20d1110b038db`, human turn
+`01a1a96d-bf11-7b80-8f7a-d0712fcffff0` / message
+`01a1a96d-bf5b-70c3-9b4f-5b3bc1290b5a` in PM chat authorized
+`批准 v4 一次，排在 Inventory 之後`. Customer directly verified the original
+question/answer, the exact TL review and the later PM exclusive GO before the
+single successful native run. This is scoped runtime authority for781dd9be/v4,
+not approval of these new hashes, routine cases, test admission, PR CI or merge.
+The [source-bound checkpoint](implementation/task032-partial-composition-candidate.md#scoped-native-checkpoint--2026-11-05)
+records actual six-observation PASS and verified cleanup without copying private data.
+
+PM separately permitted local canonical preparation and exact source adoption;
+TL accepted static impact reconciliation with fresh main `b1d98732`. Neither is
+recorded as a new human baseline decision. Independent source review for781dd9be
+and owner review for2abe4015 remain source-specific evidence. Final integrated
+composition review, formal baseline disposition, exact protected-input admission,
+minimum directly loaded functional-regression approval and a new normal PR/CI
+publication boundary remain pending. TASK-032 is PARTIAL; four missing providers,
+production history, root-lock/writer and archive rules still block formal enablement.
+
+## TASK-032 exact human decision — 2026-11-04
+
+Sam explicitly selected `批准兩檔、Draft PR 及一次 CI` in PM chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, human turn `01a1a544-148d-7753-8ecc-7bbc7e9db6e2`, user message `01a1a544-14f2-7600-8900-69bd5dcd3623`, question `call_c8b597c64378488eb9e206ab4bbe4d15` item0. Customer independently read the actual question and answer before recording this decision; it is not inferred from TL source review or an unanswered proposal.
+
+- Approved exact DESIGN: `6b158f0c747be7c93f4db94edb59708dbc922ca8a23f51ad88412c7bd60600a0`; PLAN: `b918832b54a840e34a60c1e8b95e5de07017b50ad265623a82687be8c3f11186`.
+- Exact support inputs: manifest mode100644/blob `1154b814a4a93ffb0a81e39e432e32c9fa3c96f9`; task plan mode100644/blob `1e935c0c4322dae808b6e67efee59d55ac27906e`. The question's short hashes resolve uniquely to these reviewed bytes and hashes; no contents or thresholds were changed after approval.
+- Scope: two exact added product paths and TASK032 partial checkpoint; latest-main reconciliation, independent trusted admission registration, Draft PR and **one** natural existing eight-shard functional CI. No new routine case, scale or relaxed gate; first failure stops. Customer is the sole publisher after registration/static admission confirmation. Keep Draft; merge requires a separate decision.
+- Original candidate `ef11e8a9` and integrated local `246e7360` retain their source/evidence history. Private C1/C2/F1 are not replayed or promoted to routine CI. Required production providers, deployed readiness, whole TC075, downstream acceptance, UAT and NFR remain unapproved/unproven as previously recorded.
+- Historical HD016 approval for13a77ed2/b390c588 is preserved for its original revision. The new human decision applies only to this specified continuation and does not authenticate future changed receipt/product/plan bytes.
+
+The author-prepared `.github/test-admissions/customer-task032-support.json` binds those two blobs. Only the independently assigned CI administrator may verify the decision, register its digest externally and report successful readback; writing the receipt does not grant admission. Approval/review/state bookkeeping is excluded from the DESIGN/PLAN hash inputs; it does not alter the approved two files.
+
 ## Current UI shared-root exception — HD-012 (proposal only)
 
 Sam authorized DEF-034002/DEF-027001 repair/verification/PRmerge. Current DESIGN9.1

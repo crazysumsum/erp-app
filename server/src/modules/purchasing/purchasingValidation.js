@@ -53,6 +53,11 @@ export function lineNote(value = "", field = "lineNote") {
   return text(value, { maximum: 1000, multiline: true, field });
 }
 
+/** 提交說明等最多 500 字、可以留空嘅欄位。 */
+export function shortNote(value = "", field = "note") {
+  return text(value, { maximum: 500, multiline: true, field });
+}
+
 /** Supplier reference 等單行欄位，最多 190 字。 */
 export function reference(value = "", field = "reference") {
   return text(value, { maximum: 190, multiline: false, field });
