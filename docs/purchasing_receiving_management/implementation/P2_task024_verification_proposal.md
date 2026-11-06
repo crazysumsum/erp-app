@@ -72,20 +72,22 @@ Counted from the fixtures and case code, not measured. A mutant usually stops it
 
 | Stage | Limit | How it is enforced |
 | --- | --- | --- |
-| Initialize, start, users and migrate | 60 s | Process timeouts in `run024.mjs` |
-| Batch | 120 s | Shared deadline; each case at most 30 s and each process at most 45 s |
-| Clean-up | 30 s | 15 s for shutdown and 15 s of waiting, then a kill of this instance's own PID from its PID file |
+| Initialize, start, users and migrate | 60 s from start | Shared absolute deadline; nothing spawns once it has passed |
+| Batch | Until 180 s from start | Shared absolute deadline; each case at most 30 s and each process at most 45 s |
+| Clean-up | 30 s, ending by 210 s from start | Shutdown, then a kill of this instance's verified PID; state that stays unknown fails the batch |
 | **Whole slot** | **210 s** | The sum of the above |
-| Request and transaction limits | Unchanged | Request 30 s, acquire 5 s, query 10 s, transaction 20 s |
+| Request and transaction limits | Pinned, unchanged | Request 30 s, acquire 5 s, query 10 s, transaction 20 s |
 
 A limit being reached counts as a stop: clean up, report, and do not retry. Past runs suggest far less: on 2026-11-06 the 14:21 run took 17 s from start to clean-up with 23 cases.
 
 **Other boundaries**
 
-- **Versions:** the commit that applies this patch, checked at start. `run024.mjs` stops if the tree is dirty or the head differs. Unchanged since `3a21c6db`: `PurchasingLookupService.js` `3cf96e9bf77b`, `PurchasingSettingsService.js` `42a4c343b5b1`, `purchasingSchemas.js` `ac92bcf4fd6e`.
-- **Instance:** new and private, port 33619, `/private/tmp/m023`, deleted afterwards. It starts only if no other `mysqld` is running and ports 3306 and 33619 are free.
-- **Mutants:** applied one at a time and restored from memory after each. A mutant counts as caught only if its named case is the one that failed.
-- **Stops:** the first case failure, a mutant not caught, an invalid mutant or a dirty tree afterwards.
+- **Bound at start:** the full commit that applies this patch and both tool hashes. The tools stop if any differs or the tree is dirty. Unchanged since `3a21c6db`: `PurchasingLookupService.js` `3cf96e9bf77b`, `PurchasingSettingsService.js` `42a4c343b5b1`, `purchasingSchemas.js` `ac92bcf4fd6e`.
+- **Tools:** `run024.mjs` `0f7c01d14b4229dfae416a2826c65d43c779b0e4fd2cdf6743e665649ab39761` and `sweep024.mjs` `c378f504949feea8dab006227151e0ad524f40b79989ee84cfc125eb43a95666`, in the session scratchpad. They were syntax-checked and their strings checked statically. They have never run, and a tool fault in the batch counts as INVALID and stops it.
+- **Instance:** new and private, port 33619, socket `/private/tmp/m023/mysql.sock`, schema `erp_dev`. It starts only if no other `mysqld` is running and ports 3306 and 33619 are free. Every child gets a fixed environment, and the tools refuse a conflicting value or a `server/.env`. After migrating, they check the instance's port, socket, data directory and tables.
+- **What counts as caught:** a mutant counts only if exactly its named case failed, as a test code failure, with the expected error on the expected test line. The expected error is an `AssertionError`, except A11, which is a `TypeError` on `after.body.data.history[0]` only, because a failed response schema gives HTTP 500 without data. A7's service `TypeError` also becomes HTTP 500, so the test reports an `AssertionError` on `detail.status`. These two expectations come from reading the code and have not been observed. Anything else counts as INVALID.
+- **Stops:** the first failed case, a mutant not caught, an INVALID result, a dirty tree or a passed deadline. All exit non-zero and report attempted and NOT_RUN items.
+- **Clean-up:** the data directory is deleted only after the instance's own processes are confirmed gone and port 33619 is free. Otherwise the batch fails and the directory stays. Mutants are restored from the parent's bytes and their hash is checked.
 - **Report:** PID, socket, port, candidate, results and next step.
 
 ## After that
