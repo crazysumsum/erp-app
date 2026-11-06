@@ -343,6 +343,7 @@ export function validateCatalog() {
 export function routinePattern(client = false) {
   validateCatalog();
   const names = cases.filter(c => (c.group === "client") === client).flatMap(c => c.names);
+  assert.ok(names.length > 0 && names.every(name => typeof name === "string" && name.trim().length > 0), "Routine exclusion requires nonempty capacity names");
   // Both runners can prefix a name with its parent/suite; match the complete suffix.
   const suffix = `(?:^| )(?:${names.map(escapePattern).join("|")})$`;
   return client ? `^(?!.*${suffix}).*$` : suffix;

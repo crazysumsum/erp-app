@@ -37,6 +37,37 @@ The selector checks both revisions, rejects unknown or unrelated IDs and runs
 only the granted cases. Missing or stale grants fail before capacity execution.
 Remove grants after the approved run. A baseline alone cannot authorize load.
 
+## Local functional entrypoints
+
+The server and client `test` / `test:coverage` npm scripts reuse the existing
+`capacity-runner.mjs server-pattern` / `client-pattern` selectors. Catalog
+validation, an empty selected name set, selector failure or empty output stops
+before test discovery. Each selector runs in a separate process with
+`NODE_V8_COVERAGE` cleared; the test process retains its original instrumentation.
+There is no unfiltered fallback, second catalog or local capacity option.
+Ordinary cases in mixed files, fixture isolation and rollback assertions remain.
+
+Root `test`, `test:coverage` and `verify` accept no extra arguments and call the
+workspace entrypoints. For targeted checks, select the workspace explicitly:
+
+- Server `test` forwards Node test arguments; its catalog skip pattern still
+  applies. Server `test:coverage` accepts no arguments and keeps the complete
+  functional suite, 92/83/90 and the 39 per-file floors in the same command.
+- Client `test` accepts only positional file paths. All options are rejected,
+  including custom name filters, reporters, config files and interactive modes.
+- Client `test:coverage` accepts no arguments, except the existing CI single
+  `--testNamePattern=<pattern>` argument when it exactly equals the pattern
+  generated from the same catalog. That argument is consumed before injecting
+  the pattern once; Vitest rejects duplicate single-value options.
+- Client `test:watch` exits with a diagnostic directing callers to a one-shot
+  functional run. Interactive filtering could otherwise replace the exclusion.
+
+These are deliberate local-command compatibility restrictions; they do not
+change CI triggers, cases, data, workers, eight-shard coverage or browser gates.
+The npm command wiring requires POSIX `sh` (macOS/Linux); native Windows command
+shell compatibility has not been verified. Capacity execution remains subject
+to the post-UAT accepted-main grant procedure above.
+
 ## Execution and unchanged gates
 
 Routine server coverage keeps eight serial shards on separate MySQL databases.
@@ -72,7 +103,7 @@ browser gates remain. Each browser suite must pass both flows on shard 1. No add
 the existing six scope/gate tests are updated, and the five coverage-rule tests are
 unchanged. Further private filter probes are outside CI discovery.
 
-## Review and validation record
+## Original routing validation record
 
 - Local existing CI rules: 11 passed.
 - Private zero-load native runner proof: all catalog names, parameterized/nested

@@ -10,6 +10,7 @@ import { consumeInventoryStocktakeCancelContext } from "./inventoryStocktakeCanc
 import { consumeInventoryHighRiskContext } from "./inventoryHighRiskContext.js";
 import { INVENTORY_STOCK_STATUSES } from "./inventoryConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
+import { stocktakeScopeConflict } from "./inventoryStocktakeConflict.js";
 import { inventoryStringHasInvalidCharacters } from "./inventorySafeJson.js";
 import { calculateInventoryAvailability, meetsMinimumRemainingLife, validateInventoryCommandContext } from "./inventoryValidation.js";
 
@@ -686,9 +687,11 @@ export class InventoryStocktakeService {
       return row;
     });
   }
-  #exclusive(scopes, requested, ownId = null) {
-    if (scopes.some(row => Number(row.stocktake_id) !== ownId && requested.includes(Number(row.bin_id)))) {
-      throw inventoryError("STOCKTAKE_STATE_CONFLICT");
+  #exclusive(roots, scopes, requested, ownId = null) {
+    const conflict = scopes.find(row => Number(row.stocktake_id) !== ownId && requested.includes(Number(row.bin_id)));
+    if (conflict) {
+      const owner = roots.find(row => Number(row.id) === Number(conflict.stocktake_id));
+      throw stocktakeScopeConflict(owner?.stocktake_number);
     }
   }
   async #insertScope(tx, stocktakeId, bins, now) {
@@ -714,8 +717,8 @@ export class InventoryStocktakeService {
     const locked = await this.locks.lockForStocktakeDraftCreate(tx,
       { warehouseIds: [payload.warehouseId], binIds: payload.binIds }, async rows => {
         const bins = this.#bins(rows, payload.warehouseId, payload.binIds);
-        const { scopes } = await this.#roots(tx, payload.warehouseId);
-        this.#exclusive(scopes, payload.binIds);
+        const { roots, scopes } = await this.#roots(tx, payload.warehouseId);
+        this.#exclusive(roots, scopes, payload.binIds);
         context.actorLabel = await this.#actor(tx, context, true);
         const number = `ST-${claim.operationId}`;
         const [inserted] = await tx.execute(`INSERT INTO inventory_stocktakes
@@ -755,7 +758,7 @@ export class InventoryStocktakeService {
     const owned = scopes.filter(row => Number(row.stocktake_id) === payload.stocktakeId);
     if (JSON.stringify(owned.map(row => Number(row.bin_id)).sort((a, b) => a - b)) !== JSON.stringify(originalIds)) throw inventoryError("VERSION_CONFLICT");
     if (action !== "cancel") {
-      this.#exclusive(scopes, requested, payload.stocktakeId);
+      this.#exclusive(roots, scopes, requested, payload.stocktakeId);
       if (locked.binLocks.some(row => requested.includes(Number(row.bin_id)))) throw inventoryError("BIN_LOCKED_BY_STOCKTAKE");
     } else if (locked.binLocks.some(row => Number(row.stocktake_id) === payload.stocktakeId)) throw inventoryError("STOCKTAKE_STATE_CONFLICT");
     context.actorLabel = await this.#actor(tx, context, true);
