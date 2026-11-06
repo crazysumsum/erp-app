@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 518,
+  "revision": 519,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-052",
   "baseline": {
-    "design": "dfd5b0055c125e216aac75e6e32599d33581b462b6e49ac9213fa43f39e42b9f",
-    "plan": "b16b6df2054a2504e38d408e5fb3184c7435bf76422666ba5243505d9b69af8e",
-    "code_commit": "55915e27732ef7a88761751dad344c80ce8ba5c1",
-    "source_fingerprint": "448c49852b4a2a5d9ba9e9beba8ccf087127b0b80cbcf58f0a408971be7d04fe",
+    "design": "c5c7e6ca53d2e3a23b37f87c2b2066ff3d7d1dca9180656cf9d6184aa3c8cff6",
+    "plan": "debdcb7de7bde174c0d531c203c314545f24d2d93ea80c2b41371650c5a8930d",
+    "code_commit": "dd67a460dbfef8f883387771a1c6406758a4d92a",
+    "source_fingerprint": "c865e4395630c52ca2084a282e9bee24b5d589f2d752ae9378301664005ae62b",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider",
     "default_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
     "mode_entry_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f"
@@ -12010,5 +12010,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; independent review; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a post-UAT formal run on main. Purchasing re-pins Supplier 03 once after the merge."
+  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; re-record the DESIGN and PLAN approvals on the new baselines once the human's 'A' is confirmed as Sam's; admission receipt for TC-137 verified by the trusted approval administrator; one push and one PR; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance. Non-functional capacity runs only after formal UAT, by explicit dispatch on main with an external grant; the 41 limited-UAT acceptances are not formal UAT. Purchasing re-pins Supplier 03 once after the merge."
 }
