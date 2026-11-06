@@ -29,6 +29,15 @@ Sam chose option A on 2026-11-06: the settings update uses `jwt-device-password`
 
 TASK-024 lists only pages, but its screens need routes no task delivers: `GET /api/v1/purchase-order-approvals/mine` (§5.2), `GET /api/v1/purchasing-lookups/approvers` (§5.5), and approval data in the detail response. `allowedActions` also lacks approve, reject and withdraw. Same kind of gap as HD-019.
 
+## CI admission and sweep decision
+
+Sam, as project owner, approved on 2026-11-06: "全部批准，我作為project owner 批準你發digest，CI綠了就merge". Scope, as proposed in chat:
+- A mutation sweep of about 15 mutants on the approval commands, on a private MySQL in a slot from the PM. It runs 18: 6 handler mutants without a database and 12 service mutants.
+- 11 new routine CI cases: 6 in `purchasingApprovalCommands.integration.test.js`, 5 in `purchaseOrderApprovalHandlers.test.js`. Also the changed assertion in `purchaseOrderHandlers.test.js` and the changed cleanups in two integration files. No workflow or job change, no timing threshold, every PR like other functional tests.
+- Publishing this receipt's digest once, and merging once CI is green. If the sweep requires test changes, new cases go back to Sam first.
+
+**Sweep so far:** the 6 handler mutants were all killed (2026-11-06). The 12 service mutants wait for a MySQL slot.
+
 ## Handoff: resumed 2026-11-06
 
 Sam resumed the work, relayed by the PM, who granted the first local MySQL slot of the day.
@@ -44,11 +53,10 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- A mutation sweep has not been done, so these cases have not been shown to fail when the code is wrong.
+- The 12 service mutants have not run, so the 6 integration cases have not been shown to fail when the code is wrong.
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- A mutation sweep needs its own authorization and a PM MySQL slot.
-- Sam: CI admission, after verification. The gate currently lists about 20 inputs, because changing pinned test files invalidated earlier receipts.
+- PM: a MySQL slot of about 10 minutes for the 12 service mutants.
 
-**Only next step:** Sam's decision on the mutation sweep and CI admission proposal.
+**Only next step:** the PM's MySQL slot, then run the 12 service mutants.
