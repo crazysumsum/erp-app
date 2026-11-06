@@ -110,6 +110,12 @@ No new job, workflow, fixture file or capacity case. No increase in data, concur
 
 **Beyond the approvals:** nothing found.
 
-## Only next step
+## Paused at Sam's request, 2026-11-06
+
+Relayed by the PM. Wait for Sam to explicitly resume. No digest, push, PR, CI or merge until then, and earlier approvals not yet started do not start on their own.
+
+Not on `origin`: this branch, this record and the receipt draft. In the session scratchpad only: `run024.mjs`, `sweep024.mjs`, `run024-final.log`, `run024-logs/`.
+
+## Only next step on resume
 
 The trusted admission administrator's check of this receipt.
