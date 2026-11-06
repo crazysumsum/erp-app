@@ -8,13 +8,15 @@ Written on 2026-11-06 for the PM to forward to the Supplier owner. It is a read-
 
 ### `findSkuRefsInTransaction(connection, supplierId, skuIds)`
 
-**Accepted, with one required addition: each row must carry `skuId`.** The candidate says "same shape as the `relation` in `listForSku`", but that shape has no `skuId`, and Purchasing has to match rows to lines.
+**Accepted in the version the PM relayed on 2026-11-06:** a `Map` from `skuId` to `{ relationId, relationshipStatus, supplierItemCode, lastSuppliedAt }`, as a plain read that keeps `stopped` rows. The map key meets the need for `skuId`, and `UNIQUE(supplier_id, sku_id)` means one row per SKU.
+
+Three details Purchasing needs stated in the contract: map keys and `relationId` are numbers, an empty `skuIds` returns an empty map without a query, and duplicate IDs are tolerated.
 
 | Item | Purchasing's requirement |
 | --- | --- |
 | Caller | `PurchaseOrderService` line validation, on save and on submit. It runs on the caller's `tx`, with no second connection. |
 | Input | One Supplier, up to 100 SKU IDs in one call, because §8.2 forbids per-line queries. Duplicates must be tolerated. |
-| Output | Existing refs only: `{ relationId, skuId, relationshipStatus, supplierItemCode }`. Other fields are fine if they are not bank data. A missing relation is simply absent and is not an error. |
+| Output | Existing refs only. A missing relation is simply absent and is not an error. |
 | Status | Rows with `stopped` are returned, with their status. Purchasing decides what to do with them (see open item 2). |
 | Eligibility | No check on Supplier or SKU eligibility here, and no failure for an inactive relation. FR-PO-007 says relations are hints only. |
 | Consistency | A plain read is enough. The values are hints, and the `supplier_sku_ref_id` FK protects the link. This relies on refs never being deleted, as Supplier states. |
@@ -78,7 +80,7 @@ None of this code exists yet: the GR tables arrive with TASK-027. `TASK-040` is 
 
 ## Who needs to act
 
-- **Supplier, through the PM:** add `skuId` to the refs output, confirm items 1 and 7, and check the stale-read note.
+- **Supplier, through the PM:** state the three details above, confirm items 1 and 7, and check the stale-read note.
 - **Purchasing, at TASK-032 and TASK-040:** record the answers to items 1 to 5, 8 and 9.
 - **Tech lead:** item 6.
 - **Sam, only if a choice of address is wanted in this release:** Part 1, open item 1.

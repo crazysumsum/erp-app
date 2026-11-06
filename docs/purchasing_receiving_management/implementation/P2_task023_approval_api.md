@@ -1,6 +1,6 @@
 # TASK-023 — Settings and approval command APIs
 
-**Status: built and verified on a private MySQL. No mutation sweep, CI or PR yet.** See the handoff below.
+**Status: built and verified on a private MySQL, with the mutation sweep complete. No CI or PR yet.** See the handoff below.
 
 Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2, §5.4, §6.2, §8.3; FR-SET, FR-APPROVAL, SEC-006～009, AC-012～017; `TC-004`, `TC-001`.
 
@@ -51,7 +51,11 @@ Sam approved both follow-ups on 2026-11-06 ("全部批准，兩項都做"): one 
 
 Totals: 17 of 18 mutants ran, 16 killed, 1 survived, 1 not run.
 
-Sam chose option A on 2026-11-06 ("選 A，全部批准"): added assertions in two existing cases, with no new case, that a decision completes its operation row and that reject and withdraw write the right audit action. One added mutant checks the reject and withdraw assertion, so the plan is now 19. The assertions are written and have not run yet.
+Sam chose option A on 2026-11-06 ("選 A，全部批准"): added assertions in two existing cases, with no new case, that a decision completes its operation row and that reject and withdraw write the right audit action. One added mutant checks the reject and withdraw assertion, so the plan is now 19. 
+
+**Third batch (2026-11-06, private MySQL, code at `c88ec18a`):** the baseline passed 6 of 6 with the new assertions. All 3 mutants were killed: approve audited as rejected, reject and withdraw audited as approved, decision operation never completed.
+
+**Sweep total:** all 19 mutants ran and all were killed, each by the handler tests or the integration file named above. Each mutant ran only against its targeted files, so this is not a full-suite result.
 
 ## Handoff: resumed 2026-11-06
 
@@ -68,10 +72,8 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- The new assertions and the 3 remaining mutants have not run.
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- PM: a MySQL slot of about 3 minutes, for one baseline and 3 mutants.
 
-**Only next step:** the PM's MySQL slot, then run the baseline and the 3 mutants.
+**Only next step:** merge main, rebuild the admission list, build the receipt, publish its digest, push and open the PR.
