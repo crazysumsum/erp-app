@@ -21,9 +21,7 @@ Code `3a21c6db`, private MySQL, started 14:21:53 HKT, cleaned up 14:22:10. `purc
 2. **`purchasingApprovalCommands.integration.test.js`:** the detail case also checks `lineAmount`.
 3. **`purchasingInquiry.integration.test.js` (needs Sam's approval):** adds exactly `approval`, `approvalHistory` and `statusHistory` to the key list, and drops them from the message. The list stays an exact allowlist, so a bank or internal field would still fail, and nothing else in the case changes.
 
-**For the reviewer:**
-- Is the fix at the right layer? The alternative stores formatted amounts in the snapshot, which changes TASK-022's merged code, its hash input and its test (`9007199254740993.0000`).
-- Should `approval` carry the whole snapshot for every `purchasing.view` user? The design says the assigned approver can see it (FR-APPROVAL-005) and §5.2 gives detail to `purchasing.view`. PO detail already shows the same prices to those users.
+**Independent review (the tech lead, relayed by the PM on 2026-11-06):** no Critical, High or Medium findings on this patch. Formatting `subtotalAmount`, `totalAmount` and `lineAmount` in the response is correct, and stored snapshots, hash, `unitPrice` and quantities stay as they are. The exact allowlist addition matches the design. FR-APPROVAL-005 says the assigned approver can view, not that only they can, so `purchasing.view` keeps read access and only the assigned approver decides. No visibility assertion is added.
 
 ## Smallest re-verification
 
@@ -39,11 +37,56 @@ Code `3a21c6db`, private MySQL, started 14:21:53 HKT, cleaned up 14:22:10. `purc
 
 Each mutant counts as caught only if its named case fails. No extra baseline run: the 14:21 run passed `待我審批`, `審批人選項` and `設定`, and steps 1 and 2 cover the rest. A failure at 14:21 before the fix is also the red evidence for the snapshot format.
 
-- **Versions:** the commit that applies this patch. Unchanged since `3a21c6db`: `PurchasingLookupService.js` `3cf96e9bf77b`, `PurchasingSettingsService.js` `42a4c343b5b1`, `purchasingSchemas.js` `ac92bcf4fd6e`.
-- **Data:** the small fixtures each case creates, on a new private instance, port 33619, `/private/tmp/m023`.
-- **Limit:** about 3 minutes, estimated: 20 s to start and migrate, about 3 s per run.
-- **Clean-up:** stop the instance, delete the data directory, and report the PID, socket and port.
-- **Not included:** other cases, full coverage, capacity, CI. No new case. The approved 11 mutants stay as they are; A1 already passed.
+Not included: other cases, full coverage, capacity, CI, and any new case. The other 21 PASS results and A1 stand.
+
+### Exact limits
+
+Counted from the fixtures and case code, not measured. A mutant usually stops its case at the first failed assertion, so these are upper limits.
+
+**Data each run creates**
+
+| Case | Runs | Fixed setup | PO data per run | HTTP requests per run |
+| --- | --- | --- | --- | --- |
+| `詳情：待審批` | 4 (step 1, A5, A6, A7) | A | 1 PO, 1 line, 1 approval | 8 |
+| `待我審批` | 3 (A2, A3, A4) | A | 2 POs, 2 lines, 2 approvals | 14 |
+| `審批人選項` | 3 (A8, A9, A10) | A | none | 5 |
+| `設定：讀要` | 1 (A11) | A | 1 PO, 1 line, 1 settings update | 11 |
+| `詳情回交易快照` | 1 (step 2) | B | 3 POs, 4 lines | 0 (13 direct service calls) |
+
+- **Setup A:** 5 users, 5 roles, 10 role permissions, 5 user roles, 1 device, 1 Supplier, 1 item, 1 UOM, 1 SKU, 1 SKU UOM. Over HTTP, on the application's pool.
+- **Setup B:** 2 users, 2 roles, 3 role permissions, 2 user roles, 1 currency, 3 Suppliers, 1 item, 1 UOM, 3 SKUs, 3 SKU UOMs, 1 barcode. All in one transaction that rolls back.
+
+**Totals for the batch**
+
+| Item | Limit |
+| --- | --- |
+| Test process runs | 12, one at a time, each selecting one case |
+| HTTP requests | 100 (32 + 42 + 15 + 11) |
+| POs that remain until the instance is deleted | 11 (4 + 6 + 1); the 3 in setup B roll back |
+| Approvals | 10 |
+| Concurrency | 1. These 4 cases do not send requests in parallel |
+| Database connections | At most 10 per process (`connectionLimit` in `config/database.js`), 3 for `purchasingInquiry`. The instance is capped at `--max-connections=16` |
+| Rate limit | Unchanged, 20 requests per second per IP |
+
+**Time limits**
+
+| Stage | Limit | How it is enforced |
+| --- | --- | --- |
+| Initialize, start, users and migrate | 60 s | Process timeouts in `run024.mjs` |
+| Batch | 120 s | Shared deadline; each case at most 30 s and each process at most 45 s |
+| Clean-up | 30 s | 15 s for shutdown and 15 s of waiting, then a kill of this instance's own PID from its PID file |
+| **Whole slot** | **210 s** | The sum of the above |
+| Request and transaction limits | Unchanged | Request 30 s, acquire 5 s, query 10 s, transaction 20 s |
+
+A limit being reached counts as a stop: clean up, report, and do not retry. Past runs suggest far less: on 2026-11-06 the 14:21 run took 17 s from start to clean-up with 23 cases.
+
+**Other boundaries**
+
+- **Versions:** the commit that applies this patch, checked at start. `run024.mjs` stops if the tree is dirty or the head differs. Unchanged since `3a21c6db`: `PurchasingLookupService.js` `3cf96e9bf77b`, `PurchasingSettingsService.js` `42a4c343b5b1`, `purchasingSchemas.js` `ac92bcf4fd6e`.
+- **Instance:** new and private, port 33619, `/private/tmp/m023`, deleted afterwards. It starts only if no other `mysqld` is running and ports 3306 and 33619 are free.
+- **Mutants:** applied one at a time and restored from memory after each. A mutant counts as caught only if its named case is the one that failed.
+- **Stops:** the first case failure, a mutant not caught, an invalid mutant or a dirty tree afterwards.
+- **Report:** PID, socket, port, candidate, results and next step.
 
 ## After that
 
