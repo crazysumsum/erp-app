@@ -6,7 +6,11 @@ const ACTIONS = Object.freeze({
   "purchase_order.created": { target: "PO", fields: DOCUMENT },
   "purchase_order.updated": { target: "PO", fields: DOCUMENT },
   "purchase_order.copied": { target: "PO", fields: [...DOCUMENT, "sourcePurchaseOrderId"] },
+  "purchase_order.submitted": { target: "PO", fields: [...DOCUMENT, "policyVersion", "assignedApproverId"] },
   "purchase_order.confirmed": { target: "PO", fields: [...DOCUMENT, "policyVersion"] },
+  "purchase_order.approved": { target: "PO", fields: ["version"] },
+  "purchase_order.rejected": { target: "PO", fields: ["version"] },
+  "purchase_order.approval_withdrawn": { target: "PO", fields: ["version"] },
   "purchasing.setting.updated": { target: "SETTING", fields: ["requirePoApproval", "version"] }
 });
 // 冇業務寫入嘅拒絕結果（§4.15）：同名 action 加 outcome REJECTED；同 event 唔同內容另用 operation_conflict（§12.2）。
