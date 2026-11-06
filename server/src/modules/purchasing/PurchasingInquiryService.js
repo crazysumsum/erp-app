@@ -37,9 +37,10 @@ const allowedActions = (status, permissions) => !permissions.includes("purchasin
 // §7.4：跟操作者。列表唔讀審批，所以呢三個動作只喺詳情出；service 喺 transaction 入面會再驗。
 function decisionActions(pending, actorId, permissions) {
   if (!pending) return [];
-  const requester = Number(pending.requested_by) === actorId;
-  const assigned = Number(pending.assigned_approver_id) === actorId && !requester && permissions.includes("purchasing.approval");
-  return [...(assigned ? ["approve", "reject"] : []), ...(requester && permissions.includes("purchasing.mgmt") ? ["withdraw"] : [])];
+  // 審批人一定係另一個人（提交時驗咗），所以 assigned 唔使再排除提交人。
+  const assigned = Number(pending.assigned_approver_id) === actorId && permissions.includes("purchasing.approval");
+  const requester = Number(pending.requested_by) === actorId && permissions.includes("purchasing.mgmt");
+  return [...(assigned ? ["approve", "reject"] : []), ...(requester ? ["withdraw"] : [])];
 }
 
 function listQuery(input) {
@@ -128,11 +129,11 @@ const toMyApproval = (row) => ({ approvalId: Number(row.id), purchaseOrderId: Nu
   supplierCode: row.supplier_code_snapshot, supplierName: row.supplier_name_snapshot, currencyCode: row.currency_code,
   totalAmount: storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot)), requestedByLabel: row.requested_by_label, requestNote: row.request_note, requestedAt: Number(row.requested_at) });
 
-function toPurchaseOrderDetail(row, lines, permissions, { approvals, history, actorId }) {
-  const pending = approvals.find((approval) => approval.status === "PENDING") ?? null, header = toHeader(row, permissions);
+function toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot, history, actorId }) {
+  const header = toHeader(row, permissions);
   return {
     ...header, allowedActions: [...header.allowedActions, ...decisionActions(pending, actorId, permissions)],
-    approval: pending && { ...toApprovalSummary(pending), snapshot: pending.approval_snapshot }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
+    approval: pending && { ...toApprovalSummary(pending), snapshot }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
     orderingAddressId: nullableId(row.ordering_address_id), orderingAddress: row.ordering_address_snapshot,
     currencyName: row.currency_name_snapshot, currencyDecimalPlaces: Number(row.currency_decimal_places_snapshot),
     paymentTermId: nullableId(row.payment_term_id), paymentTerm: row.payment_term_snapshot,
@@ -208,12 +209,14 @@ export class PurchasingInquiryService {
       const [[row]] = await tx.query(`SELECT ${DETAIL} FROM purchase_orders WHERE id = ?`, [id]);
       if (!row) throw purchasingError("PURCHASE_ORDER_NOT_FOUND");
       const [lines] = await tx.query(`SELECT ${LINE} FROM purchase_order_lines WHERE purchase_order_id = ? ORDER BY line_number`, [id]);
-      // 只讀 Pending 嗰份快照：§7.4 要完整顯示，但舊申請每份都可以去到 1MiB。
       const [approvals] = await tx.query(`SELECT id, status, purchase_order_version, requested_by, assigned_approver_id, requested_by_label, approver_label, request_note, decision_reason,
-        requested_at, decided_at, IF(status = 'PENDING', approval_snapshot, NULL) AS approval_snapshot FROM purchase_order_approvals WHERE purchase_order_id = ? ORDER BY requested_at, id`, [id]);
+        requested_at, decided_at FROM purchase_order_approvals WHERE purchase_order_id = ? ORDER BY requested_at, id`, [id]);
+      // 只讀 Pending 嗰份快照：§7.4 要完整顯示，但舊申請每份都可以去到 1MiB。
+      const pending = approvals.find((approval) => approval.status === "PENDING") ?? null;
+      const [[stored]] = pending ? await tx.query("SELECT approval_snapshot FROM purchase_order_approvals WHERE id = ?", [pending.id]) : [[null]];
       const [history] = await tx.query(`SELECT sequence_no, from_status, to_status, action, reason, purchase_order_version_after, actor_label, occurred_at
         FROM purchase_order_status_history WHERE purchase_order_id = ? ORDER BY sequence_no`, [id]);
-      return toPurchaseOrderDetail(row, lines, permissions, { approvals, history, actorId });
+      return toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot: stored?.approval_snapshot, history, actorId });
     });
     return { ...detail, currentMasterDifferences: await this.#differences(detail) };
   }

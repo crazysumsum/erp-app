@@ -21,11 +21,24 @@ The approval covers the plan, not new routine CI cases. Those need their own pro
 
 No schema change. `idx_po_approvals_assignee` and `idx_purchasing_audit_action` already cover the new reads. The route lives in `handlers/purchase-orders/` rather than §9's `purchase-order-approvals/`, as HD-016 did for other Purchasing handlers.
 
-## Verification
+## Verification plan
 
-- Without a database: `test/purchasing` and lint.
-- Not run: the new integration cases, and `purchasingInquiry`, `purchasingLookups` against the changed detail and lookup code. These need a PM MySQL slot.
+Not started. New cases and the sweep need Sam's new approval; the TASK-023 approval does not carry over. MySQL needs a PM slot.
+
+1. **One run on a private MySQL:** `purchasingApprovalCommands`, `purchasingInquiry` and `purchasingLookups`. Stop at the first unexpected failure.
+2. **Mutation sweep, if approved:** 11 mutants, in the scratchpad script `sweep024.mjs`, against targeted files only. One needs no database.
+
+| Mutant | Rule it checks |
+| --- | --- |
+| A1 | My approvals requires the approval policy |
+| A2, A3 | The list is limited to the actor and to pending |
+| A4 | Oldest first |
+| A5, A6 | Only the assigned approver sees approve and reject; only the requester sees withdraw |
+| A7 | Pending detail returns the snapshot |
+| A8, A9 | Approvers exclude the actor and read `purchasing.approval` |
+| A10 | `requireApproval` follows the setting |
+| A11 | Settings history excludes failures |
 
 ## Only next step
 
-A PM MySQL slot for the three integration files.
+Sam's decision on the CI admission and sweep proposal, and a PM MySQL slot.

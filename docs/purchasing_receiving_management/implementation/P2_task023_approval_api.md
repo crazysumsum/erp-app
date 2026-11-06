@@ -2,6 +2,8 @@
 
 **Status: merged in #347 (`b28a7d88`), admitted CI run 42171546833 green.**
 
+**Merge evidence:** merge commit `b28a7d88`, tree `33addced`, parents main `12f7e559` and head `4e522233`, matching the admitted merge `c8383c71`. Run 42171546833 attempt 1: 18 jobs passed, including 8 server coverage shards, client coverage and the merged coverage job that enforces the global and per-file floors. The 2 capacity jobs were skipped. The merged worktree and branches were deleted.
+
 Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2, §5.4, §6.2, §8.3; FR-SET, FR-APPROVAL, SEC-006～009, AC-012～017; `TC-004`, `TC-001`.
 
 | Route | Auth and permission | Result |
