@@ -48,6 +48,10 @@ If the sweep requires test changes beyond this scope, they go back to Sam first.
 
 Code `3a21c6db`, private MySQL. 23 cases: 21 passed, 2 failed, so the sweep did not run. Clean-up finished at 14:22:10. See `P2_task024_verification_proposal.md`.
 
+## Approved batch
+
+Sam approved on 2026-11-06, relayed by the PM: "批准完整修補及本機整批一次". It covers patch `032d52e1`, including the `purchasingInquiry` assertion change, the two failed cases once each, and A2 to A11 once each, with A7 changed from `snapshot: null` to removing `response.snapshot`. Tools: `run024` `a9978fa1`, `sweep024` `21c97d05`. One isolated MySQL preparation, existing migrations, batch and clean-up, within the limits in `P2_task024_verification_proposal.md`. No retry and no CI or push from this approval. The other 21 PASS results and A1 stand.
+
 ## Only next step
 
-The PM's review of that proposal, then Sam's decision.
+The PM binds the final head and gives a slot, then the batch runs once.

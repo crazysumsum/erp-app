@@ -129,11 +129,18 @@ const toMyApproval = (row) => ({ approvalId: Number(row.id), purchaseOrderId: Nu
   supplierCode: row.supplier_code_snapshot, supplierName: row.supplier_name_snapshot, currencyCode: row.currency_code,
   totalAmount: storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot)), requestedByLabel: row.requested_by_label, requestNote: row.request_note, requestedAt: Number(row.requested_at) });
 
+/** §2.8（HD-009）：API 一律回 Currency 小數位。儲存嘅快照同 hash 唔郁，只喺回傳時格式化。 */
+function toApprovalSnapshot(snapshot) {
+  const places = snapshot.currency.decimalPlaces;
+  return { ...snapshot, subtotalAmount: storedAmount(snapshot.subtotalAmount, places), totalAmount: storedAmount(snapshot.totalAmount, places),
+    lines: snapshot.lines.map((line) => ({ ...line, lineAmount: storedAmount(line.lineAmount, places) })) };
+}
+
 function toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot, history, actorId }) {
   const header = toHeader(row, permissions);
   return {
     ...header, allowedActions: [...header.allowedActions, ...decisionActions(pending, actorId, permissions)],
-    approval: pending && { ...toApprovalSummary(pending), snapshot }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
+    approval: pending && { ...toApprovalSummary(pending), snapshot: toApprovalSnapshot(snapshot) }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
     orderingAddressId: nullableId(row.ordering_address_id), orderingAddress: row.ordering_address_snapshot,
     currencyName: row.currency_name_snapshot, currencyDecimalPlaces: Number(row.currency_decimal_places_snapshot),
     paymentTermId: nullableId(row.payment_term_id), paymentTerm: row.payment_term_snapshot,
