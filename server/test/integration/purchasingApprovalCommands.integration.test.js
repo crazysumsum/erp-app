@@ -62,10 +62,10 @@ async function setup(t) {
     return { status: response.status, body: await response.json() };
   };
   const command = (id, action, token, fields) => send(`/api/v1/purchase-orders/${id}/${action}`, { token, body: { eventId: randomUUID(), ...fields } });
+  const draftFields = { supplierId: supplier, currencyCode: "HKD", orderDate: today, buyerId: maker.id, lines: [{ skuId: sku, purchaseSkuUomId: skuUom, orderedQuantity: "2", unitPrice: "1.25" }] };
   const draft = async () => {
     const eventId = randomUUID();
-    const { status, body } = await send("/api/v1/purchase-orders/create", { token: maker.token, body: { eventId, supplierId: supplier, currencyCode: "HKD", orderDate: today, buyerId: maker.id,
-      lines: [{ skuId: sku, purchaseSkuUomId: skuUom, orderedQuantity: "2", unitPrice: "1.25" }] } });
+    const { status, body } = await send("/api/v1/purchase-orders/create", { token: maker.token, body: { eventId, ...draftFields } });
     assert.equal(status, 201, JSON.stringify(body));
     return body.data;
   };
@@ -79,7 +79,7 @@ async function setup(t) {
   const history = async (id) => (await db.query("SELECT from_status, to_status, action, reason FROM purchase_order_status_history WHERE purchase_order_id = ? ORDER BY sequence_no", [id]))[0].map((row) => [row.from_status, row.to_status, row.action, row.reason]);
   const statusOf = async (id) => (await db.query("SELECT status, version FROM purchase_orders WHERE id = ?", [id]))[0][0];
   const approvals = async (id) => (await db.query("SELECT status, decision_reason, assigned_approver_id, requested_by, purchase_order_version FROM purchase_order_approvals WHERE purchase_order_id = ? ORDER BY id", [id]))[0];
-  return { db, send, command, draft, setPolicy, pending, history, statusOf, approvals, maker, approver, other, viewer, admin, device, supplier, url };
+  return { db, send, command, draft, draftFields, setPolicy, pending, history, statusOf, approvals, maker, approver, other, viewer, admin, device, supplier, url };
 }
 const failure = (result) => [result.status, result.body.error?.code];
 
@@ -108,6 +108,7 @@ integrationTest("審批開啟：一定要指定另一名有權限嘅人；提交
   const [approval] = await f.approvals(po.id);
   assert.deepEqual([approval.status, Number(approval.assigned_approver_id), Number(approval.requested_by), Number(approval.purchase_order_version)], ["PENDING", f.approver.id, f.maker.id, 2]);
   assert.deepEqual(failure(await f.command(po.id, "copy", f.viewer.token, {})), [403, "Forbidden"]);
+  assert.deepEqual(failure(await f.command(po.id, "update", f.maker.token, { version: 2, ...f.draftFields })), [409, "PO_STATE_CONFLICT"]);
 
   const approve = (token, fields = {}) => f.command(po.id, "approval/approve", token, { version: 2, password: PASSWORD, ...fields });
   assert.equal((await f.send(`/api/v1/purchase-orders/${po.id}/approval/approve`, { token: f.approver.token, body: { eventId: randomUUID(), version: 2 } })).body.error.code, "PASSWORD_REQUIRED");

@@ -42,6 +42,8 @@ Sam, as project owner, approved on 2026-11-06: "全部批准，我作為project 
 - Pending PO can be saved: survived the integration file and was killed only by `purchaseOrderStateMachine.test.js`. The integration case's title says the PO is frozen, but no case tries to update a pending PO over HTTP.
 - Not run, because Sam's approved scope does not name them: submit without an approver, approver sent with approval off, settings ignoring version, wrong audit action on a decision, decision operation not completed.
 
+Sam approved both follow-ups on 2026-11-06 ("全部批准，兩項都做"): one added assertion in the existing case that updating a pending PO returns `409 PO_STATE_CONFLICT`, with no new case, and running the 5 remaining mutants. The assertion is written and has not run yet.
+
 ## Handoff: resumed 2026-11-06
 
 Sam resumed the work, relayed by the PM, who granted the first local MySQL slot of the day.
@@ -57,11 +59,10 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- 5 service mutants have not run. No test updates a pending PO over HTTP.
+- 5 service mutants have not run, and the new pending-PO assertion has not run.
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- Sam: whether to add the pending-PO update assertion to the existing integration case, and whether to run the 5 remaining mutants.
-- PM: a MySQL slot, if Sam approves either.
+- PM: a MySQL slot of about 5 minutes.
 
-**Only next step:** Sam's decision on the assertion and the 5 remaining mutants.
+**Only next step:** the PM's MySQL slot, then run the changed integration file and the 6 mutants.
