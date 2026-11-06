@@ -36,7 +36,11 @@ Sam, as project owner, approved on 2026-11-06: "全部批准，我作為project 
 - 11 new routine CI cases: 6 in `purchasingApprovalCommands.integration.test.js`, 5 in `purchaseOrderApprovalHandlers.test.js`. Also the changed assertion in `purchaseOrderHandlers.test.js` and the changed cleanups in two integration files. No workflow or job change, no timing threshold, every PR like other functional tests.
 - Publishing this receipt's digest once, and merging once CI is green. If the sweep requires test changes, new cases go back to Sam first.
 
-**Sweep so far:** the 6 handler mutants were all killed (2026-11-06). The 12 service mutants wait for a MySQL slot.
+**Sweep so far (2026-11-06):** 13 of the planned 18 ran, all within the scope Sam approved. All 13 were killed, but one only by a unit test.
+- 6 handler mutants, killed by the handler tests.
+- 6 service mutants, killed by `purchasingApprovalCommands.integration.test.js`: approve skips revalidation, no history on decision, no history on submit, anyone can withdraw, self-approval, non-assigned approver.
+- Pending PO can be saved: survived the integration file and was killed only by `purchaseOrderStateMachine.test.js`. The integration case's title says the PO is frozen, but no case tries to update a pending PO over HTTP.
+- Not run, because Sam's approved scope does not name them: submit without an approver, approver sent with approval off, settings ignoring version, wrong audit action on a decision, decision operation not completed.
 
 ## Handoff: resumed 2026-11-06
 
@@ -53,10 +57,11 @@ Sam resumed the work, relayed by the PM, who granted the first local MySQL slot 
 - None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- The 12 service mutants have not run, so the 6 integration cases have not been shown to fail when the code is wrong.
+- 5 service mutants have not run. No test updates a pending PO over HTTP.
 - No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- PM: a MySQL slot of about 10 minutes for the 12 service mutants.
+- Sam: whether to add the pending-PO update assertion to the existing integration case, and whether to run the 5 remaining mutants.
+- PM: a MySQL slot, if Sam approves either.
 
-**Only next step:** the PM's MySQL slot, then run the 12 service mutants.
+**Only next step:** Sam's decision on the assertion and the 5 remaining mutants.
