@@ -25,22 +25,27 @@ Built on 2026-11-05 from main `d18a6951`. No schema change. Design §3.3, §5.2,
 
 TASK-024 lists only pages, but its screens need routes no task delivers: `GET /api/v1/purchase-order-approvals/mine` (§5.2), `GET /api/v1/purchasing-lookups/approvers` (§5.5), and approval data in the detail response. `allowedActions` also lacks approve, reject and withdraw. Same kind of gap as HD-019.
 
-## Handoff: paused at Sam's request, 2026-11-05
+## Handoff: resumed 2026-11-06
 
-Relayed by the PM. Wait for Sam to explicitly resume; a heartbeat is not authorization.
+Sam resumed the work, relayed by the PM, who granted the first local MySQL slot of the day.
 
 **Candidate:** local branch `claude/purchasing-task023-approval-api`, worktree `.worktrees/purchasing-task023-approval-api`, based on main `d18a6951`. Not pushed, no PR, no CI run.
 
-**Verified:** `server/test/purchasing/*.test.js` (67 tests), three convention test files (8 cases), lint, boundary and traceability, all without a database.
+**Verified without a database (2026-11-05):** `server/test/purchasing/*.test.js` (67 tests), three convention test files (8 cases), lint, boundary and traceability.
+
+**Verified on a private MySQL (2026-11-06, code at `af1bc272`, 33619, fresh datadir, all migrations):** 28 of 28 passed, 0 skipped, in about 10 seconds, at concurrency 1.
+- `purchasingApprovalCommands.integration.test.js`: 6 of 6, the first run of this file.
+- `purchasingPurchaseOrderApi.integration.test.js`: 5 of 5.
+- `purchasingPurchaseOrders.integration.test.js`: 17 of 17.
+- None of the 28 case names match the capacity catalog pattern. The run left 5 approval rows (1 approved, 1 rejected, 3 withdrawn) and 27 status history rows.
 
 **Not verified:**
-- `server/test/integration/purchasingApprovalCommands.integration.test.js`, which has never run.
-- The changed cleanups in `purchasingPurchaseOrderApi.integration.test.js` and `purchasingPurchaseOrders.integration.test.js`.
-- A mutation sweep has not been done.
+- A mutation sweep has not been done, so these cases have not been shown to fail when the code is wrong.
+- No full suite and no CI. The concurrency case ran once.
 
 **Open dependencies:**
-- HD-021, Sam: `jwt-device-password` (recommended, in the code) or `jwt-password` for the settings update.
-- PM: a local MySQL slot. Use a private instance and targeted files only, never bare `npm run test:coverage`.
+- HD-021: `jwt-device-password` (recommended, in the code) or `jwt-password` for the settings update.
+- A mutation sweep needs its own authorization and a PM MySQL slot.
 - Sam: CI admission, after verification. The gate currently lists about 20 inputs, because changing pinned test files invalidated earlier receipts.
 
-**Only next step on resume:** once Sam has decided HD-021 and the PM has granted a slot, run the integration files above on a private MySQL.
+**Only next step:** get the HD-021 answer.
