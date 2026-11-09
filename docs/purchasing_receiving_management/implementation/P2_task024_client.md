@@ -457,3 +457,149 @@ One batch, after the PM grants an exclusive slot. Nothing goes into `client/e2e`
 - The trigger and concurrency contradiction stays as reported above.
 - Receipt `4569e9a0…` is not used.
 - The 8 and 3 private mutants, the old 121/68 results and the intermediate failures are kept as-is, not re-run and not retroactively claimed.
+
+## Three Required fixes (TL review of `2b60ebef`, relayed by the PM on 2026-11-09), commit `092c86dd`
+
+1. **High: `uncertainRecords` never updated.** It now reads `changes.value` before enumerating. It used to read the empty Map without touching `changes`, so it cached `[]` for good, and the first TIMEOUT followed by `approval: null` never showed the banner. Still a plain Map with the change counter. `current(key)` now also exposes in-flight records.
+2. **Medium: the form's visible state was not bound to in-flight records.**
+   - `PurchaseOrderForm` restores its values and the submit dialog from the owner's existing record, whether in flight or uncertain. It does this on every reset and on each `uncertain` transition.
+   - While that record is busy, the fieldset, the save button and Submit are locked, and so are the dialog's approver, note and confirm.
+   - With an owner, results go to `owner.saved`, `owner.submitted` and `owner.failed`, together with the owner's generation captured at send time. `failed` is only called when the record has gone, meaning a definite failure. So a result is handled once, even if the sending form has unmounted.
+   - `PurchaseOrderEditPage` and `PurchaseOrderCreatePage` keep their own generation, which changes on a route id or actor change and on unmount.
+   - When the form is not shown, `PurchaseOrderEditPage` shows any uncertain save or submit (`data-testid="po-hidden-unknown"`). The form is hidden when loading, on an error, without permission, or when a submit really succeeded with its ACK lost so the PO is no longer editable. A user with the current view and mgmt permissions gets a replay of the original body to the original PO; anyone else sees a blocked notice.
+   - No new API or persistence.
+3. **Medium: dialog-time target.** `askCopy` and `askWithdraw` capture the generation, PO id, version and key before `confirm` or `promptReason`. When the dialog returns into a different context, nothing is sent. Copy and withdraw use the captured target, and the retry buttons call `copy()` and `withdraw()` explicitly.
+
+**Remaining limitation:**
+- If the sending form has unmounted and its call then fails definitely, the replacement form unlocks with the original values but has no inline field errors. The owner shows `notifyError`.
+- Records still live only in memory, until TASK-033.
+
+**Pin diff against the committed receipt** (`4569e9a0…`, not used):
+
+| File | Old | New |
+| --- | --- | --- |
+| `PurchaseOrderForm.vue` | `46756f67da942965c44ba090da73c199574c6bd2` | `e31a6624f33508a8cb6f5c60bfef65a16dbd46e5` |
+| `PurchaseOrderDetailPage.vue` | `d4bb5eeda0b09b5fa0eaf297f988711ae991582c` | `74bf6c0c799cc3d123b30c27c4029df8e3a29771` |
+| `PurchaseOrderEditPage.vue` | `e8af0806120e70f3599d5d325ac425776a94466a` | `d8d6cf3b725866372098d7995fb9a517d3ac2dd0` |
+| `PurchaseOrderCreatePage.vue` | `ae34b43a3fcff83e55112943697cbf3f70c1df51` | `738bbacf9eafd1cdd3e763f07d6a11e7ccb0d4c3` |
+| `PurchasingSettingsPage.vue` | `d801c2ae252aafc589a03f6bb6902add02cec186` | `ba536f6b9d643309e04f3a4120be03c0894bf5c5` |
+
+Unpinned at `b3b2bbd0`, and unverified for the new bytes:
+- `useCommandEvent.js`: `7dd7c967fdf2fb6c997a4849c15ef6017c715f5f`
+- `ApprovalSnapshotPanel.vue`: `f3b21b36f5a641e54f55581d10a08837e79eb331`
+
+## Verification package corrections (supersede the matching items above; nothing written or run)
+
+- **H1:** three `run` invocations, which are **1 real `send` and 2 local `COMMAND_PENDING` refusals**:
+  - in flight on the same key;
+  - another `meta.action` on an existing record.
+
+  Then the original TIMEOUT settles: one record, uncertain.
+- **C11** starts from a **fresh** Detail owner with an empty Map. The first approve `TIMEOUT`, then a reload with `approval: null`, makes `uncertainRecords` show the detached banner.
+- **C8, C9 and C10 parent boundaries.** All three mount the real `PurchaseOrderEditPage`, with `commands` passed.
+  - **C8:** variant a refreshes permissions with mgmt kept, and variant b fails the same-PO GET. Each remounts the form; it shows the original values and stays locked.
+  - **C9:** submit `TIMEOUT`, then `VERSION_CONFLICT`. The dialog is still open after any remount, and the retry body is equal.
+  - **C10:** submit is held, then a permission refresh remounts the form. The new form shows the dialog busy. Resolve with success: the owner's `submitted` runs once and navigates to the detail; the old instance emits nothing. Calls: submit 1, get 2.
+- **C16, new, ACK lost:** submit `TIMEOUT`, then the reload shows PENDING_APPROVAL, which is not editable, so the form is hidden.
+  - Variant a, as mgmt: `po-hidden-unknown` with "以原內容重試提交" sends the same body and eventId, and succeeds once. Calls: submit 2, get 2.
+  - Variant b, without mgmt: the blocked text, and no call. Calls: submit 1, get 2.
+- **C17, new, dialog-time target:**
+  - Variant a: open the copy confirm on PO 8, switch to PO 9, then confirm. 0 copy calls.
+  - Variant b: the same with the withdraw prompt and an actor switch. 0 withdraw calls.
+- **C18, new, observer:**
+  - Save held, then a same-PO refresh remounts the form. The new form is locked and busy and shows the original values.
+  - The original call then rejects with `TIMEOUT`: the new form shows the uncertain banner with the original values, and the retry sends the original body.
+  - Calls: update 2, get 2.
+- **C15 is replaced.** A busy route guard refuses without a confirm, so the old C15 was unreachable. **New C15, an actor switch while saving:** the save is held and `session.user` changes, so the Edit owner's generation changes and the form remounts under a new key. The original call rejects 409: no error and no stale banner on the new form, and no owner notification. Calls: update 1, get 2.
+- **The literal ③ command:**
+
+  ```
+  cd client && npm test -- test/components/purchasing/purchasingPurchaseOrderForm.test.js test/pages/purchasing/purchasingPurchaseOrderEditor.test.js test/pages/purchasing/purchasingPurchaseOrderPages.test.js test/pages/purchasing/purchasingNavigationErrors.test.js test/pages/purchasing/purchasingPurchaseOrderPrint.test.js test/services/purchasing.test.js test/pages/purchasing/purchasingApprovals.test.js
+  ```
+
+  It is not single-worker, because the entrypoint refuses options. The original behaviour assertions are kept and none is skipped.
+
+### ⑥ Playwright, corrected
+
+One batch. Each step stops at the first failure.
+
+**Steps:**
+1. **Application validator before the own DB.** Inside `server`, with the env below exported:
+
+   ```
+   node --input-type=module -e 'const m = await import("./src/framework/configuration/applicationConfiguration.js"); m.validateApplicationConfiguration(); console.log("CONFIG_OK")'
+   ```
+
+   It must print `CONFIG_OK`. This is in addition to the static admission and boundary checks.
+2. **Own DB:**
+   - `mysqld --initialize-insecure --datadir=/private/tmp/m024c`
+   - `mysqld --daemonize --skip-log-bin --datadir=/private/tmp/m024c --port=33619 --bind-address=127.0.0.1 --socket=/private/tmp/m024c/s.sock`
+   - create `erp_user` and `erp_dev` with the root and erp passwords from `ci.yml`
+   - `cd server && npm run migrate`
+3. **Env:**
+   - The 18 runtime variables: `DB_HOST=127.0.0.1`, `DB_PORT=33619`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_ADMIN_USER`, `DB_ADMIN_PASSWORD`, `JWT_SECRET`, `NODE_ENV=test`, `FULFILLMENT_LIFECYCLE_ENABLED=true`, and the 4 `CUSTOMER_BANK_*` and 4 `SUPPLIER_BANK_*` keyring variables. All values are copied from `ci.yml`, except the host and port.
+   - Plus `CLIENT_URL=http://127.0.0.1:4173`.
+   - Client build env: `VITE_API_BASE_URL=http://127.0.0.1:3000`.
+   - The deleted `ci023.env` is not assumed.
+4. **Minimal permissions, explicitly:**
+   - `createUser` gives the **first** account `system-admin`. So the first account is a declared `bootstrap` account. It never logs in, and it is disabled with SQL (`users.status`) before the browser starts.
+   - The roles are created in the own DB with exact SQL inserts into `roles`, `role_permissions` and `user_roles`:
+     - `pr-maker`: `purchasing.view` and `purchasing.mgmt`, for U1;
+     - `pr-approver`: `purchasing.view` and `purchasing.approval`, for U2;
+     - `pr-settings`: `purchasing.settings`, for U3.
+   - Then `createUser` for U1, U2 and U3, with passwords on stdin and no `--role`.
+   - A SELECT confirms that each user has exactly those permissions and that `bootstrap` is disabled. No fourth admin takes part.
+5. **Build and serve:** `cd client && npx vite build && npm run preview`, on 127.0.0.1:4173. Vite dev is not used: its per-module requests would exceed the total.
+6. **Legal devices:**
+   - Each account's first signed login gives `DEVICE_PENDING_APPROVAL` and no token. That is 3 logins.
+   - `node scripts/approveDevice.js --list`, then `node scripts/approveDevice.js <id>` for each of the 3 bindings.
+   - Each account logs in again. That is 3 more, so **6 logins and 3 approvals**.
+   - `GET /api/v1/device/bindings` is only a read, and it counts as an API GET.
+
+**Data:** 1 supplier, 1 SKU, and PO-A and PO-B, each a Draft with 1 line, created by U1 before the counted run (this needs a separate PM grant).
+
+**The 11 named business POSTs:**
+
+| # | User | Request | Expected |
+| --- | --- | --- | --- |
+| 1 | U3 | settings, wrong password | 403 |
+| 2 | U3 | settings, approval on | 200 |
+| 3 | U1 | PO-A submit with U2 | 200 |
+| 4 | U1 | PO-B submit with U2 | 200 |
+| 5 | U1 | PO-B approval withdraw | 200 |
+| 6 | U1 | PO-B resubmit | 200 |
+| 7 | U2 | PO-A approve, wrong password | 403 |
+| 8 | U2 | PO-A approve: `page.route` calls `route.fetch()`, and **only after a real server 200** calls `route.abort()`. If the fetched status is not 200, stop. | UI shows UNKNOWN |
+| 9 | U2 | PO-A retry, wrong password | 403, still locked |
+| 10 | U2 | PO-A retry | **200 replay only**; a 409 fails the run |
+| 11 | U2 | PO-B reject with reason | 200 |
+
+**Hard counters:** a Playwright `page.on("request")` and `context.on("request")` tally by category, stopping the run on the first overflow.
+
+| Category | Limit |
+| --- | --- |
+| Total HTTP | 150 |
+| API GET | 40 |
+| Business POST | 11, as named |
+| Login POST | 6 |
+| `token/refresh` POST | 4 |
+| OPTIONS | 35 (preflights are cached for 600 s by `cors.maxAgeSeconds`) |
+| Static | 50 |
+
+The sum, 146, is within 150. **Budget delta for the PM:** the business POST, login, refresh, OPTIONS and static limits are new. Using vite dev instead of preview would need a much higher total. Approve, or adjust.
+
+**Checks:**
+- Allowed statuses: only the expected ones above. No 5xx.
+- The console must show no error.
+- The focus order and headings are checked.
+
+**Time:**
+- Preparation, 15 minutes or less.
+- Execution, 25 minutes or less.
+- Cleanup, 10 minutes or less:
+  1. stop preview, the server and mysqld (`mysqladmin --socket=/private/tmp/m024c/s.sock -uroot shutdown`);
+  2. `rm -rf /private/tmp/m024c`;
+  3. `lsof -i :33619 -i :3000 -i :4173` must be empty;
+  4. close the browser and report the release time.
+
+**Tools:** `@playwright/cli` and one inline script for request 8 and the counters. No new runner.
