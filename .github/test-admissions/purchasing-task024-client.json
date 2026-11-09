@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"前端測試提案全部批准，TASK-025 可以開始\", answering the consolidated proposal in implementation/P2_task024_client.md: 6 new jsdom cases (4 in the new purchasingApprovals.test.js, 1 in purchasingPurchaseOrderForm.test.js, 1 in client/test/services/purchasing.test.js) and 2 changed existing cases (the lookupApprovers mock in purchasingPurchaseOrderForm.test.js and the TASK-021 navigation pin), in the existing client unit job on every PR. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json, which these changes invalidate as whole receipts, plus support pins for the new and changed pages. This decision does not authorize the agent to publish the digest",
+  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"前端測試提案全部批准，TASK-025 可以開始\", answering the consolidated proposal in implementation/P2_task024_client.md: 6 new jsdom cases (4 in the new purchasingApprovals.test.js, 1 in purchasingPurchaseOrderForm.test.js, 1 in client/test/services/purchasing.test.js) and 2 changed existing cases (the lookupApprovers mock in purchasingPurchaseOrderForm.test.js and the TASK-021 navigation pin), in the existing client unit job on every PR. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json, which these changes invalidate as whole receipts, plus support pins for the new and changed pages. After the tech lead's review relayed by the PM on 2026-11-09, the two PASSWORD_INVALID mocks in purchasingApprovals.test.js were aligned from status 401 to the real 403, with no case added and no assertion changed; whether that alignment needs Sam's separate approval is for the PM to confirm. This decision does not authorize the agent to publish the digest",
   "purpose": "The my-approvals page requests only the actor's pending list with paging and search and links to detail; the detail page shows the fixed approval snapshot, not the live PO, and shows decision controls only for allowedActions plus purchasing.approval; a failed decision keeps the reason, clears the password and retries an uncertain result with the same action and eventId; the settings page sends version, reason and password through the signed update and keeps the reason after an error; submit with approval on requires an approver and sends it; the TASK-018 to TASK-021 client behaviour stays pinned",
   "data": "No database or network: mocked services, real discovered pages, and small inline objects of at most 1 approval and 1 line. No fixture files",
   "concurrency": "1",
@@ -190,7 +190,7 @@
     {
       "path": "client/test/pages/purchasing/purchasingApprovals.test.js",
       "mode": "100644",
-      "blob": "0c7b043a338594a907ffea66fba07aa380baa912",
+      "blob": "62d284a9468575079f996ca02aa4c716878d4337",
       "kind": "functional",
       "cases": [
         "要 view＋approval，入選單；送頁碼同搜尋，按處理入詳情；冇資料有空狀態",
@@ -208,7 +208,7 @@
     {
       "path": "client/src/pages/purchasing/PurchasingSettingsPage.vue",
       "mode": "100644",
-      "blob": "853a25994d3e8fac7ac4fcb34a53e408d1c34140",
+      "blob": "d801c2ae252aafc589a03f6bb6902add02cec186",
       "kind": "support"
     }
   ]
