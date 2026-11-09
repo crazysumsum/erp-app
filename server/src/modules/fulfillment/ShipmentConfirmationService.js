@@ -57,7 +57,7 @@ export class ShipmentConfirmationService {
    const started=Object.freeze(pending({operationId,eventId,correlationId:request.correlationId}));
    this.#pendingRequests.set(started,request);this.#startedActors.set(started,actor);this.#recoveryStarts.set(started,token);this.#leaseBoundaries.set(started,Object.freeze({tx,request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:performance.now()}));
    return {started,actor};
-  },{isolationLevel:"READ COMMITTED",signal});
+  },{isolationLevel:"READ COMMITTED",signal,eventAdmissionId:eventId});
   if(!prepared)return {state:"UNKNOWN"};
   if(prepared.terminal)return prepared.terminal;
   const {started,actor}=prepared,context=this.database.context;
@@ -124,7 +124,7 @@ export class ShipmentConfirmationService {
    await tx.execute("INSERT INTO shipment_status_history (shipment_id,sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id,actor_label,occurred_at) VALUES (?,?,'DRAFT','SHIPPING','CONFIRM_START',?,?,?,?,?)",[shipmentId,sequence.next_sequence,intent.eventId,intent.version+1,actor.id,actor.username,at]);
    await tx.execute("INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES ('SHIPMENT',?,'SHIP',?,?,?,?,?,?)",[shipmentId,intent.eventId,request.correlationId,actor.id,actor.username,JSON.stringify({shipmentId,fulfillmentId:String(root.id),status:"SHIPPING",version:intent.version+1}),at]);
    const output=Object.freeze(pending(operation));this.#pendingRequests.set(output,request);this.#startedActors.set(output,freezeShipmentIntent({id:actor.id,username:actor.username,roles:[...actor.roles],permissions:[...actor.permissions]}));this.#leaseBoundaries.set(output,Object.freeze({tx,request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:performance.now()}));return output;
-  });
+  },{eventAdmissionId:intent.eventId});
  }
  ownsStartedConfirmation(started){
   const boundary=this.#leaseBoundaries.get(started);
@@ -143,7 +143,7 @@ export class ShipmentConfirmationService {
     if(current?.status==="IN_PROGRESS")assertShipmentLeaseBoundary(this.#leaseBoundaries.get(started),request,this.operations.leaseMs);
     const replay=await this.operations.getShipmentConfirmationReplayInTransaction(tx,{eventId:request.eventId,shipmentId:request.target.id,version:request.payload.version});
     return replay?{replay}:{lease:await readOrRenewShipmentLease(this.database,tx,request,this.operations.leaseMs)};
-   },{isolationLevel:"READ COMMITTED",signal:callerSignal});
+   },{isolationLevel:"READ COMMITTED",signal:callerSignal,eventAdmissionId:request.eventId});
    if(prepared.replay){terminalReplay=true;return terminal(prepared.replay);}
    entry=shipmentLeaseEntry(prepared.lease,callerSignal);await this.#verifyRecovery(null,started);
    return await this.database.withTransaction(async(tx,{signal:transactionSignal})=>{
@@ -194,7 +194,7 @@ export class ShipmentConfirmationService {
    const output={id:request.target.id,number:snapshot.shipment.shipment_number,status:"SHIPPED",version:shipmentVersion};await this.#verifyRecovery(tx,started);await this.operations.succeedInTransaction(tx,{request,result:output});
    return {outcome:"SHIPPED",operationId:String(operation.id),eventId:request.eventId,correlationId:request.correlationId,result:output};
    }catch(error){if(attempt.operationLocked&&!transactionSignal.aborted&&shipmentPermanentFailureCode(error))attempt.knownLockedAtMono=performance.now();throw error;}
-  },{isolationLevel:"READ COMMITTED",signal:entry.signal});
+  },{isolationLevel:"READ COMMITTED",signal:entry.signal,eventAdmissionId:request.eventId});
   }catch(error){
    if(terminalReplay)throw error;
    const outcome=getTransactionOutcome(attempt.tx)?.state??null,boundary=Object.freeze({tx:attempt.tx,request,outcome,operationLocked:attempt.operationLocked,knownLockedAtMono:attempt.knownLockedAtMono});

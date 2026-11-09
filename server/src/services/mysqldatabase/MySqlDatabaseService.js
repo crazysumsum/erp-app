@@ -1,5 +1,6 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { createMySqlDatabasePool } from "./connection.js";
+import { createHash } from "node:crypto";
 
 const ISOLATION_LEVELS = new Set([
   "READ UNCOMMITTED",
@@ -10,6 +11,21 @@ const ISOLATION_LEVELS = new Set([
 
 const ACTIVE_TRANSACTIONS = new WeakMap();
 const TRANSACTION_OUTCOMES = new WeakMap();
+const CLOSED_EVENT_TRANSACTIONS = new WeakSet();
+
+function eventAdmissionKey(database, eventId) {
+  if (typeof eventId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/iu.test(eventId) ||
+      typeof database.config.database !== "string" || !database.config.database) {
+    throw new TypeError("Event admission requires a UUID and configured database");
+  }
+  return createHash("sha256").update(JSON.stringify(["erp-managed-event-v1", database.config.database, eventId.toLowerCase()])).digest("hex");
+}
+
+export function hasTransactionEventAdmission(database, executor, eventId) {
+  const active = ACTIVE_TRANSACTIONS.get(executor);
+  return Boolean(active && active.database === database && !active.signal.aborted &&
+    database.context.get()?.databaseTransaction === executor && active.eventAdmissionKey === eventAdmissionKey(database, eventId));
+}
 
 export function getTransactionOutcome(executor) {
   return TRANSACTION_OUTCOMES.get(executor) || null;
@@ -190,6 +206,9 @@ class MySqlDatabaseExecutor {
   async run(method, sql, parameters, { timeoutMs, signal, operationName } = {}) {
     if (typeof sql !== "string" || !sql.trim()) {
       throw new TypeError("Database SQL must be a non-empty string");
+    }
+    if (CLOSED_EVENT_TRANSACTIONS.has(this)) {
+      throw new MySqlDatabaseOperationError("Event-admitted transaction is closed", { code: "DATABASE_OPERATION_ABORTED" });
     }
 
     const requestContext = this.context.get();
@@ -424,7 +443,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
 
   async withTransaction(
     work,
-    { isolationLevel = "REPEATABLE READ", timeoutMs, signal } = {}
+    { isolationLevel = "REPEATABLE READ", timeoutMs, signal, eventAdmissionId } = {}
   ) {
     if (typeof work !== "function") {
       throw new TypeError("Database transaction work must be a function");
@@ -437,6 +456,10 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
     }
 
     const context = this.context.get();
+    const admissionKey = eventAdmissionId === undefined ? null : eventAdmissionKey(this, eventAdmissionId);
+    if (admissionKey && context?.databaseTransaction) {
+      throw new TypeError("Event admission requires a new transaction");
+    }
     const parentSignal = signal || context?.signal || null;
     // 交易也要走同一條借連線的路徑，否則「等連線」在這裡仍然沒有上限。
     const connection = await this.acquireConnection(parentSignal);
@@ -458,6 +481,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
     let connectionDestroyed = false;
     let connectionQuarantined = false;
     let transactionOutcome = "INDETERMINATE";
+    let eventLockHeld = false;
     // COMMIT 送出去之後，交易的結果就不再是這一側能斷定的了。這個旗標同時
     // 擋掉「commit 失敗後再 rollback」，並決定錯誤要不要報成 indeterminate。
     let commitAttempted = false;
@@ -510,13 +534,29 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
         throw abortError(controller.signal);
       }
 
+      if (admissionKey) {
+        let rows;
+        try {
+          [rows] = await raceWithSignal(connection.query({ sql: "SELECT GET_LOCK(?,0) AS acquired", timeout: this.config.queryTimeoutMs }, [admissionKey]), controller.signal);
+        } catch (error) {
+          connectionQuarantined = true;
+          onTransactionAbort();
+          throw error;
+        }
+        if (rows?.[0]?.acquired !== 1) {
+          if (rows?.[0]?.acquired !== 0) { connectionQuarantined = true; onTransactionAbort(); }
+          throw new MySqlDatabaseOperationError("Event admission is unavailable", { code: "DATABASE_EVENT_ADMISSION_UNAVAILABLE" });
+        }
+        eventLockHeld = true;
+      }
+
       await raceWithSignal(
         connection.query(`SET TRANSACTION ISOLATION LEVEL ${normalizedIsolation}`),
         controller.signal
       );
       await raceWithSignal(connection.beginTransaction(), controller.signal);
       transactionStarted = true;
-      ACTIVE_TRANSACTIONS.set(transaction, { isolationLevel: normalizedIsolation, signal: controller.signal });
+      ACTIVE_TRANSACTIONS.set(transaction, { database: this, isolationLevel: normalizedIsolation, signal: controller.signal, eventAdmissionKey: admissionKey });
       this.updateContext({ databaseTransaction: transaction });
       const result = await raceWithSignal(
         Promise.resolve(work(transaction, { signal: controller.signal })),
@@ -527,6 +567,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       // timeoutMs=10 的交易在 50ms 後仍未結束，而且 finally 跑不到，連線既沒還
       // 也沒毀，直接從池子裡消失。
       ACTIVE_TRANSACTIONS.delete(transaction);
+      if (admissionKey) CLOSED_EVENT_TRANSACTIONS.add(transaction);
       commitAttempted = true;
       await raceWithSignal(connection.commit(), controller.signal);
       transactionStarted = false;
@@ -534,6 +575,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       return result;
     } catch (error) {
       ACTIVE_TRANSACTIONS.delete(transaction);
+      if (admissionKey) CLOSED_EVENT_TRANSACTIONS.add(transaction);
       // COMMIT 一旦送出去就不能再 rollback：伺服器可能已經提交了。在一條剛剛
       // commit 失敗的連線上再送 rollback，好一點是 no-op，差一點是第二次卡死。
       if (transactionStarted && !commitAttempted && !connectionDestroyed) {
@@ -590,7 +632,18 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       });
     } finally {
       ACTIVE_TRANSACTIONS.delete(transaction);
+      if (admissionKey) CLOSED_EVENT_TRANSACTIONS.add(transaction);
       TRANSACTION_OUTCOMES.set(transaction, Object.freeze({ state: transactionOutcome }));
+      if (eventLockHeld && !connectionDestroyed && !connectionQuarantined) {
+        try {
+          const [rows] = await raceWithSignal(connection.query({ sql: "SELECT RELEASE_LOCK(?) AS released", timeout: this.config.queryTimeoutMs }, [admissionKey]), controller.signal);
+          if (rows?.[0]?.released !== 1) throw new Error("Event mutex release was not acknowledged");
+        } catch (error) {
+          connectionQuarantined = true;
+          onTransactionAbort();
+          void this.logger?.error?.("database.event_admission.cleanup_failed", "Event mutex session was quarantined", { requestId: context?.requestId || null, transactionOutcome, error: { name: error.name, code: error.code || null } });
+        }
+      }
       clearTimeout(timer);
       controller.signal.removeEventListener("abort", onTransactionAbort);
       parentSignal?.removeEventListener?.("abort", onParentAbort);

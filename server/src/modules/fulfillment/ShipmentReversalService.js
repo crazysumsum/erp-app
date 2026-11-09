@@ -17,6 +17,9 @@ import { normalizeSalesFulfillmentIntent,salesFulfillmentIntentHash } from "../s
 import { freezeShipmentIntent } from "./shipmentConfirmationScope.js";
 import { assertShipmentLeaseBoundary,shipmentLeaseEntry,shipmentTransactionBudget } from "./shipmentOperationLease.js";
 import { assertShipmentReversalSource,shipmentReversalProjection,assertReversedSalesProjection,saveShipmentReversalProjection } from "./shipmentReversalProjection.js";
+import { InventoryLookupService } from "../inventory/InventoryLookupService.js";
+import { SalesFulfillmentService } from "../sales/SalesFulfillmentService.js";
+import { ShipmentEventAdmission } from "./shipmentEventAdmission.js";
 
 const fail=code=>{throw fulfillmentError(code);};
 function terminal(operation){if(operation.status==="FAILED")throw fulfillmentError(operation.publicErrorCode,operation.publicErrorDetails);return Object.freeze({outcome:"REVERSED",shipment:operation.result});}
@@ -28,8 +31,13 @@ export class ShipmentReversalService {
  #leaseBoundaries=new WeakMap();
  #completing=new WeakSet();
  #completionAttempts=new WeakMap();
+ #admission;
  constructor({database,time,downstreamRegistry,operationLeaseMs=60000,sales,inventoryLookup}){
   Object.assign(this,{database,time,sales,inventoryLookup});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry});
+  this.#admission=new ShipmentEventAdmission({database,readWriter:token=>this.#startedAttempts.get(token)});
+  const eventAdmissionVerifier=(tx,input)=>this.#admission.verifyWriter(tx,input);
+  this.inventoryLookup=inventoryLookup??new InventoryLookupService({database,time,eventAdmissionVerifier});
+  this.sales=sales??new SalesFulfillmentService({database,time,inventoryFulfillment:this.inventoryLookup.fulfillment,eventAdmissionVerifier});
  }
  // null is no trusted terminal result, never proof of absence or permission to write.
  async readReversalTerminal(shipmentId,input){
@@ -127,7 +135,7 @@ export class ShipmentReversalService {
      const {row,now}=current,expiry=now+this.operations.leaseMs;
      const [changed]=await tx.execute("UPDATE fulfillment_operation_requests SET lease_expires_at=?,updated_at=? WHERE id=? AND event_id=? AND status='IN_PROGRESS' AND operation_type='REVERSE' AND lease_owner=? AND attempt_count=? AND payload_hash=? AND lease_expires_at=? AND lease_expires_at>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)",[expiry,now,row.id,request.eventId,binding.leaseOwner,binding.attemptCount,binding.payloadHash,row.lease_expires_at]);if(changed.affectedRows!==1)fail("CONCURRENT_OPERATION");
      return {entryDeadlineMono:current.observedAtMono+Math.floor(this.operations.leaseMs/2),publishedExpiry:expiry};
-    },{isolationLevel:"READ COMMITTED",signal:callerSignal});
+    },{isolationLevel:"READ COMMITTED",signal:callerSignal,eventAdmissionId:request.eventId});
     if(lease.replay)return terminal(lease.replay);
     if(getTransactionOutcome(attempt.leaseTx)?.state!=="COMMITTED")fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
     entry=shipmentLeaseEntry(Object.freeze(lease),callerSignal);
@@ -140,6 +148,7 @@ export class ShipmentReversalService {
       attempt.tx=tx;attempt.signal=transactionSignal;
        const current=await this.#lockReversalOperation(tx,binding,()=>{entry.locked();attempt.operationLocked=true;attempt.knownLockedAtMono=performance.now();});if(current.replay)return terminal(current.replay);
        if(current.expires-current.now<budget)fail("CONCURRENT_OPERATION");
+       await this.#admission.enterWriter(tx,started);
        const actor=current.actor,command=freezeShipmentIntent({actor:{userId:actor.id,serviceName:"",claimedRoles:[...actor.roles],claimedPermissions:[...actor.permissions]},source:{documentId:request.target.id,eventId:request.eventId},correlationId:request.correlationId,payload:prepared.inventoryPayload});
        attempt.inventoryCommand=command;
        const proof=await inventory.claimFulfillmentBatchInTransaction(tx,{action:"REVERSE",command});attempt.inventoryRequestHash=proof.requestHash;
@@ -154,10 +163,10 @@ export class ShipmentReversalService {
        const output=await saveShipmentReversalProjection(tx,snapshot,projection,request,actor,this.time.nowMs());
        await this.operations.succeedInTransaction(tx,{request,result:output});
        return Object.freeze({outcome:"REVERSED",shipment:Object.freeze(output)});
-     },{isolationLevel:"READ COMMITTED",signal:entry.signal});
+     },{isolationLevel:"READ COMMITTED",signal:entry.signal,eventAdmissionId:request.eventId});
     });
    }catch(error){attempt.error=error;throw error;}
-   finally{entry?.close();attempt.outcome=getTransactionOutcome(attempt.tx)?.state??null;Object.freeze(attempt);}
+   finally{this.#admission.close(attempt.tx);entry?.close();attempt.outcome=getTransactionOutcome(attempt.tx)?.state??null;Object.freeze(attempt);}
   });}finally{this.#completing.delete(started);}
  }
  async startReversal(shipmentId,input){
@@ -166,6 +175,13 @@ export class ShipmentReversalService {
   const request=Object.freeze({eventId:command.eventId,operationType:"REVERSE",target:Object.freeze({type:"SHIPMENT",id:shipmentId}),payload:command,leaseOwner:randomUUID(),correlationId:randomUUID()});
   let created=null;
   const output=await this.transactions.withTransaction(async tx=>{
+   const [[existing]]=await tx.query("SELECT id FROM fulfillment_operation_requests WHERE event_id=? FOR UPDATE",[command.eventId]);
+   if(!existing){
+    if(typeof this.inventoryLookup.readShipmentEventAdmissionInTransaction!=="function"||typeof this.sales.readShipmentEventAdmissionInTransaction!=="function")fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    const source={eventId:command.eventId,shipmentId};
+    const inventory=await this.inventoryLookup.readShipmentEventAdmissionInTransaction(tx,source),sales=await this.sales.readShipmentEventAdmissionInTransaction(tx,source);
+    if(inventory?.state!=="CLEAR"||sales?.state!=="CLEAR")fail("FULFILLMENT_SOURCE_CONFLICT");
+   }
    const operation=await this.operations.claimInTransaction(tx,request);
    if(operation.replay)return terminal(operation);
    const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.reverse");
@@ -201,7 +217,7 @@ export class ShipmentReversalService {
    const result=pending(operation,{id:reversalId,reversal_number:number,version:1},command.version+1);
    created={executor:tx,result,knownLockedAtMono:performance.now(),facts:Object.freeze({request,initiatorId:String(actor.id),operationId:operation.operationId,correlationId:request.correlationId,leaseOwner:request.leaseOwner,attemptCount:1,payloadHash:fulfillmentOperationHash(request)})};
    return result;
-  });
+  },{eventAdmissionId:command.eventId});
   const binding=created&&output===created.result&&getTransactionOutcome(created.executor)?.state==="COMMITTED"?created.facts:null;
   if(binding){this.#startedAttempts.set(output,binding);this.#leaseBoundaries.set(output,Object.freeze({tx:created.executor,request:binding.request,outcome:"COMMITTED",operationLocked:true,knownLockedAtMono:created.knownLockedAtMono}));}
   created=null;
