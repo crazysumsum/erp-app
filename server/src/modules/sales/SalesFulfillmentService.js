@@ -301,7 +301,7 @@ export class SalesFulfillmentService {
     return source;
   }
   async readShipmentReversalZeroEffectInTransaction(tx,session){
-    const source=await this.#zeroOutcomeBinding(tx,session,"read");markSalesReconciliationRead(tx);let outcome={state:"UNKNOWN"};
+    const source=await this.#zeroOutcomeBinding(tx,session,"read");markSalesReconciliationRead(tx);let outcome={state:"UNKNOWN",eligibility:"UNKNOWN"};
     try{
       const selected=salesOutcomeSelection(source),references=new Map(source.originalIssue.references.map(reference=>[reference.inventoryAllocationId,reference]));
       const [[originalJournal]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=? FOR SHARE",[source.originalIssue.eventId]);
@@ -340,7 +340,16 @@ export class SalesFulfillmentService {
       if(history.length||audit.length)mismatch();
       // Absence relies on every event writer holding this gate and normal apply being atomic.
       // Current counters only validate conservation; they never establish historical absence.
-      outcome={state:"ABSENT"};
+      let eligibility="INELIGIBLE";
+      if(["COMPLETED","PARTIALLY_FULFILLED","CLOSED"].includes(data.header.status)){
+        try{
+          // Only plan against the locked current projection; never reconstruct an old attempt/hash.
+          planSalesFulfillmentQuantities({orderId:source.salesOrderId,status:data.header.status,version:Number(data.header.version),lines:data.lines.map(quantities)},
+            {action:"SHIPMENT_REVERSED",lines:selected.map(line=>({...line,expectedVersion:Number(data.lines.find(row=>dbInteger(row.id)===line.salesOrderLineId).version)}))});
+          eligibility="ELIGIBLE";
+        }catch(error){if(error.code!=="SALES_FULFILLMENT_CONTRACT_MISMATCH")throw error;}
+      }
+      outcome={state:"ABSENT",eligibility};
     }catch(error){if(!unknownSalesOutcomeSource(error))throw error;}
     if(await this.#zeroOutcomeBinding(tx,session,"read")!==source)mismatch();
     const proof=Object.freeze({});this.#zeroOutcomeProofs.set(proof,{tx,session,source,outcome});return proof;
