@@ -179,9 +179,9 @@ This supersedes the `PASSWORD_INVALID` special case in `556925cf`.
 
 | File | Old blob | New blob |
 | --- | --- | --- |
-| `PurchaseOrderForm.vue` | `46756f67da942965c44ba090da73c199574c6bd2` | `d79e8bbf9b48…` |
-| `PurchaseOrderDetailPage.vue` | `d4bb5eeda0b09b5fa0eaf297f988711ae991582c` | `9ad38f008e51…` |
-| `PurchasingSettingsPage.vue` | `d801c2ae252afc589a03f6bb6902add02cec186` | `bdbfd1d2470f…` |
+| `PurchaseOrderForm.vue` | `46756f67da942965c44ba090da73c199574c6bd2` | `d79e8bbf9b483a5ba7f75a68c916a89ccf728ff9` |
+| `PurchaseOrderDetailPage.vue` | `d4bb5eeda0b09b5fa0eaf297f988711ae991582c` | `9ad38f008e514a6f1998dc603c3d18afc8759324` |
+| `PurchasingSettingsPage.vue` | `d801c2ae252afc589a03f6bb6902add02cec186` | `bdbfd1d2470f4f5364bdaae1e4c8c0e1c1c88bc8` |
 
 - The composable and the panel were not gate inputs at `b3b2bbd0`. That is **unverified for the new bytes**, because the gate was not rerun.
 - The receipt is **not updated**. It must wait until the test changes below are approved.
