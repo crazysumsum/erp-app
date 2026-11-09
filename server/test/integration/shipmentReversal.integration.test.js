@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { reversalFixture,startReversal,completeReversal,facts,sequence,nativeActor,inventoryTables,removeReversePermission,observeReverseClaim,renewedRow,assertRolledBack,assertCommittedReversal,mapperData } from "../fulfillment/shipmentReversalFixture.js";
+import { reversalFixture,startReversal,completeReversal,facts,sequence,supportFacts,nativeActor,inventoryTables,removeReversePermission,observeReverseClaim,renewedRow,observeCommittedInputs,assertRolledBack,assertCommittedReversal,mapperData } from "../fulfillment/shipmentReversalFixture.js";
 import { inventoryNativeFixture } from "../fulfillment/inventoryNativeFixture.js";
 import { ShipmentReversalService } from "../../src/modules/fulfillment/ShipmentReversalService.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
@@ -16,7 +16,7 @@ const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 const nativeOptions={timeout:120000,concurrency:false};
 
 nativeTest("REVERSE-INTERNAL preparation and genuine started identity",nativeOptions,async t=>{
- const f=await reversalFixture(t,{twoLines:true,archives:true}),started=await startReversal(f),before=await facts(f),numbers=await sequence(f);
+ const f=await reversalFixture(t,{twoLines:true,archives:true,noDownstream:true}),started=await startReversal(f),before=await facts(f),numbers=await sequence(f);
  assert.ok(await f.execute(()=>f.reversal.readStartedReversal(started))===started);
  assert.equal(await f.execute(()=>f.reversal.readStartedReversal(structuredClone(started))),null);
  const prepared=await f.execute(()=>f.reversal.prepareReversalReadOnly(f.shipmentId,f.command,started));
@@ -68,7 +68,7 @@ nativeTest("REVERSE-INTERNAL terminal lookup binds exact command and actor",nati
 });
 
 nativeTest("REVERSE-INTERNAL preparation rejects permission revoked after snapshot",nativeOptions,async t=>{
- const f=await reversalFixture(t,{archives:true}),started=await startReversal(f),before=await facts(f),sales=f.confirmation.sales,lookup=f.confirmation.inventoryLookup,original=sales.getShipmentReversalScope,originalInventory=lookup.getFulfillmentReversalPreparationInTransaction;
+ const f=await reversalFixture(t,{archives:true,noDownstream:true}),started=await startReversal(f),before=await facts(f),sales=f.confirmation.sales,lookup=f.confirmation.inventoryLookup,original=sales.getShipmentReversalScope,originalInventory=lookup.getFulfillmentReversalPreparationInTransaction;
  let restore,entered=0,inventoryCalls=0;
  sales.getShipmentReversalScope=async function(...args){entered++;assert.ok(f.database.context.get()?.databaseTransaction===null,"Snapshot transaction has completed");restore=await removeReversePermission(f,f.userId);return original.apply(this,args);};
  lookup.getFulfillmentReversalPreparationInTransaction=function(...args){inventoryCalls++;return originalInventory.apply(this,args);};
@@ -87,53 +87,58 @@ nativeTest("REVERSE-INTERNAL current SHIP verifier rejects untrusted REVERSE inp
 });
 
 nativeTest("REVERSE-PHASEB atomic two-leg restore and genuine ownership",nativeOptions,async t=>{
- const f=await reversalFixture(t,{twoLines:true,archives:true});await startReversal(f);const before=await facts(f),numbers=await sequence(f);
+ const f=await reversalFixture(t,{twoLines:true,archives:true,noDownstream:true});await startReversal(f);const before=await facts(f),numbers=await sequence(f),support=await supportFacts(f);
  await assert.rejects(completeReversal(f,structuredClone(f.started)),{code:"FULFILLMENT_SOURCE_CONFLICT"});assert.deepEqual(await facts(f),before);
- const inventory=f.confirmation.inventoryLookup.fulfillment,original=inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction,reached=Promise.withResolvers(),release=Promise.withResolvers(),controller=new AbortController(),originalTransaction=f.database.withTransaction,previousShutdown=f.f.cleanup.shutdown;
- let calls=0,transactions=0,genuine,overlap,settled=false,cleanupPromise,rejectWait;
+ const evidence=observeCommittedInputs(f),inventory=f.confirmation.inventoryLookup.fulfillment,original=inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction,reached=Promise.withResolvers(),release=Promise.withResolvers(),controller=new AbortController(),originalTransaction=f.database.withTransaction,previousShutdown=f.f.cleanup.shutdown;
+ const callbacks=[];let calls=0,transactions=0,genuine,overlap,settled=false,cleanupPromise,rejectWait;
  const stopWait=()=>rejectWait?.(t.signal.reason);
  const abort=()=>{release.resolve();controller.abort(t.signal.reason);};t.signal.addEventListener("abort",abort,{once:true});
- f.database.withTransaction=function(...args){transactions++;return originalTransaction.apply(this,args);};
+ f.database.withTransaction=function(work,...args){transactions++;return originalTransaction.call(this,function(...inputs){let pending;try{pending=Promise.resolve(work.apply(this,inputs));}catch(error){pending=Promise.reject(error);}callbacks.push(pending);void pending.catch(()=>{});return pending;},...args);};
  inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=async function(tx,command,proof){calls++;assert.equal(command.source.eventId,f.command.eventId);assert.ok(tx===f.database.context.get()?.databaseTransaction,"Actual writer executor");assert.equal(getActiveTransactionIsolation(tx),"READ COMMITTED");reached.resolve();await release.promise;return original.call(this,tx,command,proof);};
- const cleanup=()=>cleanupPromise??=(async()=>{release.resolve();if(genuine&&!settled)controller.abort(new Error("Owned reversal case cleanup"));await Promise.allSettled([genuine,overlap].filter(Boolean));inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=original;f.database.withTransaction=originalTransaction;t.signal.removeEventListener("abort",abort);t.signal.removeEventListener("abort",stopWait);})();
+ const cleanup=()=>cleanupPromise??=(async()=>{
+  release.resolve();if(genuine&&!settled)controller.abort(new Error("Owned reversal case cleanup"));await Promise.allSettled([genuine,overlap].filter(Boolean));
+  const errors=[];let drained=0;try{while(drained<callbacks.length){const pending=callbacks.slice(drained);drained=callbacks.length;for(const result of await Promise.allSettled(pending))if(result.status==="rejected")errors.push(result.reason);}}
+  finally{inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=original;f.database.withTransaction=originalTransaction;evidence.restore();t.signal.removeEventListener("abort",abort);t.signal.removeEventListener("abort",stopWait);}
+  if(errors.length)throw new AggregateError(errors,"Owned actual transaction callbacks rejected during drain");
+ })();
  f.f.cleanup.shutdown=async()=>{try{await cleanup();}finally{await previousShutdown();}};
  try{
   genuine=completeReversal(f,f.started,{signal:controller.signal}).then(value=>{settled=true;return value;},error=>{settled=true;throw error;});void genuine.catch(()=>{});
   await Promise.race([reached.promise,genuine.then(()=>{throw new Error("Expected actual PhaseB barrier was not reached");}),new Promise((_,reject)=>{rejectWait=reject;if(t.signal.aborted)stopWait();else t.signal.addEventListener("abort",stopWait,{once:true});})]);t.signal.removeEventListener("abort",stopWait);
   const count=transactions;overlap=completeReversal(f);await assert.rejects(overlap,{code:"CONCURRENT_OPERATION"});assert.equal(transactions,count,"Same-object overlap does not open a second DB transaction");release.resolve();
   const result=await genuine;assert.equal(result.outcome,"REVERSED");assert.equal(calls,1);const after=await facts(f);assertCommittedReversal(before,after,f);
-  assert.deepEqual(await completeReversal(f),result);assert.deepEqual(await facts(f),after);assert.deepEqual(await sequence(f),numbers);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,4);
+  assert.deepEqual(await completeReversal(f),result);assert.deepEqual(await facts(f),after);assert.deepEqual(await sequence(f),numbers);assert.deepEqual(await supportFacts(f),support);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,4);
  }finally{await cleanup();}
 });
 
 nativeTest("REVERSE-PHASEB late audit rollback blocks same-object retry",nativeOptions,async t=>{
- const f=await reversalFixture(t,{archives:true});await startReversal(f);const before=await facts(f),numbers=await sequence(f);let actual,renewal,originalExecute,forwards=0,faults=0;
+ const f=await reversalFixture(t,{archives:true,noDownstream:true});await startReversal(f);const before=await facts(f),numbers=await sequence(f),support=await supportFacts(f);let actual,renewal,originalExecute,forwards=0,faults=0;
  const observer=observeReverseClaim(f,async tx=>{assert.ok(actual===undefined,"Exactly one actual business executor");actual=tx;renewal=await renewedRow(tx,f);originalExecute=tx.execute;tx.execute=async function(sql,args,...rest){const result=await originalExecute.call(this,sql,args,...rest);if(sql==="INSERT INTO fulfillment_audit_logs (target_type,target_id,action,event_id,correlation_id,actor_user_id,actor_label,after_summary,occurred_at) VALUES (?,?,'REVERSE',?,?,?,?,?,?)"&&args[0]==="REVERSAL"&&String(args[1])===f.started.reversal.id&&args[2]===f.command.eventId&&args[3]===f.started.correlationId){forwards++;assert.equal(forwards,1);faults++;throw Object.assign(new Error("Synthetic final REVERSAL audit forwarding fault"),{code:"FULFILLMENT_TEST_REVERSAL_AUDIT_AFTER_INSERT"});}return result;};});
  try{
   await assert.rejects(completeReversal(f),error=>error.code==="DATABASE_TRANSACTION_FAILED"&&error.cause?.code==="FULFILLMENT_TEST_REVERSAL_AUDIT_AFTER_INSERT");assert.equal(forwards,1);assert.equal(faults,1);assert.deepEqual(getTransactionOutcome(actual),{state:"ROLLED_BACK"});
-  await assertRolledBack(f,before,renewal);assert.deepEqual(await completeReversal(f),f.started);assert.equal(observer.calls,1);await assertRolledBack(f,before,renewal);assert.deepEqual(await sequence(f),numbers);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,2);
+  await assertRolledBack(f,before,renewal);assert.deepEqual(await completeReversal(f),f.started);assert.equal(observer.calls,1);await assertRolledBack(f,before,renewal);assert.deepEqual(await sequence(f),numbers);assert.deepEqual(await supportFacts(f),support);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,2);
  }finally{if(actual&&originalExecute)actual.execute=originalExecute;observer.restore();}
 });
 
 nativeTest("REVERSE-PHASEB lost commit ACK resolves by original terminal",nativeOptions,async t=>{
- const f=await reversalFixture(t,{archives:true});await startReversal(f);const before=await facts(f),numbers=await sequence(f);let actual,connection,originalCommit,originalDestroy,originalRelease,commits=0,acks=0,faults=0,destroys=0,releases=0;
- const observer=observeReverseClaim(f,tx=>{
+ const f=await reversalFixture(t,{archives:true,noDownstream:true});await startReversal(f);const before=await facts(f),numbers=await sequence(f),support=await supportFacts(f);let actual,connection,originalCommit,originalDestroy,originalRelease,commits=0,acks=0,faults=0,destroys=0,releases=0;
+ const evidence=observeCommittedInputs(f),observer=observeReverseClaim(f,tx=>{
   assert.ok(actual===undefined,"Exactly one actual business executor");actual=tx;connection=tx.target;assert.ok(connection!==f.db,"Independent fixture observer connection");originalCommit=connection.commit;originalDestroy=connection.destroy;originalRelease=connection.release;
   connection.commit=async function(...args){assert.ok(this===connection&&f.database.context.get()?.databaseTransaction===actual,"Only the selected actual PhaseB connection and executor");assert.equal(getActiveTransactionIsolation(actual),null);commits++;assert.equal(commits,1);await originalCommit.apply(this,args);acks++;faults++;throw Object.assign(new Error("Synthetic PhaseB COMMIT ACK lost after native commit"),{code:"PROTOCOL_CONNECTION_LOST"});};
   connection.destroy=function(...args){destroys++;return originalDestroy.apply(this,args);};connection.release=function(...args){releases++;return originalRelease.apply(this,args);};
  });
  try{
   await assert.rejects(completeReversal(f),error=>error.code==="DATABASE_TRANSACTION_INDETERMINATE"&&error.cause?.code==="PROTOCOL_CONNECTION_LOST");assert.equal(commits,1);assert.equal(acks,1);assert.equal(faults,1);assert.equal(destroys,1);assert.equal(releases,0);assert.deepEqual(getTransactionOutcome(actual),{state:"INDETERMINATE"});
-  const persisted=await facts(f);assertCommittedReversal(before,persisted,f);const terminal=await f.execute(()=>f.reversal.readReversalTerminal(f.shipmentId,f.command));assert.equal(terminal.outcome,"REVERSED");assert.deepEqual(await completeReversal(f),terminal);assert.deepEqual(await facts(f),persisted);assert.deepEqual(await sequence(f),numbers);assert.equal(observer.calls,1);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,2);
- }finally{if(connection){connection.commit=originalCommit;connection.destroy=originalDestroy;connection.release=originalRelease;}observer.restore();}
+  const persisted=await facts(f);assertCommittedReversal(before,persisted,f);const terminal=await f.execute(()=>f.reversal.readReversalTerminal(f.shipmentId,f.command));assert.equal(terminal.outcome,"REVERSED");assert.deepEqual(await completeReversal(f),terminal);assert.deepEqual(await facts(f),persisted);assert.deepEqual(await sequence(f),numbers);assert.deepEqual(await supportFacts(f),support);assert.equal(observer.calls,1);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,2);
+ }finally{if(connection){connection.commit=originalCommit;connection.destroy=originalDestroy;connection.release=originalRelease;}observer.restore();evidence.restore();}
 });
 
 nativeTest("REVERSE-PHASEB complete locked source rejects active zero-line Claim",nativeOptions,async t=>{
- const f=await reversalFixture(t,{twoLines:true,archives:true});await startReversal(f);const initial=await facts(f),line=initial.fulfillment_lines.find(row=>String(row.shipped_base_quantity)==="0"),claims=initial.fulfillment_line_reservation_claims.filter(row=>String(row.fulfillment_line_id)===String(line.id));assert.equal(claims.length,1);const claim=claims[0];assert.equal(claim.status,"RELEASED");assert.equal(String(claim.original_claimed_quantity),"5");
+ const f=await reversalFixture(t,{twoLines:true,archives:true,noDownstream:true});await startReversal(f);const initial=await facts(f),line=initial.fulfillment_lines.find(row=>String(row.shipped_base_quantity)==="0"),claims=initial.fulfillment_line_reservation_claims.filter(row=>String(row.fulfillment_line_id)===String(line.id));assert.equal(claims.length,1);const claim=claims[0];assert.equal(claim.status,"RELEASED");assert.equal(String(claim.original_claimed_quantity),"5");
  const [changed]=await f.db.execute("UPDATE fulfillment_line_reservation_claims SET active_claimed_quantity=5,released_quantity=0,status='ACTIVE' WHERE id=? AND fulfillment_id=? AND fulfillment_line_id=? AND sales_order_line_reservation_id=? AND inventory_reservation_id=? AND original_claimed_quantity=5 AND status='RELEASED' AND active_claimed_quantity=0 AND released_quantity=5 AND consumed_quantity=0 AND reversed_quantity=0 AND inventory_version=? AND updated_at=?",[claim.id,claim.fulfillment_id,claim.fulfillment_line_id,claim.sales_order_line_reservation_id,claim.inventory_reservation_id,claim.inventory_version,claim.updated_at]);assert.equal(changed.affectedRows,1);
- const before=await facts(f),actualClaim=before.fulfillment_line_reservation_claims.find(row=>String(row.id)===String(claim.id)),omit=row=>Object.fromEntries(Object.entries(row).filter(([key])=>!["active_claimed_quantity","released_quantity","status"].includes(key)));assert.deepEqual(omit(actualClaim),omit(claim));assert.equal(String(actualClaim.active_claimed_quantity),"5");assert.equal(String(actualClaim.released_quantity),"0");assert.equal(actualClaim.status,"ACTIVE");
+ const before=await facts(f),numbers=await sequence(f),support=await supportFacts(f),actualClaim=before.fulfillment_line_reservation_claims.find(row=>String(row.id)===String(claim.id)),omit=row=>Object.fromEntries(Object.entries(row).filter(([key])=>!["active_claimed_quantity","released_quantity","status"].includes(key)));assert.deepEqual(omit(actualClaim),omit(claim));assert.equal(String(actualClaim.active_claimed_quantity),"5");assert.equal(String(actualClaim.released_quantity),"0");assert.equal(actualClaim.status,"ACTIVE");
  const inventory=f.confirmation.inventoryLookup.fulfillment,original=inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction;let posts=0,actual,renewal;
  inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=function(...args){posts++;return original.apply(this,args);};const observer=observeReverseClaim(f,async tx=>{assert.ok(actual===undefined,"Exactly one actual business executor");actual=tx;renewal=await renewedRow(tx,f);});
- try{await assert.rejects(completeReversal(f),{code:"FULFILLMENT_SOURCE_CONFLICT"});assert.equal(posts,0);assert.equal(observer.calls,1);assert.deepEqual(getTransactionOutcome(actual),{state:"ROLLED_BACK"});await assertRolledBack(f,before,renewal);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,1);}
+ try{await assert.rejects(completeReversal(f),{code:"FULFILLMENT_SOURCE_CONFLICT"});assert.equal(posts,0);assert.equal(observer.calls,1);assert.deepEqual(getTransactionOutcome(actual),{state:"ROLLED_BACK"});await assertRolledBack(f,before,renewal);assert.deepEqual(await sequence(f),numbers);assert.deepEqual(await supportFacts(f),support);assert.equal(f.startCalls,1);assert.equal(f.completionCalls,1);}
  finally{inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=original;observer.restore();}
 });
