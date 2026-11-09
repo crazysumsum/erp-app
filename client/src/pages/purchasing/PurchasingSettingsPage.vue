@@ -3,7 +3,7 @@ export const page = { name: "purchasing-settings", path: "/purchasing/settings",
   menu: { group: "purchasingReceiving", icon: "tune", order: 90 } };
 </script>
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
@@ -11,12 +11,16 @@ import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { timestamp } from "@/components/purchasing/purchaseOrderPresentation.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
+import { useSessionStore } from "@/stores/session.js";
 import purchasing from "@/services/purchasing.js";
 
 // §5.4：改設定只影響之後提交嘅 PO；要已註冊裝置簽署兼再輸入密碼。密碼唔入 intent，出錯清走，原因保留。
 const settings = ref(null), loading = ref(false), loadError = ref("");
 const target = ref(false), reason = ref(""), password = ref(""), saving = ref(false), saveError = ref(""), stale = ref(false);
-const command = useCommandEvent();
+const command = useCommandEvent(), session = useSessionStore();
+// Intent 綁 actor；重新讀設定唔清走未確定嘅變更，重試仍然送原 payload 同 eventId。
+const commandKey = () => `${session.user?.id}:settings`;
+const uncertain = computed(() => command.isUncertain(commandKey()));
 const controller = new AbortController();
 onBeforeUnmount(() => controller.abort());
 const columns = [
@@ -32,8 +36,9 @@ async function load() {
   loading.value = true; loadError.value = ""; stale.value = false;
   try {
     settings.value = await purchasing.getSettings({ signal: controller.signal });
-    target.value = settings.value.requirePoApproval;
-    command.reset();
+    const pendingChange = command.pendingPayload(commandKey());
+    target.value = pendingChange?.requirePoApproval ?? settings.value.requirePoApproval;
+    if (pendingChange) reason.value = pendingChange.reason;
   } catch (failure) {
     if (!controller.signal.aborted) loadError.value = failure.message || "載入採購設定失敗";
   } finally { loading.value = false; }
@@ -45,16 +50,18 @@ async function save() {
   saveError.value = text.length < 5 || text.length > 500 ? "原因須為 5–500 字" : password.value ? "" : "請輸入密碼";
   if (saveError.value) return;
   saving.value = true;
-  const secret = password.value;
+  const secret = password.value, key = commandKey(), wasUncertain = uncertain.value;
   try {
     const result = await command.run({ version: settings.value.version, requirePoApproval: target.value, reason: text },
-      (body) => purchasing.updateSettings({ ...body, password: secret }));
+      (body) => purchasing.updateSettings({ ...body, password: secret }), key);
+    if (key !== commandKey()) return; // 晚到：已經換咗 actor
     notifySuccess(`採購單審批已設為「${label(result.requirePoApproval)}」，只影響之後提交的採購單。`);
     reason.value = "";
     await load();
   } catch (failure) {
-    stale.value = failure.code === "VERSION_CONFLICT";
-    saveError.value = command.uncertain.value ? `${failure.code === "PASSWORD_INVALID" ? `${failure.message}。` : ""}結果尚未確認；請再輸入密碼，重試同一操作以確認結果。` : failure.message || "儲存失敗";
+    if (key !== commandKey()) return;
+    stale.value = failure.code === "VERSION_CONFLICT" && !uncertain.value;
+    saveError.value = uncertain.value ? `${wasUncertain && failure.message ? `${failure.message}。` : ""}結果尚未確認；請再輸入密碼，重試同一操作以確認結果。` : failure.message || "儲存失敗";
   } finally {
     password.value = "";
     saving.value = false;
@@ -74,11 +81,11 @@ async function save() {
             <h2 class="text-h6 q-ma-none q-mb-sm">採購單審批</h2>
             <p>目前：<strong>{{ label(settings.requirePoApproval) }}</strong>（版本 {{ settings.version }}；{{ settings.updatedByLabel }}，{{ timestamp(settings.updatedAt) }}）</p>
             <q-banner v-if="saveError" role="alert" class="bg-negative text-white q-mb-sm">{{ saveError }}<template v-if="stale" #action><q-btn flat label="載入最新設定" @click="load" /></template></q-banner>
-            <q-toggle v-model="target" label="提交採購單時需要審批" :disable="command.uncertain.value" />
-            <q-input v-model="reason" label="變更原因 *" type="textarea" autogrow maxlength="500" counter :readonly="command.uncertain.value" class="q-mt-sm" outlined dense />
+            <q-toggle v-model="target" label="提交採購單時需要審批" :disable="uncertain" />
+            <q-input v-model="reason" label="變更原因 *" type="textarea" autogrow maxlength="500" counter :readonly="uncertain" class="q-mt-sm" outlined dense />
             <q-input v-model="password" label="密碼 *" type="password" autocomplete="current-password" class="q-mt-sm" outlined dense />
-            <q-btn color="primary" class="q-mt-sm" :label="command.uncertain.value ? '重試確認結果' : '儲存設定'" :loading="saving"
-              :disable="!command.uncertain.value && target === settings.requirePoApproval" @click="save" />
+            <q-btn color="primary" class="q-mt-sm" :label="uncertain ? '重試確認結果' : '儲存設定'" :loading="saving"
+              :disable="!uncertain && target === settings.requirePoApproval" @click="save" />
           </q-card-section>
         </q-card>
         <h2 class="text-h6 q-ma-none q-mb-md">變更紀錄（最近 50 次）</h2>

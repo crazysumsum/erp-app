@@ -20,9 +20,12 @@ import { useSessionStore } from "@/stores/session.js";
 import purchasing from "@/services/purchasing.js";
 
 const router = useRouter(), session = useSessionStore(), copying = ref(false), withdrawing = ref(false);
-const copyCommand = useCommandEvent(), withdrawCommand = useCommandEvent();
+const copyCommand = useCommandEvent(), withdrawCommand = useCommandEvent(), decisionCommand = useCommandEvent();
 let withdrawReason = "";
-const { document, loading, error, load } = usePurchaseOrder({ onLoad: () => { copyCommand.reset(); withdrawCommand.reset(); } });
+const { document, loading, error, load } = usePurchaseOrder();
+// 呢個頁係 intent 嘅 owner（換 PO 時 vue-router 重用佢）。Key 綁 actor、PO 同 action：重新載入、panel 卸載重建都唔清走未確定嘅操作，
+// 換咗 PO／actor 就唔會用錯原 intent，返嚟原 PO 仍然可以用原 eventId 確認結果。
+const commandKey = (action) => `${session.user?.id}:${document.value?.id}:${action}`;
 
 // 審批決定要 purchasing.approval，其餘寫入要 purchasing.mgmt（§6.1 六個權限互不繼承）；server 仍然會再驗。
 const DECISIONS = ["approve", "reject"];
@@ -56,27 +59,30 @@ const BASE_ROWS = [["Ordered", "orderedBaseQuantity"], ["Gross Received", "gross
   ["Outstanding", "outstandingBaseQuantity"], ["Over-received", "overReceivedBaseQuantity"], ["Closed Remaining", "closedRemainingBaseQuantity"]];
 
 async function copy() {
-  const { id, number } = document.value;
+  const { id, number } = document.value, key = commandKey("copy");
   copying.value = true;
   try {
-    const result = await copyCommand.run({}, (body) => purchasing.copyPurchaseOrder(id, body));
+    const result = await copyCommand.run({}, (body) => purchasing.copyPurchaseOrder(id, body), key);
+    if (key !== commandKey("copy")) return; // 晚到：已經換咗 PO／actor
     notifySuccess(`已由 ${number} 複製為 ${result.number}。`);
     result.warnings.forEach((warning) => notifyWarning(warningText(warning)));
     await router.push(`/purchasing/purchase-orders/${result.id}`);
   } catch (failure) {
-    if (!copyCommand.uncertain.value) notifyError(failure.message || "複製失敗");
+    if (key === commandKey("copy") && !copyCommand.isUncertain(key)) notifyError(failure.message || "複製失敗");
   } finally {
     copying.value = false;
   }
 }
 async function withdraw() {
+  const { id, version } = document.value, key = commandKey("withdraw");
   withdrawing.value = true;
   try {
-    const result = await withdrawCommand.run({ version: document.value.version, reason: withdrawReason }, (body) => purchasing.withdrawPurchaseOrderApproval(document.value.id, body));
+    const result = await withdrawCommand.run({ version, reason: withdrawReason }, (body) => purchasing.withdrawPurchaseOrderApproval(id, body), key);
+    if (key !== commandKey("withdraw")) return;
     notifySuccess(`${result.number} 已撤回審批，回到草稿。`);
     await load({ keep: true });
   } catch (failure) {
-    if (!withdrawCommand.uncertain.value) notifyError(failure.message || "撤回失敗");
+    if (key === commandKey("withdraw") && !withdrawCommand.isUncertain(key)) notifyError(failure.message || "撤回失敗");
   } finally {
     withdrawing.value = false;
   }
@@ -103,19 +109,19 @@ async function askCopy() {
       <q-skeleton v-if="loading" type="rect" aria-label="載入採購單" />
       <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load()" /><q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" /></template></q-banner>
       <template v-else-if="document">
-        <q-banner v-if="copyCommand.uncertain.value" role="status" class="bg-warning text-dark q-mb-md">複製結果尚未確認；請重試同一操作以確認結果，不會重複建立。<template #action><q-btn flat label="重試確認結果" :loading="copying" @click="copy" /></template></q-banner>
-        <q-banner v-if="withdrawCommand.uncertain.value" role="status" class="bg-warning text-dark q-mb-md">撤回結果尚未確認；請重試同一操作以確認結果。<template #action><q-btn flat label="重試確認結果" :loading="withdrawing" @click="withdraw" /></template></q-banner>
+        <q-banner v-if="copyCommand.isUncertain(commandKey('copy'))" role="status" class="bg-warning text-dark q-mb-md">複製結果尚未確認；請重試同一操作以確認結果，不會重複建立。<template #action><q-btn flat label="重試確認結果" :loading="copying" @click="copy" /></template></q-banner>
+        <q-banner v-if="withdrawCommand.isUncertain(commandKey('withdraw'))" role="status" class="bg-warning text-dark q-mb-md">撤回結果尚未確認；請重試同一操作以確認結果。<template #action><q-btn flat label="重試確認結果" :loading="withdrawing" @click="withdraw" /></template></q-banner>
         <div class="row items-center q-gutter-sm q-mb-md">
           <q-badge :color="statusColors[document.status]" :label="statusLabels[document.status]" />
           <span>版本 {{ document.version }}</span>
           <q-btn v-if="actions.includes('edit')" label="編輯草稿" :to="`/purchasing/purchase-orders/${document.id}/edit`" />
-          <q-btn v-if="actions.includes('withdraw')" label="撤回審批" :loading="withdrawing" :disable="withdrawCommand.uncertain.value" @click="askWithdraw" />
-          <q-btn v-if="actions.includes('copy')" label="複製" :loading="copying" :disable="copyCommand.uncertain.value" @click="askCopy" />
+          <q-btn v-if="actions.includes('withdraw')" label="撤回審批" :loading="withdrawing" :disable="withdrawCommand.isUncertain(commandKey('withdraw'))" @click="askWithdraw" />
+          <q-btn v-if="actions.includes('copy')" label="複製" :loading="copying" :disable="copyCommand.isUncertain(commandKey('copy'))" @click="askCopy" />
           <q-btn v-if="printKind(document.status)" label="列印" :to="`/purchasing/purchase-orders/${document.id}/print`" />
           <q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" />
         </div>
         <ApprovalSnapshotPanel v-if="document.approval" :key="document.approval.id" :approval="document.approval" :purchase-order-id="document.id" :version="document.version"
-          :actions="actions.filter((action) => DECISIONS.includes(action))" @decided="decided" @reload="load({ keep: true })" />
+          :actions="actions.filter((action) => DECISIONS.includes(action))" :command="decisionCommand" :command-key="commandKey" @decided="decided" @reload="load({ keep: true })" />
         <q-card flat bordered class="q-mb-md">
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">概覽</h2>
