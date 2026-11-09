@@ -3,6 +3,7 @@ import { requireSalesActor } from "./salesAuthorization.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
 import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 import { salesEventId } from "./salesValidation.js";
+import { assertShipmentEventAdmissionInTransaction } from "../fulfillment/shipmentEventAdmission.js";
 
 const TARGETS = Object.freeze({ CREATE_QUOTATION: "QUOTATION", UPDATE_QUOTATION: "QUOTATION", ISSUE_QUOTATION: "QUOTATION",
   CANCEL_QUOTATION: "QUOTATION", CONVERT_QUOTATION: "QUOTATION", CREATE_ORDER: "SALES_ORDER", UPDATE_ORDER: "SALES_ORDER", WITHDRAW_ORDER: "SALES_ORDER", CANCEL_ORDER: "SALES_ORDER", CLOSE_REMAINING_ORDER: "SALES_ORDER", CONFIRM_IMPORT: "IMPORT_JOB", CANCEL_IMPORT: "IMPORT_JOB" });
@@ -42,12 +43,14 @@ export function safeSalesOperationResult(value, commandType) {
 }
 
 export class SalesOperationService {
+  constructor({ database } = {}) { this.database = database; }
   async claimConfirmation(connection, { eventId, targetId, payload, actor, nowMs, leaseOwner, leaseMs, requestId, correlationId }) {
     salesEventId(eventId); salesEventId(leaseOwner); identifier(targetId); identifier(actor.id); timestamp(nowMs);
     if (!payload || Object.keys(payload).join(",") !== "version" || !Number.isSafeInteger(payload.version) || payload.version < 1 ||
         !Number.isSafeInteger(leaseMs) || leaseMs < 1 || leaseMs > 2147483647 || typeof actor.username !== "string" ||
         !actor.username || [...actor.username].length > 190 || /[\p{Cc}]/u.test(actor.username)) throw new TypeError("Invalid confirmation intent");
     const hash = salesPayloadHash(payload);
+    await assertShipmentEventAdmissionInTransaction(this.database,connection,{eventId});
     try {
       const [row] = await connection.execute(`INSERT INTO sales_operation_requests
         (event_id,command_type,target_type,target_id,request_hash,recovery_payload,status,actor_user_id,actor_label,
@@ -83,6 +86,7 @@ export class SalesOperationService {
         [...actor.username].some(character => character.codePointAt(0) < 32 || character.codePointAt(0) === 127)) throw new TypeError("Invalid Sales actor label");
     if (targetId !== null) identifier(targetId);
     timestamp(nowMs); requestId = trace(requestId); correlationId = trace(correlationId);
+    await assertShipmentEventAdmissionInTransaction(this.database,connection,{eventId});
     try {
       const [row] = await connection.execute(`INSERT INTO sales_operation_requests
         (event_id, command_type, target_type, target_id, request_hash, status, actor_user_id, actor_label,

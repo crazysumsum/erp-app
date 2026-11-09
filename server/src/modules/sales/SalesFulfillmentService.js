@@ -1,6 +1,7 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
-import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
+import { assertShipmentEventAdmissionInTransaction } from "../fulfillment/shipmentEventAdmission.js";
+import { getActiveTransactionIsolation,hasTransactionEventAdmission } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { SalesAuditService } from "./SalesAuditService.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
@@ -60,7 +61,9 @@ export class SalesFulfillmentService {
   #reconciliationVerifier;
   #outcomeProofs=new WeakMap();
   #reversalOutcomeProofs=new WeakMap();
-  constructor({database,context=database?.context,time,logger,itemProvider,inventoryFulfillment,audit=new SalesAuditService(),reconciliationVerifier}={}){Object.assign(this,{database,context,time,logger,itemProvider,inventoryFulfillment,audit});if(reconciliationVerifier!==undefined&&typeof reconciliationVerifier!=="function")throw new TypeError("Trusted reconciliation verifier required");this.#reconciliationVerifier=reconciliationVerifier;}
+  #zeroOutcomeProofs=new WeakMap();
+  #eventAdmissionVerifier;
+  constructor({database,context=database?.context,time,logger,itemProvider,inventoryFulfillment,audit=new SalesAuditService(),reconciliationVerifier,eventAdmissionVerifier}={}){Object.assign(this,{database,context,time,logger,itemProvider,inventoryFulfillment,audit});if(reconciliationVerifier!==undefined&&typeof reconciliationVerifier!=="function")throw new TypeError("Trusted reconciliation verifier required");this.#reconciliationVerifier=reconciliationVerifier;if(eventAdmissionVerifier!==undefined&&typeof eventAdmissionVerifier!=="function")throw new TypeError("Trusted event admission verifier required");this.#eventAdmissionVerifier=eventAdmissionVerifier;}
   #transaction(tx){if(typeof tx?.query!=="function"||typeof tx?.execute!=="function"||this.context?.get()?.databaseTransaction!==tx)mismatch();}
   async #actor(tx,intent){
     const claims=this.context?.get()?.auth?.claims,actorId=claims&&Number(claims.sub);
@@ -265,6 +268,88 @@ export class SalesFulfillmentService {
     if(!read||read.tx!==tx||read.session!==session||await this.#reversalOutcomeBinding(tx,session,"verify")!==read.source)mismatch();
     return structuredClone(read.outcome);
   }
+  // Phase A collision read: no placeholder journal and no managed writer authority.
+  async readShipmentEventAdmissionInTransaction(tx,{eventId,shipmentId}){
+    this.#transaction(tx);event(eventId);integer(shipmentId);
+    if(!hasTransactionEventAdmission(this.database,tx,eventId))mismatch();
+    const actor=await this.#actor(tx);
+    if(!actor.permissions.includes("fulfillment.reverse"))throw new ApplicationError("Fresh Fulfillment reverse permission required",{code:"FORBIDDEN",statusCode:403});
+    try{
+      const [journals]=await tx.query("SELECT id FROM sales_operation_requests WHERE event_id=? LIMIT 1 FOR SHARE",[eventId]);
+      const [history]=await tx.query("SELECT id FROM sales_order_status_history WHERE event_id=? LIMIT 1 FOR SHARE",[eventId]);
+      const [audit]=await tx.query("SELECT id FROM sales_audit_logs WHERE event_id=? LIMIT 1 FOR SHARE",[eventId]);
+      return {state:journals.length||history.length||audit.length?"UNKNOWN":"CLEAR"};
+    }catch(error){if(!unknownSalesOutcomeSource(error))throw error;return {state:"UNKNOWN"};}
+  }
+  async #zeroOutcomeBinding(tx,session,phase){
+    this.#transaction(tx);
+    if(getActiveTransactionIsolation(tx)!=="READ COMMITTED"||!this.#reconciliationVerifier)mismatch();
+    const source=await this.#reconciliationVerifier(tx,session,`reversal.zero.sales.${phase}`);
+    fields(source,"purpose,fulfillmentId,shipmentId,salesOrderId,customerId,warehouseId,eventId,actorId,scopeHash,correlationId,pickedLines,originalIssue");
+    const frozen=value=>value===null||typeof value!=="object"||Object.isFrozen(value)&&!Object.getOwnPropertySymbols(value).length&&Object.values(value).every(frozen);
+    if(source.purpose!=="SHIPMENT_REVERSAL_ZERO_EFFECT"||!frozen(source))mismatch();
+    for(const name of ["fulfillmentId","shipmentId","salesOrderId","customerId","warehouseId","actorId"])integer(source[name]);
+    for(const name of ["eventId","correlationId"])if(event(source[name])!==source[name])mismatch();
+    if(!hasTransactionEventAdmission(this.database,tx,source.eventId))mismatch();
+    hash(source.scopeHash);fields(source.originalIssue,"eventId,references");
+    if(event(source.originalIssue.eventId)!==source.originalIssue.eventId||source.originalIssue.eventId===source.eventId)mismatch();
+    if(!Array.isArray(source.originalIssue.references)||!source.originalIssue.references.length||source.originalIssue.references.length>5000)mismatch();
+    for(const reference of source.originalIssue.references){fields(reference,"shipmentIssueId,originalMovementId,originalInventoryOperationId,inventoryAllocationId");for(const value of Object.values(reference))integer(value);}
+    for(const name of ["shipmentIssueId","originalMovementId","inventoryAllocationId"])if(new Set(source.originalIssue.references.map(reference=>reference[name])).size!==source.originalIssue.references.length)mismatch();
+    const actor=await this.#actor(tx);
+    if(String(actor.id)!==source.actorId||!actor.permissions.includes("fulfillment.reverse"))throw new ApplicationError("Fresh Fulfillment reverse permission required",{code:"FORBIDDEN",statusCode:403});
+    return source;
+  }
+  async readShipmentReversalZeroEffectInTransaction(tx,session){
+    const source=await this.#zeroOutcomeBinding(tx,session,"read");markSalesReconciliationRead(tx);let outcome={state:"UNKNOWN"};
+    try{
+      const selected=salesOutcomeSelection(source),references=new Map(source.originalIssue.references.map(reference=>[reference.inventoryAllocationId,reference]));
+      const [[originalJournal]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=? FOR SHARE",[source.originalIssue.eventId]);
+      const [journals]=await tx.query("SELECT id FROM sales_operation_requests WHERE event_id=? LIMIT 1 FOR SHARE",[source.eventId]);
+      const data=await this.#lockOrder(tx,source.salesOrderId,"FOR SHARE");
+      if(!originalJournal||journals.length||dbInteger(data.header.customer_id)!==source.customerId||dbInteger(data.header.fulfillment_warehouse_id)!==source.warehouseId)mismatch();
+      const original=normalizeSalesFulfillmentIntent(json(originalJournal.recovery_payload)?.intent);
+      if(original.purpose!=="SHIPMENT_CONFIRMED"||original.eventId!==source.originalIssue.eventId||original.salesOrderId!==source.salesOrderId||original.shipmentId!==source.shipmentId||dbInteger(originalJournal.actor_user_id)!==original.actor.userId||JSON.stringify(memberIdentity(original))!==JSON.stringify(selected.map(({skuId:_skuId,...line})=>line)))mismatch();
+      const completed=this.#completed(originalJournal,original),originalMembers=new Map(completed.payload.inventoryMembers.map(member=>[member.claimId,member]));
+      if(Number(data.header.version)<completed.result.version)mismatch();
+      const mappings=new Map();
+      for(const mapping of data.mappings){const id=dbInteger(mapping.inventory_reservation_id);dbInteger(mapping.id);dbInteger(mapping.inventory_operation_id);event(mapping.source_event_id);version(Number(mapping.inventory_version));if(mappings.has(id))mismatch();mappings.set(id,mapping);}
+      for(const row of data.lines){const q=quantities(row);if(BigInt(q.orderedBaseQuantity)!==BigInt(q.reservedOutstandingBaseQuantity)+BigInt(q.backorderedBaseQuantity)+BigInt(q.fulfilledBaseQuantity)+BigInt(q.cancelledBaseQuantity))mismatch();}
+      const used=new Set();
+      for(const line of selected){
+        const current=data.lines.find(row=>dbInteger(row.id)===line.salesOrderLineId);
+        if(!current||dbInteger(current.sku_id)!==line.skuId||Number(current.version)<completed.result.lines.find(row=>row.salesOrderLineId===line.salesOrderLineId).version||BigInt(dbInteger(current.fulfilled_base_quantity,false))<BigInt(line.baseQuantity))mismatch();
+        const picked=source.pickedLines.find(row=>row.salesOrderLineId===line.salesOrderLineId);
+        for(const member of line.reservations){
+          const old=originalMembers.get(member.claimId),mapping=mappings.get(member.inventoryReservationId);
+          const originalMember=original.lines.find(row=>row.salesOrderLineId===line.salesOrderLineId).reservations.find(row=>row.claimId===member.claimId);
+          if(!old||!mapping||dbInteger(mapping.sales_order_line_id)!==line.salesOrderLineId||Number(mapping.inventory_version)<originalMember.expectedVersion+1||BigInt(dbInteger(mapping.consumed_base_quantity,false))<BigInt(member.baseQuantity))mismatch();
+          const pickedMember=picked.reservations.find(row=>row.claimId===member.claimId);let total=0n;
+          for(const leg of pickedMember.allocations){
+            fields(leg,"inventoryAllocationId,inventoryBalanceId,baseQuantity");integer(leg.inventoryAllocationId);integer(leg.inventoryBalanceId);integer(leg.baseQuantity);
+            const reference=references.get(leg.inventoryAllocationId);
+            if(!reference||used.has(leg.inventoryAllocationId)||reference.originalInventoryOperationId!==old.inventoryOperationId)mismatch();
+            used.add(leg.inventoryAllocationId);total+=BigInt(leg.baseQuantity);
+          }
+          if(total!==BigInt(member.baseQuantity))mismatch();
+        }
+      }
+      if(used.size!==references.size)mismatch();
+      const [history]=await tx.query("SELECT id FROM sales_order_status_history WHERE event_id=? LIMIT 1 FOR SHARE",[source.eventId]);
+      const [audit]=await tx.query("SELECT id FROM sales_audit_logs WHERE event_id=? LIMIT 1 FOR SHARE",[source.eventId]);
+      if(history.length||audit.length)mismatch();
+      // Absence relies on every event writer holding this gate and normal apply being atomic.
+      // Current counters only validate conservation; they never establish historical absence.
+      outcome={state:"ABSENT"};
+    }catch(error){if(!unknownSalesOutcomeSource(error))throw error;}
+    if(await this.#zeroOutcomeBinding(tx,session,"read")!==source)mismatch();
+    const proof=Object.freeze({});this.#zeroOutcomeProofs.set(proof,{tx,session,source,outcome});return proof;
+  }
+  async verifyShipmentReversalZeroEffectProofInTransaction(tx,session,proof){
+    const read=this.#zeroOutcomeProofs.get(proof);
+    if(!read||read.tx!==tx||read.session!==session||await this.#zeroOutcomeBinding(tx,session,"verify")!==read.source)mismatch();
+    return structuredClone(read.outcome);
+  }
   async #original(tx,intent){
     const [[row]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=?",[intent.originalConfirmationEventId]);
     if(!row)mismatch();const stored=json(row.recovery_payload),original=normalizeSalesFulfillmentIntent(stored?.intent),completed=this.#completed(row,original);
@@ -289,13 +374,20 @@ export class SalesFulfillmentService {
     if((intent.purpose!=="CLAIM"||intent.claimMode!==undefined)&&getActiveTransactionIsolation(tx)!=="READ COMMITTED")mismatch();
     const actor=await this.#actor(tx,intent),intentHash=salesFulfillmentIntentHash(intent),existing=this.#receipts.get(tx);
     if(existing){if(existing.intentHash!==intentHash)mismatch();return structuredClone(existing.replay?{replay:true,result:existing.result}:{replay:false,order:existing.projection});}
-    const nowMs=epoch(this.time.nowMs());let operationId=null;
+    const nowMs=epoch(this.time.nowMs());let operationId=null,eventAdmission=null;
+    if(intent.purpose!=="CLAIM"){
+      const input={eventId:intent.eventId,shipmentId:intent.shipmentId,action:intent.purpose==="SHIPMENT_REVERSED"?"REVERSE":"ISSUE"};
+      const admitted=eventAdmission=this.#eventAdmissionVerifier?await this.#eventAdmissionVerifier(tx,input):await assertShipmentEventAdmissionInTransaction(this.database,tx,input);
+      if(admitted?.state==="MANAGED"&&(intent.purpose!=="SHIPMENT_REVERSED"||admitted.eventId!==intent.eventId||admitted.shipmentId!==intent.shipmentId||admitted.salesOrderId!==intent.salesOrderId||admitted.actorId!==intent.actor.userId))mismatch();
+      if(!["MANAGED","UNMANAGED"].includes(admitted?.state))mismatch();
+    }
     if(intent.purpose==="SHIPMENT_REVERSED")await this.#original(tx,intent);
     if(intent.purpose!=="CLAIM"){
       try{const [row]=await tx.execute(`INSERT INTO sales_operation_requests(event_id,command_type,target_type,target_id,request_hash,recovery_payload,status,actor_user_id,actor_label,created_at,updated_at) VALUES (?,?,'FULFILLMENT_SOURCE',?,?,?,'IN_PROGRESS',?,?,?,?)`,[intent.eventId,intent.purpose,intent.shipmentId,intentHash,JSON.stringify({intent}),actor.id,actor.username,nowMs,nowMs]);operationId=dbInteger(row.insertId);}
       catch(error){if((error.cause?.code??error.code)!=="ER_DUP_ENTRY")throw error;const [[row]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=? FOR UPDATE",[intent.eventId]);if(!row||row.request_hash!==intentHash||String(row.actor_user_id)!==intent.actor.userId)mismatch();if(row.status!=="SUCCEEDED")throw salesError("CONCURRENT_OPERATION");const {payload,result}=this.#completed(row,intent);this.#receipts.set(tx,{intentHash,replay:true,result,applyHash:payload.applyHash});return {replay:true,result:structuredClone(result)};}
     }
     const data=await this.#lockOrder(tx,intent.salesOrderId);
+    if(eventAdmission?.state==="MANAGED"&&(dbInteger(data.header.customer_id)!==eventAdmission.customerId||dbInteger(data.header.fulfillment_warehouse_id)!==eventAdmission.warehouseId))mismatch();
     if(Number(data.header.version)!==intent.expectedOrderVersion||!(intent.purpose==="SHIPMENT_REVERSED"?["COMPLETED","PARTIALLY_FULFILLED","CLOSED"]:["CONFIRMED","PARTIALLY_FULFILLED"]).includes(data.header.status))mismatch();
     // Allocation may advance Inventory CAS while Sales retains its last quantity projection; apply still verifies the actual owner receipt and every counter.
     const mappingByReservation=new Map(data.mappings.map(row=>[dbInteger(row.inventory_reservation_id),row]));
