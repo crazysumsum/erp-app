@@ -39,28 +39,34 @@ The list now also reads `has_confirmed_receipt` for this.
 - `PurchasingInquiryService.js`;
 - `handlers/purchase-orders/purchaseOrderLifecycleHandlers.js` (new).
 
-## Point for the TL
+## Fail-closed receipt guard (TL review, relayed by the PM on 2026-11-09)
 
-§8.4 guards withdraw and cancel with `has_confirmed_receipt = 0` and with "`NOT EXISTS` confirmed GR". The GR tables arrive in TASK-027, so this candidate checks only the flag. It is marked with a `ponytail:` comment.
+§8.4 requires two things for withdraw and cancel, both inside the same transaction under the PO lock:
+- `has_confirmed_receipt = 0`;
+- an authoritative fact that the PO never had a confirmed GR.
 
-That needs two follow-ups:
-- GR confirm (TASK-032) must set the flag in its own transaction.
-- The `NOT EXISTS` check, which counts any GR ever confirmed (H1), must be added when the table lands.
+The flag alone is not enough. A missing GR table, a read error or an unknown answer must not count as zero, and a full reversal does not erase an earlier confirmation.
 
-## Local checks, no database
+`PurchaseOrderLifecycleService` therefore takes a `receiptFacts.everConfirmed(tx, purchaseOrderId)` dependency, called after the PO is locked:
+- Anything other than an explicit `false` is refused with `PO_STATE_CONFLICT`.
+- The default, `NO_GOODS_RECEIPT_FACTS`, throws `PURCHASING_DEPENDENCY_UNAVAILABLE` (503).
+- So, until TASK-027 lands the GR table, **every withdraw and cancel fails closed, Draft and Pending cancels included.** The success paths cannot be accepted until then.
+- TASK-032's GR confirm sets the sticky `has_confirmed_receipt` in its own transaction.
 
-- `eslint` on the changed folders: exit 0.
+Close remaining does not use this guard; it needs PARTIALLY_RECEIVED. No migration or public entry is added. The PM schedules whether the existing GR schema design goes first, and aligns the two traceability sources.
+
+**Open for the TL:** `allowedActions` still offers `withdrawConfirmation` and `cancel`, as a UI hint. The server is the authority, and it refuses them until the GR facts exist.
+
+## Local checks
+
+**At `5b5a6589`, before the fail-closed change:**
+- `eslint`: exit 0.
 - The existing `server/test/purchasing/*.test.js`: 68 of 68 pass.
-- **Private check, outside CI discovery:** the scratchpad script `check025.mjs`, against a fake transaction. It covers:
-  - every §3.2 status derivation, including a Base quantity above 2^53;
-  - cancelling a pending PO invalidates its approval;
-  - the receipt, version and state guards;
-  - withdraw clears the confirmation;
-  - close-all closes `ordered - net`;
-  - a selected line with nothing outstanding is refused, and an unknown line gives 404;
-  - a partial close keeps the status and writes no history.
+- The private `check025.mjs` passed, and its three mutants were killed. Its cancel and withdraw success assertions no longer hold, because those paths now fail closed. That evidence covers the earlier version only.
 
-  It passes. Three mutants were each killed and restored from the commit: no receipt guard, no approval invalidation, and CLOSED and FULLY_RECEIVED swapped.
+**After the change:**
+- `eslint` on the changed file: exit 0.
+- No test, private check or mutant was run.
 
 ## Test proposal, not executed (needs Sam's approval via the PM)
 
@@ -70,12 +76,14 @@ That needs two follow-ups:
 
 | # | File | Cases |
 | --- | --- | --- |
-| 1 | new `server/test/purchasing/purchaseOrderLifecycleService.test.js`, unit, fake transaction | About 6 cases, the same rules as the private check above |
+| 1 | new `server/test/purchasing/purchaseOrderLifecycleService.test.js`, unit, fake transaction | About 7 cases: the private check's rules, with `receiptFacts` injected as `false`, `true`, throwing, and returning `undefined`, plus the default refusing |
 | 2 | new `server/test/integration/purchasingLifecycle.integration.test.js`, MySQL | 4 cases, listed below |
 | 3 | `purchasingApprovalCommands.integration.test.js` | Update 3 existing `allowedActions` assertions (lines 253, 254 and 267) for `cancel` |
 | 4 | `purchasingInquiry.integration.test.js` | Update the existing `allowedActions` assertions (lines 124, 126 and 311, and the detail check at 265 if it shifts) |
 
 The 4 cases in item 2:
+Cases a, b and d need the authoritative GR fact. Until TASK-027 they can only prove the fail-closed refusal (503 with nothing written), so their success paths wait for TASK-027.
+
 - **a.** Confirmed zero-receipt withdraw: back to DRAFT, editable again, and a resubmit with approval on creates a new approval. Status history and Audit rows are written.
 - **b.** Cancel from DRAFT, PENDING and CONFIRMED, where the pending approval becomes INVALIDATED. Cancel and withdraw are refused once the fixture sets `has_confirmed_receipt = 1` directly, since GR does not exist yet.
 - **c.** Close remaining, selected lines and all lines, on a fixture PO set to PARTIALLY_RECEIVED with `gross = net`. It checks:

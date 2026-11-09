@@ -27,13 +27,21 @@ const KINDS = Object.freeze({
 export const LIFECYCLE_KINDS = Object.keys(KINDS);
 
 /**
+ * §8.4 嘅權威事實：同一 transaction、已鎖 PO 之下，呢張 PO 有冇任何曾經 Confirmed 嘅 GR（完全 Reversal 後仍然算，H1）。
+ * GR 表要 TASK-027 先有；讀唔到、出錯或者未知都唔可以當零，所以預設 fail closed，撤回同取消一律唔成功。
+ */
+export const NO_GOODS_RECEIPT_FACTS = Object.freeze({
+  async everConfirmed() { throw purchasingError("PURCHASING_DEPENDENCY_UNAVAILABLE"); }
+});
+
+/**
  * §8.4：Confirmed 撤回、取消同 Close Remaining。鎖 PO 再按 ID 鎖 Lines（§2.6），version CAS，同一 transaction 寫 status history 同 Audit。
  * Caller（PurchaseOrderService）負責 actor freshness、operation claim 同 complete。
  */
 export class PurchaseOrderLifecycleService {
-  constructor({ approvals }) {
+  constructor({ approvals, receiptFacts = NO_GOODS_RECEIPT_FACTS }) {
     if (!approvals) throw new TypeError("PurchaseOrderLifecycleService requires approvals");
-    this.approvals = approvals;
+    Object.assign(this, { approvals, receiptFacts });
   }
 
   async runInTransaction(tx, { kind, purchaseOrderId: id, request, actor, nowMs }) {
@@ -41,9 +49,11 @@ export class PurchaseOrderLifecycleService {
     if (!po) throw purchasingError("PURCHASE_ORDER_NOT_FOUND");
     const next = nextPurchaseOrderStatus(po.status, KINDS[kind].transition);
     if (Number(po.version) !== request.version) throw purchasingError("VERSION_CONFLICT", { currentVersion: Number(po.version) });
-    // FR-LIFE-005：有過 Confirmed Receipt 就唔准撤回或者取消；Reversal 後 has_confirmed_receipt 仍然係 1（H1）。
-    // ponytail: GR 表未有（TASK-027），暫時只靠呢個 flag；§8.4 嘅 NOT EXISTS confirmed GR 要喺 GR 表落地後加返。
-    if (kind !== "CLOSE_REMAINING" && Number(po.has_confirmed_receipt) === 1) throw purchasingError("PO_STATE_CONFLICT");
+    // FR-LIFE-005、§8.4：projection 係 0 之外，仲要喺同一 transaction 權威證實從來冇 Confirmed GR；唔係明確 false 就當有收過。
+    // TASK-032 嘅 GR Confirm 會喺同一 transaction 設 sticky 嘅 has_confirmed_receipt。
+    if (kind !== "CLOSE_REMAINING" && (Number(po.has_confirmed_receipt) === 1 || await this.receiptFacts.everConfirmed(tx, id) !== false)) {
+      throw purchasingError("PO_STATE_CONFLICT");
+    }
 
     const version = request.version + 1, reason = request.reason;
     let status = next, detail = { version };
