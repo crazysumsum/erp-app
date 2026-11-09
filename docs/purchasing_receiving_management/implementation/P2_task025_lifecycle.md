@@ -218,3 +218,33 @@ The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). Th
 **Existing assertion:** only `purchasingInquiry.integration.test.js` lines 265 to 266 change, from `e: ["copy"]` to `e: ["copy", "closeRemaining"]`.
 
 **Command, DB and cleanup:** as listed above. The "After" rows run only after the reader exists. TASK-025 is not DONE before them.
+
+## ④ exact (superseding every earlier "about" in this file)
+
+**Unit file** `server/test/purchasing/purchaseOrderLifecycleService.test.js`. Support code: a fake `tx` that returns fixed rows by SQL pattern, a fake `approvals` with `invalidateInTransaction`, and a fake `receiptFacts`.
+
+| # | Variants | Fake calls |
+| --- | --- | --- |
+| U1 | 8 table rows | none |
+| U2 | 1 | lock 1, reader 1, invalidate 1, PO UPDATE 1, history 2 |
+| U3 | 1 | lock 1, reader 1, PO UPDATE 1, history 2 |
+| U4 | 5 (flag 1, `true`, `undefined`, throws, default) | lock 5, reader 4, UPDATE 0 |
+| U5 | 3 (VERSION_CONFLICT, WITHDRAW from DRAFT, CLOSE from CONFIRMED) | lock 3, reader 0 |
+| U6 | 1 | PO lock 1, lines lock 1, line UPDATE 1, PO UPDATE 1, history 2 |
+| U7 | 3 (zero outstanding gives 409; unknown id gives 404; partial close) | lock 3, lines lock 3, line UPDATE 1, PO UPDATE 1, history 0 |
+
+**Integration, reachable now:** 6 POs, 9 lines, 15 HTTP calls, of which 12 are business POSTs and 3 are read GETs.
+
+| # | POs and lines | Business POSTs | Read GETs |
+| --- | --- | --- | --- |
+| I1 | 1 PO, 1 line | 1 withdraw | 1 detail |
+| I2 | 3 POs, 1 line each | 3 cancel | 1 detail |
+| I3 | 1 PO, 3 lines | 6 close-remaining (`[line2]`, `[line1]`, `[999]`, view-only, no reason, all) | 1 detail |
+| I4 | 1 PO, 2 lines | 2 close-remaining with the same eventId | 0 |
+
+**Integration, after TASK-045 and the wired reader (not reachable now):**
+- I1-after: 1 PO, 1 line. 3 POSTs (withdraw, update, submit) and 1 GET.
+- I2-after: 5 POs, 1 line each. 5 POSTs (3 succeed, 2 give 409) and 1 GET.
+- I4-after: 1 PO, 1 line. 2 concurrent POSTs and 1 GET. **This needs Sam's separate approval.**
+
+**Existing assertion:** `purchasingInquiry.integration.test.js` lines 265 to 266 change from `e: ["copy"]` to `e: ["copy", "closeRemaining"]`. Nothing else changes, and the original assertions are kept, with none skipped.
