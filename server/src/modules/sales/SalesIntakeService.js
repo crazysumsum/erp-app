@@ -94,6 +94,9 @@ export class SalesIntakeService {
  async process(request){
   if(!request||Object.keys(request).some(key=>!["intakeOrderId","jobClaimToken","signal"].includes(key))||!Number.isSafeInteger(request.intakeOrderId)||request.intakeOrderId<1)throw salesError("SALES_INPUT_INVALID");
   const {intakeOrderId,jobClaimToken,signal}=request;if(jobClaimToken!==undefined)salesEventId(jobClaimToken);let original;
+  // Reject an untrusted runtime before the advisory read; the transaction still revalidates its fresh fence.
+  const principal=await this.authorize?.();
+  if(!principal||principal.signal!==signal||signal?.aborted!==false||typeof principal.leaseOwner!=="string"||!principal.leaseOwner)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
   const [[candidate]]=await this.database.query("SELECT id,processing_event_id,payload_hash FROM sales_intake_orders WHERE id=?",[intakeOrderId]);
   if(!candidate)throw salesError("SALES_IMPORT_NOT_FOUND");
   const eventAdmissionId=salesEventId(candidate.processing_event_id);
