@@ -93,3 +93,30 @@ This does not cover:
 - withdraw;
 - settings change from a registered device;
 - console and network checks.
+
+## Tests and receipt (2026-11-09)
+
+Items 1 to 7 were written as approved.
+
+**Local run:** the 7 Purchasing client test files gave 121 passed out of 121 (115 earlier plus 6 new). jsdom only, no database. `vite build` and `eslint` pass.
+
+**Private discrimination check:** 8 source mutants, each run against its test file and then restored from the commit. All 8 were killed:
+- approve gated by mgmt;
+- password put into the intent;
+- password kept after an error;
+- the other action allowed while a result is uncertain;
+- snapshot supplier taken from the live PO;
+- settings update unsigned;
+- approver not sent on submit;
+- settings password kept after an error.
+
+**Receipt:** `.github/test-admissions/purchasing-task024-client.json`, sha256 `ba1ce40f4e11e849f062098ff1111e857d359337e1991b9ff909cf76b4f4ea26`, not published. It has 17 files:
+- the whole of `purchasing-task018.json` and `purchasing-task021.json`, which these changes invalidate as whole receipts;
+- the new test;
+- the two new pages.
+
+**Gate (`--static-only`):**
+- With this digest and the backend digest added locally: exit 0, 155 inputs accepted.
+- Without this digest: exit 1, "Missing Sam approval" for this receipt.
+
+Sam's decision does not authorize the agent to publish the digest. The trusted administrator publishes it.
