@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "decision": "Sam actual PM-chat decision 2026-11-09: 「批准十組、准入發布及一次 CI（建議）」; chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, turn 01a1be20-73ec-71c2-9bec-895317bc7b00, user message 01a1be20-7444-7fb0-be98-e635f5e737f7, call_fc8cb538f28f4de2bf7f702129daa20b. Exact approved six-group proposal SHA256 358d787dd1036902e0f5bbfae85f27e6d0efaa803286aeb7aaa34fba97446666, four-group proposal 41e3f15136db1016d18a63699020d879979ac7f060990b6b75b44dd2b9651f1e and execution supplement e1eb6ba0c4be8450414ce772e93e442303769f2f75294b49fa364d64a7b5c1a2. Publication only after independent actual-byte review and trusted non-author admission registration/readback; merge separately decided.",
+  "purpose": "TASK-035 internal normal Shipment Reversal correctness: genuine operation/capability, complete source and current permission validation, atomic Inventory/Sales/Fulfillment restoration, final audit rollback, commit-ACK ambiguity and original terminal reconciliation. Existing P2 confirmation and the five previously consumed internal Phase A cases do not exercise this new writer. No public activation or Task036 recovery completion.",
+  "data": "Exactly ten literal registrations: nine isolated native schema lifecycles and one pure mapper group. Across nine native lifecycles: 7 SO / 10 lines, 12 SKU, 10 Reservations, 13 Allocations, 15 Balances and 10 original Issue details. Seven Sales-derived fixtures use one or two lines, each planned 5; two native-only fixtures have one SKU and on_hand 20 each with no SO/Reservation/Allocation/Issue. Two-line recipe A allocates 2+3 and picks 2+1, B allocates 5 and picks 0; single-line recipe allocates 5 and picks 3. Existing 0099 twelve empty archive mirrors in exactly six related schemas, zero archive data/batches. Seven Phase A starts total; four new Phase B cases have exactly nine completion invocations and one explicit terminal lookup. Explicit synthetic no-downstream registry only in R01/R05 and B01-B04, required by their genuine Phase A guard; R02 retains default unknown; actual Returns/invoicing provider and public deployment gates remain closed.",
+  "concurrency": "Serial registrations, one worker per existing file process. Sales business pool limit 2 plus existing independent fixture/admin connections 1 each; native-only fixture retains existing business pool limit 4. No extra observer pool or DB writer. B01 overlaps one genuine JS completion with one same-object invocation rejected before another DB transaction; other cases have no concurrent writer.",
+  "repetitions": "Each of the ten registrations once per existing functional CI selection. One authorized natural Draft PR CI for this publication; no local native pre-run, old five rerun, independent six-case batch, retry, sample, load or profile. Future unchanged registrations use existing admitted PR/main/weekly functional discovery. Any actual failure preserves original diagnostics and stops for PM before another batch.",
+  "thresholds": "All original authorization, true CAS/source/version/quantity/lock/receipt/idempotency and atomic rollback checks. Full 26 business-table row sets; rollback exception only actual published lease_expires_at and updated_at of the exact original ER row, verified against the true preclaim executor. Preserve all old cases, coverage and 39 per-file floors (server aggregate 92/83/90). Native case timeout 120000 ms and pure case 10000 ms are safety ceilings, not performance measurements. Existing transaction configuration remains: Sales fixture 10 seconds, native fixture 20 seconds; global 20-second maximum, acquire/query bounds unchanged. All NFR/capacity deferred post-UAT.",
+  "trigger": "Existing admitted PR, main push and weekly functional discovery; same server test entrypoints and eight existing shards, no added workflow/job/step/worker/schedule or controller bypass. For this candidate only one normal Draft PR CI after actual review, trusted admission/readback and fresh main impact check. Repository crazysumsum/erp-app, branch codex/fulfillment-task035-phaseb-20261109; merge separate.",
+  "cost": "UNKNOWN incremental runtime, slowest shard, critical path and runner cost until the one approved natural CI. Includes nine fresh schema preparations/cleanups, existing per-file logical baseline cache where its current two environment conditions hold, fixed fault observations and complete row comparisons. No unapproved local run to estimate. Alternatives were keeping candidates private or reusing old five evidence; Sam chose ten-group routine functional coverage and one CI. No added capacity workload or job.",
+  "files": [
+    {
+      "path": "server/test/integration/shipmentReversal.integration.test.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "REVERSE-INTERNAL preparation and genuine started identity",
+        "REVERSE-INTERNAL ambiguous original terminal audit",
+        "REVERSE-INTERNAL mapper rejects three misbound source copies",
+        "REVERSE-INTERNAL terminal lookup binds exact command and actor",
+        "REVERSE-INTERNAL preparation rejects permission revoked after snapshot",
+        "REVERSE-INTERNAL current SHIP verifier rejects untrusted REVERSE inputs",
+        "REVERSE-PHASEB atomic two-leg restore and genuine ownership",
+        "REVERSE-PHASEB late audit rollback blocks same-object retry",
+        "REVERSE-PHASEB lost commit ACK resolves by original terminal",
+        "REVERSE-PHASEB complete locked source rejects active zero-line Claim"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/shipmentReversalFixture.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "Exactly the ten REVERSE-INTERNAL / REVERSE-PHASEB registrations in shipmentReversal.integration.test.js; fixed approved synthetic fixtures and transparent fault observers"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/aggregateFixture.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "Unchanged dependency of the approved ten REVERSE functional groups; no additional registration or capacity execution"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/inventoryNativeFixture.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "Unchanged dependency of the approved ten REVERSE functional groups; no additional registration or capacity execution"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/nativeDatabase.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "Unchanged dependency of the approved ten REVERSE functional groups; no additional registration or capacity execution"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/p1CapacityDiagnostics.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "Unchanged dependency of the approved ten REVERSE functional groups; no additional registration or capacity execution"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase1/fixtures.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "functional",
+      "cases": [
+        "Unchanged dependency of the approved ten REVERSE functional groups; no additional registration or capacity execution"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0088_create_sales_archive_batches.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0092_create_fulfillment_operations_and_sequences.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0093_create_fulfillment_documents.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0095_create_fulfillment_allocations.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0096_create_shipments.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0098_create_fulfillment_audit_and_exports.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0099_create_fulfillment_archives.js",
+      "mode": "100644",
+      "blob": "0",
+      "kind": "support",
+      "cases": [
+        "Unchanged synthetic schema dependency; 0099 twelve archive mirrors empty in exactly six related schema lifecycles"
+      ]
+    }
+  ],
+  "dependency_bindings": [
+    {
+      "path": "server/test/fulfillment/p1Fixture.js",
+      "mode": "100644",
+      "blob": "0",
+      "admission_receipt": ".github/test-admissions/inventory-def012-conflict-disclosure.json"
+    },
+    {
+      "path": "server/test/fulfillment/p1CancellationFixture.js",
+      "mode": "100644",
+      "blob": "0",
+      "admission_receipt": ".github/test-admissions/inventory-def012-conflict-disclosure.json"
+    },
+    {
+      "path": "server/test/sales/phase4/salesFulfillmentFixtures.js",
+      "mode": "100644",
+      "blob": "0",
+      "admission_receipt": ".github/test-admissions/fulfillment-fixture-eight-shard-composition.json"
+    }
+  ],
+  "source_baseline": {
+    "commit": "f4d0f2d3d07e3c1889933e33ce77c41198d60462",
+    "tree": "ff2c67891d19440a75e5e3aba1af4340047ce336",
+    "meaning": "Reviewed internal normal Phase B product and unchanged source dependencies; actual test/helper blobs above separately reviewed. Baseline migrations <=0088 and framework schema remain unchanged. dependency_bindings are documentary exact pins under existing atomic owner receipts, not new duplicate ownership claims or executable admission checks."
+  }
+}
