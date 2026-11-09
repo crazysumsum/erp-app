@@ -106,3 +106,71 @@ Inventory SUCCEEDED 返回 `{state,result,requestHash}`，Sales SUCCEEDED 返回
 | 必要下游部署及provider／本地終局 | registry無正式宣告仍UNKNOWN；本地schema已定義投影history/audit/detail | owner正式部署契約＋真writer鎖內完成投影與0092終局，不能由兩reader補寫 | 保存的真終局可沿原路查；下游狀態須在同鎖域重驗，不能預設no-provider |
 
 本次可驗收止於同樹來源、欄位消費與上述缺口。下階段才在真正 Phase B 寫入／恢復邊界建立 REVERSE issuer/caller；不把 SHIP verifier 改成接受 REVERSE、不新增未被使用的helper、不自創儲存或替舊結果補hash。全部權限、鎖序／CAS／FK／unique、原子性、100行／每行50／總5,000及20秒交易限制保持；非功能驗證延至UAT後依授權執行。
+
+## 2026-11-09 Recovery 契約補充 — main `06caf911`，尚未實作
+
+本節依 TL `fulfillment-task036-next-scope-verdict-20261109.md` 補充**下一個真正 consumer 的契約**；上文保留為各原 commit 的歷史觀察，不把其「尚無真正 Phase B」沿用為現在缺口。固定來源為 main `06caf9119d72d940d88192d6ebc1cd6eb065847c`／tree `4c5ce07671ec4b8f31aea28a554cc3f2994473d1`：PR #348 的 normal Phase B、原 PR CI `42554850522` 及自然 main CI `42557160760` 已成功。這些結果不驗證本節尚未實作的 Recovery，也不完成 TASK-036／整個 P2 或 UAT。
+
+### 唯一實作方向及真正 caller
+
+沿原 TASK-036，由其既定 `ShipmentReversalRecoveryJob` 消費私有 `recoverExpiredReversal(eventId, invocationCapability, {signal})` 契約；名稱在此描述待實作入口，不是現存公開 API。Job 對實際 scheduler invocation／cluster lease 的私有 token 負責，Fulfillment 對原 E_R、bootstrap、fence 與恢復決策負責。沒有獨立 same-process diagnostic／read-only helper 交付；不能用新的診斷標籤代替可恢復結果。
+
+真正 REVERSE consumer 使用 **reversal-owned、同實例 InventoryLookup／InventoryFulfillment＋Sales pair，共用原 database／pool**；正常 writer 及其 Recovery reader 使用該同一組實例，建構時綁私有 purpose-bound verifier。不改 SHIP verifier，不加 phase 字串 router，不在建構後更換 owner verifier，不跨 instance／process 搬 proof。本文件不建立該 pair、issuer、Job 或 scheduler registration。
+
+### 三個 crash 窗口與可得結果
+
+| 原事件窗口 | 必查事實 | 可獨立辨認的結果；現有不足 |
+| --- | --- | --- |
+| Phase A 已提交，Phase B 未開始；或 Phase B 全部 rollback | 原 Phase A request／history／Reversal、有效原 actor、過期 E_R；取得真 operation X 及下列完整零效果證據 | 證據充分後才可按原計劃建立同 E_R 的新 fenced attempt；永久業務拒絕才走已批准的 failure／回 SHIPPED 流程。現有 REVERSE readers 只回 SUCCEEDED／UNKNOWN，**尚不能完成這項零效果證明**；不能靠「看來未開始」接管。 |
+| Phase B 在途、client timeout／process 消失或 COMMIT 結果未知 | 同一 operation 的真 X lock、DB 目前終局及完整 source；不能以程序的 outcome enum／signal 作跨程序事實 | 尚取不到 X、資料不全或結果矛盾則保持待查；取到 X 後若原真終局已存在，返回原結果；否則仍須雙 owner 零效果與本地證明。不能因 lease 過期推斷舊 writer 已停。 |
+| 原 native COMMIT 已成功但 ACK 遺失 | normal writer 把 Inventory、Sales、本地投影／audit 及 E_R SUCCEEDED 放在**同一交易**；原 terminal 的身份／hash／權限驗證 | 先由現有 `readReversalTerminal` 查回同一真終局，零追加 business write。兩 owner 有成功效果而本地 E_R 缺終局屬矛盾／非此正常原子狀態，維持 UNKNOWN；不靠 owner-only success 補寫終局。 |
+
+來源：[正常 writer／Phase A](../../../server/src/modules/fulfillment/ShipmentReversalService.js) 的 `completeReversalPhaseB`／`startReversal`、[原終局讀取](../../../server/src/modules/fulfillment/FulfillmentOperationService.js) 的 `getShipmentReversalReplayInTransaction`。先查終局仍須重建並驗原 command 及目前原 actor；不是以任意 event row 返回他人結果。
+
+### 先用既有 durable facts，逐欄重建而不新選 storage
+
+| 所需原事實 | 既有權威來源與核對 | 能否跨程序取得／不能替代的資料 |
+| --- | --- | --- |
+| E_R、target S1、domain hash、correlation | `fulfillment_operation_requests.event_id,operation_type='REVERSE',target_type='SHIPMENT',target_id,payload_hash,correlation_id`；須對唯一 `shipment_reversals.event_id,shipment_id,correlation_id` 及 Shipment 的 reversal event 核對 | 0092 **只有 payload_hash，沒有完整 command、Inventory hash 或 Sales hash 欄位**；不能把 hash 本身 decode 為 payload。 |
+| 原 command 的 version、reason、兩確認 | Phase A `shipment_reversals.reason,goods_under_company_control,goods_returned_to_original_bins,before_summary`；`before_summary` 保存 `{shipmentId,fulfillmentId,version,status:'SHIPPED',registryVersion}`；同 E_R 的唯一 `REVERSE_START` history 必須由 SHIPPED→REVERSING，`version_after=原version+1`，reason／actor 相同；Phase A audit 的 target、event、correlation、reversalId／version 亦對上 | 以這些原事實構造五欄 command，經既有 `normalizeShipmentReversal` 及 `fulfillmentOperationHash({operationType:'REVERSE',target,payload})` 恰等 0092 hash。不得只用今天 Shipment.version−1；before_summary 也不是單獨 authority，須交叉核對。其 registryVersion 只證當時觀察，不替代現在部署宣告。 |
+| 原 actor、nonce／attempt／期限 | 0092 `initiated_by,lease_owner,attempt_count,lease_expires_at,next_attempt_at,status,is_document_archived`；Reversal `created_by`、Phase A history／audit actor 交叉核對；原 role／permission 從目前 directory 驗真 | Actor FK 可 SET NULL，label／username 不是原 user ID。刪除、缺失、歸檔、actor 不一致或 directory 不明都不補造身份／能力。nonce／attempt 是 DB 的目前 fence tuple，不是舊 callback 已結束的證明。 |
+| E_S、SO／Customer／Warehouse、完整原行／member／leg | Shipment `confirmation_event_id`、原 SHIP operation／history／audit witness；完整 Shipment／Fulfillment Lines（含零行）；Claims 與歷史 Allocations；0097 Issue 的 `shipment_line_id,fulfillment_allocation_id,inventory_reservation_id,inventory_allocation_id,inventory_balance_id,inventory_operation_id,inventory_movement_id,issued_base_quantity` 及 bucket snapshots | 由原 Issue／關聯重建全部原 member／leg／quantity，原 member operation 可以跨腿重複。不能由 caller subset、現有 outstanding quantity 或只有 count／sum 取代。必驗 exact set、source／quantity conservation、archive 無分裂及原 witness；維持 100 行／每行 50／總 5,000 上限。 |
+| 原 E_R Inventory hash／結果 | **有真 committed owner event 時**，`inventory_operation_requests` 原 root 的 `request_hash`、root/member/leg result summaries 及 Movement 有持久資料；現有 Inventory reader／codec 負責驗原 source、完整集合、原→反向引用 | normal Phase B 已在私有 attempt 捕獲真正 preclaim hash／command；WeakMap 不跨程序。0092／Phase A 沒保存它。原版本／candidate facts 不能由今天 Balance／Reservation versions 重算；Fulfillment 不直接查 owner journal 就自簽可信 hash。 |
+| 原 Sales intent／hash／apply | 有真 committed E_R 時，`sales_operation_requests.request_hash,recovery_payload.intent,result_summary,completed_at` 保存原 normalized intent、Inventory requestHash／applyHash／members；由 Sales owner 的正式驗證契約核實 | normal Phase B 已捕獲真 normalized intent/hash，並非缺 Sales 交付。現有 reader 要求先有可信原 source/hashes，不是跨程序 bootstrap API。沒有 committed event 時，不存在可還原的「舊成功 hash」；零效果證明不應捏造它。 |
+| 實際 executor／取消／完整 locked source | 本程序 normal attempt 已有真 `tx,signal,inventoryCommand,inventoryRequestHash,salesIntent,salesRequestHash,outcome`；完整 locked snapshot 仍是 callback local 變數 | executor、WeakMap、signal、proof 都不跨程序；新的 Recovery 只能重新證原 durable facts 與 DB fence，不能假造 COMMITTED／ROLLED_BACK、舊 expected versions 或把 advisory 升為 capability。 |
+
+來源：[0092 schema](../../../server/database/migrations/0092_create_fulfillment_operations_and_sequences.js)、[0097 schema／triggers](../../../server/database/migrations/0097_create_shipment_issues_and_reversals.js)、[snapshot／完整鎖內檢查](../../../server/src/modules/fulfillment/shipmentReversalSnapshot.js)、[Sales 原事件驗證](../../../server/src/modules/sales/SalesFulfillmentService.js) 及 [Inventory 原事件驗證](../../../server/src/modules/inventory/inventoryFulfillmentOutcome.js)。本節**不預建新表或 JSON payload**：原 domain command 可先用上述 facts/hash 證明；沒有足夠事實則列為具體缺口，不把 storage 當答案。讀到原 owner rows 但無法正式驗原 hashes 時保持 UNKNOWN；本節不新增 partial-effect repair。
+
+### 真 old-writer fence：inspection 與重試授權分開
+
+1. 私有 Job capability 只證真正 scheduler invocation／cluster lease／deadline，不給業務權限。先以原 actor 的目前 fresh view＋reverse context 驗原 terminal；若非終局，開全新 actual RC，對同 E_R `FOR UPDATE`，以 DB clock 重讀。核 id/event/type/target/hash/actor/correlation、IN_PROGRESS、未歸檔、空 result/error/completed、old nonce、old attempt、精確 expiry／next-attempt 到期條件；超界／等待逾時／不一致一律待查，不改全域隔離或 20 秒上限。
+2. X lock 是正在此 DB transaction 中的**inspection fence**：normal Phase B 在任何 Inventory preclaim 前已取得並持 E_R X 至 COMMIT／rollback。若舊 DB transaction 仍可能提交，Recovery 不能先取得該 X；若舊 COMMIT 已成功，取得 X 後須看到原 terminal，重走原結果。原程序仍可能在 timeout 後執行 JS callback，不能把外層 promise reject 當 drain；它的舊 DB writer 不是靠 signal／lease 字面排除，而是此 DB X 的互斥、closed/aborted executor 及下面的 nonce/attempt fencing。
+3. 持 X 本身不授權 retry／回 SHIPPED。保持上文 Doc99 鎖序：先 Inventory scope／E_R operations，再 Sales journals／SO／Lines／mappings，再 Fulfillment root／children／S1／Reversal／完整 Issues 及必要 downstream guard，最後 Inventory domain locks。**不得為 bootstrap 先拿 Fulfillment 父鎖再倒回 Inventory/Sales。** 現 RR `readShipmentReversalSnapshot` 明確拒絕 caller transaction；它不能直接充當持 X 的 fresh-RC bootstrap。Fulfillment 必須提供從已核 Phase A＋不可變原 SHIP/Issue facts 建立完整 source、在正確父鎖階段再重驗 exact set 的真正 loader；未證來源不先 mint owner session。
+4. 只有下節同 transaction 的完整零效果 proof、原身份／權限／deadline 重驗及既定 eligibility 均通過，後續實作才可把 takeover CAS 與 proof 放在同一原子決策。CAS 應綁原 id/event/type/target/hash/actor/correlation、status、old nonce、**old attempt**、精確 old expiry 與到期條件，換全新 nonce、attempt+1、DB-clock lease，保留原 event/domain command。`takeOverInTransaction` 已有 X／nonce/hash／到期 CAS 原語，但沒有獨立 expected-attempt/input capability，不能把通用方法直接當完整 Recovery fence。UNKNOWN 不提交 takeover；此為待核定 Recovery 決策契約，不是上文 read-only session 自行取得 DML 權限。owner read session 驗證完即失效，不能升成 owner writer；後續 Fulfillment 決策須有其本身已核定的 job／actor／fence authority，且本文件沒有 DML 授權。
+5. 釋放 inspection locks 後，待執行的新 writer 必須重新持 E_R X，核新 nonce／attempt／identity／lease／實際 active RC，再按同一鎖序重新驗業務來源；不沿用 read-proof 當寫入 proof。舊 queued writer 的私有 binding 仍是 old nonce／attempt，必須在 preclaim **之前**被拒絕；既有 pending-row lookup 不產生新 started capability。保留半租約／原子 X 期間續租的 HD-027 限定規則，原 framework/query/acquire/deadline 不放寬。
+
+來源：[normal operation fence／私有 binding](../../../server/src/modules/fulfillment/ShipmentReversalService.js)、[generic takeover／terminal CAS](../../../server/src/modules/fulfillment/FulfillmentOperationService.js)、[DB callback race、abort destroy／unknown commit](../../../server/src/services/mysqldatabase/MySqlDatabaseService.js)。新的 loader、私有 job admission 與完整 attempt fencing 是 **Fulfillment 尚缺的 consumed contract**，不是缺 Inventory/Sales 原有 readers。
+
+### 零效果：現契約不足及最小 owner-contract delta（提請 TL 核定）
+
+選定路徑是 **terminal-first → 同一 fence 下完整三方零效果證明 → 才依原 TASK-036 決定新 attempt 或已批准永久失敗**。不引入 pending-row 推論、shared phase router、owner-only success 修復或新的撤權例外。現有 API 無法完成中間一步：Inventory 的 reversal binding 要求可信 Inventory hash，`finishFulfillmentReversalOutcome` 無完整 root 便 UNKNOWN；Sales 的 reversal read 對缺 journal／null hashes 亦 UNKNOWN。SHIP 的 ABSENT 不適用。
+
+所需的是以下具名 owner 的**狹窄新證明契約**，不是要求把既有 UNKNOWN 改名為 ABSENT，也不在此發明 endpoint／response enum 或修改現有成功讀取介面：
+
+| Owner／尚缺的證明 | 最小精確範圍與鎖責任 |
+| --- | --- |
+| **Fulfillment：durable bootstrap＋本地零效果／fence** | 證上表原五欄 domain command/hash/actor、唯一 Phase A、完整不可變 E_S/Issue/member source；在同 E_R X 下依正確 rank 重驗全部父子集合。原 E_R 沒有成功 root/shipment terminal history/audit，沒有任何 reversal detail／Issue reversal pointer／Line 或 Claim reversed 效果，root 仍 SHIPPED 且 active_shipment_id 為原 S1、未有 reversed_at/by；S1 仍 REVERSING／原 version+1、Reversal 仍 REVERSING／version1，原 reason/確認/before_summary及原 audit／REVERSE_START完整，不能只看 status/count。Archive、schema、原 actor、來源不足或 callback/writer fence不明均不發 proof。 |
+| **Inventory owner：同 E_R 原庫存效果的零效果證明** | 私有 verifier 必須核真正 Fulfillment Recovery inspection session/fence、完整原 E_S/Issue references及 fresh actor。沿既有 scope/operation → 後段 Warehouse 等 domain 鎖序，驗原 ISSUE 真 receipts、member/leg/Reservation/Allocation/bucket 身份及現有 conservation；查同 E_R 的全部 SHIPMENT／SHIPMENT_LEG root/member/leg journals，並查**每個原 Movement 的任何 reversal reference**，不可只查一個 root 或總數。存在任何 partial/pending/其他事件的反向資料、未知 writer、缺 schema/來源皆不證零；scope 缺失不是可新 claim 的空集合。不能用新的 preclaim/INSERT 查存在性；不得改舊 hash 規則或以今日 versions 偽造原 hash。 |
+| **Sales owner：同 E_R 原 Sales 效果的零效果證明** | 在相同真正 session/fence 下，鎖原 E_S及E_R journal再SO/Lines/mappings；驗原 SHIP normalized intent/receipt、原 reserve identity、完整行/member/原 Inventory member 對照及現有 conservation，證 E_R 沒有 journal、fulfillment-reverse history/audit 或任何 attributable apply效果。不能把 mapping/currentVersion 當「舊 attempt 沒做過」；其他合法 event 的版本變化也不能冒稱原 E_R效果。partial/缺來源/未知結果不證零，不授權 service actor、不回寫 Sales。 |
+
+兩 owner 均須以 private same-tx/session/source-bound proof 供原實例 verify；完整零效果須與本地 proof 在同 fence 逐欄對齊，不能以兩個查詢 null 拼成結論。證明「原 E_R 沒有效果」與「現在可再執行」分開；bucket/downstream 等現在 eligibility 不明，仍不能 retry／terminal DML。若零效果充分但沒有可信舊 hashes，不為不存在的舊提交創造 hash；只有正式新 fenced attempt 的真 preclaim/normalized intent 產生新的實際 hashes，且原 domain event/理由/確認/數量不變。
+
+有任一原 owner row／效果則不得走這條零效果路徑：原終局可驗真才返回，否則 UNKNOWN，保留原證據交 owner/TL查明。只有當正式 owner 契約能驗其持久原 hashes/結果時，才可沿上文現有雙成功查證；成功 proof 本身依然不補本地 terminal。若上述完整否定證明尚不能由 owner writer/locking invariants成立，缺的就是該**具體 proof/serialization contract**；目前不能宣稱已具 safe retry 或需要先建新 storage。
+
+### 原 actor／撤權與具名接續
+
+Job capability 仿現有 [confirmation Job](../../../server/src/services/fulfillment/ShipmentConfirmationRecoveryJob.js) 的私有 invocation／framework lease 驗證方向，但不借其 SHIP token。原 `initiated_by` 須與 Phase A actor 一致，載入目前 directory 的原 user/roles/permissions並重驗 **fulfillment.view＋fulfillment.reverse**；不把 background service claims 當原 actor。現 [readShipmentRecoveryActor](../../../server/src/modules/fulfillment/shipmentRecoveryActor.js) 的 `eligible` 檢查是 view＋operation，不能原樣當 REVERSE eligibility。此為 Fulfillment 的精確目的綁定缺口；不是增加權限例外。
+
+原 actor disabled/revoked、deleted／SET NULL、directory失敗或來源歸檔一律不取得新的業務／failure-only／retry能力，保留待查並按既有安全診斷交接。現兩 owner reversal readers要求當前原 actor 的 fresh view＋reverse；SHIP 已有的撤權 failure-only policy 不自動套用 REVERSE。若將來要為 REVERSE 擴展撤權例外，須 PM 集中把具體業務／權限取捨交 Sam；本節沒有作此決定。
+
+下一個可驗收交付是 **Fulfillment loader/fence/job-purpose 契約＋Inventory/Sales 上述零效果 proof/serialization 的 TL 核定**，再定真正 consumed source 的最小範圍；不是先建 pair/helper 等 caller。TL 協調精確新 owner delta，不重交已有 read/verify／normal hashes；PM統一協調後續 source及新功能案例准入。Returns／AR 的真 providers與部署 membership仍是適用執行／公開啟用 gate：未能驗真則UNKNOWN，不能預設 no-provider；它們不阻擋這次內部契約整理。保留原TASK036 API/Job/回SHIPPED/並發/Crash/UAT全部驗收義務，沒有標DONE、降低門檻或以文件／既有綠CI代替新Recovery驗證。
