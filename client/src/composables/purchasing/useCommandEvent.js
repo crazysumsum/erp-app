@@ -44,14 +44,19 @@ export function useCommandEvent() {
   }
   const isUncertain = (key = "") => changes.value >= 0 && Boolean(records.get(key)?.uncertain);
   const isBusy = (key = "") => changes.value >= 0 && Boolean(records.get(key)?.inflight);
-  /** 未確定 record 嘅原 payload（唔含 eventId）同 meta，畀 owner 回填畫面或者用原內容重試。 */
-  function pending(key = "") {
+  /** 現存 record（in-flight 或者未確定）嘅原 payload（唔含 eventId）同 meta，畀 owner 綁住可見 state 同用原內容重試。 */
+  function current(key = "") {
     if (changes.value < 0) return null;
     const record = records.get(key);
-    if (!record?.uncertain) return null;
+    if (!record) return null;
     const { eventId: _eventId, ...payload } = structuredClone(record.body);
-    return { key, payload, meta: structuredClone(record.meta) };
+    return { key, payload, meta: structuredClone(record.meta), uncertain: record.uncertain, inflight: record.inflight };
   }
-  const uncertainRecords = computed(() => [...records.keys()].map((key) => pending(key)).filter(Boolean));
-  return { run, isUncertain, isBusy, pending, uncertainRecords };
+  const pending = (key = "") => { const record = current(key); return record?.uncertain ? record : null; };
+  // 一定要先讀 changes：Map 初始係空，唔讀就冇依賴，computed 會永遠 cache 住空 array。
+  const uncertainRecords = computed(() => {
+    void changes.value;
+    return [...records.keys()].map((key) => pending(key)).filter(Boolean);
+  });
+  return { run, isUncertain, isBusy, current, pending, uncertainRecords };
 }

@@ -19,8 +19,14 @@ const lookupError = ref(""), defaultsError = ref(""), optionsError = ref(""), co
 const showSubmit = ref(false), submitError = ref("");
 // §7.3：審批開住要揀審批人。讀唔到設定係 null，交返伺服器判斷（PO_APPROVAL_REQUIRED 會再讀）。
 const policy = reactive({ loading: false, requireApproval: null, approvers: [], approverId: null, requestNote: "" });
-// 冇 owner 傳入（只有直接掛 Form，例如 component test）先自己擁有。
-const { save: saveCommand, submit: submitCommand } = props.commands ?? { save: useCommandEvent(), submit: useCommandEvent() };
+// 冇 owner 傳入（只有直接掛 Form，例如 component test）先自己擁有，結果用 emit。有 owner 時結果交返 owner 嘅 handler，
+// 由 owner 用自己發出時嘅 generation 判斷仲係咪同一個畫面；咁就算發出嗰個 Form 已經卸載，結果都只會處理一次。
+const owner = props.commands;
+const { save: saveCommand, submit: submitCommand } = owner ?? { save: useCommandEvent(), submit: useCommandEvent() };
+function deliver(event, value, gen, ownerGen) {
+  if (owner) owner[event](value, ownerGen);
+  else if (gen === generation) emit(event, value);
+}
 // Record 綁 actor 同呢張 PO（新單用 new）；document 重新載入唔會清走未確定嘅儲存／提交。
 const commandKey = (action) => `${props.actor.id}:${props.document?.id ?? "new"}:${action}`;
 // 可見回調只屬於發出嗰次生命週期：換 actor／PO 或者卸載就作廢。
@@ -54,11 +60,16 @@ function reset(document) {
   touched.clear();
   if (document) { touched.add("currencyCode"); touched.add("paymentTermId"); }
   pristine.value = JSON.stringify(form);
-  const pendingSave = saveCommand.pending(commandKey("save")), pendingSubmit = submitCommand.pending(commandKey("submit"));
-  if (pendingSave) restoreView(pendingSave.meta.view);
-  if (pendingSubmit) { Object.assign(policy, pendingSubmit.meta.view, { loading: false }); showSubmit.value = true; }
+  showRecords();
+}
+// 可見 state 綁 owner 現存嘅 record（in-flight 或者未確定）：重建或者轉做未確定時都顯示返原本送出嘅內容同提交對話框。
+function showRecords() {
+  const saveRecord = saveCommand.current(commandKey("save")), submitRecord = submitCommand.current(commandKey("submit"));
+  if (saveRecord) restoreView(saveRecord.meta.view);
+  if (submitRecord) { Object.assign(policy, submitRecord.meta.view, { loading: false }); showSubmit.value = true; }
 }
 watch(() => props.document, reset, { immediate: true });
+watch([() => saveCommand.current(commandKey("save"))?.uncertain, () => submitCommand.current(commandKey("submit"))?.uncertain], showRecords);
 watch([() => props.actor.id, () => props.document?.id], () => { generation += 1; });
 
 const uncertain = computed(() => saveCommand.isUncertain(commandKey("save")));
@@ -85,7 +96,7 @@ const paymentTermOptions = computed(() => {
 });
 const total = computed(() => previewTotal(form.lines.map((line) => previewLineAmount(line.orderedQuantity, line.unitPrice, places.value)), places.value));
 const zeroPriceLines = computed(() => form.lines.filter((line) => isZeroPrice(line.unitPrice)).length);
-const canSubmit = computed(() => props.document?.allowedActions?.includes("submit") && !dirty.value && !stale.value && !uncertain.value);
+const canSubmit = computed(() => props.document?.allowedActions?.includes("submit") && !dirty.value && !stale.value && !uncertain.value && !busy.value);
 
 function nextSignal(kind) {
   controllers[kind]?.abort();
@@ -150,16 +161,18 @@ const send = (body) => (props.document ? purchasing.updatePurchaseOrder(props.do
 async function save() {
   if (stale.value) throw new Error("資料已被修改；你的輸入仍保留，請載入最新資料。");
   if (!form.lines.length) throw new Error("請新增至少一項明細。");
-  const key = commandKey("save"), gen = generation;
+  const key = commandKey("save"), gen = generation, ownerGen = owner?.generation();
   try {
     const result = await saveCommand.run(payload(), send, key, { action: "save", view: viewOf() });
-    // 晚到嘅回應：已經換咗 PO／actor 或者離開，就唔再改呢個畫面。
-    if (gen !== generation) return result;
-    pristine.value = JSON.stringify(form);
-    emit("saved", result);
+    // 晚到嘅回應：已經換咗 PO／actor 或者呢個 Form 已卸載，就唔再改呢個畫面；結果照樣交 owner。
+    if (gen === generation) pristine.value = JSON.stringify(form);
+    deliver("saved", result, gen, ownerGen);
     return result;
   } catch (error) {
-    if (gen !== generation) return undefined;
+    if (gen !== generation) {
+      if (!saveCommand.current(key)) owner?.failed(error, ownerGen);
+      return undefined;
+    }
     // 未確定之後嘅 VERSION_CONFLICT 證明唔到原儲存失敗，唔入 stale 路徑，保留重試同一儲存。
     if (error.code === "VERSION_CONFLICT" && !uncertain.value) conflictVersion.value = error.details?.currentVersion ?? props.document?.version ?? 0;
     const safe = new Error(uncertain.value ? "結果尚未確認；保留原提交，請重試確認結果。" : stale.value ? "版本已更改；你的輸入仍保留。" : error.message || "儲存失敗");
@@ -196,15 +209,17 @@ const canConfirm = computed(() => !policy.loading && (policy.requireApproval !==
 async function submit() {
   submitError.value = "";
   const approval = policy.requireApproval ? { assignedApproverId: policy.approverId, ...(policy.requestNote.trim() ? { requestNote: policy.requestNote.trim() } : {}) } : {};
-  const key = commandKey("submit"), id = props.document.id, gen = generation;
+  const key = commandKey("submit"), id = props.document.id, gen = generation, ownerGen = owner?.generation();
   const view = { requireApproval: policy.requireApproval, approvers: policy.approvers, approverId: policy.approverId, requestNote: policy.requestNote };
   try {
     const result = await submitCommand.run({ version: props.document.version, ...approval }, (body) => purchasing.submitPurchaseOrder(id, body), key, { action: "submit", view });
-    if (gen !== generation) return;
-    showSubmit.value = false;
-    emit("submitted", result);
+    if (gen === generation) showSubmit.value = false;
+    deliver("submitted", result, gen, ownerGen);
   } catch (error) {
-    if (gen !== generation) return;
+    if (gen !== generation) {
+      if (!submitCommand.current(key)) owner?.failed(error, ownerGen);
+      return;
+    }
     if (error.code === "VERSION_CONFLICT" && !submitUncertain.value) { conflictVersion.value = error.details?.currentVersion ?? props.document.version; showSubmit.value = false; return; }
     if (["PO_APPROVAL_REQUIRED", "PO_APPROVER_INVALID"].includes(error.code)) loadPolicy();
     const line = /^lines\.(\d+)\./.exec(error.details?.field ?? "");
@@ -220,7 +235,7 @@ async function submit() {
     <q-banner v-if="stale" role="alert" class="bg-warning text-dark q-mb-md">資料已被其他人修改（最新版本 {{ conflictVersion }}），你的輸入仍保留。{{ copied }}<template #action><q-btn flat label="複製我的輸入" @click="copyInput" /><q-btn flat label="載入最新資料" @click="reload" /></template></q-banner>
     <q-banner v-if="uncertain" role="status" class="bg-warning text-dark q-mb-md">結果尚未確認；請先重試同一提交以確認結果。</q-banner>
     <FormPanel v-slot="{ submitting: panelSubmitting, fieldError }" :on-submit="save">
-      <fieldset class="q-pa-none q-ma-none" :disabled="panelSubmitting || uncertain" :inert="panelSubmitting || uncertain">
+      <fieldset class="q-pa-none q-ma-none" :disabled="panelSubmitting || saving || uncertain" :inert="panelSubmitting || saving || uncertain">
         <section aria-labelledby="po-terms-heading">
           <h2 id="po-terms-heading" class="text-h6 q-mt-none q-mb-md">供應商與商業條件</h2>
           <q-banner v-if="defaultsError" role="alert" class="bg-warning text-dark q-mb-md">{{ defaultsError }}</q-banner>
@@ -257,7 +272,7 @@ async function submit() {
           <li v-if="zeroPriceLines">{{ zeroPriceLines }} 行為零價。</li>
           <li v-if="!form.paymentTermId">未選擇付款條款。</li>
         </ul>
-        <q-btn color="primary" type="submit" :label="uncertain ? '重試確認結果' : '儲存草稿'" :loading="panelSubmitting" :disable="stale" />
+        <q-btn color="primary" type="submit" :label="uncertain ? '重試確認結果' : '儲存草稿'" :loading="panelSubmitting || saving" :disable="stale || (saving && !panelSubmitting)" />
         <q-btn v-if="document" class="q-ml-sm" outline color="primary" label="提交" :disable="!canSubmit" @click="openSubmit" />
         <span v-if="document && dirty" class="text-caption q-ml-sm">請先儲存變更才可提交。</span>
       </section>
@@ -280,8 +295,8 @@ async function submit() {
           <q-skeleton v-if="policy.loading" type="text" aria-label="讀取審批設定" />
           <template v-else-if="policy.requireApproval">
             <q-select v-model="policy.approverId" label="審批人 *" :options="policy.approvers" option-value="id" option-label="label" emit-value map-options
-              :disable="submitUncertain" :hint="policy.approvers.length ? '' : '沒有可用的審批人；請聯絡管理員授予審批權限。'" outlined dense />
-            <q-input v-model="policy.requestNote" label="提交備註（選填）" type="textarea" autogrow maxlength="500" :readonly="submitUncertain" class="q-mt-sm" outlined dense />
+              :disable="submitUncertain || submitting" :hint="policy.approvers.length ? '' : '沒有可用的審批人；請聯絡管理員授予審批權限。'" outlined dense />
+            <q-input v-model="policy.requestNote" label="提交備註（選填）" type="textarea" autogrow maxlength="500" :readonly="submitUncertain || submitting" class="q-mt-sm" outlined dense />
             <p class="q-mb-none q-mt-sm">提交後等待審批；批准後才可收貨。</p>
           </template>
           <p v-else-if="policy.requireApproval === false" class="q-mb-none">確認後可收貨。</p>
@@ -289,7 +304,7 @@ async function submit() {
         </q-card-section>
         <q-card-actions align="right">
           <q-btn v-close-popup flat label="返回" :disable="submitting || submitUncertain" />
-          <q-btn color="primary" :label="submitUncertain ? '重試確認結果' : policy.requireApproval ? '提交審批' : '確認提交'" :loading="submitting" :disable="!submitUncertain && !canConfirm" @click="submit" />
+          <q-btn color="primary" :label="submitUncertain ? '重試確認結果' : policy.requireApproval ? '提交審批' : '確認提交'" :loading="submitting" :disable="submitting || (!submitUncertain && !canConfirm)" @click="submit" />
         </q-card-actions>
       </q-card>
     </q-dialog>

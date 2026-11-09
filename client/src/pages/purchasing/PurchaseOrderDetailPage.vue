@@ -21,7 +21,6 @@ import purchasing from "@/services/purchasing.js";
 
 const route = useRoute(), router = useRouter(), session = useSessionStore();
 const copyCommand = useCommandEvent(), withdrawCommand = useCommandEvent(), decisionCommand = useCommandEvent();
-let withdrawReason = "";
 const { document, loading, error, load } = usePurchaseOrder();
 // 呢個頁係 record 嘅穩定 owner（換 PO 時 vue-router 重用佢；panel 會因 loading／error 卸載）。Key 綁 actor、route 上嘅 PO 同目標：
 // 同一 context 重新載入唔清走未確定操作；換 PO／actor 唔會用錯原 record，返嚟仍然可以用原 eventId 確認結果。
@@ -64,8 +63,11 @@ const columns = [
 const BASE_ROWS = [["Ordered", "orderedBaseQuantity"], ["Gross Received", "grossReceivedBaseQuantity"], ["Reversed", "reversedBaseQuantity"], ["Net Received", "netReceivedBaseQuantity"],
   ["Outstanding", "outstandingBaseQuantity"], ["Over-received", "overReceivedBaseQuantity"], ["Closed Remaining", "closedRemainingBaseQuantity"]];
 
-async function copy() {
-  const id = poId.value, number = document.value?.number ?? "", key = commandKey("copy"), gen = generation;
+// 喺開任何 dialog 之前捕捉原 generation 同目標；dialog 返嚟時 context 唔同就唔送（0 HTTP）。
+const capture = (action) => ({ id: poId.value, number: document.value?.number ?? "", version: document.value?.version, key: commandKey(action), gen: generation });
+async function copy(target = capture("copy")) {
+  const { id, number, key, gen } = target;
+  if (gen !== generation) return;
   try {
     const result = await copyCommand.run({}, (body) => purchasing.copyPurchaseOrder(id, body), key, { action: "copy" });
     if (gen !== generation) return; // 晚到：已經離開或者換咗 PO／actor
@@ -76,10 +78,11 @@ async function copy() {
     if (gen === generation && !copyCommand.isUncertain(key)) notifyError(failure.message || "複製失敗");
   }
 }
-async function withdraw() {
-  const id = poId.value, key = commandKey("withdraw"), gen = generation;
+async function withdraw(target = capture("withdraw"), reason = "") {
+  const { id, version, key, gen } = target;
+  if (gen !== generation) return;
   try {
-    const result = await withdrawCommand.run({ version: document.value?.version, reason: withdrawReason }, (body) => purchasing.withdrawPurchaseOrderApproval(id, body), key, { action: "withdraw" });
+    const result = await withdrawCommand.run({ version, reason }, (body) => purchasing.withdrawPurchaseOrderApproval(id, body), key, { action: "withdraw" });
     if (gen !== generation) return;
     notifySuccess(`${result.number} 已撤回審批，回到草稿。`);
     await load({ keep: true });
@@ -88,10 +91,10 @@ async function withdraw() {
   }
 }
 async function askWithdraw() {
-  const reason = await promptReason({ title: "撤回審批", message: `撤回 ${document.value.number} 的審批？採購單會回到草稿，需要重新提交。`, okLabel: "撤回" });
-  if (reason === null) return;
-  withdrawReason = reason.trim();
-  await withdraw();
+  const target = capture("withdraw");
+  const reason = await promptReason({ title: "撤回審批", message: `撤回 ${target.number} 的審批？採購單會回到草稿，需要重新提交。`, okLabel: "撤回" });
+  if (reason === null || target.gen !== generation) return;
+  await withdraw(target, reason.trim());
 }
 // 審批決定：record key 連 approval ID，所以重新提交後嘅新 pending approval 唔會撞到舊決定。
 const RELOAD = ["VERSION_CONFLICT", "PO_STATE_CONFLICT", "APPROVAL_ASSIGNEE_MISMATCH", "CONCURRENT_OPERATION"];
@@ -132,7 +135,8 @@ function replay(record) {
   return sendDecision({ ...record, password });
 }
 async function askCopy() {
-  if (await confirm({ title: "複製採購單", message: `以 ${document.value.number} 建立新草稿？會佔用一個新編號，並按目前主資料重新驗證。`, okLabel: "複製" })) await copy();
+  const target = capture("copy");
+  if (await confirm({ title: "複製採購單", message: `以 ${target.number} 建立新草稿？會佔用一個新編號，並按目前主資料重新驗證。`, okLabel: "複製" }) && target.gen === generation) await copy(target);
 }
 </script>
 
@@ -152,8 +156,8 @@ async function askCopy() {
       <q-skeleton v-if="loading" type="rect" aria-label="載入採購單" />
       <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load()" /><q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" /></template></q-banner>
       <template v-else-if="document">
-        <q-banner v-if="copyCommand.isUncertain(commandKey('copy'))" role="status" class="bg-warning text-dark q-mb-md">複製結果尚未確認；請重試同一操作以確認結果，不會重複建立。<template #action><q-btn flat label="重試確認結果" :loading="copyCommand.isBusy(commandKey('copy'))" @click="copy" /></template></q-banner>
-        <q-banner v-if="withdrawCommand.isUncertain(commandKey('withdraw'))" role="status" class="bg-warning text-dark q-mb-md">撤回結果尚未確認；請重試同一操作以確認結果。<template #action><q-btn flat label="重試確認結果" :loading="withdrawCommand.isBusy(commandKey('withdraw'))" @click="withdraw" /></template></q-banner>
+        <q-banner v-if="copyCommand.isUncertain(commandKey('copy'))" role="status" class="bg-warning text-dark q-mb-md">複製結果尚未確認；請重試同一操作以確認結果，不會重複建立。<template #action><q-btn flat label="重試確認結果" :loading="copyCommand.isBusy(commandKey('copy'))" @click="copy()" /></template></q-banner>
+        <q-banner v-if="withdrawCommand.isUncertain(commandKey('withdraw'))" role="status" class="bg-warning text-dark q-mb-md">撤回結果尚未確認；請重試同一操作以確認結果。<template #action><q-btn flat label="重試確認結果" :loading="withdrawCommand.isBusy(commandKey('withdraw'))" @click="withdraw()" /></template></q-banner>
         <div class="row items-center q-gutter-sm q-mb-md">
           <q-badge :color="statusColors[document.status]" :label="statusLabels[document.status]" />
           <span>版本 {{ document.version }}</span>
