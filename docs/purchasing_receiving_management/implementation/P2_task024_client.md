@@ -556,7 +556,13 @@ One batch. Each step stops at the first failure.
    - Each account logs in again. That is 3 more, so **6 logins and 3 approvals**.
    - `GET /api/v1/device/bindings` is only a read, and it counts as an API GET.
 
-**Data:** 1 supplier, 1 SKU, and PO-A and PO-B, each a Draft with 1 line, created by U1 before the counted run (this needs a separate PM grant).
+**Data:** 1 supplier, 1 SKU, and PO-A and PO-B, each a Draft with 1 line.
+- **The supplier and SKU master data have no unresolved fixture.** I see two options:
+  - (a) Exact SQL inserts in the own DB, mirroring the integration fixture helpers. The statements would be listed with the grant.
+  - (b) Creating them through the UI, which adds Supplier and Item POSTs and approvals not budgeted here.
+
+  I recommend (a). **This is an open named dependency for the PM.**
+- **PO-A and PO-B are created by U1 in the run:** 2 more named business POSTs, `#0a` and `#0b`, each `POST /api/v1/purchase-orders/create` with an expected 200. That makes **13 business POSTs** in total.
 
 **The 11 named business POSTs:**
 
@@ -580,13 +586,17 @@ One batch. Each step stops at the first failure.
 | --- | --- |
 | Total HTTP | 150 |
 | API GET | 40 |
-| Business POST | 11, as named |
+| Business POST | 13, as named (#0a, #0b and #1 to #11) |
 | Login POST | 6 |
 | `token/refresh` POST | 4 |
 | OPTIONS | 35 (preflights are cached for 600 s by `cors.maxAgeSeconds`) |
 | Static | 50 |
 
-The sum, 146, is within 150. **Budget delta for the PM:** the business POST, login, refresh, OPTIONS and static limits are new. Using vite dev instead of preview would need a much higher total. Approve, or adjust.
+The sum, 148, is within 150. **Budget delta for the PM:**
+- the business POST limit rises from 11 to 13, for PO creation;
+- the login, refresh, OPTIONS and static limits are new.
+
+Using vite dev instead of preview would need a much higher total. Approve, or adjust.
 
 **Checks:**
 - Allowed statuses: only the expected ones above. No 5xx.
