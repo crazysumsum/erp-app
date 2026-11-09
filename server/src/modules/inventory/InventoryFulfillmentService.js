@@ -211,6 +211,7 @@ export class InventoryFulfillmentService {
     read.finished=true;let outcome;
     try{outcome=await finishFulfillmentReversalZeroEffect(tx,read.prepared,read.source);}
     catch(error){if(!unknownOutcomeSource(error))throw error;outcome={state:"UNKNOWN"};}
+    outcome={...outcome,eligibility:outcome.state==="ABSENT"?outcome.eligibility??"UNKNOWN":"UNKNOWN"};
     if(await this.#zeroBinding(tx,read.session,"finish")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
     const proof=Object.freeze({state:outcome.state});this.#zeroProofs.set(proof,{...read,outcome});return proof;
   }

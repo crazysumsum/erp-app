@@ -43,3 +43,13 @@ PhaseA caller是實際基線接線；完整Zero proof的真正Recovery Job／dur
 其後已只讀實核Fulfillment consumer `7143e060d4dec2c0a5bf2979e37f0f0e710b971e`：`ShipmentReversalService`用同database真pair＋constructor callbacks，實際呼叫三個Inventory zero ABI／三個`reversal.zero.inventory.*` phase；`shipmentReversalRecoverySource.shipmentReversalZeroEffectSource`的frozen purpose、欄位及originalIssue reference shape與本候選相符。因此沒有為該consumer新增Inventory adapter，不整合／覆寫其他owner檔。這次只是來源接線相容性觀察，該consumer仍待TL完整審查，不代表其loader/counters/下游/fence已被Inventory驗真或runtime PASS。原首組sharedDB/classifier兩Required仍由Fulfillment/TL處置。
 
 單MySQL cooperative全writer參與、retention/archive/maintenance、downstream membership及部署版本均是未驗activation依賴；私有caller/fence若不能證明就不發可信source，不能拿constructor boolean當部署證據。TASK036、Inventory P4及TASK041均不由本增量宣告DONE；NFR仍UAT後。
+
+## R3：absence與目前可執行資格分離
+
+TL針對聯合來源`8198f4da93439cfa5f9bed0eb81044890e4847d2`／tree`a5962d9113bf2e5792c7ed15cc0d721d823e44d3`指出Required/P2：兩方ABSENT不能代替takeover前當前eligibility。該來源本Inventory outcome blob與本branch原`b4631834`相同；本次只改原兩檔產品及本文件，不重審absence/admission或其他writer。
+
+`readAnchors`原Warehouse鎖讀同句額外取status，保留其已鎖Bins與active Bin locks，及原Control map；不另開advisory query或變鎖序。既有success-reader不採新資格條件、不變原結果。只有新zero finish在完整absence成立後另算`eligibility`：Warehouse/Bin均ACTIVE、無active stocktake lock，Reservation為原reverse接受的ACTIVE/PARTIALLY_CONSUMED/CONSUMED，原鎖定counter在整批回補後不超safe-integer、原DB version遞增不超上限。加總依原writer每Balance leg、每SKU member遞增次數，不看單行而漏整批溢位；不改原writer、數量或version規則。
+
+有明確inactive／盤點鎖／不接受狀態或原數值／版本越界則`ABSENT + INELIGIBLE`；資料不足、absence未證或例外則`eligibility:UNKNOWN`。只有同輪既有鎖事實全部符合才`ABSENT + ELIGIBLE`。私有same-tx/session/source proof存這個獨立欄位，verify回原instance所存clone；原opaque public proof仍只state、不接受caller DTO。不因INELIGIBLE改稱舊效果存在，亦不把ELIGIBLE當writer grant。
+
+Fulfillment須消費兩owner的ABSENT且ELIGIBLE才做任何exhausted-attempt排程或takeover CAS；缺欄位視UNKNOWN並保留原nonce/attempt/lease，fresh PhaseB仍完整重驗。這個consumer差額由Fulfillment唯一作者處理，Inventory未改其檔。R3增量source review待TL，沒有新增／執行任何測試或工具驗證。
