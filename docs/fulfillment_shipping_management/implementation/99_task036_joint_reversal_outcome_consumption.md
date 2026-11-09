@@ -231,4 +231,10 @@ legacy/non-Shipment是另一個來源判定，不能以「不是數字／查無S
 
 ZERO_EFFECT 使用獨立 frozen source：`purpose=SHIPMENT_REVERSAL_ZERO_EFFECT`、完整 owner IDs、E_R／原 actor／domain hash／correlation、全部 pickedLines/member/leg及原 E_S/Issue/Movement/member references；沒有虛構舊 Inventory/Sales hash，不放寬 success parser。Inventory phases `reversal.zero.inventory.prepare/finish/verify`；Sales phases `reversal.zero.sales.read/verify`。每次 verifier 重驗同 session/source/active tx/live Job/E_R fence；proof 只能由真正原 owner instance verify。任何一方 UNKNOWN、缺正式方法、歸檔／schema／source不全、partial effect或actor不合資格，不 takeover。
 
-此項仍為本地來源候選，雙 owner 增量／最終合樹來源覆核尚待完成；runtime verification 全部 NOT_RUN。部署的 single-writer topology、全部 writer/retention/maintenance參與及完整 downstream membership仍未驗明，公開 Recovery 保護不開。TASK-036、原 API／UI／Crash／UAT／完整 P2 Gate 未標 DONE；全部安全檢查及20秒限制保留，非功能驗證仍延至UAT後。
+雙 owner 的 absence/admission 分項已由 TL SOURCE ACCEPT／0 Required：Inventory `7fb93911`及文件`95b879c3`、Sales `32ae8cf7`，精確合入`8198f4da`；不是聯合 runtime PASS。首組 R1（保留未綁 REVERSE grant 的 SHIP pair fallback）及 R2（預期 mutex 競爭變500）在`7143e060`修正並獲 TL 實碼閉合。
+
+聯合來源覆核另發現 **R3：ABSENT 不證明現在可執行**。Inventory 原零效果讀取不以 Warehouse／Bin ACTIVE、有效盤點鎖及原 writer 的數量／版本上限判資格；Sales 亦需獨立套用既有 reverse 訂單／projection 規則。這是一般技術修正，不新增業務分類。consumer `858dafe7`先於 exhausted scheduling／takeover 的任何 DML，嚴格要求兩個原 instance verify 結果均 `state=ABSENT AND eligibility=ELIGIBLE`；missing、INELIGIBLE、UNKNOWN不改 attempt／lease。兩 owner 在各自原 proof 加獨立 eligibility，重用同次已鎖資料及原 writer 規則，不改 ABSENT、成功 reader 或 source/hash parser；新 Phase B 仍重新驗證。
+
+R3 consumer `858dafe7`、Sales `64980b63`及 Inventory `f67723b1`均已獲 TL 分項 SOURCE ACCEPT／0新Required。其精確整合依次為`858dafe7`、`2d104689`、`3b8f0a9f`，與原三方產品域 Git diff 全空；Fulfillment沒有代改 owner 檔。最終合樹／本次文件更新仍交 TL 作 R3 閉合判決，沒有借分項 verdict宣稱 joint completion。
+
+此項仍為本地來源候選，runtime verification 全部 NOT_RUN；未新增或執行測試、DB、CI、push。部署的 single-writer topology、全部 writer/retention/maintenance參與及完整 downstream membership仍未驗明，公開 Recovery 保護不開。TASK-036、原 API／UI／Crash／UAT／完整 P2 Gate 未標 DONE；全部安全檢查及20秒限制保留，非功能驗證仍延至UAT後。
