@@ -5,14 +5,18 @@
 // - CHECK 跟 0112：狀態、flag／version、編號同 document_year_month／sequence_no 一致、真 YYYYMM、序號 1～999999、反向 ≤ 已收，
 //   同確認一致性：DRAFT／CANCELLED 冇 confirmed_at 同 confirm_event_id，CONFIRMED／PARTIALLY_REVERSED／REVERSED 一定有。
 //   confirmed_by 刻意唔入 CHECK：刪 user 會經 FK SET NULL 清空，唔等於冇確認證據。
-// - §4.16：曾經確認（OLD.confirmed_at IS NOT NULL）之後，PO、Supplier、業務日期、送貨單號、備註、確認結果同編號唔准改，
-//   亦唔准退返 DRAFT／CANCELLED 或者刪除；只可以改 reversal 狀態同數量 projection。FK 嘅 SET NULL 唔會觸發 trigger。
+// - §4.16：曾經確認（OLD.confirmed_at IS NOT NULL）之後，除咗 reversal 狀態、數量／filter projection 同 updated_*／version，
+//   其餘現有欄位（GR_CONFIRMED_FACTS）全部唔准改，亦唔准退返 DRAFT／CANCELLED 或者刪除。FK 嘅 SET NULL 唔會觸發 trigger，
+//   所以刪 user 清空 actor 欄仍然合法。
 // 純新增；CREATE TABLE 喺 MySQL 8.0 係原子 DDL，IF NOT EXISTS 令重跑係 no-op。
 import { ensureTriggers } from "./0114_create_purchasing_operation_requests.js";
 
 export const GR_STATUSES = "'DRAFT', 'CONFIRMED', 'PARTIALLY_REVERSED', 'REVERSED', 'CANCELLED'";
+// 曾經確認之後只准改 reversal 狀態、數量／filter projection 同 updated_*／version；其餘現有欄位全部凍結。
 export const GR_CONFIRMED_FACTS = ["purchase_order_id", "supplier_id", "business_receipt_date", "supplier_delivery_note", "notes", "confirmed_at",
-  "confirmed_by", "confirm_event_id", "inventory_result_summary", "gr_number", "document_year_month", "sequence_no"];
+  "confirmed_by", "confirm_event_id", "inventory_result_summary", "gr_number", "document_year_month", "sequence_no",
+  "id", "supplier_code_snapshot", "supplier_name_snapshot", "supplier_status_at_confirm", "supplier_exception_reason", "created_at", "created_by",
+  "created_by_label", "cancelled_at", "cancelled_by", "cancel_reason"];
 
 const same = (columns) => columns.map((column) => `NEW.${column} <=> OLD.${column}`).join(" AND ");
 

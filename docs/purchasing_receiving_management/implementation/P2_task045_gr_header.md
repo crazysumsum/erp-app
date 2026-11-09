@@ -22,3 +22,28 @@
 **Not run:** no migration, test, build or validator. eslint could not load in this worktree, which has no `node_modules`, so there is **no lint evidence**.
 
 **Not done yet:** the ever-confirmed reader and its wiring into `PurchaseOrderLifecycleService({ receiptFacts })` are not written. They need C5, or another approval, for their verification.
+
+## Immutable-facts completion (TL review relayed by the PM on 2026-11-09)
+
+`GR_CONFIRMED_FACTS` now also freezes, once a header has been historically confirmed:
+- `id`;
+- `supplier_code_snapshot` and `supplier_name_snapshot`;
+- `supplier_status_at_confirm` and `supplier_exception_reason`;
+- `created_at`, `created_by` and `created_by_label`;
+- `cancelled_at`, `cancelled_by` and `cancel_reason`.
+
+**Kept as it was:**
+- the original 12 facts;
+- the `OLD.confirmed_at IS NOT NULL` test;
+- the block on returning to DRAFT or CANCELLED;
+- the DELETE trigger;
+- the FK SET NULL exception, because FK actions do not fire triggers.
+
+**Static cross-check**, by reading the source text only, without importing or running it: 33 columns, 23 frozen facts with no duplicates or unknown names, which leaves 10 mutable columns:
+- `status`;
+- `total_received_base_quantity` and `total_reversed_base_quantity`;
+- `has_over_receipt`, `has_expiry_override` and `has_sku_exception`;
+- `version`;
+- `updated_at`, `updated_by` and `updated_by_label`.
+
+No DDL, import, validator, lint, test or DB was run. The number 0119 is checked at the release baseline.
