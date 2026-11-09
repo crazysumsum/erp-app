@@ -174,3 +174,47 @@ Job capability 仿現有 [confirmation Job](../../../server/src/services/fulfill
 原 actor disabled/revoked、deleted／SET NULL、directory失敗或來源歸檔一律不取得新的業務／failure-only／retry能力，保留待查並按既有安全診斷交接。現兩 owner reversal readers要求當前原 actor 的 fresh view＋reverse；SHIP 已有的撤權 failure-only policy 不自動套用 REVERSE。若將來要為 REVERSE 擴展撤權例外，須 PM 集中把具體業務／權限取捨交 Sam；本節沒有作此決定。
 
 下一個可驗收交付是 **Fulfillment loader/fence/job-purpose 契約＋Inventory/Sales 上述零效果 proof/serialization 的 TL 核定**，再定真正 consumed source 的最小範圍；不是先建 pair/helper 等 caller。TL 協調精確新 owner delta，不重交已有 read/verify／normal hashes；PM統一協調後續 source及新功能案例准入。Returns／AR 的真 providers與部署 membership仍是適用執行／公開啟用 gate：未能驗真則UNKNOWN，不能預設 no-provider；它們不阻擋這次內部契約整理。保留原TASK036 API/Job/回SHIPPED/並發/Crash/UAT全部驗收義務，沒有標DONE、降低門檻或以文件／既有綠CI代替新Recovery驗證。
+
+### 2026-11-09 Joint event-admission：權威 mapping 與 claim 前入口的精確缺口
+
+本窄補充沿 TL `task036-joint-owner-contract-verdict-20261109.md`，只消費已完成的 Inventory 三問及 Sales 四入口評估；不要求重交 readers。產品仍固定 main `06caf911`；上面 `de1d1d68` 已接受內容不改。**本次交付驗收結果為「尚無已證相容的全 caller 入口；列明具體矛盾」**，不是一個可直接實作的 admission helper。共同命題仍是：原事件所有合法 journal／attributable-effect 路徑，在 inspection 至決策期間，均由同序屏障排除，或由 owner 權威證明不屬該 identity；UNKNOWN passthrough 不能滿足它。
+
+#### 真 TASK-036 entry 能從哪些現有資料辨識 current identity
+
+| 入口所需權威 | 既有 records／fields及 current-read 位置 |
+| --- | --- |
+| 原 managed E_R及S1 | 真 Job invocation進入前節私有 Recovery entry；以已正規化 event定位現存 `fulfillment_operation_requests`，在新 actual RC 先持其 X，重驗 `operation_type='REVERSE',target_type='SHIPMENT',target_id,event_id,payload_hash,initiated_by,correlation_id,lease_owner,attempt_count,lease_expires_at,is_document_archived` 及完整 Phase A。target_id 是owner保存的S1身份，不是把 Inventory caller.documentId 直接 numeric 化。 |
+| S1 → Fulfillment／SO／Warehouse | 同一RC中普通 current read `shipments.id,fulfillment_id,sales_order_id,customer_id,warehouse_id,reversal_event_id,correlation_id`；對 `fulfillments.id,sales_order_id,customer_id,warehouse_id,active_shipment_id`、同E_R唯一Reversal及前節原hash/history核實。0096 `trg_shipment_update`固定S1的id/fulfillment_id/SO/customer/warehouse；不能只信denormalized before_summary或caller另給的fulfillmentId。這裡不先鎖Shipment／Fulfillment父行；持E_R X且完整bootstrap成立後，才可交給早階scope admission，於既定Fulfillment rank再鎖全來源並逐欄重驗。單次無鎖讀取本身不發proof。 |
+| 既有 PICK_SCOPE 身份 | 由上述owner核實的fulfillmentId定位 `inventory_operation_requests`：`source_module='FULFILLMENT',source_document_type='PICK_SCOPE',source_document_id=fulfillmentId,source_line_id='',source_event_id='scope-v1'`；Inventory核其command/result為 `FULFILLMENT_SCOPE_LOCK/FULFILLMENT_SCOPE`、result_id、原scope request_hash、completed_at及result_summary的warehouseId/salesOrderId，必須與owner身份相同。inspection只讀／鎖既有row，不INSERT scope或placeholderclaim。 |
+| 真／歸檔／不完整身分 | 除operation.is_document_archived，須核 `shipments_archive`／`fulfillments_archive` 及原所需完整來源，必要時以0099的archive_batch_id/archived_at/row_hash與 `sales_archive_order_manifests` 的sales_order_id／fulfillment_table_counts／fulfillment_hash_summary及批次對照。這些只能識別歸檔／live-archive分裂，**不是從archive重建active writer的授權**；本Recovery entry對archived、缺schema、缺任一關聯／scope或互相矛盾一律不admit。 |
+
+欄位來源：[0092](../../../server/database/migrations/0092_create_fulfillment_operations_and_sequences.js)、[0096及其immutable owner關係](../../../server/database/migrations/0096_create_shipments.js)、[0097](../../../server/database/migrations/0097_create_shipment_issues_and_reversals.js)、[0099 mirrors](../../../server/database/migrations/0099_create_fulfillment_archives.js)、[0088 manifests](../../../server/database/migrations/0088_create_sales_archive_batches.js)、[scope receipt](../../../server/src/modules/inventory/inventoryFulfillmentScope.js)。這些支援 **已知原E_R的Recovery loader**；並不等於已有可供任意generic caller使用的共同mapping API。
+
+legacy/non-Shipment是另一個來源判定，不能以「不是數字／查無Shipment」自動證outside。`SHIP-42`／`posted-1`及provider random-UUID documentId是現有接受的識別方式；不存在權威alias→Shipment映射或反向owner證據時，身份仍未證。即使今天用RC查無資料，也不能證先前獲准、尚未claim的caller在之後不會進原event；更不能用其原RR舊snapshot查無row作outside。已證是其他owner來源，亦須同時證不屬被檢視的event／effect身份；特別是Sales全域event唯一，不因target是別的SO／IMPORT_JOB便能排除。
+
+#### 必需的合法早階位置，及現有 caller 的實際證據
+
+單一共同規則應先由Fulfillment owner核原identity及真transaction／phase，然後由各入口在**第一個原event INSERT／duplicate-read，以及任何較後owner/domain/parent鎖之前**消費同序admission；inspection與claim兩邊必須持有相衝突的既有barrier，不能只發一個mapping結果。已知managed Recovery／normal REVERSE的順序是 E_R X → Inventory PICK_SCOPE／event operations → Sales journals／SO／Lines／mappings → Fulfillment父子 → Inventory domain；generic的caller-owned交易若已在較後rank，不能再補早階鎖。沒有現存證據可把任意這類tx聲稱為early；不新增lock-rank框架去假裝可證。
+
+| 真實入口／第一個相關動作 | 已證可用位置與沒有被它涵蓋的事實 |
+| --- | --- |
+| `ShipmentReversalService.completeReversalPhaseB` | 自建fresh RC，`#lockReversalOperation`先於Inventory preclaim；`claimFulfillmentBatchInTransaction`先scope再batch。這是現有真正合法early caller；它不能替其他generic／Sales呼叫者簽admission。未來真正TASK036 Job必須在自己fresh RC開始即消費同一identity/fence，而不是從query到pending DTO自簽token。 |
+| `InventoryOperationService.claim` | source/type/hash驗證之後、`INSERT inventory_operation_requests`／duplicate `FOR UPDATE`之前是單一攔截**候選位置**。但input只有source/commandType/payload，並無上述權威S1→scope入口；`assertExecutor`與 `assertInventoryTransaction`只要求query/execute，不能證current RC、尚無later locks或scope-first。`InventoryPostingService.#postIssueInTransaction`在本方法內是claim→Warehouse，但provider接受caller-owned tx，外層之前是否已持Warehouse／父鎖未由其契約保證；不能在claim一律補scope／E_R X。原scope-v1 claim本身也不能遞迴取這條路。 |
+| `SalesOperationService.claimConfirmation/claim` | 自己直接INSERT／duplicate event read，不持Fulfillment E_R或scope；所屬target可為SO、Quotation或Import。不能用它作唯一攔截點，因下面三條沒有經過它。 |
+| `SalesImportService.upload` 的stage | 自己的 `operations.run` callback，在freshactor後直接INSERT `UPLOAD_IMPORT/IMPORT_JOB`，之後才建立Import Job；補償會鎖operation/job並刪自己的未完成stage。共同event准入需涵蓋這個pre-INSERT位置及其retention契約，不能等原SO鎖，也不能只查stage當下是否存在。 |
+| `SalesIntakeService.process/#operation` | process持其framework/job fence，從intake讀 `processing_event_id`及actor後，直接claim `PROCESS_INTAKE/INTAKE_ORDER`；之後才 `#job`／intake `FOR UPDATE`。可指出其目前pre-claim位置，但framework/job fence不是Fulfillment E_R ownership。不能把intake的非SO target當原event不可能有journal的證明。 |
+| `SalesFulfillmentService.lockLinesForFulfillmentInTransaction` | non-CLAIM直接INSERT shipment event，之後才SO/Lines/mappings；REVERSE另先讀原SHIP journal。normal coordinator已持正確E_R/scope；直接modulecaller只驗自己的active RC及actor/receipts，並不證Fulfillment先行admission。共同規則須在首次event claim／後階鎖之前由真正caller消費，不能只在apply或SO鎖後補檢。 |
+
+直接source：[normal reversal](../../../server/src/modules/fulfillment/ShipmentReversalService.js)、[Inventory generic claim](../../../server/src/modules/inventory/InventoryOperationService.js)、[generic/provider transaction契約](../../../server/src/modules/inventory/inventoryValidation.js)、[generic ISSUE入口](../../../server/src/modules/inventory/InventoryPostingService.js)、[Sales Operation](../../../server/src/modules/sales/SalesOperationService.js)、[Import](../../../server/src/modules/sales/SalesImportService.js)、[Intake](../../../server/src/modules/sales/SalesIntakeService.js)、[Fulfillment direct claim](../../../server/src/modules/sales/SalesFulfillmentService.js)。這是既有named入口及已評估範圍，不把任意SQL／audit helper發明成額外公開攻擊路徑。
+
+現有查詢也不能補出早階准入：[ShipmentInquiryService.#read](../../../server/src/modules/fulfillment/ShipmentInquiryService.js)拒絕已有caller transaction並另開RR；`readShipmentReversalSnapshot`亦是獨立RR，`readLockedShipmentReversalSnapshot`則先取後階Fulfillment父子鎖。Inventory `getFulfillmentReversalPreparationInTransaction`要求numeric shipmentId＋完整原operation IDs，不能只傳generic source得到scope。換成Shipment `FOR SHARE`再返回scope、在caller原RR普通讀「看不到」便放行、或在Warehouse之後才admit，都不符合本契約。
+
+#### 目前不能同時成立的條件、before/after與處置
+
+- **身份矛盾**：要保留generic/provider既有opaque documentId及無Shipment／無scope的合法呼叫，同時又以這些caller字串、查無row或missing原opIDs得到權威outside判定，目前沒有相容契約。具名證據為 `inventoryIssueService.test.js` 的TASK023 `postFulfillmentIssueInTransaction` 使用 `SHIP-42/posted-1`，及 `inventoryStocktakeSafety.integration.test.js` 的同provider random-UUID source；這是已接受API行為證據，非聲稱這些fixture就是某個已部署訂單流程。現在可依原權限/receipt/冪等規則posting；若改numeric-only、要求新scope/source token或一概封FULFILLMENT namespace，這些呼叫會在原業務效果前被新拒絕／須遷移，屬真相容性變更，未批准。
+- **位置矛盾**：generic caller-owned tx目前沒有「尚未持later鎖／current RC」的可驗入口保證。強加早階E_R/scope可能形成較後domain→早階operation/scope的倒序；強制另開tx或切isolation也改變現有transaction契約。normal REVERSE的正確入口不能證所有generic caller都符合，不能只靠函式命名或client加alreadyLocked。
+- **event矛盾**：Sales四入口共用UUID，其他target可先claim同E_R；原SO鎖只穩同root效果。Inventory generic能claimexact SHIPMENT/SHIPMENT_LEG tuple但不持PICK_SCOPE。若任一合法入口仍可unknown passthrough，inspection後仍可能有新journal，不能同時簽Doc99的stable全event零效果proof。scope/row不存在時不INSERT補足；不以減弱命題解決。
+
+**現階段採取的處置**：保留目前generic/legacy接受行為與UNKNOWN，Recovery沒有零效果proof便不takeover／retry／terminal DML；這不是原TASK036驗收豁免。TL可消費的精確缺口是「Fulfillment的已知current identity可由上述記錄驗真，但尚無覆蓋所有合法caller、在later locks前可驗且處理legacy/缺失/歸檔的共同owner admission入口」。不是再缺一份成功reader或一個獨立proof helper。
+
+後續現實選項只有：（A）若TL另有能直接出示的既有producer身份／caller順序契約，僅交其精確差額，證可在原輸出／原transaction語義不變下前移並消費同一admission，對legacy取得**真正owner outside-identity證據**；目前沒有，不據此要求兩owner重盤同一問題或宣稱可實作；（B）若實際caller沒有這個位置／身分來源，明確改managed event/namespace及legacy接受契約，列出上面合法provider的before/after、必要caller遷移及業務影響，再由PM判定是否交Sam。**建議目前維持保守處置，由TL只就這些精確identity／early-entry差額裁定A是否成立；不成立則PM一次整理B，不能在產品偷偷選B。** 不預選新event registry／storage／隔離策略，不再請兩owner重盤模塊；Revoked actor、Doc99全event要求及原成功readers不變。本補充沒有source/helper/API/schema/job/test/validator/DB/CI/push授權。
