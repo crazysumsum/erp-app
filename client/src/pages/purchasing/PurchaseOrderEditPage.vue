@@ -21,7 +21,7 @@ async function saved(result) {
   await load({ keep: true });
 }
 async function submitted(result) {
-  notifySuccess(`採購單 ${result.number} 已提交。`);
+  notifySuccess(result.outcome === "PENDING_APPROVAL" ? `採購單 ${result.number} 已提交審批。` : `採購單 ${result.number} 已提交並確認。`);
   await router.push(`/purchasing/purchase-orders/${result.id}`);
 }
 </script>

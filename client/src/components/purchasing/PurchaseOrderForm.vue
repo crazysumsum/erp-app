@@ -16,6 +16,8 @@ const form = reactive({}), options = reactive({ suppliers: [], warehouses: [], b
 const supplier = ref(null), warehouse = ref(null), buyer = ref(null), address = ref(null), useAddress = ref(true), defaultCurrency = ref("");
 const lookupError = ref(""), defaultsError = ref(""), optionsError = ref(""), conflictVersion = ref(null), copied = ref(""), saving = ref(false), pristine = ref(""), entryCurrency = ref("");
 const showSubmit = ref(false), submitError = ref(""), submitting = ref(false);
+// §7.3：審批開住要揀審批人。讀唔到設定係 null，交返伺服器判斷（PO_APPROVAL_REQUIRED 會再讀）。
+const policy = reactive({ loading: false, requireApproval: null, approvers: [], approverId: null, requestNote: "" });
 const saveCommand = useCommandEvent(), submitCommand = useCommandEvent();
 const touched = new Set(), controllers = {};
 
@@ -150,14 +152,32 @@ async function copyInput() {
   try { await navigator.clipboard.writeText(JSON.stringify(payload(), null, 2)); copied.value = "已複製你的輸入。"; }
   catch { copied.value = "未能複製；請手動記下你的輸入。"; }
 }
+async function loadPolicy() {
+  policy.loading = true;
+  try {
+    const { requireApproval, items } = await purchasing.lookupApprovers();
+    Object.assign(policy, { requireApproval, approvers: items });
+    if (!items.some((item) => item.id === policy.approverId)) policy.approverId = null;
+  } catch {
+    Object.assign(policy, { requireApproval: null, approvers: [] });
+  } finally { policy.loading = false; }
+}
+function openSubmit() {
+  submitError.value = "";
+  showSubmit.value = true;
+  if (!submitCommand.uncertain.value) loadPolicy();
+}
+const canConfirm = computed(() => !policy.loading && (policy.requireApproval !== true || policy.approverId !== null));
 async function submit() {
   submitting.value = true; submitError.value = "";
+  const approval = policy.requireApproval ? { assignedApproverId: policy.approverId, ...(policy.requestNote.trim() ? { requestNote: policy.requestNote.trim() } : {}) } : {};
   try {
-    const result = await submitCommand.run({ version: props.document.version }, (body) => purchasing.submitPurchaseOrder(props.document.id, body));
+    const result = await submitCommand.run({ version: props.document.version, ...approval }, (body) => purchasing.submitPurchaseOrder(props.document.id, body));
     showSubmit.value = false;
     emit("submitted", result);
   } catch (error) {
     if (error.code === "VERSION_CONFLICT") { conflictVersion.value = error.details?.currentVersion ?? props.document.version; showSubmit.value = false; return; }
+    if (["PO_APPROVAL_REQUIRED", "PO_APPROVER_INVALID"].includes(error.code)) loadPolicy();
     const line = /^lines\.(\d+)\./.exec(error.details?.field ?? "");
     submitError.value = submitCommand.uncertain.value ? "結果尚未確認；請重試同一提交以確認結果。" : `${error.message || "提交失敗"}${line ? `（第 ${Number(line[1]) + 1} 行）` : ""}`;
   } finally { submitting.value = false; }
@@ -209,7 +229,7 @@ async function submit() {
           <li v-if="!form.paymentTermId">未選擇付款條款。</li>
         </ul>
         <q-btn color="primary" type="submit" :label="uncertain ? '重試確認結果' : '儲存草稿'" :loading="panelSubmitting" :disable="stale" />
-        <q-btn v-if="document" class="q-ml-sm" outline color="primary" label="提交" :disable="!canSubmit" @click="showSubmit = true" />
+        <q-btn v-if="document" class="q-ml-sm" outline color="primary" label="提交" :disable="!canSubmit" @click="openSubmit" />
         <span v-if="document && dirty" class="text-caption q-ml-sm">請先儲存變更才可提交。</span>
       </section>
     </FormPanel>
@@ -228,11 +248,19 @@ async function submit() {
             <li v-if="zeroPriceLines">{{ zeroPriceLines }} 行為零價。</li>
             <li v-if="!document?.paymentTermId">未選擇付款條款。</li>
           </ul>
-          <p class="q-mb-none">確認後可收貨。</p>
+          <q-skeleton v-if="policy.loading" type="text" aria-label="讀取審批設定" />
+          <template v-else-if="policy.requireApproval">
+            <q-select v-model="policy.approverId" label="審批人 *" :options="policy.approvers" option-value="id" option-label="label" emit-value map-options
+              :disable="submitCommand.uncertain.value" :hint="policy.approvers.length ? '' : '沒有可用的審批人；請聯絡管理員授予審批權限。'" outlined dense />
+            <q-input v-model="policy.requestNote" label="提交備註（選填）" type="textarea" autogrow maxlength="500" :readonly="submitCommand.uncertain.value" class="q-mt-sm" outlined dense />
+            <p class="q-mb-none q-mt-sm">提交後等待審批；批准後才可收貨。</p>
+          </template>
+          <p v-else-if="policy.requireApproval === false" class="q-mb-none">確認後可收貨。</p>
+          <q-banner v-else role="status" class="bg-warning text-dark">未能讀取審批設定；如需要審批，伺服器會拒絕並重新讀取。<template #action><q-btn flat label="重試" @click="loadPolicy" /></template></q-banner>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn v-close-popup flat label="返回" :disable="submitting || submitCommand.uncertain.value" />
-          <q-btn color="primary" :label="submitCommand.uncertain.value ? '重試確認結果' : '確認提交'" :loading="submitting" @click="submit" />
+          <q-btn color="primary" :label="submitCommand.uncertain.value ? '重試確認結果' : policy.requireApproval ? '提交審批' : '確認提交'" :loading="submitting" :disable="!submitCommand.uncertain.value && !canConfirm" @click="submit" />
         </q-card-actions>
       </q-card>
     </q-dialog>
