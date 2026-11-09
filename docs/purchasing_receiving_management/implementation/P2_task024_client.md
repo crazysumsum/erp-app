@@ -557,7 +557,7 @@ One batch. Each step stops at the first failure.
    - `GET /api/v1/device/bindings` is only a read, and it counts as an API GET.
 
 **Data:** 1 supplier, 1 SKU, and PO-A and PO-B, each a Draft with 1 line.
-- **The supplier and SKU master data have no unresolved fixture.** I see two options:
+- **The supplier and SKU master data have no fixture yet; this is unresolved.** I see two options:
   - (a) Exact SQL inserts in the own DB, mirroring the integration fixture helpers. The statements would be listed with the grant.
   - (b) Creating them through the UI, which adds Supplier and Item POSTs and approvals not budgeted here.
 
