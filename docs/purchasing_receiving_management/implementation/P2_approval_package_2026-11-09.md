@@ -382,3 +382,19 @@ Each is refused, not answered false. These are not inside the 6 MySQL cases.
 - **CI actually runs:** admitted PR dispatch, every push to main, and weekly on Monday 10:17 Hong Kong time, with Vitest's default file workers.
 - **The existing receipts say:** "every PR and push to main" and "concurrency 1", meaning within a case.
 - **Recommendation:** keep the existing triggers and workers, and have Sam approve that full trigger explicitly. Neither the workflow nor any wording has been changed.
+
+## Sam's decision
+
+2026-11-09, in the Purchasing chat: "A、B、C1、C2、C4 全部批准，C3、C5 暫緩".
+
+| Part | Decision | What it covers |
+| --- | --- | --- |
+| A | Approved | Writing the TASK-045 `goods_receipts` header migration source exactly as A1 describes. Running it is not part of A: its functional verification is C5, which is deferred. The source therefore lives on its own branch, so that C4's `npm run migrate` does not apply it. |
+| B | Approved | The planning patch applied as it is, sha256 `25c9da17…`. After applying it, `validate_traceability.py` (also with `--check-approvals`) gives STRUCTURE_PASS and `validate_module_boundary.py` gives LOCAL_CHECKS_PASS. |
+| C1 | Approved | The 29 new client registrations and 3 changed existing cases, and a new client receipt. |
+| C2 | Approved | One run of the literal 7-file command, plus build, lint and static admission. Stop at the first failure, with no retry. |
+| C4 | Approved | The 22 unit and 4 integration TASK-025 registrations, the inquiry assertion change, the two regression files, and a new receipt. The DB run still waits for the PM's exclusive MySQL slot. |
+| C3 | Deferred | Playwright. |
+| C5 | Deferred | Header verification, and the reader's contradiction unit file. |
+
+This decision does not authorize the agent to publish any digest. The trusted administrator does that.
