@@ -297,3 +297,20 @@ The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). Th
 - The same data: 6 POs, 9 lines, 12 POSTs, 3 GETs, 2 actors, 1 app and pool.
 - Default workers, and stop at the first failure.
 - **Honest limit:** the four cases' assertions after the first lifecycle POST have never been reached, so further failures cannot be ruled out until that run.
+
+## Re-verification run (Sam's approval of 2026-11-09, "批准三行修補及原四案一次"; the grant is used): PASSED, released
+
+- **Candidate:** `40fc298c5ea0acbc6ea22769d6ed308f4d5169e8`. It includes fix `462a9925`, with `PurchasingOperationService.js` blob `65fdad29…`. Migrations end at 0118, and `goods_receipts` was absent after migrating.
+- **Window:**
+  - Started 13:40:40 +08:00.
+  - Private mysqld PID 43335 on 127.0.0.1:33619, socket `/private/tmp/m025c4r/s.sock`, datadir `/private/tmp/m025c4r`.
+  - Released 13:42:01 +08:00: the PID exited, the datadir was removed, `lsof` showed no listener on 33619, and `pgrep mysqld` was empty.
+- **Steps:**
+  1. Preflight passed.
+  2. `validateApplicationConfiguration()` with the same 19 variables: `CONFIG_OK`.
+  3. Initialize, start, and create the users: exit 0.
+  4. `npm run migrate`: exit 0, 111 migrations up to 0118.
+  5. `cd server && npm test -- test/integration/purchasingLifecycle.integration.test.js`: **exit 0. Tests 4: 4 passed, 0 failed** (1.25 s). I1 to I4 all passed.
+- **HTTP in the test window**, from the server request log: **12 POSTs and 3 GETs**, as approved.
+- **Combined with the first C4 run:** 22 unit, 8 inquiry and 9 approval-command cases passed there, plus these 4. All C4 registrations have now passed, on two runs; the earlier failure stays on record.
+- **Evidence:** `/Users/sam/Documents/workspace/purchasing-evidence/c4r-2026-11-09/`, with `SHA256SUMS` of 23 entries. It holds the logs, exit files, the env used, the mysqld error log, and the server system and request logs.
