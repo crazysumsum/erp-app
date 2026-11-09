@@ -21,6 +21,9 @@ export class InventoryLookupService {
   prepareShipmentIssueOutcomeReadInTransaction(tx,session){return this.fulfillment.prepareShipmentIssueOutcomeReadInTransaction(tx,session);}
   readShipmentIssueOutcomeInTransaction(tx,context){return this.fulfillment.readShipmentIssueOutcomeInTransaction(tx,context);}
   verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof){return this.fulfillment.verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof);}
+  prepareShipmentReversalOutcomeReadInTransaction(tx,session){return this.fulfillment.prepareShipmentReversalOutcomeReadInTransaction(tx,session);}
+  readShipmentReversalOutcomeInTransaction(tx,context){return this.fulfillment.readShipmentReversalOutcomeInTransaction(tx,context);}
+  verifyShipmentReversalOutcomeProofInTransaction(tx,session,proof){return this.fulfillment.verifyShipmentReversalOutcomeProofInTransaction(tx,session,proof);}
   async #authorize(tx,permission="fulfillment.operation") {
     const current=this.fulfillment.assertTransaction(tx),claims=current.auth?.claims,actorId=Number(claims?.sub);
     if(!claims||!Number.isSafeInteger(actorId)||actorId<1||!Array.isArray(claims.roles)||!Array.isArray(claims.permissions))throw inventoryError("PERMISSION_STALE");
