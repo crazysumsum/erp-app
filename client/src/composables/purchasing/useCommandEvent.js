@@ -18,6 +18,9 @@ export function useCommandEvent() {
       uncertain.value = false;
       return result;
     } catch (error) {
+      // 結果未確定之後重試，密碼重新驗證被拒（403 PASSWORD_INVALID）只係今次認證失敗，證明唔到原交易冇成功：
+      // 保留原 intent（eventId 同 payload）同未確定狀態，等用家用正確密碼重試同一操作。
+      if (uncertain.value && error.code === "PASSWORD_INVALID") throw error;
       uncertain.value = UNCERTAIN.includes(error.code) || error.status >= 500;
       if (!uncertain.value) intent = null;
       throw error;

@@ -102,7 +102,7 @@ describe("TASK-024 審批快照及決定", () => {
   });
 
   it("拒絕要原因；出錯保留原因清密碼；未確定只准同一動作用同一 eventId 重試", async () => {
-    purchasing.rejectPurchaseOrder.mockRejectedValueOnce(apiError("請確認你目前的密碼", { code: "PASSWORD_INVALID", status: 401 }))
+    purchasing.rejectPurchaseOrder.mockRejectedValueOnce(apiError("請確認你目前的密碼", { code: "PASSWORD_INVALID", status: 403 }))
       .mockRejectedValueOnce(apiError("逾時", { code: "TIMEOUT" }))
       .mockResolvedValue({ id: 8, number: pending.number, status: "DRAFT", version: 4, replayed: false });
     await open("/purchasing/purchase-orders/8", [VIEW, APPROVAL]);
@@ -143,7 +143,7 @@ describe("TASK-024 採購設定", () => {
   it("顯示目前值同紀錄；改設定送 version、原因同密碼，出錯保留原因清密碼", async () => {
     expect(settingsPage.requires.permissions).toEqual(["purchasing.settings"]);
     expect(settingsPage.menu.group).toBe("purchasingReceiving");
-    purchasing.updateSettings.mockRejectedValueOnce(apiError("請確認你目前的密碼", { code: "PASSWORD_INVALID", status: 401 }))
+    purchasing.updateSettings.mockRejectedValueOnce(apiError("請確認你目前的密碼", { code: "PASSWORD_INVALID", status: 403 }))
       .mockResolvedValue({ requirePoApproval: true, version: 4, replayed: false });
     await open("/purchasing/settings", ["purchasing.settings"]);
     expect(wrapper.text()).toContain("目前：不需審批");

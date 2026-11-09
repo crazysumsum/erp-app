@@ -61,7 +61,7 @@ async function decide(action) {
     emit("decided", { action, result });
   } catch (error) {
     stale.value = RELOAD.includes(error.code);
-    errorMessage.value = command.uncertain.value ? "結果尚未確認；請再輸入密碼，重試同一操作以確認結果。" : error.message || "操作失敗";
+    errorMessage.value = command.uncertain.value ? `${error.code === "PASSWORD_INVALID" ? `${error.message}。` : ""}結果尚未確認；請再輸入密碼，重試同一操作以確認結果。` : error.message || "操作失敗";
   } finally {
     password.value = "";
     pending.value = null;

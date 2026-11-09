@@ -54,7 +54,7 @@ async function save() {
     await load();
   } catch (failure) {
     stale.value = failure.code === "VERSION_CONFLICT";
-    saveError.value = command.uncertain.value ? "結果尚未確認；請再輸入密碼，重試同一操作以確認結果。" : failure.message || "儲存失敗";
+    saveError.value = command.uncertain.value ? `${failure.code === "PASSWORD_INVALID" ? `${failure.message}。` : ""}結果尚未確認；請再輸入密碼，重試同一操作以確認結果。` : failure.message || "儲存失敗";
   } finally {
     password.value = "";
     saving.value = false;
