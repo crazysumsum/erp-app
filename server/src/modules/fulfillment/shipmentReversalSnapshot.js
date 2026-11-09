@@ -3,6 +3,9 @@ import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySq
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
 import { assertShipmentConfirmationHistory } from "./shipmentConfirmationWitness.js";
+import { assertFulfillmentTransaction } from "./FulfillmentTransactionService.js";
+import { lockFulfillmentRowsInTransaction } from "./FulfillmentLockService.js";
+import { assertClaimQuantities,assertFulfillmentQuantities } from "./fulfillmentQuantityMath.js";
 
 const conflict=()=>{throw fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");};
 const unavailable=()=>{throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");};
@@ -68,6 +71,70 @@ function assertOriginalShip(snapshot,operations,history,audits){
  assertOriginalIssueSet(snapshot);
 }
 
+async function assertOriginalShipInTransaction(tx,snapshot){
+ const shipmentId=id(snapshot.shipment.id),eventId=snapshot.shipment.confirmation_event_id;
+ const [operations]=await tx.query("SELECT id,event_id,operation_type,target_type,target_id,payload_hash,status,result_json,lease_owner,lease_expires_at,next_attempt_at,attempt_count,correlation_id,completed_at,initiated_by,public_error_code,public_error_details FROM fulfillment_operation_requests WHERE event_id=? LIMIT 2",[eventId]);
+ const [history]=await tx.query("SELECT shipment_id,sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action IN ('CONFIRM_START','CONFIRM') ORDER BY sequence_no LIMIT 3",[shipmentId,eventId]);
+ const [audits]=await tx.query("SELECT target_type,target_id,action,event_id,correlation_id,actor_user_id,after_summary FROM fulfillment_audit_logs WHERE target_type='SHIPMENT' AND target_id=? AND action='SHIP' AND event_id=? AND JSON_UNQUOTE(JSON_EXTRACT(after_summary,'$.status'))='SHIPPED' ORDER BY id LIMIT 2",[shipmentId,eventId]);
+ assertOriginalShip(snapshot,operations,history,audits);
+}
+
+function assertLockedReversalQuantities(snapshot,totals){
+ const {root,lines,claims,allocations}=snapshot,byLine=indexed(lines,"id"),byTotal=indexed(totals,"fulfillment_line_id"),sum=(rows,field)=>rows.reduce((total,row)=>total+integer(row[field]),0n);
+ if(byTotal.size!==byLine.size)conflict();
+ for(const claim of claims){
+  assertClaimQuantities({original:id(claim.original_claimed_quantity),active:integer(claim.active_claimed_quantity).toString(),released:integer(claim.released_quantity).toString(),consumed:integer(claim.consumed_quantity).toString(),reversed:integer(claim.reversed_quantity).toString()});
+  if(id(claim.fulfillment_id)!==id(root.id)||!byLine.has(id(claim.fulfillment_line_id))||integer(claim.active_claimed_quantity)!==0n||integer(claim.reversed_quantity)!==0n||claim.status!==(integer(claim.consumed_quantity)>0n?"CONSUMED":"RELEASED"))conflict();
+ }
+ assertFulfillmentQuantities("SHIPPED",lines.map(line=>{
+  const members=claims.filter(row=>id(row.fulfillment_line_id)===id(line.id)),legs=allocations.filter(row=>id(row.fulfillment_line_id)===id(line.id)),total=byTotal.get(id(line.id));
+  if(!total||integer(total.invalid)!==0n||!members.length||members.length>50||legs.length>50||
+     integer(total.allocated)!==integer(line.allocated_base_quantity)||integer(total.picked)!==integer(line.picked_base_quantity)||sum(members,"original_claimed_quantity")!==integer(line.planned_base_quantity)||sum(members,"consumed_quantity")!==integer(line.shipped_base_quantity)||sum(members,"released_quantity")!==integer(line.short_base_quantity))conflict();
+  return {planned:id(line.planned_base_quantity),allocated:integer(line.allocated_base_quantity).toString(),released:integer(total.released).toString(),picked:integer(line.picked_base_quantity).toString(),short:integer(line.short_base_quantity).toString(),shipped:integer(line.shipped_base_quantity).toString(),reversed:integer(line.reversed_base_quantity).toString()};
+ }));
+}
+
+// Called after the actual Inventory preclaim and Sales locks, never inside the RR advisory.
+export async function readLockedShipmentReversalSnapshot(database,tx,{request,reversalId,fulfillmentId,actorId}){
+ assertFulfillmentTransaction(database,tx);
+ const [root]=await lockFulfillmentRowsInTransaction(tx,"fulfillments",[fulfillmentId]);
+ const children=async(table,column,parent,maximum)=>{
+  const [rows]=await tx.query(`SELECT id FROM ${table} WHERE ${column}=? ORDER BY id LIMIT ${maximum+1}`,[parent]);
+  if(rows.length>maximum)conflict();
+  return lockFulfillmentRowsInTransaction(tx,table,rows.map(row=>row.id));
+ };
+ const lines=await children("fulfillment_lines","fulfillment_id",root.id,100);
+ const claims=await children("fulfillment_line_reservation_claims","fulfillment_id",root.id,5000);
+ const [allocationIds]=await tx.query("SELECT id FROM fulfillment_allocations WHERE fulfillment_id=? AND picked_base_quantity>0 ORDER BY id LIMIT 5001",[root.id]);
+ if(allocationIds.length>5000)conflict();
+ const allocations=await lockFulfillmentRowsInTransaction(tx,"fulfillment_allocations",allocationIds.map(row=>row.id));
+ const [shipment]=await lockFulfillmentRowsInTransaction(tx,"shipments",[request.target.id]);
+ const shipmentLines=await children("shipment_lines","shipment_id",shipment.id,100);
+ const [reversal]=await lockFulfillmentRowsInTransaction(tx,"shipment_reversals",[reversalId]);
+ const [issues]=await tx.query("SELECT *,DATE_FORMAT(expiry_date_snapshot,'%Y-%m-%d') AS expiry_date_snapshot FROM shipment_issue_details WHERE shipment_id=? ORDER BY id LIMIT 5001 FOR UPDATE",[shipment.id]);
+ if(root.status!=="SHIPPED"||id(root.active_shipment_id)!==id(shipment.id)||shipment.status!=="REVERSING"||Number(shipment.version)!==request.payload.version+1||
+    id(shipment.fulfillment_id)!==id(root.id)||["sales_order_id","customer_id","warehouse_id"].some(field=>id(shipment[field])!==id(root[field]))||
+    shipment.reversal_event_id!==request.eventId||shipment.correlation_id!==request.correlationId||reversal.event_id!==request.eventId||id(reversal.shipment_id)!==id(shipment.id)||
+    reversal.status!=="REVERSING"||Number(reversal.version)!==1||reversal.correlation_id!==request.correlationId||id(reversal.created_by)!==actorId||
+    reversal.reason!==request.payload.reason||Number(reversal.goods_under_company_control)!==1||Number(reversal.goods_returned_to_original_bins)!==1||
+    reversal.completed_at!==null||reversal.failure_code!==""||!lines.length||lines.length!==Number(root.line_count)||shipmentLines.length!==Number(shipment.line_count)||lines.length!==shipmentLines.length||issues.length>5000)conflict();
+ const [archivedRoot]=await tx.query("SELECT id FROM fulfillments_archive WHERE id=? LIMIT 1",[root.id]);
+ const [archivedShipment]=await tx.query("SELECT id FROM shipments_archive WHERE id=? LIMIT 1",[shipment.id]);
+ const [details]=await tx.query("SELECT id FROM shipment_reversal_details WHERE shipment_id=? LIMIT 1",[shipment.id]);
+ const [effective]=await tx.query("SELECT id FROM shipment_reversals WHERE effective_shipment_id=? ORDER BY id LIMIT 2",[shipment.id]);
+ const [history]=await tx.query("SELECT actor_user_id,from_status,to_status,version_after,reason FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action='REVERSE_START' LIMIT 2",[shipment.id,request.eventId]);
+ if(archivedRoot.length||archivedShipment.length||details.length||effective.length!==1||id(effective[0].id)!==id(reversal.id)||
+    history.length!==1||id(history[0].actor_user_id)!==actorId||history[0].from_status!=="SHIPPED"||history[0].to_status!=="REVERSING"||Number(history[0].version_after)!==request.payload.version+1||history[0].reason!==request.payload.reason||
+    issues.some(row=>row.reversal_movement_id!==null)||lines.some(row=>integer(row.reversed_base_quantity)!==0n)||shipmentLines.some(row=>integer(row.reversed_base_quantity)!==0n))conflict();
+ const snapshot={root,shipment,reversal,lines,shipmentLines,claims,allocations,issues};
+ if(!uuid(shipment.confirmation_event_id))unavailable();
+ // Held root/children fence their writers; aggregate all released history without imposing the active-leg cap on it.
+ const [totals]=await tx.query("SELECT fulfillment_line_id,SUM(allocated_base_quantity) AS allocated,SUM(released_base_quantity) AS released,SUM(picked_base_quantity) AS picked,SUM(CASE WHEN allocated_base_quantity<>released_base_quantity+picked_base_quantity OR (picked_base_quantity>0 AND status<>'CONSUMED') OR (picked_base_quantity=0 AND status<>'RELEASED') THEN 1 ELSE 0 END) AS invalid FROM fulfillment_allocations WHERE fulfillment_id=? GROUP BY fulfillment_line_id ORDER BY fulfillment_line_id",[root.id]);
+ assertLockedReversalQuantities(snapshot,totals);
+ await assertOriginalShipInTransaction(tx,snapshot);
+ return snapshot;
+}
+
 // Historical SHIP witness only; E_R terminal, eligibility and the writer's lock/fence remain separate.
 export async function readShipmentReversalSnapshot(database,shipmentId){
  fulfillmentInteger(shipmentId);
@@ -92,12 +159,8 @@ export async function readShipmentReversalSnapshot(database,shipmentId){
   const [issues]=await tx.query("SELECT *,DATE_FORMAT(expiry_date_snapshot,'%Y-%m-%d') AS expiry_date_snapshot FROM shipment_issue_details WHERE shipment_id=? ORDER BY shipment_line_id,id LIMIT 5001",[shipmentId]);
   if(sourceClaims.length>5000||allocations.length>5000||issues.length>5000)conflict();
   if(!uuid(shipment.confirmation_event_id))unavailable();
-  const [operations]=await tx.query("SELECT id,event_id,operation_type,target_type,target_id,payload_hash,status,result_json,lease_owner,lease_expires_at,next_attempt_at,attempt_count,correlation_id,completed_at,initiated_by,public_error_code,public_error_details FROM fulfillment_operation_requests WHERE event_id=? LIMIT 2",[shipment.confirmation_event_id]);
-  const [history]=await tx.query("SELECT shipment_id,sequence_no,from_status,to_status,action,event_id,version_after,actor_user_id FROM shipment_status_history WHERE shipment_id=? AND event_id=? AND action IN ('CONFIRM_START','CONFIRM') ORDER BY sequence_no LIMIT 3",[shipmentId,shipment.confirmation_event_id]);
-  // Phase A also records SHIP/SHIPPING; only the terminal SHIPPED audit witnesses the complete Issue set.
-  const [audits]=await tx.query("SELECT target_type,target_id,action,event_id,correlation_id,actor_user_id,after_summary FROM fulfillment_audit_logs WHERE target_type='SHIPMENT' AND target_id=? AND action='SHIP' AND event_id=? AND JSON_UNQUOTE(JSON_EXTRACT(after_summary,'$.status'))='SHIPPED' ORDER BY id LIMIT 2",[shipmentId,shipment.confirmation_event_id]);
   const snapshot={root,shipment,lines,shipmentLines,claims:sourceClaims,allocations,issues};
-  assertOriginalShip(snapshot,operations,history,audits);
+  await assertOriginalShipInTransaction(tx,snapshot);
   return snapshot;
  },{isolationLevel:"REPEATABLE READ"});
 }
