@@ -1179,7 +1179,8 @@
         "TC-035 actual CSV archived duplicate retains null Active order ID and archived result routing",
         "TC-041 actual malformed precheck reaches terminal completion and becomes eligible for file retention",
         "TC-038 same-currency Draft creation and update cannot invert the master and line-gap locks",
-        "TC-035 identifier controls cannot starve valid peers or the next registered worker job"
+        "TC-035 identifier controls cannot starve valid peers or the next registered worker job",
+        "TC-035 real registered worker completes bounded50MiB/100000-row ingestion inside its unchanged30-second deadline"
       ],
       "capacityIds": [
         "audit-14"
