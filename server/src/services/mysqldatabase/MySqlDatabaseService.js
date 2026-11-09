@@ -40,7 +40,8 @@ export function getActiveTransactionIsolation(executor) {
 // 可重試的 503，而不是一個看起來像 bug 的 500——監控上的意義也完全不同。
 const OVERLOADED_CODES = new Set([
   "DATABASE_POOL_QUEUE_FULL",
-  "DATABASE_CONNECTION_TIMEOUT"
+  "DATABASE_CONNECTION_TIMEOUT",
+  "DATABASE_EVENT_ADMISSION_UNAVAILABLE"
 ]);
 
 export class MySqlDatabaseOperationError extends ApplicationError {

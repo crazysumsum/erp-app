@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 372,
+  "revision": 373,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-003",
-  "current_task": "TASK-027",
+  "current_phase": "PHASE-004",
+  "current_task": "TASK-036",
   "baseline": {
     "design": "5f5568a32688332add8ec23710628a7fc0eb3b04961b505ab9124686ca8c14bb",
     "plan": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
@@ -66,7 +66,7 @@
     "TASK-033": "IN_PROGRESS",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
-    "TASK-036": "PENDING",
+    "TASK-036": "IN_PROGRESS",
     "TASK-037": "PENDING",
     "TASK-038": "PENDING",
     "TASK-039": "PENDING",
@@ -4160,6 +4160,24 @@
       "scope": [
         "Existing deadline file fe979bbec0c5a847b74da4e3821abb972e3ee4cd, one corrected rollback case;15originalregistrations/timers retained",
         "P2receipt24to25/overall95to96,0newcase/data/time/worker/CIattempt"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-TASK036-MANAGED-EVENT-LOCAL-20261109",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PM user01a1bed1-3a14-7db1-9e9e-ecbc10aa93fe directly read",
+      "decision": "APPROVED",
+      "source_ref": "Actual PM turn01a1bed1-39b7-7f61-86c5-db595bb93cb5 call_1501354670804769a0f370fc4e9223f7 item1: A：批准限定契約及本地候選（建議）. TL technical boundary in external task036-joint-admission-delta-review-20261109.md. Original accepted Doc99 98bf8357/c1c5d729e71b7b583b13898ea161f9116768cb8e5f2368bf7ed01cfc5aaace2e.",
+      "recorded_at": "2026-11-09T06:00:26.346021+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b916c8fce891dd28d1679569cfaf974740ad6a5bb56d4d7bf45523473afa931",
+      "code_commit": "98bf835708731f6728658e3d1f5043f00174d30f",
+      "scope": [
+        "Local consumed TASK036 Job/loader/event admission/three-party proof/takeover/fresh PhaseB source and canonical documents only",
+        "TL-selected same-connection pre-BEGIN event mutex and limited managed identity compatibility; PM coordinates owner increments",
+        "No new/executed test, parser/lint/build/validator/import, DB/app/browser, CI, push, new table, data migration or public activation"
       ],
       "expires_at": null
     }
@@ -11404,5 +11422,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PMtrustedadminhasregistered/readbackexactreceiptsandexplicitlyreleasedpublication; no furtheradminwait. DeliverfinaldoccheckpointHEAD/tree+Inventory71receipt5568d01435732cff046fac62354291a94cdfaec083f6a40645445edc6e35328d+P225receipt173cdbf252342be1c943a8bb8f54719c25ce595521e50081105ed46f4c2fed5e toPMtrustedadmin. PMactualtrustedadminreleaseexec-2981277f-657f-4abf-896b-f4334854c0bb nowobserved: bothdigestsregistered/readback,unchangedverifier108reviewed/0capacityPASS. Completeactualindependentreview+doccheckpoint,verifyonlydocdelta/pinsunchanged,thenbranchpush/Draftwithoutnewapproval. Rootsolepublisher; normalcontrollerfunctionalPRCIonceonly; admission/CI failurestop/reportbeforechange/retry. No merge/mainCI/manualdispatch/NFR. Requireactual4shardJUnit166/230floors/0unexpectedskip,P1P2exact2each,allcoverage/checks/reviews; TASK027-033/DEF029030notdone. Native remainsSTOPPED; postUATNFRseparate."
+  "next_safe_action": "Current TASK036 source-only local stack starts from 98bf8357/productmain06caf911. First interface/caller commit b0c2c907 is delivered to PM/Inventory/Sales, not runtime qualified. Finish real private Recovery consumer, integrate only reviewed owner commits and obtain TL actual combined-source review. Historical baseline/evidence above remain historical and do not qualify this new candidate. R1 own REVERSE pair and R2 controlled503 fixes are in the current local source increment. No TASK036 DONE, tests/DB/CI/push or public activation; full verification still NOT_RUN and needs exact PM/Sam admission. Unverified writer topology/membership/downstream remains UNKNOWN. Non-functional validation post-UAT only; original20second/all safety limits remain."
 }
