@@ -2,11 +2,11 @@
   "version": 1,
   "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"A、B、C1、C2、C4 全部批准，C3、C5 暫緩\", answering the approval package docs/purchasing_receiving_management/implementation/P2_approval_package_2026-11-09.md (sha256 f1f80354…). C4 approves, against source 2cb6fe60: 22 unit registrations in server/test/purchasing/purchaseOrderLifecycleService.test.js, 4 integration registrations (I1-I4 as reachable now) in server/test/integration/purchasingLifecycle.integration.test.js, and one changed assertion in purchasingInquiry.integration.test.js (lines 265-266). B approves the planning patch (sha256 25c9da17…) that changed 05_development_tasks.md and 08_traceability.json, which invalidates purchasing-task024-backend.json as a whole, so its 21 files are re-pinned here; Sam's earlier decisions recorded in that receipt still cover their content. This decision does not authorize the agent to publish the digest",
   "purpose": "Confirmed withdraw and cancel fail closed with 503 and write nothing while no authoritative GR fact exists, and are not offered in allowedActions; close remaining on PARTIALLY_RECEIVED closes ordered minus net per selected or outstanding line, reaches CLOSED only when nothing is outstanding, writes history only on the status change, touches no Inventory rows, refuses bad lines, view-only users and a missing reason, and replays the same key; the pure derivation and the in-transaction guards are pinned with fakes; the TASK-022 to TASK-024 backend cases stay pinned",
-  "data": "Unit: fakes only. Integration: 6 POs with 9 lines in total, created as drafts over HTTP and placed in state by SQL; 3 users with minimal roles per file; one supplier, item, UOM, SKU and SKU-UOM per file; the HKD seed. No fixture files",
-  "concurrency": "1",
+  "data": "Unit: fakes only, 22 registrations. Integration, 4 registrations sharing one application and pool per file: 2 users (maker with purchasing.view and purchasing.mgmt; viewer with purchasing.view and purchasing.approval, also the assigned approver), one supplier, item, UOM, SKU and SKU-UOM, and the HKD seed; 6 POs with 9 lines written by SQL, one pending approval created in-process by PurchaseApprovalService; HTTP is exactly 12 lifecycle POSTs and 3 detail GETs, with no setup HTTP. No fixture files",
+  "concurrency": "Within a case: 1, with no concurrent requests. Runner workers are unchanged: the existing server jobs keep node --test's default file concurrency",
   "repetitions": "1",
   "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
-  "trigger": "Routine correctness regression on every PR and push to main, in the existing server jobs",
+  "trigger": "The existing ci.yml triggers, as approval package C4 states: every admitted PR dispatch, every push to main, and the weekly schedule on Monday 02:17 UTC (10:17 Hong Kong time), in the existing server jobs",
   "cost": "Not measured. A 2026-11-06 local run of three Purchasing integration files with 23 cases took 12.5 s; that is history, not a promise. No new job and no capacity workload",
   "files": [
     {
@@ -283,7 +283,7 @@
     {
       "path": "server/test/purchasing/purchaseOrderLifecycleService.test.js",
       "mode": "100644",
-      "blob": "ffad95ebca51421b0c68d506d062b083f20b269f",
+      "blob": "8ce506481df6b3cc72dcb6c241720b3962c2a06f",
       "kind": "functional",
       "cases": [
         "TASK-025 U1 derivedStatus：${name}",
@@ -298,7 +298,7 @@
     {
       "path": "server/test/integration/purchasingLifecycle.integration.test.js",
       "mode": "100644",
-      "blob": "c54d300dbdf6ddb7d5e1d597d44f88225c886ced",
+      "blob": "3889244c96e1f57ecbbca45d39183855291b6ade",
       "kind": "functional",
       "cases": [
         "TASK-025 I1 撤回確認：未有權威 GR 事實就 503，乜都唔寫，亦唔宣告呢個動作",
