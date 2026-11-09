@@ -5,7 +5,7 @@
  * 呢度唔驗並發。
  * Fixture（全檔共用一次）：
  * - 2 名用戶：maker（view＋mgmt）、viewer（view＋approval，兼做 pending 嘅指定審批人）。
- * - PO 同 Line 用 SQL 直接寫（gross = net + reversed）。
+ * - PO 同 Line 用 SQL 直接寫（gross = net + reversed；表頭金額 = 每行 2.5 × 行數）。
  * - Pending approval 用真 PurchaseApprovalService 喺 transaction 入面建立，快照同 hash 都有效。
  * 完咗刪走用戶、角色同 token version，關 application；PO 同主檔留喺私人 DB，隨 DB 一齊棄置。
  */
@@ -20,6 +20,15 @@ import { PurchaseApprovalService } from "../../src/modules/purchasing/PurchaseAp
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const REASON = "生命週期測試原因", MONTH = "209810";
 let shared = null;
+
+/** 倒序逐個試一次已登記嘅清理（最先登記嘅 application.shutdown 一定最後試到），任何一步失敗都照試其餘，回傳全部錯誤。 */
+async function runCleanups(cleanups) {
+  const errors = [];
+  for (const cleanup of [...cleanups].reverse()) {
+    try { await cleanup(); } catch (error) { errors.push(error); }
+  }
+  return errors;
+}
 
 async function setup() {
   const cleanups = [];
@@ -53,7 +62,7 @@ async function setup() {
       const [[{ next }]] = await db.query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next FROM purchase_orders WHERE document_year_month = ?", [MONTH]);
       const id = await insert("purchase_orders", { po_number: `PO-${MONTH}-${String(next).padStart(6, "0")}`, document_year_month: MONTH, sequence_no: Number(next), supplier_id: supplier,
         supplier_code_snapshot: `PLC-${tag}`, supplier_name_snapshot: "Lifecycle Supplier", currency_code: "HKD", currency_name_snapshot: "HK Dollar", currency_decimal_places_snapshot: 2,
-        order_date: "2098-10-01", buyer_id: maker.id, buyer_label: "Buyer", total_amount: "5.0000", subtotal_amount: "5.0000", created_at: now, updated_at: now,
+        order_date: "2098-10-01", buyer_id: maker.id, buyer_label: "Buyer", total_amount: (2.5 * received.length).toFixed(4), subtotal_amount: (2.5 * received.length).toFixed(4), created_at: now, updated_at: now,
         created_by: maker.id, created_by_label: "maker", updated_by: maker.id, updated_by_label: "maker" });
       for (const [index, net] of received.entries()) {
         await insert("purchase_order_lines", { purchase_order_id: id, line_number: index + 1, sku_id: sku, sku_code_snapshot: `PLC-${tag}`, sku_name_snapshot: "Lifecycle SKU",
@@ -90,16 +99,18 @@ async function setup() {
       [id, action]))[0][0].total);
     return { db, cleanups, command, read, order, pendingOrder, historyCount, succeeded, maker, viewer };
   } catch (error) {
-    for (const cleanup of cleanups.reverse()) await cleanup().catch(() => {});
-    throw error;
+    const cleanupErrors = await runCleanups(cleanups);
+    throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Lifecycle fixture setup failed and its cleanup also failed") : error;
   }
 }
 // 全檔只建一次（同一個 application／pool）；setup 失敗都喺 setup 入面清走已建立嘅嘢。
 const fixture = () => (shared ??= setup());
 after(async () => {
   if (!shared) return;
-  const { cleanups } = await shared;
-  for (const cleanup of cleanups.reverse()) await cleanup();
+  let state;
+  try { state = await shared; } catch { return; } // setup 失敗：已經喺 setup 入面清理過，錯誤亦已經由呼叫嘅 case 報告。
+  const errors = await runCleanups(state.cleanups);
+  if (errors.length) throw new AggregateError(errors, "Lifecycle fixture cleanup failed");
 });
 const failure = (result) => [result.status, result.body.error?.code];
 
