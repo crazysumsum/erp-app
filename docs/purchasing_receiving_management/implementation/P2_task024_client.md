@@ -613,3 +613,20 @@ Using vite dev instead of preview would need a much higher total. Approve, or ad
   4. close the browser and report the release time.
 
 **Tools:** `@playwright/cli` and one inline script for request 8 and the counters. No new runner.
+
+## C2 run (Sam's approval of 2026-11-09; the single grant is now used)
+
+- **Candidate:** `e2b22945e146da3ea4f8551e43de2963ee9799e6`. `client/src` is identical to `092c86dd`.
+- **Environment:** macOS arm64, Node v26.6.0, the default Vitest file workers.
+- **Window:** 2026-11-09 12:06:50 to 12:07:21 +08:00.
+
+| Step | Command | Exit | Result | `real` |
+| --- | --- | --- | --- | --- |
+| 1 | `cd client && npm test -- <the literal 7 files>` | 0 | 7 files, **150 of 150 passed** (Vitest duration 2.02 s) | 2.55 s |
+| 2 | `cd client && npx vite build` | 0 | built in 429 ms | 0.87 s |
+| 3 | `npx eslint client/src/pages/purchasing client/src/components/purchasing client/src/composables/purchasing client/src/services/purchasing.js` | 0 | no problems | 0.73 s |
+| 4 | `node .github/scripts/test-admission.mjs --static-only`, with the unpublished digests `9b21adb7…` (backend) and `776bc49d…` (this receipt) added locally only | 0 | "Trusted admission accepted 155 reviewed inputs at HEAD." | 2.83 s |
+
+- **Evidence:** `scratchpad/evidence-c2-2026-11-09/`, with logs, exit files and `SHA256SUMS` (8 entries). The scratchpad may be wiped.
+- **Still not covered:** Playwright (C3) and any browser evidence. This run is jsdom only.
+- **Earlier evidence:** the earlier failures and private mutants stay recorded as they were.
