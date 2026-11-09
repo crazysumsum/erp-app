@@ -739,7 +739,8 @@
       "path": "server/test/integration/fulfillmentInventoryStock.integration.test.js",
       "kind": "functional",
       "cases": [
-        "Existing approved case/helper ABI only, original scale/registrations/assertions/opt-in preserved."
+        "Existing approved case/helper ABI only, original scale/registrations/assertions/opt-in preserved.",
+        "P0 two native connections reject concurrent Issue admission and replay the committed event without duplicate effects"
       ],
       "mode": "100644",
       "blob": "eeb6075e6f714b795844b0dba62d68da8f5ca3ed"
@@ -1060,7 +1061,31 @@
       "blob": "a0f10c9085914754125289a4f60ef34bec3a08a5",
       "kind": "functional",
       "cases": [
-        "Original dormant safety suite ABI only; original double opt-in preserved. No new executions or changed data/loops/transactions; true Fulfillment alias admission and original pool1/barriers. NOT_RUN in this functional round."
+        "Original dormant safety suite ABI only; original double opt-in preserved. No new executions or changed data/loops/transactions; true Fulfillment alias admission and original pool1/barriers. NOT_RUN in this functional round.",
+        "ST041-S01 valid real HTTP Receipt rejects COUNTING/READY locked destination with no effects",
+        "ST041-S02 ordinary/Receiving/Customer Return native aliases keep fixed authority and caller rollback",
+        "ST041-S03 real HTTP Issue locks a later allocated Bucket and preserves entire Reservation",
+        "ST041-S04 ordinary and Fulfillment Issue entrypoints reach the same lock with distinct fixed callers",
+        "ST041-S05 Bin Move source lock rejects HTTP and caller-owned transaction without paired leg",
+        "ST041-S06 Bin Move destination lock protects existing and absent target Bucket",
+        "ST041-S07 whole Transfer Dispatch HTTP/native rejects a later locked source without partial transit",
+        "ST041-S08 whole Transfer Receive HTTP/native rejects later locked destination and no zero residue",
+        "ST041-S09 strong signed HTTP and native Adjustment IN/OUT respect active locks",
+        "ST041-S10 all six Status directions reject atomically under COUNTING and READY",
+        "ST041-S11 real server-derived paired Reversal retains safe rejection contract and no inverse legs",
+        "ST041-S12 original authorized reversible-writer replay stays identical after Start, new sources reject",
+        "ST041-S13 Start-first real processes make every current writer wait then reject persistent locks",
+        "ST041-S14 writer-first real waits produce Start snapshots including every committed final Bucket",
+        "ST041-S15 legitimate Draft create/replace and same-Draft Start races preserve exclusive ownership",
+        "ST041-S16 COUNTING locks survive actual process termination and fresh processes reject every writer",
+        "ST041-S17 READY frozen values survive fresh-process Post and Cancel with renewed native proof",
+        "ST041-S18 kill real Start before COMMIT proves no partial snapshot or persistent lock and retry once",
+        "ST041-S19 killed mid-Post after actual second Movement rolls all inventory and workflow back",
+        "ST041-S20 observed actual COMMIT with lost reply replays exact original scalar in fresh process",
+        "ST041-S21 kill Cancel after first real unlock retains entire own lockset and history",
+        "ST041-S22 actual Post/Post and both Post/Cancel orders serialize to one complete terminal winner",
+        "ST041-S23 foreign ownership and real-wait permission/device/JWT revocation cannot post or replay",
+        "ST041-S24 actual gain/loss/zero/notFound reconcile per Bucket/SKU/Warehouse, preserve commitments and Cancel"
       ]
     },
     {
@@ -1936,12 +1961,13 @@
     "source_product_unchanged": false,
     "local_batches_used": 0,
     "ci_rounds_used": 0,
-    "revision": 3,
-    "prior_draft_sha256": "d18e69d66b622b84066ea79821c55833a32432dbdf258e92c698d26f36d7b48d",
+    "revision": 4,
+    "prior_draft_sha256": "e64110385f140fc2f5743a53ec0e4eb33ea04073ea6f3f1a86e178dc04e08c28",
     "inherited_pins": 115,
     "current_pins": 136,
     "execution_hold": "Source slices independently accepted with zero Required. Final commit/tree composition readback, trusted non-author admission registration/readback and PM fresh exclusive MySQL slot required. This receipt does not authorize itself.",
     "approved_product_delta": "25047ec90bd4c401704cc9163f74081508b0348f",
-    "product_blob": "b17082b68b0455c496a94fc10be7193feea66497"
+    "product_blob": "b17082b68b0455c496a94fc10be7193feea66497",
+    "receipt_metadata_correction": "Add exact25 already-existing literal case names from trusted admin complete registration-blocked.json: Stock1 renamed existing case plus dormant ST04124. No test/product/tool blob or workload/exclusion change. Original failed static-admission record preserved; author did not rerun checker or tests."
   }
 }
