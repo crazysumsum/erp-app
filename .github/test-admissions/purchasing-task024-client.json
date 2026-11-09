@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"前端測試提案全部批准，TASK-025 可以開始\", answering the consolidated proposal in implementation/P2_task024_client.md: 6 new jsdom cases (4 in the new purchasingApprovals.test.js, 1 in purchasingPurchaseOrderForm.test.js, 1 in client/test/services/purchasing.test.js) and 2 changed existing cases (the lookupApprovers mock in purchasingPurchaseOrderForm.test.js and the TASK-021 navigation pin), in the existing client unit job on every PR. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json, which these changes invalidate as whole receipts, plus support pins for the new and changed pages. This decision does not authorize the agent to publish the digest",
+  "purpose": "The my-approvals page requests only the actor's pending list with paging and search and links to detail; the detail page shows the fixed approval snapshot, not the live PO, and shows decision controls only for allowedActions plus purchasing.approval; a failed decision keeps the reason, clears the password and retries an uncertain result with the same action and eventId; the settings page sends version, reason and password through the signed update and keeps the reason after an error; submit with approval on requires an approver and sends it; the TASK-018 to TASK-021 client behaviour stays pinned",
+  "data": "No database or network: mocked services, real discovered pages, and small inline objects of at most 1 approval and 1 line. No fixture files",
+  "concurrency": "1",
+  "repetitions": "1",
+  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
+  "trigger": "Routine correctness regression on every PR and push to main, in the existing client test job",
+  "cost": "Measured locally on 2026-11-09: the 7 Purchasing client test files, 121 cases, run in a few seconds together; the new file's 4 cases take about 0.1 s. CI not measured, estimated under 2 s added. No new job and no capacity workload",
+  "files": [
+    {
+      "path": "client/test/services/purchasing.test.js",
+      "mode": "100644",
+      "blob": "485a8c13fcc1565e1c55433eb096b9210203cb8e",
+      "kind": "functional",
+      "cases": [
+        "create、update、submit、copy 用 eventId 做 Idempotency-Key，body 原封不動",
+        "列表映射 DataTable，去走空 filter；detail 同 lookup 轉發 AbortSignal",
+        "明確結果之後下一次係新意圖、新 eventId",
+        "reset 之後唔會再用舊 intent",
+        "結果未確定（%j）就保留原 payload 同 eventId (it.each, 5 rows)",
+        "審批命令用 eventId 做 Idempotency-Key；設定更新要裝置簽章；待我審批映射 DataTable；approvers 回埋 requireApproval"
+      ]
+    },
+    {
+      "path": "client/test/components/purchasing/purchasingPurchaseOrderForm.test.js",
+      "mode": "100644",
+      "blob": "00fd9ba79a18f5ef49ac61c968f752ff0cce3e9c",
+      "kind": "functional",
+      "cases": [
+        "Total 係已 round Line Amount 之和；factor 換算同 server 一樣，唔整除就回 null",
+        "建立：帶入 Supplier 預設、預設 Buyer 係自己，只送可編輯欄位",
+        "用戶改過嘅貨幣同條款，換 Supplier 都唔蓋；未改過嘅照帶；地址一定跟新 Supplier",
+        "舊 Supplier 嘅預設遲返嚟唔會蓋住新 Supplier",
+        "預設值失效只係提示，用戶可以手動揀；Supplier 冇地址就唔送舊地址 ID",
+        "關閉主要地址之後唔送地址，再開返就送",
+        "修改：保留 Line ID 同 version，唔帶 Supplier 預設；Buyer 保持原本嗰位",
+        "修改：換 Supplier 唔蓋已儲存嘅貨幣同條款，但地址跟新 Supplier",
+        "舊搜尋遲返嚟唔會蓋住新結果",
+        "零價要原因先送得；有價就唔送原因",
+        "新增、排序、刪除都係按鈕；同 SKU 重複加都係新一行",
+        "條碼：搵到就揀，搵唔到提示；SKU 摘要顯示 Base UOM、tracking、效期",
+        "結果未確定：鎖住輸入，重試送一模一樣嘅 eventId 同內容",
+        "欄位錯誤對返去欄位，輸入保留；下一次係新 eventId",
+        "Version conflict：顯示最新版本、保留輸入、可以複製；載入要確認",
+        "Dirty 離開要確認（route 切換、同 route 換 query、瀏覽器關閉）；儲存之後唔再問",
+        "客戶端驗證擋住：零數量、超精度、唔整除 Base、交期早過訂單日期、冇明細",
+        "提交：未儲存唔准，摘要顯示「確認後可收貨」，送 version 同 eventId；結果未確定用同一 eventId 重試",
+        "提交被拒顯示行號；Version conflict 關 dialog 走 stale 路徑",
+        "選項載入失敗有重試；搜尋失敗有提示",
+        "數量 %s × 單價 %s（%i 位） (it.each, 9 rows)",
+        "審批開住：要揀審批人先可以提交審批，送 assignedApproverId 同 requestNote（§7.3）"
+      ]
+    },
+    {
+      "path": "client/src/components/purchasing/PurchaseOrderForm.vue",
+      "mode": "100644",
+      "blob": "46756f67da942965c44ba090da73c199574c6bd2",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/pages/purchasing/purchasingPurchaseOrderEditor.test.js",
+      "mode": "100644",
+      "blob": "72b4bbb6f588986a2f130cf2a5657a1f3d797d2c",
+      "kind": "functional",
+      "cases": [
+        "要 view 同 mgmt；採購員預設目前用戶；新單冇 document",
+        "儲存後取代歷史去編輯頁，warning 用文字顯示",
+        "要 view 同 mgmt；Draft 帶入 server 值",
+        "儲存：帶版本、重新讀取但表單唔 unmount，warning 有提示",
+        "儲存後重新讀取失敗：有訊息可重試，唔會留低舊版本繼續改",
+        "提交成功去詳情頁",
+        "版本衝突：輸入保留；確認後載入最新版本",
+        "改咗未存：離開要確認，拒絕就留低",
+        "%s：唔出表單，只有返回詳情 (it.each, 2 rows)",
+        "唔合法嘅 id %s 唔會打 API (it.each, 3 rows)",
+        "讀取失敗可重試"
+      ]
+    },
+    {
+      "path": "client/test/pages/purchasing/purchasingPurchaseOrderPages.test.js",
+      "mode": "100644",
+      "blob": "02b901e52a6bd5ccb7a193af6afad9a4eb36f2be",
+      "kind": "functional",
+      "cases": [
+        "只要 purchasing.view；無 mgmt 唔見新增同編輯，預設按更新時間倒序",
+        "mgmt 見新增；編輯跟 server 嘅 allowedActions",
+        "URL 還原全部 filter、頁碼同排序；未知 key 唔會送去 server",
+        "排序欄同頁碼唔合法就用預設",
+        "搜尋寫入 URL 並回到第 1 頁；清除篩選清走",
+        "供應商 ID 只接受安全正整數",
+        "舊 filter 嘅回應遲到，唔會蓋住新結果",
+        "風險有文字；進度同未收顯示 server 嘅準確數字",
+        "讀取失敗顯示重試，重試成功；空結果有提示",
+        "進度條 %s／%s 係 %s，超收唔超過 100%% (it.each, 6 rows)",
+        "只有 view：就算 server 有 action 都唔出寫入按鈕",
+        "mgmt：按鈕跟 server；非 Draft 冇編輯",
+        "%s 列印入口：%s（Viewer 都有） (it.each, 5 rows)",
+        "快照同目前主資料分開；冇分別就冇目前主資料區",
+        "每行分開顯示全部 Base 數量；零價同超收有文字；備註唔當 HTML",
+        "多行進度用 BigInt 加總，超過 2^53 都準",
+        "唔合法嘅 id %s 唔會打 API (it.each, 4 rows)",
+        "讀取失敗可重試，唔會出舊資料",
+        "權限變咗就重新讀，按鈕跟新權限",
+        "轉 PO 時舊回應遲到唔會蓋住新 PO",
+        "複製要先確認；取消就唔發",
+        "複製成功去新 PO，並顯示每個 warning",
+        "結果未確定：保留同一 eventId 重試，唔再問確認；期間唔可以開新複製",
+        "結果未確定時轉去另一張 PO：banner 清走，唔會用舊 eventId 複製新 PO",
+        "明確拒絕：留喺原頁，下次係新 eventId"
+      ]
+    },
+    {
+      "path": "client/test/pages/purchasing/purchasingPurchaseOrderPrint.test.js",
+      "mode": "100644",
+      "blob": "9bc2b595465675e37a964d4db4857ea6dfd48ef2",
+      "kind": "functional",
+      "cases": [
+        "purchasing.view 就可以印；內容用交易快照，唔用目前主資料",
+        "語意 table，100 行都喺度；PO 編號喺重複嘅表頭入面",
+        "%s 係正式版本，冇水印 (it.each, 4 rows)",
+        "Draft 有水印同文字，掣寫明係草稿",
+        "%s 唔准印 (it.each, 2 rows)",
+        "撳掣用瀏覽器列印，唔打任何 API",
+        "冇值就寫未設定；備註當文字",
+        "唔合法嘅 id %s 唔會打 API (it.each, 3 rows)",
+        "讀取失敗可重試，唔會出列印掣",
+        "列印 CSS：A4、表頭每頁重現、行唔切開、藏起 app 外框"
+      ]
+    },
+    {
+      "path": "client/test/pages/purchasing/purchasingNavigationErrors.test.js",
+      "mode": "100644",
+      "blob": "d4ecdbe82b390f543cdf9404f2995415e36a8de5",
+      "kind": "functional",
+      "cases": [
+        "有 purchasing.view 先見到群組，入面只有採購單",
+        "權限 %j 唔見群組 (it.each, 3 rows)",
+        "TASK-024：待我審批要 view＋approval、採購設定要 settings 先入選單；收貨頁未有入口；詳情、新增、編輯、列印唔入選單",
+        "群組已登記，排喺供應商同客戶之間，頁面通過啟動驗證",
+        "server 每個採購錯誤碼都有繁中訊息，唔係原文代碼",
+        "多個模組共用嘅訊息要啱採購：唔可以只講庫存，換算問題要叫用戶先檢查數量",
+        "HttpClient 用繁中訊息取代 server 文字，code 同 status 保留",
+        "未知 code 沿用 server 嘅公開訊息；冇訊息先用安全 fallback"
+      ]
+    },
+    {
+      "path": "client/config/menu.js",
+      "mode": "100644",
+      "blob": "e077c221ef97274bea1967ad2260140c2d2b3715",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/purchasing/PurchaseOrdersPage.vue",
+      "mode": "100644",
+      "blob": "a0db51f09d3d7392f3ce8466d8fe7acc9dddd82e",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/purchasing/PurchaseOrderDetailPage.vue",
+      "mode": "100644",
+      "blob": "d4bb5eeda0b09b5fa0eaf297f988711ae991582c",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/purchasing/PurchaseOrderCreatePage.vue",
+      "mode": "100644",
+      "blob": "ae34b43a3fcff83e55112943697cbf3f70c1df51",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/purchasing/PurchaseOrderEditPage.vue",
+      "mode": "100644",
+      "blob": "e8af0806120e70f3599d5d325ac425776a94466a",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/purchasing/PurchaseOrderPrintPage.vue",
+      "mode": "100644",
+      "blob": "25509da64ad43f3ac3083ae69ae5f8bd618c4dd8",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/components/purchasing/PurchaseOrderProgress.vue",
+      "mode": "100644",
+      "blob": "6448d69a80dde53cfdae2b0f5f90081d80055dcd",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/pages/purchasing/purchasingApprovals.test.js",
+      "mode": "100644",
+      "blob": "0c7b043a338594a907ffea66fba07aa380baa912",
+      "kind": "functional",
+      "cases": [
+        "要 view＋approval，入選單；送頁碼同搜尋，按處理入詳情；冇資料有空狀態",
+        "快照來自 approval.snapshot 唔係目前 PO；按鈕跟 allowedActions 同權限，mgmt 只見撤回",
+        "拒絕要原因；出錯保留原因清密碼；未確定只准同一動作用同一 eventId 重試",
+        "顯示目前值同紀錄；改設定送 version、原因同密碼，出錯保留原因清密碼"
+      ]
+    },
+    {
+      "path": "client/src/pages/purchasing/MyPurchaseOrderApprovalsPage.vue",
+      "mode": "100644",
+      "blob": "36be06b8069fc2b1c98592727384c5119475ea77",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/purchasing/PurchasingSettingsPage.vue",
+      "mode": "100644",
+      "blob": "853a25994d3e8fac7ac4fcb34a53e408d1c34140",
+      "kind": "support"
+    }
+  ]
+}
