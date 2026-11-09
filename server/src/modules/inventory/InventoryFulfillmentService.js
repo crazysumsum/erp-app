@@ -12,7 +12,7 @@ import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySq
 import { claimFulfillmentInventoryScope } from "./inventoryFulfillmentScope.js";
 import { FULFILLMENT_INVENTORY_COMMANDS } from "./inventoryFulfillmentConstants.js";
 import { postFulfillmentAllocationBatch } from "./inventoryFulfillmentAllocation.js";
-import { prepareFulfillmentIssueOutcome,finishFulfillmentIssueOutcome,markFulfillmentReconciliationRead,enterFulfillmentWriteMode } from "./inventoryFulfillmentOutcome.js";
+import { prepareFulfillmentIssueOutcome,finishFulfillmentIssueOutcome,markFulfillmentReconciliationRead,enterFulfillmentWriteMode,finishFulfillmentReversalOutcome } from "./inventoryFulfillmentOutcome.js";
 
 const OUTCOME_UNKNOWN_SOURCE_CODES=new Set(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR","ER_KEY_DOES_NOT_EXITS","INVENTORY_SOURCE_CONFLICT","INVENTORY_INPUT_INVALID","INVENTORY_QUANTITY_INVALID","INVENTORY_DEPENDENCY_UNAVAILABLE","ALLOCATION_STATE_CONFLICT"]);
 function unknownOutcomeSource(error){return OUTCOME_UNKNOWN_SOURCE_CODES.has(error?.cause?.code??error?.code);}
@@ -23,6 +23,8 @@ export class InventoryFulfillmentService {
   #reconciliationVerifier;
   #outcomeContexts=new WeakMap();
   #outcomeProofs=new WeakMap();
+  #reversalOutcomeContexts=new WeakMap();
+  #reversalOutcomeProofs=new WeakMap();
   constructor({database,time,logger,itemLookup,operations,locks,audit,reconciliationVerifier}={}) {
     this.database=database;this.context=database?.context;this.time=time;
     this.itemLookup=itemLookup??new ItemLookupService({database,time,logger});
@@ -82,6 +84,58 @@ export class InventoryFulfillmentService {
   async verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof){
     const read=this.#outcomeProofs.get(proof);
     if(!read||read.tx!==tx||read.session!==session||await this.#outcomeBinding(tx,session,"inventory.verify")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    return structuredClone(read.outcome);
+  }
+  async #reversalOutcomeBinding(tx,session,phase){
+    const current=this.assertTransaction(tx);
+    if(!this.#reconciliationVerifier)throw new TypeError("Trusted reversal reconciliation verifier required");
+    const source=await this.#reconciliationVerifier(tx,session,`reversal.inventory.${phase}`);
+    fulfillmentInventoryFields(source,["purpose","fulfillmentId","shipmentId","salesOrderId","customerId","warehouseId","eventId","actorId","scopeHash","correlationId","inventoryRequestHash","salesRequestHash","pickedLines","originalIssue"]);
+    const frozen=value=>value===null||typeof value!=="object"||Object.isFrozen(value)&&Object.values(value).every(frozen);
+    if(source.purpose!=="SHIPMENT_REVERSED"||!frozen(source)||!Array.isArray(source.pickedLines))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    for(const name of ["fulfillmentId","shipmentId","salesOrderId","customerId","warehouseId","actorId"])fulfillmentInventoryId(source[name]);
+    fulfillmentInventoryFields(source.originalIssue,["eventId","references"]);
+    const references=source.originalIssue.references;
+    if(!Array.isArray(references)||!references.length||references.length>5000)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    for(const reference of references){
+      fulfillmentInventoryFields(reference,["shipmentIssueId","originalMovementId","originalInventoryOperationId","inventoryAllocationId"]);
+      for(const name of ["shipmentIssueId","originalMovementId","originalInventoryOperationId","inventoryAllocationId"])fulfillmentInventoryId(reference[name]);
+    }
+    for(const name of ["shipmentIssueId","originalMovementId","inventoryAllocationId"]){
+      if(new Set(references.map(reference=>reference[name])).size!==references.length)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    }
+    for(const value of [source.scopeHash,source.inventoryRequestHash]){
+      if(typeof value!=="string"||!/^[a-f0-9]{64}$/u.test(value))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    }
+    for(const value of [source.eventId,source.originalIssue.eventId,source.correlationId]){
+      if(typeof value!=="string"||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(value))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    }
+    if(source.eventId===source.originalIssue.eventId||source.salesRequestHash!==null&&(typeof source.salesRequestHash!=="string"||!/^[a-f0-9]{64}$/u.test(source.salesRequestHash)))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const claims=current.auth?.claims;
+    if(String(claims?.sub)!==source.actorId)throw inventoryError("PERMISSION_STALE");
+    const actor=await assertActorFresh(tx,{actorId:claims.sub,claimedRoles:claims.roles,claimedPermissions:claims.permissions});
+    if(!actor.username||!["fulfillment.view","fulfillment.reverse"].every(permission=>actor.permissions.includes(permission)))throw inventoryError("PERMISSION_STALE");
+    return source;
+  }
+  async prepareShipmentReversalOutcomeReadInTransaction(tx,session){
+    const source=await this.#reversalOutcomeBinding(tx,session,"prepare");markFulfillmentReconciliationRead(tx);
+    let prepared;try{prepared=await prepareFulfillmentIssueOutcome(tx,source);}catch(error){if(!unknownOutcomeSource(error))throw error;prepared={available:false,rows:[]};}
+    if(await this.#reversalOutcomeBinding(tx,session,"prepare")!==source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const context=Object.freeze({});this.#reversalOutcomeContexts.set(context,{tx,session,source,prepared,finished:false});return context;
+  }
+  async readShipmentReversalOutcomeInTransaction(tx,context){
+    const read=this.#reversalOutcomeContexts.get(context);
+    if(!read||read.tx!==tx)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const source=await this.#reversalOutcomeBinding(tx,read.session,"finish");
+    if(source!==read.source||read.finished)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    read.finished=true;let outcome;
+    try{outcome=await finishFulfillmentReversalOutcome(tx,read.prepared,read.source);}catch(error){if(!unknownOutcomeSource(error))throw error;outcome={state:"UNKNOWN"};}
+    if(await this.#reversalOutcomeBinding(tx,read.session,"finish")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const proof=Object.freeze({state:outcome.state});this.#reversalOutcomeProofs.set(proof,{...read,outcome});return proof;
+  }
+  async verifyShipmentReversalOutcomeProofInTransaction(tx,session,proof){
+    const read=this.#reversalOutcomeProofs.get(proof);
+    if(!read||read.tx!==tx||read.session!==session||await this.#reversalOutcomeBinding(tx,session,"verify")!==read.source)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
     return structuredClone(read.outcome);
   }
   async claimFulfillmentBatchInTransaction(tx,{action,command}) {

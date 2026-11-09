@@ -1,6 +1,7 @@
 import { BaseService } from "../../framework/services/BaseService.js";
 import { ShipmentConfirmationService,normalizeShipmentConfirmationCommand } from "../../modules/fulfillment/ShipmentConfirmationService.js";
 import { ShipmentInquiryService } from "../../modules/fulfillment/ShipmentInquiryService.js";
+import { ShipmentReversalService } from "../../modules/fulfillment/ShipmentReversalService.js";
 import { FulfillmentTransactionService } from "../../modules/fulfillment/FulfillmentTransactionService.js";
 import { requireFulfillmentActor } from "../../modules/fulfillment/fulfillmentAuthorization.js";
 import { fulfillmentInteger } from "../../modules/fulfillment/fulfillmentValidation.js";
@@ -14,6 +15,7 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
  #closed=false;
  #confirmation;
  #inquiry;
+ #reversal;
  constructor(input={}){
   super(input);this.database=this.services.require("mysqldatabase");
   const options={database:this.database,time:this.services.require("time"),logger:this.services.require("logging").logger};
@@ -84,6 +86,16 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
    this.#events.set(intent.eventId,record);this.#launch(record,started,claims);launched=true;
    return await this.#wait(record,deadline,context?.signal);
   }finally{if(!launched)this.#finish(record);}
+ }
+ async prepareReversalReadOnly(shipmentId,input,started){
+  const context=this.database.context?.get(),record=this.#beginRequest(context);
+  try{
+   // Keep the original-instance capability private; request auth is read afresh through this shared context.
+   this.#reversal??=new ShipmentReversalService({database:this.database,time:this.time,operationLeaseMs:this.#confirmation.operations.leaseMs,sales:this.#confirmation.sales,inventoryLookup:this.#confirmation.inventoryLookup});
+   const preparation=await this.database.context.storage.run({...context,signal:record.controller.signal,databaseTransaction:null},()=>this.#reversal.prepareReversalReadOnly(shipmentId,input,started));
+   if(this.#closed||record.controller.signal.aborted||performance.now()>=record.deadline)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+   return preparation;
+  }finally{this.#finish(record);}
  }
  async shutdown(){this.#closed=true;const active=[...this.#active];for(const record of active)record.controller.abort();await Promise.all(active.map(record=>record.done));}
 }

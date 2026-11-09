@@ -1,5 +1,5 @@
 import { inventoryOperationHash } from "./InventoryOperationService.js";
-import { readFulfillmentInventoryBatch } from "./inventoryFulfillmentReceipts.js";
+import { readFulfillmentInventoryBatch,readOriginalFulfillmentIssueBatch } from "./inventoryFulfillmentReceipts.js";
 import { readFulfillmentAllocationScope } from "./inventoryFulfillmentAllocationPreparation.js";
 import { fulfillmentInventoryFields,fulfillmentInventoryId,fulfillmentInventoryVersion } from "./inventoryFulfillmentValidation.js";
 import { inventoryError } from "./inventoryErrors.js";
@@ -121,5 +121,58 @@ export async function finishFulfillmentIssueOutcome(tx,prepared,source){
  const members=rows.filter(row=>row.source_document_type==="SHIPMENT"&&row.source_line_id!==""),legs=rows.filter(row=>row.source_document_type==="SHIPMENT_LEG");
  if(rows.length!==1+work.members.length+work.legs.length||members.length!==memberIds.size||members.some(row=>row.command_type!=="ISSUE_POST"||!memberIds.has(key(row.id)))||legs.length!==movementIds.size||legs.some(row=>row.command_type!=="FULFILLMENT_BATCH_LEG"||!movementIds.has(key(parse(row.result_summary)?.movementId))))fail();
  if(movements.length!==movementIds.size||movements.some(row=>!movementIds.has(key(row.id))))fail();
+ return {state:"SUCCEEDED",result:decoded.result,requestHash:root.request_hash};
+}
+
+
+// REVERSE uses the same prepare-only scope/event locks; its domain reads stay in finish.
+// No ABSENT is issued until the caller's all-attempt fence and every writer barrier are proven.
+export async function finishFulfillmentReversalOutcome(tx,prepared,source){
+ if(!prepared.available)return {state:"UNKNOWN",reason:"SCOPE_OR_EVENT_PROOF_UNAVAILABLE"};
+ if(prepared.rows.length===0)return {state:"UNKNOWN",reason:"REVERSAL_ABSENCE_BARRIER_UNPROVEN"};
+ const work=selection(source),anchors=await readAnchors(tx,source,work),rows=prepared.rows;
+ const roots=rows.filter(row=>row.source_document_type==="SHIPMENT"&&row.source_line_id===""&&row.command_type==="FULFILLMENT_BATCH_REVERSE");
+ if(roots.length!==1||rows.some(row=>row.completed_at===null||key(row.actor_user_id)!==source.actorId||row.correlation_id!==source.correlationId))return {state:"UNKNOWN"};
+ const root=roots[0];if(root.request_hash!==source.inventoryRequestHash)return {state:"UNKNOWN"};
+ const decoded=await readFulfillmentInventoryBatch(tx,{action:"REVERSE",operationId:key(root.id),documentId:source.shipmentId,eventId:source.eventId,requestHash:root.request_hash,locking:false});
+ const references=source.originalIssue.references,referenceByAllocation=indexed(references,"inventoryAllocationId");
+ if(references.length!==work.legs.length)fail();
+ const original=await readOriginalFulfillmentIssueBatch(tx,{shipmentId:source.shipmentId,
+  members:unique(references.map(reference=>reference.originalInventoryOperationId)).map(originalInventoryOperationId=>({originalInventoryOperationId}))});
+ if(original.root.source_event_id!==source.originalIssue.eventId||original.fulfillmentId!==source.fulfillmentId||original.result.lines.length!==work.lines.length||decoded.fulfillmentId!==source.fulfillmentId||decoded.result.lines.length!==work.lines.length)fail();
+ const memberIds=new Set(),movementIds=new Set(),originalMovementIds=new Set();
+ for(const line of work.lines){
+  const result=decoded.result.lines.find(item=>item.fulfillmentLineId===line.fulfillmentLineId&&item.salesOrderLineId===line.salesOrderLineId);
+  const old=original.result.lines.find(item=>item.fulfillmentLineId===line.fulfillmentLineId&&item.salesOrderLineId===line.salesOrderLineId);
+  if(!result||!old||result.baseQuantity!==line.baseQuantity||old.baseQuantity!==line.baseQuantity||result.reservations.length!==line.reservations.length||old.reservations.length!==line.reservations.length)fail();
+  for(const member of line.reservations){
+   const actual=result.reservations.find(item=>item.claimId===member.claimId&&item.inventoryReservationId===member.inventoryReservationId);
+   const previous=old.reservations.find(item=>item.claimId===member.claimId&&item.inventoryReservationId===member.inventoryReservationId);
+   const current=anchors.reservationById.get(member.inventoryReservationId);
+   if(!actual||!previous||actual.originalInventoryOperationId!==previous.inventoryOperationId||actual.baseQuantity!==member.baseQuantity||actual.allocations.length!==member.allocations.length||Number(current.version)<actual.version)fail();
+   memberIds.add(actual.inventoryOperationId);
+   for(const leg of member.allocations){
+    const effect=actual.allocations.find(item=>item.inventoryAllocationId===leg.inventoryAllocationId&&item.inventoryBalanceId===leg.inventoryBalanceId);
+    const prior=previous.allocations.find(item=>item.inventoryAllocationId===leg.inventoryAllocationId&&item.inventoryBalanceId===leg.inventoryBalanceId);
+    const allocation=anchors.allocationById.get(leg.inventoryAllocationId),reference=referenceByAllocation.get(leg.inventoryAllocationId);
+    if(!effect||!prior||!reference||reference.originalInventoryOperationId!==previous.inventoryOperationId||reference.originalMovementId!==prior.movementId||effect.shipmentIssueId!==reference.shipmentIssueId||effect.originalMovementId!==reference.originalMovementId||effect.baseQuantity!==leg.baseQuantity||effect.originalMovementId!==prior.movementId||allocation.status!=="CONSUMED"||quantity(allocation.outstanding_quantity)!==0n||quantity(allocation.consumed_quantity)!==BigInt(leg.baseQuantity)||Number(allocation.version)<effect.allocationVersion)fail();
+    movementIds.add(effect.movementId);originalMovementIds.add(prior.movementId);
+   }
+  }
+ }
+ const members=rows.filter(row=>row.source_document_type==="SHIPMENT"&&row.source_line_id!==""),legs=rows.filter(row=>row.source_document_type==="SHIPMENT_LEG");
+ if(rows.length!==1+work.members.length+work.legs.length||members.length!==memberIds.size||members.some(row=>row.command_type!=="FULFILLMENT_REVERSE_ISSUE"||!memberIds.has(key(row.id)))||legs.length!==movementIds.size||legs.some(row=>row.command_type!=="FULFILLMENT_BATCH_LEG"||!movementIds.has(key(parse(row.result_summary)?.movementId))))fail();
+ const effectRows=[],ids=unique(rows.map(row=>key(row.id)));
+ for(let start=0;start<ids.length;start+=100){
+  const page=ids.slice(start,start+100),[effects]=await tx.query(`SELECT id FROM inventory_movements FORCE INDEX (idx_inventory_movements_operation) WHERE operation_request_id IN (${marks(page)}) ORDER BY operation_request_id,id LIMIT 5001 FOR SHARE`,page);
+  effectRows.push(...effects);if(effectRows.length>5000)fail();
+ }
+ if(effectRows.length!==movementIds.size||effectRows.some(row=>!movementIds.has(key(row.id))))fail();
+ const reverseRows=[],originalIds=unique([...originalMovementIds]);
+ for(let start=0;start<originalIds.length;start+=100){
+  const page=originalIds.slice(start,start+100),[effects]=await tx.query(`SELECT id,reversal_of_movement_id FROM inventory_movements FORCE INDEX (uq_inventory_movement_reversal) WHERE reversal_of_movement_id IN (${marks(page)}) ORDER BY reversal_of_movement_id FOR SHARE`,page);
+  reverseRows.push(...effects);
+ }
+ if(reverseRows.length!==movementIds.size||reverseRows.some(row=>!movementIds.has(key(row.id))||!originalMovementIds.has(key(row.reversal_of_movement_id))))fail();
  return {state:"SUCCEEDED",result:decoded.result,requestHash:root.request_hash};
 }
