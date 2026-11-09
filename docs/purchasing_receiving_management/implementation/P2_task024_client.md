@@ -120,3 +120,32 @@ Items 1 to 7 were written as approved.
 - Without this digest: exit 1, "Missing Sam approval" for this receipt.
 
 Sam's decision does not authorize the agent to publish the digest. The trusted administrator publishes it.
+
+## TL review fixes (relayed by the PM on 2026-11-09)
+
+**Required fix 1, an uncertain result followed by a 403:**
+- **Problem:** a retry that fails with 403 `PASSWORD_INVALID` only rejects that authentication. It does not prove the original transaction failed.
+- **Fix:** `useCommandEvent` now keeps the intent (eventId and payload) and the uncertain state when that happens. Only the password is cleared, and only the same action can retry.
+- **Messages:** the panel and settings messages show the password error together with "結果尚未確認".
+- **Unchanged:** a first, never-uncertain definite rejection still clears the intent.
+- **Consumer impact of the shared composable:**
+  - `PurchaseOrderForm` save and submit, and detail copy and withdraw, are `jwt` only and never receive `PASSWORD_INVALID`, so their behaviour is unchanged.
+  - `ApprovalSnapshotPanel` and `PurchasingSettingsPage` are the intended change.
+  - The existing `useCommandEvent` cases do not exercise this path.
+
+**Required fix 2, the mocks:** the two `PASSWORD_INVALID` mocks in `purchasingApprovals.test.js` now use the real 403 (`server/src/services/auth/passwordReauth.js`), not 401. Both occur before any uncertain result, so every assertion is unchanged.
+
+**Candidate:**
+- Commit `556925cf` holds the fix.
+- Commit `b3b2bbd0` re-pins the receipt. Its digest moves from `ba1ce40f…` to `4569e9a0b0ade48cba63f34c94d5702e85a85d1003262e0f829ab6534650c54f`.
+- Pin diff:
+  - `client/test/pages/purchasing/purchasingApprovals.test.js`: `0c7b043a…` → `62d284a9…`.
+  - `client/src/pages/purchasing/PurchasingSettingsPage.vue`: `853a2599…` → `d801c2ae…`.
+  - The panel and the composable are not gate inputs.
+- Static gate: exit 0 with 155 inputs on the new digest; exit 1 on the old one.
+
+**Not run after the fix:** no test, build, lint or mutant. The earlier 121/121, build, lint and the 3 expected failures belong to `b072d4f7` and `64ca24c8`. They do not carry over.
+
+**Observations for the TL, not fixed:**
+- Other retry rejections may also prove nothing about the original: `PERMISSION_STALE`, `DEVICE_*` on settings, and `CONCURRENT_OPERATION`.
+- Detail withdraw still resets its intent on any PO reload, as copy does.
