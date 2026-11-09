@@ -181,7 +181,7 @@ This supersedes the `PASSWORD_INVALID` special case in `556925cf`.
 | --- | --- | --- |
 | `PurchaseOrderForm.vue` | `46756f67da942965c44ba090da73c199574c6bd2` | `d79e8bbf9b483a5ba7f75a68c916a89ccf728ff9` |
 | `PurchaseOrderDetailPage.vue` | `d4bb5eeda0b09b5fa0eaf297f988711ae991582c` | `9ad38f008e514a6f1998dc603c3d18afc8759324` |
-| `PurchasingSettingsPage.vue` | `d801c2ae252afc589a03f6bb6902add02cec186` | `bdbfd1d2470f4f5364bdaae1e4c8c0e1c1c88bc8` |
+| `PurchasingSettingsPage.vue` | `d801c2ae252aafc589a03f6bb6902add02cec186` | `bdbfd1d2470f4f5364bdaae1e4c8c0e1c1c88bc8` |
 
 - The composable and the panel were not gate inputs at `b3b2bbd0`. That is **unverified for the new bytes**, because the gate was not rerun.
 - The receipt is **not updated**. It must wait until the test changes below are approved.
@@ -305,3 +305,155 @@ Runs only after the PM grants an exclusive slot. Nothing goes into `client/e2e`.
 
 - The 8 client mutants (`mut024c.py`, sha256 `051bc2e1…`) and the TASK-025 3 mutants and `check025.mjs` (sha256 `661ad155…`) are kept as-is under `scratchpad/evidence-2026-11-09/`. They had no specific approval, and they are not re-run or retroactively claimed.
 - The earlier 121/121, 68/68, build and lint apply only to their own commits, not to the new bytes.
+
+## R1 invariants (TL review of `fbb2480c`, relayed by the PM on 2026-11-09), commit `2b60ebef`
+
+The fix converges on three existing invariants. It adds no error-code list and no global event or persistence framework. This corrects `d46e28d5`.
+
+| Invariant | Change |
+| --- | --- |
+| **Stable owner keeps the intent** | `PurchaseOrderEditPage` and `PurchaseOrderCreatePage` now own the form's `save` and `submit` records and pass `commands` to `PurchaseOrderForm`. The form unmounts on the parent's loading, error or permission `v-if`; the records survive. A pending save restores the form's visible values from its stored view, and a pending submit reopens the dialog with its stored approver and note. The screen never shows new data while a retry sends the old body. With no owner passed, which only happens in direct component tests, the form owns its own. Detail owns copy, withdraw and decisions. The panel is now presentational: it emits `decide` and receives `uncertainAction`, `pendingReason`, `busy`, `errorMessage` and `stale`. |
+| **One in-flight per key; settle only the captured record** | `useCommandEvent` refuses a second send for a key that is in flight, or a different `meta.action` on an existing record, with a local `COMMAND_PENDING` and no HTTP. Decisions use one key per approval ID, `${actor}:${po}:decision:${approvalId}`, so approve and reject exclude each other across panel remounts. Settlement looks at the captured record's uncertainty at settle time, not a value read on entry. No automatic retry. |
+| **Visible callbacks bound to the real lifecycle** | Detail, Settings and Form each keep a local `generation`. It changes on a real PO or actor switch and on unmount, but not on a same-context GET. Success, catch and the former `finally` effects are dropped for an expired view: no notify, navigation, reload or error, and nothing cleared on a new pending record. `saving`, `submitting`, copy and withdraw loading now read `isBusy(key)`, so an old callback cannot clear a new in-flight state. |
+
+**Null approval.** A real approve or reject can succeed with its response lost; the GET then returns `approval: null` and the panel disappears. Detail keeps that record visible in a separate banner (`data-testid="po-detached-decision"`), apart from any new pending approval.
+- With the actor's current `purchasing.view` and `purchasing.approval`, it offers a password replay of the original action, target and body.
+- Without them it shows a blocked notice and does not bypass.
+- The current PO status and other people's history are never taken as the original event's outcome.
+
+**Still memory-only:** if the page owner unmounts or the browser reloads, the record is gone, until TASK-033.
+
+**Pin diff against the committed receipt** (`4569e9a0…`, not used):
+
+| File | Old blob | New blob |
+| --- | --- | --- |
+| `PurchaseOrderForm.vue` | `46756f67da942965c44ba090da73c199574c6bd2` | `2cfac7685c8b876da63dd4920a8702873d2a674e` |
+| `PurchaseOrderDetailPage.vue` | `d4bb5eeda0b09b5fa0eaf297f988711ae991582c` | `2ce6fcad098d78e0c5c511a2e6beac33d99cd927` |
+| `PurchaseOrderEditPage.vue` | `e8af0806120e70f3599d5d325ac425776a94466a` | `365757784f6f9e41062cc8c5f67742995338f2fe` |
+| `PurchaseOrderCreatePage.vue` | `ae34b43a3fcff83e55112943697cbf3f70c1df51` | `120c3f8dfc353bafe14a638f4f2cc0eecc64be1e` |
+| `PurchasingSettingsPage.vue` | `d801c2ae252aafc589a03f6bb6902add02cec186` | `ba536f6b9d643309e04f3a4120be03c0894bf5c5` |
+
+Not pinned at `b3b2bbd0`, and unverified for the new bytes:
+- `useCommandEvent.js`: `81a8f174…`
+- `ApprovalSnapshotPanel.vue`: `f3b21b36…`
+
+## Verification package, superseding the one above (nothing written or run)
+
+### ① Composable: six non-final errors after an uncertain result
+
+Six fixed sequences: `TIMEOUT`, then the variant error, then success. The variant errors are:
+- 403 `PASSWORD_INVALID`
+- 403 `PERMISSION_STALE`
+- 400 `DEVICE_SIGNATURE_STALE`
+- 409 `CONCURRENT_OPERATION`
+- 409 `VERSION_CONFLICT`
+- 422 `UNKNOWN_FUTURE_CODE`
+
+That is **18 mock calls**. All three bodies are equal, and `isUncertain(key)` is true after call 2 and false after call 3.
+
+Plus **H1**, a helper case:
+- A second `run` on the same key while the first is in flight gives `COMMAND_PENDING`, with `send` called once.
+- The same key with another `meta.action` gives `COMMAND_PENDING`.
+- Settling a TIMEOUT record leaves exactly one record, uncertain.
+
+That is 3 sends.
+
+### ② Fixed cases
+
+The original behaviour assertions of the 121 cases are kept.
+
+| # | Case | Mock calls |
+| --- | --- | --- |
+| C1 | Approve `TIMEOUT`, then a permission refresh forces `load()`, so the panel remounts. The reason is restored, reject disabled, and the retry has the same eventId. | approve 2, get 2 |
+| C2 | Approve `TIMEOUT`, then 403, then success, all with the same eventId. Reject stays disabled. | approve 3 |
+| C3 | Approve `TIMEOUT` on PO 8, approve on PO 9 with a new eventId, then back on PO 8 the retry uses the original eventId. | approve 3, get 3 |
+| C4 | Approve held on PO 8, switch to PO 9, then it resolves. No notify and no extra GET. | approve 1, get 2 |
+| C5 | Actor switch: user 2 sees no lock, and user 2's approve uses a new eventId. | approve 2 |
+| C6 | Withdraw `TIMEOUT`, then `load({ keep: true })`. The banner stays and the retry has the same eventId. | withdraw 2, get 2 |
+| C7 | Settings `TIMEOUT`, then `VERSION_CONFLICT`. No stale state, the toggle is disabled and the reason kept. The third call succeeds with the same eventId. | update 3, getSettings 2 |
+| C8 | **Real `PurchaseOrderEditPage`**, save `TIMEOUT`. Variant a: a permission refresh, still with mgmt, shows the loading skeleton and the form remounts with the original values ("第一次"), locked; the retry body is equal. Variant b: the same-PO GET fails, the error banner shows, retry `load()` remounts the form, same result. | a: get 2, update 2; b: get 3 (ok, fail, ok), update 2 |
+| C9 | Submit `TIMEOUT`, then `VERSION_CONFLICT`. The dialog stays, not stale. The third call succeeds with the same eventId. | submit 3 |
+| C10 | Submit held, the form unmounts, then it resolves. No `submitted`. | submit 1 |
+| C11 | **Null approval.** Approve `TIMEOUT`; the reload returns `approval: null` and CONFIRMED, so the panel is gone and the detached banner shows. Variant a, with approval permission: password, then "以原內容重試批准" sends the same body, eventId and PO id, succeeds, and the banner goes. Variant b, without approval: the blocked text shows, with no button and no call. | a: approve 2, get 3; b: approve 1, get 2 |
+| C12 | **In flight across a remount.** Approve held; `load()` remounts the panel; clicking approve and reject on the new panel sends nothing. Resolve with `TIMEOUT`: reject stays disabled. | approve 1, reject 0, get 2 |
+| C13 | **Leave and return to the same key.** Copy held on PO 8, go to PO 9, back to PO 8, then it resolves with success. No `router.push` and no notify; the route stays `/8`. | copy 1, get 3 |
+| C14 | **Copy late after leaving.** Copy held, navigate to the list, so Detail unmounts, then it resolves. The route stays on the list, no notify. | copy 1 |
+| C15 | **Save catch after a switch.** Edit PO 8, save held, the route goes to PO 9's edit page with leave confirmed, then the save rejects with 409. PO 9's form shows no error, no stale banner and no busy state. | update 1, get 2 |
+
+**Existing cases that change**, all in `services/purchasing.test.js`:
+- the `it.each` 結果未確定 (5 variants) and 明確結果之後: `uncertain.value` becomes `isUncertain()`;
+- "reset 之後唔會再用舊 intent" is replaced by "keys are independent" (3 calls).
+
+Other existing files are unchanged, because a form mounted without `commands` keeps owning its own.
+
+### ③ Regression
+
+`cd client && npm test -- <the 7 existing files with the ① and ② edits>`:
+- the supported entrypoint, catalog pattern and default file workers, the same as CI;
+- no single-worker variant, because the entrypoint rejects options and I will not bypass the catalog;
+- then `npx vite build`, `npx eslint client/src/pages/purchasing client/src/components/purchasing client/src/composables/purchasing client/src/services/purchasing.js`, and `node .github/scripts/test-admission.mjs --static-only`;
+- stop at the first failure.
+
+### ⑥ Playwright
+
+One batch, after the PM grants an exclusive slot. Nothing goes into `client/e2e`.
+
+**Order:**
+1. **Validator first:** the static admission and boundary validators on the exact candidate.
+2. **Own DB:** a private mysqld on 127.0.0.1:33619, datadir `/private/tmp/m024c`, started with `--initialize-insecure` and then `--daemonize --skip-log-bin`. Then `npm run migrate`.
+3. **Users:** `scripts/createUser.js`, with the password on stdin, plus `grantRole.js`.
+4. **Env:** rebuilt from `ci.yml` test values. The deleted `ci023.env` is not assumed to exist. The shared bank keyring and JWT keys come from the same `ci.yml` test values.
+5. **Legal device:** U3 logs in and the app creates the binding; `scripts/approveDevice.js <id>` approves it; U3 refreshes.
+
+**Data:**
+- U1: view and mgmt.
+- U2: view and approval.
+- U3: settings, with the registered device.
+- 1 supplier, 1 SKU, and PO-A and PO-B, each with 1 line.
+
+**Named business POSTs (11):**
+
+| # | User | Request | Expected |
+| --- | --- | --- | --- |
+| 1 | U3 | settings update, wrong password | 403 |
+| 2 | U3 | settings update, approval on | 200 |
+| 3 | U1 | PO-A submit with U2 | 200 |
+| 4 | U1 | PO-B submit with U2 | 200 |
+| 5 | U1 | PO-B approval withdraw | 200 |
+| 6 | U1 | PO-B resubmit | 200 |
+| 7 | U2 | PO-A approve, wrong password | 403 |
+| 8 | U2 | PO-A approve; `page.route` uses `route.fetch()`, and only after a real server 200 aborts the response | UI shows UNKNOWN |
+| 9 | U2 | PO-A approve retry, wrong password | 403, still locked |
+| 10 | U2 | PO-A approve retry | 200 replay |
+| 11 | U2 | PO-B reject with reason | 200 |
+
+**Other requests, all counted:**
+- Login: `POST /api/v1/user/login` 3 times.
+- `POST /api/v1/user/token/refresh` as they happen, budget 4.
+- `POST /api/v1/device/bindings` once.
+
+**Bounds:**
+- API GETs: at most 40.
+- OPTIONS and static assets are counted too.
+- At most 150 HTTP requests in total.
+- Allowed statuses: 200 and 403. A 409 is allowed only on request 10 if the server rejects the replay, and that stops the run.
+- No 5xx.
+- The console must show no error, and the network no unexpected failure.
+- The focus order through reason, password, approve and reject is checked, along with the headings.
+
+**Time:**
+- Preparation, 15 minutes or less.
+- Execution, 25 minutes or less.
+- Cleanup, 10 minutes or less: stop the dev servers and mysqld, delete `/private/tmp/m024c`, confirm with `lsof` that the ports are free, close the browser, and report the release time.
+- Stop and report at the first failure.
+
+**Tools:**
+- `@playwright/cli`, already installed.
+- An inline script for request 8.
+
+## Not changed
+
+- The workflow, the global workers and the receipt wording.
+- The trigger and concurrency contradiction stays as reported above.
+- Receipt `4569e9a0…` is not used.
+- The 8 and 3 private mutants, the old 121/68 results and the intermediate failures are kept as-is, not re-run and not retroactively claimed.
