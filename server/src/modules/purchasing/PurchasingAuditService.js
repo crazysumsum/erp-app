@@ -11,6 +11,9 @@ const ACTIONS = Object.freeze({
   "purchase_order.approved": { target: "PO", fields: ["version"] },
   "purchase_order.rejected": { target: "PO", fields: ["version"] },
   "purchase_order.approval_withdrawn": { target: "PO", fields: ["version"] },
+  "purchase_order.confirmation_withdrawn": { target: "PO", fields: ["version"] },
+  "purchase_order.cancelled": { target: "PO", fields: ["version"] },
+  "purchase_order.remaining_closed": { target: "PO", fields: ["version", "lineCount"] },
   "purchasing.setting.updated": { target: "SETTING", fields: ["requirePoApproval", "version"] }
 });
 // 冇業務寫入嘅拒絕結果（§4.15）：同名 action 加 outcome REJECTED；同 event 唔同內容另用 operation_conflict（§12.2）。

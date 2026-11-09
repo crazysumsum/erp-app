@@ -66,6 +66,11 @@ export const PURCHASE_ORDER_REJECT_INPUT = Object.freeze({ type: "object", requi
   properties: { eventId: EVENT_ID, version: ID, reason: REASON, password: PASSWORD } });
 export const PURCHASE_ORDER_WITHDRAW_APPROVAL_INPUT = Object.freeze({ type: "object", required: ["eventId", "version"], additionalProperties: false,
   properties: { eventId: EVENT_ID, version: ID, reason: REASON } });
+export const PURCHASE_ORDER_LIFECYCLE_INPUT = Object.freeze({ type: "object", required: ["eventId", "version", "reason"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID, reason: REASON } });
+// 冇 lineIds 就關晒仲有 outstanding 嘅 Lines；關閉數量由 server 計（§8.4）。
+export const PURCHASE_ORDER_CLOSE_REMAINING_INPUT = Object.freeze({ type: "object", required: ["eventId", "version", "reason"], additionalProperties: false,
+  properties: { eventId: EVENT_ID, version: ID, reason: REASON, lineIds: { type: "array", minItems: 1, maxItems: 100, uniqueItems: true, items: ID } } });
 export const PURCHASING_SETTINGS_UPDATE_INPUT = Object.freeze({ type: "object", required: ["eventId", "version", "requirePoApproval", "reason", "password"], additionalProperties: false,
   properties: { eventId: EVENT_ID, version: ID, requirePoApproval: { type: "boolean" }, reason: REASON, password: PASSWORD } });
 
@@ -90,6 +95,10 @@ export const PURCHASE_ORDER_DECISION_RESPONSE = Object.freeze({
   type: "object", required: ["id", "number", "status", "version", "replayed"], additionalProperties: false,
   properties: { id: ID, number: NUMBER, status: { enum: ["CONFIRMED", "DRAFT"] }, version: ID, replayed: { type: "boolean" } }
 });
+export const PURCHASE_ORDER_LIFECYCLE_RESPONSE = Object.freeze({
+  type: "object", required: ["id", "number", "status", "version", "replayed"], additionalProperties: false,
+  properties: { id: ID, number: NUMBER, status: { enum: ["DRAFT", "CANCELLED", "PARTIALLY_RECEIVED", "CLOSED"] }, version: ID, replayed: { type: "boolean" } }
+});
 export const PURCHASING_SETTINGS_RESPONSE = Object.freeze({
   type: "object", required: ["requirePoApproval", "version", "updatedAt", "updatedByLabel", "history"], additionalProperties: false,
   properties: { requirePoApproval: { type: "boolean" }, version: ID, updatedAt: { type: "integer", minimum: 0 }, updatedByLabel: { type: "string" },
@@ -111,6 +120,8 @@ const validateSubmit = validator.compile({ body: PURCHASE_ORDER_SUBMIT_INPUT }, 
 const validateApprove = validator.compile({ body: PURCHASE_ORDER_APPROVE_INPUT }, "Purchase Order approve body");
 const validateReject = validator.compile({ body: PURCHASE_ORDER_REJECT_INPUT }, "Purchase Order reject body");
 const validateWithdraw = validator.compile({ body: PURCHASE_ORDER_WITHDRAW_APPROVAL_INPUT }, "Purchase Order approval withdraw body");
+const validateLifecycle = validator.compile({ body: PURCHASE_ORDER_LIFECYCLE_INPUT }, "Purchase Order lifecycle body");
+const validateCloseRemaining = validator.compile({ body: PURCHASE_ORDER_CLOSE_REMAINING_INPUT }, "Purchase Order close remaining body");
 const validateSettings = validator.compile({ body: PURCHASING_SETTINGS_UPDATE_INPUT }, "Purchasing settings update body");
 
 /** 錯誤只帶欄位路徑（例如 `lines.0.unitPrice`），唔帶值。 */
@@ -127,7 +138,7 @@ function validated(validate, request, fallback) {
 export function purchaseOrderCommand(req, kind) {
   const body = req.input.body;
   validated({ create: validateCreate, update: validateUpdate, copy: validateCopy, submit: validateSubmit, approve: validateApprove, reject: validateReject,
-    withdrawApproval: validateWithdraw, settings: validateSettings }[kind], { body }, "body");
+    withdrawApproval: validateWithdraw, withdrawConfirmation: validateLifecycle, cancel: validateLifecycle, closeRemaining: validateCloseRemaining, settings: validateSettings }[kind], { body }, "body");
   if (req.get("Idempotency-Key") !== body.eventId) throw purchasingError("PURCHASING_INPUT_INVALID", { field: "eventId" });
   const input = Object.hasOwn(body, "password") ? Object.fromEntries(Object.entries(body).filter(([key]) => key !== "password")) : body;
   return { claims: req.auth.claims, input,
@@ -168,7 +179,7 @@ const object = (properties) => ({ type: "object", required: Object.keys(properti
 const TEXT = { type: "string" }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
 const NULLABLE_TEXT = { type: ["string", "null"] }, NULLABLE_DATE = { type: ["string", "null"] };
 const AMOUNT = { type: "string", pattern: "^\\d+(?:\\.\\d{1,4})?$" }, BASE_QUANTITY = { type: "string", pattern: "^\\d+$" };
-const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "submit", "copy", "approve", "reject", "withdraw"] } };
+const ACTIONS = { type: "array", uniqueItems: true, items: { enum: ["edit", "submit", "copy", "approve", "reject", "withdraw", "withdrawConfirmation", "cancel", "closeRemaining"] } };
 const HEADER = {
   id: ID, number: { type: "string", pattern: "^PO-\\d{6}-\\d{6}$" }, status: { enum: STATUSES }, version: ID, supplierId: ID, supplierCode: TEXT, supplierName: TEXT,
   currencyCode: TEXT, orderDate: TEXT, expectedDeliveryDate: NULLABLE_DATE, buyerId: OPTIONAL_ID, buyerLabel: TEXT, supplierReference: TEXT, totalAmount: AMOUNT,
