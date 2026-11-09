@@ -149,3 +149,159 @@ Sam's decision does not authorize the agent to publish the digest. The trusted a
 **Observations for the TL, not fixed:**
 - Other retry rejections may also prove nothing about the original: `PERMISSION_STALE`, `DEVICE_*` on settings, and `CONCURRENT_OPERATION`.
 - Detail withdraw still resets its intent on any PO reload, as copy does.
+
+## R1 completed (TL ruling relayed by the PM on 2026-11-09), commit `d46e28d5`
+
+This supersedes the `PASSWORD_INVALID` special case in `556925cf`.
+
+**`useCommandEvent`:**
+- Once a command is uncertain, only a success of the same original operation releases it. The server replays the original result for the same eventId.
+- Any later error keeps the eventId, payload and uncertain state. That includes `PASSWORD_INVALID`, `PERMISSION_STALE`, `DEVICE_*`, `CONCURRENT_OPERATION`, `VERSION_CONFLICT` and unknown 4xx. There is no code list.
+- A first, never-uncertain definite rejection still clears the intent.
+- `reset()` and the `uncertain` ref are removed. Intents are keyed with `run(payload, send, key)`, `isUncertain(key)` and `pendingPayload(key)`.
+
+**Consumers and their owners:**
+
+| Consumer | Key | Change |
+| --- | --- | --- |
+| `PurchaseOrderDetailPage` | `${actor}:${po}:copy`, `:withdraw`, `:approve`, `:reject` | Owns the copy, withdraw and decision commands. `onLoad` no longer resets anything. vue-router reuses the page across PO changes, so a reload or a PO switch keeps every intent bound to its own target. Late responses for a switched PO or actor skip notifications, navigation and reloads. |
+| `ApprovalSnapshotPanel` | from Detail through the `command` and `commandKey` props | No longer owns a command, so remounting after loading or an error keeps the decision. The reason is restored from `pendingPayload`. While one action is uncertain the opposite action is locked. Late responses for a switched context are ignored. |
+| `PurchasingSettingsPage` | `${actor}:settings` | A GET no longer resets. The toggle and reason are restored from the pending payload. A `VERSION_CONFLICT` after an uncertain result does not enter the stale path. A late response after an actor switch is ignored. |
+| `PurchaseOrderForm` | `${actor}:${po or "new"}:save`, `:submit` | `watch(document)` no longer resets. A `VERSION_CONFLICT` after an uncertain result keeps the retry instead of going stale. Late responses after unmount or a PO or actor switch do not emit. |
+
+`usePurchaseOrder` is unchanged.
+
+**Still not recovered, a memory-only limitation:**
+- If the owner unmounts, by leaving the page or reloading the browser, the intent is gone. The form's leave guard still warns first. Recovery across a refresh needs the eventId lookup in TASK-033.
+- If a reload shows that an approval was decided, perhaps by someone else, the panel disappears. Its uncertain intent stays harmless in memory, with no retry UI.
+
+**Pin diff against receipt `4569e9a0…`:**
+
+| File | Old blob | New blob |
+| --- | --- | --- |
+| `PurchaseOrderForm.vue` | `46756f67da942965c44ba090da73c199574c6bd2` | `d79e8bbf9b48…` |
+| `PurchaseOrderDetailPage.vue` | `d4bb5eeda0b09b5fa0eaf297f988711ae991582c` | `9ad38f008e51…` |
+| `PurchasingSettingsPage.vue` | `d801c2ae252afc589a03f6bb6902add02cec186` | `bdbfd1d2470f…` |
+
+- The composable and the panel were not gate inputs at `b3b2bbd0`. That is **unverified for the new bytes**, because the gate was not rerun.
+- The receipt is **not updated**. It must wait until the test changes below are approved.
+- Receipt `4569e9a0…` does not join the administrator's batch with the two earlier digests.
+
+## Verification still needed (none written or run)
+
+### ① Composable: six non-final errors after an uncertain result
+
+A new `it.each` in `client/test/services/purchasing.test.js`.
+
+Each variant makes three calls:
+1. `TIMEOUT`;
+2. the variant error;
+3. success.
+
+The six variant errors:
+- 403 `PASSWORD_INVALID`
+- 403 `PERMISSION_STALE`
+- 400 `DEVICE_SIGNATURE_STALE`
+- 409 `CONCURRENT_OPERATION`
+- 409 `VERSION_CONFLICT`
+- 422 `UNKNOWN_FUTURE_CODE`
+
+That is 6 × 3 = **18 mock calls**.
+
+Assertions:
+- all three bodies are equal (same eventId and payload);
+- `isUncertain()` is true after the second call and false after the third.
+
+### ② Consumers, resets, opposite actions and switching
+
+New cases, mostly in `purchasingApprovals.test.js`:
+
+| # | Case | Mock calls |
+| --- | --- | --- |
+| C1 | Detail: approve `TIMEOUT`, then a permission change forces `load()`, so the panel remounts. The reason is restored, reject is disabled, and the approve retry has the same eventId. | getPurchaseOrder 2, approve 2 |
+| C2 | Approve `TIMEOUT`, then a retry gets 403. Still uncertain, reject disabled, and the message shows both the password error and "結果尚未確認". The third call succeeds with the same eventId. | approve 3 |
+| C3 | PO switch: approve `TIMEOUT` on PO 8, then go to PO 9. PO 9 shows nothing uncertain, and an approve there uses a new eventId and id 9. Back on PO 8, the retry uses the original eventId. | approve 3, getPurchaseOrder 3 |
+| C4 | Late response: approve on PO 8 is held, the user switches to PO 9, then it resolves. No `notifySuccess` and no extra getPurchaseOrder. | approve 1, getPurchaseOrder 2 |
+| C5 | Actor switch: approve `TIMEOUT` as user 1, then `session.user` becomes user 2. No lock or banner for user 2, and user 2's approve uses a new eventId. | approve 2 |
+| C6 | Withdraw `TIMEOUT`, then `load({ keep: true })`. The banner stays, and the retry has the same eventId. | withdraw 2, getPurchaseOrder 2 |
+| C7 | Settings `TIMEOUT`, then a retry gets `VERSION_CONFLICT`. No stale banner, the toggle is disabled and the reason kept. The third call succeeds with the same eventId. | updateSettings 3, getSettings 2 |
+| C8 | Form save `TIMEOUT`, then the parent passes a reloaded `document` for the same id. Still locked, and the retry body is equal. Goes in `purchasingPurchaseOrderForm.test.js`. | update 2 |
+| C9 | Form submit `TIMEOUT`, then a retry gets `VERSION_CONFLICT`. The dialog stays and does not go stale. The third call succeeds with the same eventId. | submit 3 |
+| C10 | Form submit is held, the form unmounts, then it resolves. No `submitted` emit. | submit 1 |
+
+**Existing cases that must change**, in `client/test/services/purchasing.test.js`:
+- `it.each` "結果未確定（%j）就保留原 payload 同 eventId": `command.uncertain.value` becomes `command.isUncertain()`. Assertions unchanged, 5 variants.
+- "明確結果之後下一次係新意圖、新 eventId": the same API rename. Assertions unchanged.
+- "reset 之後唔會再用舊 intent": `reset` is gone. **Replacement:** "different keys are independent; a new key never uses an old intent, and the original key keeps its eventId" (3 calls).
+
+### ③ Regression on the new bytes
+
+Runs once, after the PM grants it.
+
+- `cd client && npm test -- <the 7 Purchasing client test files, with the ① and ② changes>`. This is the existing entrypoint: capacity pattern, default file workers, the same as CI. It is **not single-worker**, because the entrypoint refuses options. I recommend keeping the default.
+- `cd client && npx vite build`.
+- `npx eslint client/src/pages/purchasing client/src/components/purchasing client/src/composables/purchasing client/src/services/purchasing.js`.
+- `node .github/scripts/test-admission.mjs --static-only` with the candidate digests set locally.
+- Stop at the first failure.
+
+### ⑥ Playwright on the real app
+
+Runs only after the PM grants an exclusive slot. Nothing goes into `client/e2e`.
+
+**Preparation (15 minutes or less):**
+- A private mysqld on 127.0.0.1:33619 with datadir `/private/tmp/m024c`, started with `--initialize-insecure` and then `--daemonize --skip-log-bin`.
+- Migrate and seed with the existing scripts.
+- Server and client dev both bound to 127.0.0.1.
+- Env: the 18 exports that `ci023.env` recorded, rebuilt from `ci.yml` values, because the scratchpad may have been wiped.
+
+**Data:**
+- Users:
+  - U1, requester: view and mgmt.
+  - U2, approver: view and approval.
+  - U3, settings: `purchasing.settings`, with an approved registered device.
+- 1 supplier and 1 SKU.
+- PO-A (1 line) and PO-B (1 line), both Draft.
+
+**Flow (25 minutes or less), stopping and reporting at the first failure:**
+1. Log in as U3. Turn approval on: device-signed with password, first with a wrong password (expect 403, reason kept), then the correct one.
+2. Log in as U1. Submit PO-A with U2 as approver. Withdraw PO-B's approval after submitting it.
+3. Log in as U2. The list shows PO-A. Reject once with a wrong password (expect 403, reason kept).
+4. **UNKNOWN:** `page.route` lets the first approve reach the server, then aborts the response. The UI shows "結果尚未確認". A wrong-password retry gets 403 and stays locked. A correct retry replays as CONFIRMED.
+5. Keyboard: the focus order through reason, password, approve and reject works, and the h1 and h2 exist.
+
+**Bounds:**
+- At most 12 business POSTs:
+  - 2 settings;
+  - 3 submit or withdraw;
+  - 4 decisions;
+  - 3 margin.
+- At most 3 login POSTs.
+- At most 40 API GETs, and at most 80 HTTP requests in total.
+- Allowed statuses: 200, 403 and 409 only, with no 5xx.
+- Console must show no error.
+
+**Cleanup (10 minutes or less):**
+- Stop the dev servers and mysqld.
+- Delete `/private/tmp/m024c`.
+- Confirm with `lsof` that 33619, the server port and the client port are free.
+- Close the browser and report the release time.
+
+**Tools:**
+- `@playwright/cli`, already installed, as the user's standard. An inline script for the `page.route` fault injection.
+- Shared keys: the bank and test JWT keys come only from the `ci.yml` test values. No real secrets.
+
+## Trigger and concurrency, stated once
+
+- **What was approved:** Sam's approved proposal said "every PR".
+- **What CI actually runs:**
+  - admitted PR dispatch;
+  - every push to main;
+  - weekly on Monday at 02:17 UTC, which is 10:17 Hong Kong time.
+  - Vitest uses its default file workers, not 1.
+- **What the receipts say:** this receipt and `purchasing-task024-backend.json` say "every PR and push to main", and "concurrency 1" means within a case.
+- **Recommendation:** keep the existing triggers and workers, and have the PM obtain Sam's real approval of the full trigger. I have not changed the workflow or the wording.
+
+## Evidence status
+
+- The 8 client mutants (`mut024c.py`, sha256 `051bc2e1…`) and the TASK-025 3 mutants and `check025.mjs` (sha256 `661ad155…`) are kept as-is under `scratchpad/evidence-2026-11-09/`. They had no specific approval, and they are not re-run or retroactively claimed.
+- The earlier 121/121, 68/68, build and lint apply only to their own commits, not to the new bytes.
