@@ -119,3 +119,77 @@ Cases a, b and d need the authoritative GR fact. Until TASK-027 they can only pr
 - no sweep.
 
 **Alternative:** the unit file only, without integration. That leaves the SQL locks, CHECK and trigger interaction, and the approve-versus-cancel race unproven against a real database, so I do not recommend it.
+
+## TL ruling relayed by the PM on 2026-11-09, commit `2cb6fe60`
+
+This supersedes the earlier `allowedActions` table. The fail-closed refusal is a safety fix, not acceptance of the success paths.
+
+**Error classification**, after the PO lock in the same transaction:
+
+| Condition | Result |
+| --- | --- |
+| `has_confirmed_receipt = 1` | `PO_STATE_CONFLICT` |
+| `everConfirmed` returns `true` | `PO_STATE_CONFLICT` |
+| `everConfirmed` returns anything other than a boolean, including `undefined` | `PURCHASING_DEPENDENCY_UNAVAILABLE` (503). Never reported as an existing receipt. |
+| The reader throws | Rethrown unchanged, and the transaction rolls back. The default reader throws 503. |
+
+Only an explicit `false` lets withdraw or cancel proceed.
+
+**`allowedActions`:**
+- `cancel` and `withdrawConfirmation` are not offered, in the list or the detail, until the real reader is wired. Production currently answers 503 for both.
+- Unchanged: approval `withdraw`, `copy`, `edit`, `submit`, and `closeRemaining` on PARTIALLY_RECEIVED.
+- `has_confirmed_receipt` is back in the detail select only.
+
+**Effect on the existing assertions:**
+- The only change is `server/test/integration/purchasingInquiry.integration.test.js` lines 265 to 266. The PARTIALLY_RECEIVED detail read by a mgmt user goes from `e: ["copy"]` to `e: ["copy", "closeRemaining"]`.
+- The lines 124, 126 and 311 in that file, and lines 252 to 255 and 267 of `purchasingApprovalCommands.integration.test.js`, stay as they are.
+- The earlier proposal said these would change. That is withdrawn.
+
+**Not run after the change:** no lint, test, private check or mutant.
+
+## ④ TASK-025 verification package (needs Sam; none written or run)
+
+**Unit tests:** a new file, `server/test/purchasing/purchaseOrderLifecycleService.test.js`, using a fake `tx` and fake approvals.
+
+| # | Case | Fake calls |
+| --- | --- | --- |
+| U1 | `derivedStatus` and `lineOutstanding`, a table of 8 rows including a Base quantity above 2^53 | none |
+| U2 | Cancel PENDING with reader `false`: approval invalidated once, PO CANCELLED, version + 1, one status history row | 1 PO lock, 1 reader, 1 invalidate, 1 UPDATE, 2 history queries |
+| U3 | Withdraw CONFIRMED with reader `false`: DRAFT, `confirmed_at` and `confirmed_by` set to null | 1 lock, 1 reader, 1 UPDATE, 2 history |
+| U4 | Classification, `it.each` over 5 variants: flag 1, reader `true`, reader `undefined`, reader throws, default reader. Expected: 409, 409, 503, the thrown error unchanged, 503. Nothing is written in any variant. | 5 locks, 4 reader calls (the flag-1 variant never calls the reader), 0 UPDATE |
+| U5 | Guards: VERSION_CONFLICT, WITHDRAW from DRAFT, and CLOSE from CONFIRMED all fail before the reader | 3 locks, 0 reader |
+| U6 | Close all on PARTIALLY_RECEIVED: closes `ordered - net` only on the lines with outstanding quantity, ends CLOSED, Audit `lineCount` is 1 | 1 lock, 1 lines lock, 1 line UPDATE, 1 PO UPDATE, 2 history |
+| U7 | Close selected lines: a line with nothing outstanding gives 409 with `field`, an unknown id gives 404, and a partial close keeps PARTIALLY_RECEIVED with no history | 3 runs |
+
+**Integration tests:** a new file, `server/test/integration/purchasingLifecycle.integration.test.js`, on MySQL.
+
+The fixture POs are set directly to their state with SQL, keeping the CHECK `gross = net + reversed`. Each case uses one PO with 1 to 3 lines, with the existing users and master data.
+
+| # | Before the real GR reader (can run now) | After the real GR reader and wiring |
+| --- | --- | --- |
+| I1 | Withdraw on a CONFIRMED PO gives 503, and nothing changes in the PO, history, Audit success rows or operation result | Withdraw succeeds; a resubmit creates a new approval |
+| I2 | Cancel from DRAFT, PENDING and CONFIRMED each gives 503, and the pending approval stays PENDING | Each succeeds; the pending approval becomes INVALIDATED; a PO with a confirmed or fully reversed GR gives 409 |
+| I3 | Close remaining: selected and all lines, line quantities, CLOSED, no rows in `inventory_*`; `lineIds` gives 404 or 409; view-only gives 403; a missing reason gives 400; `allowedActions` shows `closeRemaining` | the same |
+| I4 | A replay with the same eventId returns the first result | Approve and cancel sent at once: one wins and the other gets 409. **This race case needs Sam's separate approval.** |
+
+About 6 to 10 HTTP requests per case.
+
+**Existing assertion:** the one at inquiry lines 265 to 266, listed above.
+
+**Single run:**
+```
+cd server && npm test -- test/purchasing/purchaseOrderLifecycleService.test.js test/integration/purchasingLifecycle.integration.test.js test/integration/purchasingInquiry.integration.test.js test/integration/purchasingApprovalCommands.integration.test.js
+```
+- Uses the existing entrypoint, capacity pattern and default concurrency.
+- Needs a private MySQL from the PM, with the env rebuilt from the `ci.yml` values, including `FULFILLMENT_LIFECYCLE_ENABLED=true`.
+- Stop at the first unexpected failure, without retrying.
+- Estimated 30 to 60 s, not measured.
+- Cleanup: stop mysqld, delete the datadir, and confirm with `lsof` that the port is free.
+
+**Receipt:** inquiry and approval commands are pinned by `purchasing-task024-backend.json`, so the new receipt must re-pin all 21 of its files plus the new ones.
+
+**Deferred:**
+- Close remaining versus GR confirm concurrency, to TASK-032.
+- Every "after the GR reader" column above, to the GR reader sub-delivery (see `P3_task027_gr_header_proposal.md`).
+
+TASK-025 cannot be marked DONE before those.
