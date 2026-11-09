@@ -272,3 +272,28 @@ The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). Th
   - This is a **product defect in the TASK-025 source**, not a test defect. The unit file calls `PurchaseOrderLifecycleService` directly, and the private `check025.mjs` used a fake transaction, so neither exercised `claim`.
 - **Evidence:** `/Users/sam/Documents/workspace/purchasing-evidence/c4-2026-11-09/`, with `SHA256SUMS` of 22 entries. It holds the commands' logs, exit files, the mysqld error log, and the server system and request logs.
 - No retry and no further run.
+
+## Minimal source fix after the C4 failure (candidate `462a9925`, not run)
+
+**Diff:** `server/src/modules/purchasing/PurchasingOperationService.js` gains 3 lines, mapping `WITHDRAW_CONFIRMATION_PURCHASE_ORDER`, `CANCEL_PURCHASE_ORDER` and `CLOSE_REMAINING_PURCHASE_ORDER` to `"PURCHASE_ORDER"`. The blob goes from `3bea44d0…` to `65fdad29eff247c94ebdbb581c6899deca1f372b`. Nothing else in `server/src` differs from `2cb6fe60`.
+
+**Static checks, done by reading only:**
+- These are exactly the names `PurchaseOrderService.#claim` builds, `${kind}_PURCHASE_ORDER` for the three `LIFECYCLE_KINDS`. The route, permission and target contract is unchanged: `sourceDocumentId` is the PO id, as for every other PO command.
+- `claim` still refuses unknown types. Its hash, actor, event and replay checks, and `complete`, `safeResult` and `run`, are untouched.
+- `safeResult` already accepts the lifecycle summaries `{ id, number, status, version }` with DRAFT, CANCELLED, PARTIALLY_RECEIVED or CLOSED.
+- **Schema:** in migration 0114, `command_type` is `VARCHAR(60)` ascii with no CHECK on its values. The longest new name has 30 characters, and `source_document_type 'PURCHASE_ORDER'` is already allowed. No schema change is needed.
+- No receipt pins this file, so the TASK-025 receipt draft `8a700390…` is unchanged. No test pins the whitelist.
+
+**Regression reasoning:** the change only adds keys to a frozen lookup. Existing keys and their values are unchanged, so the earlier commands resolve exactly as before. In the failed C4 run, the 22 unit, 8 inquiry and 9 approval-command cases passed, and C2 passed. The module is loaded by every file, so a syntax or import error would show in any rerun. I see no uncovered risk for the old commands that would justify rerunning all 43 cases.
+
+**Proposed re-verification (needs Sam's new batch approval; not run):**
+- Exactly the 4 failed cases, once:
+
+  ```
+  cd server && npm test -- test/integration/purchasingLifecycle.integration.test.js
+  ```
+
+- The same env (19 `ci.yml` variables), the same config validator first, and the same own-mysqld setup, migrate (up to 0118), cleanup and release rules as the first C4 run.
+- The same data: 6 POs, 9 lines, 12 POSTs, 3 GETs, 2 actors, 1 app and pool.
+- Default workers, and stop at the first failure.
+- **Honest limit:** the four cases' assertions after the first lifecycle POST have never been reached, so further failures cannot be ruled out until that run.
