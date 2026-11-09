@@ -193,3 +193,28 @@ cd server && npm test -- test/purchasing/purchaseOrderLifecycleService.test.js t
 - Every "after the GR reader" column above, to the GR reader sub-delivery (see `P3_task027_gr_header_proposal.md`).
 
 TASK-025 cannot be marked DONE before those.
+
+## ④ with fixed numbers (superseding the integration table above)
+
+The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). That is not acceptance of TASK-025's success paths.
+
+**The unit cases U1 to U7 stay as listed.**
+
+**Integration cases, by row:**
+- **"Now"** is reachable today. The default reader fails closed.
+- **"After"** needs the TASK-027 early header milestone and the wired reader. It cannot be reached now.
+- Fixture POs use 1 to 3 lines.
+
+| # | Reach | Data | HTTP calls | Assertions |
+| --- | --- | --- | --- | --- |
+| I1 | Now | 1 CONFIRMED PO, 1 line | 2: POST withdraw, GET detail | 503; the version, status history count, success Audit count and `allowedActions` (`["copy"]`) are unchanged |
+| I1 | After | the same | 4: withdraw, GET, update, submit with approval on | 200 DRAFT; a new approval id on submit |
+| I2 | Now | 3 POs: DRAFT, PENDING and CONFIRMED, 1 line each | 4: 3 POST cancel, 1 GET | 503 each; the approval stays PENDING; nothing written |
+| I2 | After | the same plus 2 POs, one with a CONFIRMED GR and one with a REVERSED GR | 6: 3 cancel 200, 1 GET, 2 cancel 409 | INVALIDATED approval; 409 is never reported as 503 |
+| I3 | Now and after | 1 PARTIALLY_RECEIVED PO with 3 lines: line 1 fully received, line 2 partial, line 3 at 0 | 7: GET (`closeRemaining` offered); close `[line2]`, which stays PARTIALLY_RECEIVED; `[line1]` gives 409; `[999]` gives 404; view-only gives 403; no reason gives 400; close all gives CLOSED | line quantities; no `inventory_*` rows; history only on the CLOSED transition |
+| I4 | Now | 1 PARTIALLY_RECEIVED PO with 2 lines | 2: close-remaining twice with the same eventId | the second is `replayed: true` with the same result |
+| I4 | After, **needs Sam** | 1 PENDING PO, 1 line | 3: approve and cancel sent at once, then GET | exactly one 200 and one 409 |
+
+**Existing assertion:** only `purchasingInquiry.integration.test.js` lines 265 to 266 change, from `e: ["copy"]` to `e: ["copy", "closeRemaining"]`.
+
+**Command, DB and cleanup:** as listed above. The "After" rows run only after the reader exists. TASK-025 is not DONE before them.
