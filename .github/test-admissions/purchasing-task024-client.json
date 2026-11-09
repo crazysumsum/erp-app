@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"A、B、C1、C2、C4 全部批准，C3、C5 暫緩\", answering the approval package docs/purchasing_receiving_management/implementation/P2_approval_package_2026-11-09.md (sha256 f1f80354…) on branch claude/purchasing-task025. C1 approves 29 new jsdom registrations (6 non-final error variants and H1 in client/test/services/purchasing.test.js; 14 UI variants in purchasingApprovals.test.js; 8 in purchasingPurchaseOrderEditor.test.js) and 3 changed existing cases in services/purchasing.test.js, against the TL-accepted source 092c86dd. Earlier approval of 2026-11-09 (\"前端測試提案全部批准，TASK-025 可以開始\") covers the first TASK-024 client cases. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json. This decision does not authorize the agent to publish the digest",
+  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"A、B、C1、C2、C4 全部批准，C3、C5 暫緩\", answering the approval package docs/purchasing_receiving_management/implementation/P2_approval_package_2026-11-09.md (sha256 f1f80354…) on branch claude/purchasing-task025. C1 approves 29 new jsdom registrations (6 non-final error variants and H1 in client/test/services/purchasing.test.js; 14 UI variants in purchasingApprovals.test.js; 8 in purchasingPurchaseOrderEditor.test.js) and 3 changed existing cases in services/purchasing.test.js, against the TL-accepted source 092c86dd. Earlier approval of 2026-11-09 (\"前端測試提案全部批准，TASK-025 可以開始\") covers the first TASK-024 client cases. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json. The existing TASK-020 Create case's FormStub is adapted to the accepted owner callback (commands.saved), as a compatibility update the PM ruled necessary for the approved C2 run, with no case added and no assertion changed; the replacement for the removed reset case keeps the original 2 sends. This decision does not authorize the agent to publish the digest",
   "purpose": "The my-approvals page requests only the actor's pending list with paging and search and links to detail; the detail page shows the fixed approval snapshot, not the live PO, and shows decision controls only for allowedActions plus purchasing.approval; a failed decision keeps the reason, clears the password and retries an uncertain result with the same action and eventId; the settings page sends version, reason and password through the signed update and keeps the reason after an error; submit with approval on requires an approver and sends it; the TASK-018 to TASK-021 client behaviour stays pinned",
   "data": "No database or network: mocked services, real discovered pages, and small inline objects of at most 1 approval and 1 line. No fixture files",
-  "concurrency": "1",
+  "concurrency": "Within a case: 1, with no concurrent requests. Runner workers are unchanged: the existing client job keeps Vitest's default file workers",
   "repetitions": "1",
   "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
-  "trigger": "Routine correctness regression on every PR and push to main, in the existing client test job",
+  "trigger": "The existing ci.yml triggers, as approval package C1 states: every admitted PR dispatch, every push to main, and the weekly schedule on Monday 02:17 UTC (10:17 Hong Kong time), in the existing client test job",
   "cost": "Not measured for the new cases. The previous 121 registrations took 1.67 s locally at 64ca24c8; the expected total is 150 registrations. No new job and no capacity workload",
   "files": [
     {
       "path": "client/test/services/purchasing.test.js",
       "mode": "100644",
-      "blob": "4c2af2a823465afc25895b2b145695df84f60d3b",
+      "blob": "ece8b2a4304eb2aac76b0aeb951515c7a5100576",
       "kind": "functional",
       "cases": [
         "create、update、submit、copy 用 eventId 做 Idempotency-Key，body 原封不動",
@@ -20,7 +20,7 @@
         "審批命令用 eventId 做 Idempotency-Key；設定更新要裝置簽章；待我審批映射 DataTable；approvers 回埋 requireApproval",
         "結果未確定（%j）就保留原 payload 同 eventId",
         "明確結果之後下一次係新意圖、新 eventId",
-        "唔同 key 互不影響：新 key 唔用舊 intent，返原 key 仍然用原 eventId 同 payload",
+        "唔同 key 互不影響：新 key 唔用舊 intent，原 key 仍然未確定",
         "未確定之後 %i %s 證明唔到原交易失敗：保留原 eventId、payload 同未確定，只有原操作成功先解除",
         "同一 key 只准一個 in-flight，亦唔准換動作：本地 COMMAND_PENDING 唔發 HTTP；未確定 record 由空開始都睇得到"
       ]
@@ -64,7 +64,7 @@
     {
       "path": "client/test/pages/purchasing/purchasingPurchaseOrderEditor.test.js",
       "mode": "100644",
-      "blob": "c5407e6f48b56737b08877fe6c95175e1612d40b",
+      "blob": "28c28466922fdd18e41ddf70663f8c4021dc8896",
       "kind": "functional",
       "cases": [
         "要 view 同 mgmt；採購員預設目前用戶；新單冇 document",
