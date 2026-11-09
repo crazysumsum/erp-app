@@ -51,8 +51,13 @@ export class PurchaseOrderLifecycleService {
     if (Number(po.version) !== request.version) throw purchasingError("VERSION_CONFLICT", { currentVersion: Number(po.version) });
     // FR-LIFE-005、§8.4：projection 係 0 之外，仲要喺同一 transaction 權威證實從來冇 Confirmed GR；唔係明確 false 就當有收過。
     // TASK-032 嘅 GR Confirm 會喺同一 transaction 設 sticky 嘅 has_confirmed_receipt。
-    if (kind !== "CLOSE_REMAINING" && (Number(po.has_confirmed_receipt) === 1 || await this.receiptFacts.everConfirmed(tx, id) !== false)) {
-      throw purchasingError("PO_STATE_CONFLICT");
+    // 明確有收過（projection 係 1 或者 reader 回 true）係狀態衝突；reader 回唔到明確 boolean 係依賴不可用，唔可以講成已有收貨。
+    // Reader 自己拋嘅錯照原樣拋出，成個 transaction rollback。
+    if (kind !== "CLOSE_REMAINING") {
+      if (Number(po.has_confirmed_receipt) === 1) throw purchasingError("PO_STATE_CONFLICT");
+      const everConfirmed = await this.receiptFacts.everConfirmed(tx, id);
+      if (everConfirmed === true) throw purchasingError("PO_STATE_CONFLICT");
+      if (everConfirmed !== false) throw purchasingError("PURCHASING_DEPENDENCY_UNAVAILABLE");
     }
 
     const version = request.version + 1, reason = request.reason;
