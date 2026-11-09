@@ -10,8 +10,11 @@ import { warningText } from "@/components/purchasing/purchaseOrderPresentation.j
 import { usePurchaseOrder } from "@/composables/purchasing/usePurchaseOrder.js";
 import { notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
+import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 
 const router = useRouter(), session = useSessionStore();
+// 呢個頁係儲存／提交 record 嘅穩定 owner：Form 會因 loading／error／權限 v-if 卸載，record 唔可以跟住冇咗。
+const commands = { save: useCommandEvent(), submit: useCommandEvent() };
 const { document, loading, error, load } = usePurchaseOrder();
 const actor = computed(() => ({ id: session.user.id, label: session.user.displayName || session.user.username }));
 const editable = computed(() => session.permissions.includes("purchasing.mgmt") && document.value?.allowedActions.includes("edit"));
@@ -32,7 +35,7 @@ async function submitted(result) {
     <div class="q-px-md q-pb-md">
       <q-skeleton v-if="loading" type="rect" aria-label="載入採購單" />
       <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load()" /><q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" /></template></q-banner>
-      <PurchaseOrderForm v-else-if="editable" :document="document" :actor="actor" @saved="saved" @submitted="submitted" @reload="load({ keep: true })" />
+      <PurchaseOrderForm :commands="commands" v-else-if="editable" :document="document" :actor="actor" @saved="saved" @submitted="submitted" @reload="load({ keep: true })" />
       <q-banner v-else-if="document" role="status" class="bg-warning text-dark">目前狀態或權限不允許編輯此採購單。<template #action><q-btn flat label="查看採購單" :to="`/purchasing/purchase-orders/${document.id}`" /></template></q-banner>
     </div>
   </div>

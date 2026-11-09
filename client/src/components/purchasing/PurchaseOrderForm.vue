@@ -7,21 +7,32 @@ import purchasing from "@/services/purchasing.js";
 import PurchaseOrderLineEditor from "./PurchaseOrderLineEditor.vue";
 import { isZeroPrice, previewLineAmount, previewTotal } from "./purchasingEditorMath.js";
 
-const props = defineProps({ document: { type: Object, default: null }, actor: { type: Object, required: true } });
+// `commands` 由 Edit／Create 頁（穩定 owner）傳入：Form 會因父頁 loading／error／權限 v-if 卸載，record 唔可以跟 Form 一齊冇咗。
+const props = defineProps({ document: { type: Object, default: null }, actor: { type: Object, required: true }, commands: { type: Object, default: null } });
 const emit = defineEmits(["saved", "submitted", "reload"]);
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const required = (value) => Boolean(value) || "必填";
 
 const form = reactive({}), options = reactive({ suppliers: [], warehouses: [], buyers: [], currencies: [], paymentTerms: [] });
 const supplier = ref(null), warehouse = ref(null), buyer = ref(null), address = ref(null), useAddress = ref(true), defaultCurrency = ref("");
-const lookupError = ref(""), defaultsError = ref(""), optionsError = ref(""), conflictVersion = ref(null), copied = ref(""), saving = ref(false), pristine = ref(""), entryCurrency = ref("");
-const showSubmit = ref(false), submitError = ref(""), submitting = ref(false);
+const lookupError = ref(""), defaultsError = ref(""), optionsError = ref(""), conflictVersion = ref(null), copied = ref(""), pristine = ref(""), entryCurrency = ref("");
+const showSubmit = ref(false), submitError = ref("");
 // §7.3：審批開住要揀審批人。讀唔到設定係 null，交返伺服器判斷（PO_APPROVAL_REQUIRED 會再讀）。
 const policy = reactive({ loading: false, requireApproval: null, approvers: [], approverId: null, requestNote: "" });
-const saveCommand = useCommandEvent(), submitCommand = useCommandEvent();
-// Intent 綁 actor 同呢張 PO（新單用 new）；document 重新載入唔會清走未確定嘅儲存／提交。
+// 冇 owner 傳入（只有直接掛 Form，例如 component test）先自己擁有。
+const { save: saveCommand, submit: submitCommand } = props.commands ?? { save: useCommandEvent(), submit: useCommandEvent() };
+// Record 綁 actor 同呢張 PO（新單用 new）；document 重新載入唔會清走未確定嘅儲存／提交。
 const commandKey = (action) => `${props.actor.id}:${props.document?.id ?? "new"}:${action}`;
-let disposed = false;
+// 可見回調只屬於發出嗰次生命週期：換 actor／PO 或者卸載就作廢。
+let generation = 0;
+// 未確定嘅儲存要顯示返原本送出嘅內容，唔可以畫面係新資料、重試卻送舊 body。
+const viewOf = () => ({ form: JSON.parse(JSON.stringify(form)), supplier: supplier.value, warehouse: warehouse.value, buyer: buyer.value, address: address.value,
+  useAddress: useAddress.value, entryCurrency: entryCurrency.value });
+function restoreView(view) {
+  Object.assign(form, view.form);
+  supplier.value = view.supplier; warehouse.value = view.warehouse; buyer.value = view.buyer; address.value = view.address;
+  useAddress.value = view.useAddress; entryCurrency.value = view.entryCurrency;
+}
 const touched = new Set(), controllers = {};
 
 function toLine(line) {
@@ -43,20 +54,26 @@ function reset(document) {
   touched.clear();
   if (document) { touched.add("currencyCode"); touched.add("paymentTermId"); }
   pristine.value = JSON.stringify(form);
+  const pendingSave = saveCommand.pending(commandKey("save")), pendingSubmit = submitCommand.pending(commandKey("submit"));
+  if (pendingSave) restoreView(pendingSave.meta.view);
+  if (pendingSubmit) { Object.assign(policy, pendingSubmit.meta.view, { loading: false }); showSubmit.value = true; }
 }
 watch(() => props.document, reset, { immediate: true });
+watch([() => props.actor.id, () => props.document?.id], () => { generation += 1; });
 
 const uncertain = computed(() => saveCommand.isUncertain(commandKey("save")));
 const submitUncertain = computed(() => submitCommand.isUncertain(commandKey("submit")));
 const stale = computed(() => conflictVersion.value !== null);
 const dirty = computed(() => JSON.stringify(form) !== pristine.value);
+const saving = computed(() => saveCommand.isBusy(commandKey("save")));
+const submitting = computed(() => submitCommand.isBusy(commandKey("submit")));
 const busy = computed(() => saving.value || submitting.value);
 const unresolved = computed(() => uncertain.value || submitUncertain.value);
 function canLeave() { return !busy.value && ((!dirty.value && !unresolved.value) || window.confirm("有未儲存或結果尚未確認的變更，確定離開？")); }
 onBeforeRouteLeave(canLeave); onBeforeRouteUpdate(canLeave);
 function beforeUnload(event) { if (busy.value || dirty.value || unresolved.value) { event.preventDefault(); event.returnValue = ""; } }
 window.addEventListener("beforeunload", beforeUnload);
-onBeforeUnmount(() => { disposed = true; window.removeEventListener("beforeunload", beforeUnload); Object.values(controllers).forEach((controller) => controller.abort()); });
+onBeforeUnmount(() => { generation += 1; window.removeEventListener("beforeunload", beforeUnload); Object.values(controllers).forEach((controller) => controller.abort()); });
 
 const currency = computed(() => options.currencies.find((row) => row.code === form.currencyCode)
   ?? (props.document?.currencyCode === form.currencyCode ? { code: form.currencyCode, name: props.document.currencyName, decimalPlaces: props.document.currencyDecimalPlaces } : null));
@@ -133,17 +150,16 @@ const send = (body) => (props.document ? purchasing.updatePurchaseOrder(props.do
 async function save() {
   if (stale.value) throw new Error("資料已被修改；你的輸入仍保留，請載入最新資料。");
   if (!form.lines.length) throw new Error("請新增至少一項明細。");
-  saving.value = true;
-  const key = commandKey("save");
+  const key = commandKey("save"), gen = generation;
   try {
-    const result = await saveCommand.run(payload(), send, key);
+    const result = await saveCommand.run(payload(), send, key, { action: "save", view: viewOf() });
     // 晚到嘅回應：已經換咗 PO／actor 或者離開，就唔再改呢個畫面。
-    if (disposed || key !== commandKey("save")) return result;
+    if (gen !== generation) return result;
     pristine.value = JSON.stringify(form);
-    saving.value = false;
     emit("saved", result);
     return result;
   } catch (error) {
+    if (gen !== generation) return undefined;
     // 未確定之後嘅 VERSION_CONFLICT 證明唔到原儲存失敗，唔入 stale 路徑，保留重試同一儲存。
     if (error.code === "VERSION_CONFLICT" && !uncertain.value) conflictVersion.value = error.details?.currentVersion ?? props.document?.version ?? 0;
     const safe = new Error(uncertain.value ? "結果尚未確認；保留原提交，請重試確認結果。" : stale.value ? "版本已更改；你的輸入仍保留。" : error.message || "儲存失敗");
@@ -152,7 +168,7 @@ async function save() {
       else if (error.details?.field) safe.details = [{ location: "body", path: `/${error.details.field.replaceAll(".", "/")}`, message: safe.message }];
     }
     throw safe;
-  } finally { saving.value = false; }
+  }
 }
 function reload() { if (window.confirm("載入最新資料會取代未儲存輸入，確定繼續？")) emit("reload"); }
 async function copyInput() {
@@ -160,14 +176,16 @@ async function copyInput() {
   catch { copied.value = "未能複製；請手動記下你的輸入。"; }
 }
 async function loadPolicy() {
+  const gen = generation;
   policy.loading = true;
   try {
     const { requireApproval, items } = await purchasing.lookupApprovers();
+    if (gen !== generation) return;
     Object.assign(policy, { requireApproval, approvers: items });
     if (!items.some((item) => item.id === policy.approverId)) policy.approverId = null;
   } catch {
-    Object.assign(policy, { requireApproval: null, approvers: [] });
-  } finally { policy.loading = false; }
+    if (gen === generation) Object.assign(policy, { requireApproval: null, approvers: [] });
+  } finally { if (gen === generation) policy.loading = false; }
 }
 function openSubmit() {
   submitError.value = "";
@@ -176,21 +194,22 @@ function openSubmit() {
 }
 const canConfirm = computed(() => !policy.loading && (policy.requireApproval !== true || policy.approverId !== null));
 async function submit() {
-  submitting.value = true; submitError.value = "";
+  submitError.value = "";
   const approval = policy.requireApproval ? { assignedApproverId: policy.approverId, ...(policy.requestNote.trim() ? { requestNote: policy.requestNote.trim() } : {}) } : {};
-  const key = commandKey("submit"), id = props.document.id;
+  const key = commandKey("submit"), id = props.document.id, gen = generation;
+  const view = { requireApproval: policy.requireApproval, approvers: policy.approvers, approverId: policy.approverId, requestNote: policy.requestNote };
   try {
-    const result = await submitCommand.run({ version: props.document.version, ...approval }, (body) => purchasing.submitPurchaseOrder(id, body), key);
-    if (disposed || key !== commandKey("submit")) return;
+    const result = await submitCommand.run({ version: props.document.version, ...approval }, (body) => purchasing.submitPurchaseOrder(id, body), key, { action: "submit", view });
+    if (gen !== generation) return;
     showSubmit.value = false;
     emit("submitted", result);
   } catch (error) {
-    if (disposed || key !== commandKey("submit")) return;
+    if (gen !== generation) return;
     if (error.code === "VERSION_CONFLICT" && !submitUncertain.value) { conflictVersion.value = error.details?.currentVersion ?? props.document.version; showSubmit.value = false; return; }
     if (["PO_APPROVAL_REQUIRED", "PO_APPROVER_INVALID"].includes(error.code)) loadPolicy();
     const line = /^lines\.(\d+)\./.exec(error.details?.field ?? "");
     submitError.value = submitUncertain.value ? "結果尚未確認；請重試同一提交以確認結果。" : `${error.message || "提交失敗"}${line ? `（第 ${Number(line[1]) + 1} 行）` : ""}`;
-  } finally { submitting.value = false; }
+  }
 }
 </script>
 

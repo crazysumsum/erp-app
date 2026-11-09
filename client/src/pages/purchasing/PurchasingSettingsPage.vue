@@ -3,7 +3,7 @@ export const page = { name: "purchasing-settings", path: "/purchasing/settings",
   menu: { group: "purchasingReceiving", icon: "tune", order: 90 } };
 </script>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
@@ -16,13 +16,17 @@ import purchasing from "@/services/purchasing.js";
 
 // §5.4：改設定只影響之後提交嘅 PO；要已註冊裝置簽署兼再輸入密碼。密碼唔入 intent，出錯清走，原因保留。
 const settings = ref(null), loading = ref(false), loadError = ref("");
-const target = ref(false), reason = ref(""), password = ref(""), saving = ref(false), saveError = ref(""), stale = ref(false);
+const target = ref(false), reason = ref(""), password = ref(""), saveError = ref(""), stale = ref(false);
 const command = useCommandEvent(), session = useSessionStore();
 // Intent 綁 actor；重新讀設定唔清走未確定嘅變更，重試仍然送原 payload 同 eventId。
 const commandKey = () => `${session.user?.id}:settings`;
 const uncertain = computed(() => command.isUncertain(commandKey()));
+const saving = computed(() => command.isBusy(commandKey()));
+// 可見回調只屬於發出嗰次生命週期：換 actor 或者卸載就作廢。
+let generation = 0;
+watch(() => session.user?.id, () => { generation += 1; saveError.value = ""; stale.value = false; });
 const controller = new AbortController();
-onBeforeUnmount(() => controller.abort());
+onBeforeUnmount(() => { generation += 1; controller.abort(); });
 const columns = [
   { name: "occurredAt", label: "時間", field: "occurredAt", align: "left" },
   { name: "requirePoApproval", label: "採購單審批", field: "requirePoApproval", align: "left" },
@@ -36,7 +40,7 @@ async function load() {
   loading.value = true; loadError.value = ""; stale.value = false;
   try {
     settings.value = await purchasing.getSettings({ signal: controller.signal });
-    const pendingChange = command.pendingPayload(commandKey());
+    const pendingChange = command.pending(commandKey())?.payload;
     target.value = pendingChange?.requirePoApproval ?? settings.value.requirePoApproval;
     if (pendingChange) reason.value = pendingChange.reason;
   } catch (failure) {
@@ -49,22 +53,19 @@ async function save() {
   const text = reason.value.trim();
   saveError.value = text.length < 5 || text.length > 500 ? "原因須為 5–500 字" : password.value ? "" : "請輸入密碼";
   if (saveError.value) return;
-  saving.value = true;
-  const secret = password.value, key = commandKey(), wasUncertain = uncertain.value;
+  const secret = password.value, key = commandKey(), wasUncertain = uncertain.value, gen = generation;
+  password.value = "";
   try {
     const result = await command.run({ version: settings.value.version, requirePoApproval: target.value, reason: text },
-      (body) => purchasing.updateSettings({ ...body, password: secret }), key);
-    if (key !== commandKey()) return; // 晚到：已經換咗 actor
+      (body) => purchasing.updateSettings({ ...body, password: secret }), key, { action: "settings" });
+    if (gen !== generation) return; // 晚到：已經換咗 actor 或者離開
     notifySuccess(`採購單審批已設為「${label(result.requirePoApproval)}」，只影響之後提交的採購單。`);
     reason.value = "";
     await load();
   } catch (failure) {
-    if (key !== commandKey()) return;
+    if (gen !== generation) return;
     stale.value = failure.code === "VERSION_CONFLICT" && !uncertain.value;
     saveError.value = uncertain.value ? `${wasUncertain && failure.message ? `${failure.message}。` : ""}結果尚未確認；請再輸入密碼，重試同一操作以確認結果。` : failure.message || "儲存失敗";
-  } finally {
-    password.value = "";
-    saving.value = false;
   }
 }
 </script>

@@ -1,28 +1,25 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import appConfig from "@config/app.js";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
-import purchasing from "@/services/purchasing.js";
 import { addressText, timestamp } from "./purchaseOrderPresentation.js";
 
 /**
  * §7.4：顯示提交當刻嘅固定快照，唔用目前 PO 資料代替；assigned approver 喺度批准／拒絕。
- * 密碼唔放入 command intent：出錯後清走密碼、保留原因（P2-T03），結果未確認時用同一 eventId 再送。
- * Command 由詳情頁擁有（`command`、`commandKey` 綁 actor／PO／action），所以 panel 因 loading／error 卸載重建都唔會清走未確定嘅決定；
- * 未確定期間只准重試同一個動作，相反動作鎖住。
+ * 只負責顯示同收輸入：record、單一 in-flight 同結果由詳情頁（穩定 owner）擁有，所以 panel 因 loading／error 卸載重建都唔會清走或者重發決定。
+ * 密碼送出即清；原因保留（P2-T03）。未確定期間原因用原 payload、唔准改，只准重試同一動作，相反動作鎖住。
  */
-const props = defineProps({ approval: { type: Object, required: true }, purchaseOrderId: { type: Number, required: true }, version: { type: Number, required: true },
-  actions: { type: Array, default: () => [] }, command: { type: Object, required: true }, commandKey: { type: Function, required: true } });
-const emit = defineEmits(["decided", "reload"]);
+const props = defineProps({ approval: { type: Object, required: true }, actions: { type: Array, default: () => [] },
+  uncertainAction: { type: String, default: null }, pendingReason: { type: String, default: "" }, busy: { type: Boolean, default: false },
+  errorMessage: { type: String, default: "" }, stale: { type: Boolean, default: false } });
+const emit = defineEmits(["decide", "reload"]);
 
 const WARNINGS = Object.freeze({ ZERO_PRICE: "有零價明細", NO_PAYMENT_TERM: "未選擇付款條款" });
-const RELOAD = ["VERSION_CONFLICT", "PO_STATE_CONFLICT", "APPROVAL_ASSIGNEE_MISMATCH", "CONCURRENT_OPERATION"];
-const DECIDE = ["approve", "reject"];
-const uncertainAction = computed(() => DECIDE.find((action) => props.command.isUncertain(props.commandKey(action))) ?? null);
 // 重建後顯示返原本提交、重試會再送嘅原因。
-const reason = ref(uncertainAction.value ? props.command.pendingPayload(props.commandKey(uncertainAction.value)).reason ?? "" : "");
-const password = ref(""), pending = ref(null), errorMessage = ref(""), stale = ref(false);
+const reason = ref(props.pendingReason), password = ref(""), localError = ref(""), clicked = ref(null);
+watch(() => props.pendingReason, (value) => { if (props.uncertainAction) reason.value = value; });
+const message = computed(() => localError.value || props.errorMessage);
 const snapshot = computed(() => props.approval.snapshot);
 const canDecide = computed(() => props.actions.includes("approve") || props.actions.includes("reject"));
 const reasonError = (required) => {
@@ -51,30 +48,13 @@ const columns = [
   { name: "lineNote", label: "備註", field: "lineNote", align: "left" }
 ];
 
-async function decide(action) {
-  if (uncertainAction.value && uncertainAction.value !== action) return;
-  const required = action === "reject";
-  errorMessage.value = reasonError(required) || (password.value ? "" : "請輸入密碼");
-  if (errorMessage.value) return;
-  pending.value = action;
-  const key = props.commandKey(action), wasUncertain = props.command.isUncertain(key);
-  const text = reason.value.trim(), secret = password.value;
-  const send = action === "approve" ? purchasing.approvePurchaseOrder : purchasing.rejectPurchaseOrder;
-  try {
-    const id = props.purchaseOrderId;
-    const result = await props.command.run({ version: props.version, ...(text ? { reason: text } : {}) }, (body) => send(id, { ...body, password: secret }), key);
-    if (key !== props.commandKey(action)) return; // 晚到：已經換咗 PO／actor
-    reason.value = "";
-    emit("decided", { action, result });
-  } catch (error) {
-    if (key !== props.commandKey(action)) return;
-    stale.value = RELOAD.includes(error.code);
-    errorMessage.value = props.command.isUncertain(key)
-      ? `${wasUncertain && error.message ? `${error.message}。` : ""}結果尚未確認；請再輸入密碼，重試同一操作以確認結果。` : error.message || "操作失敗";
-  } finally {
-    password.value = "";
-    pending.value = null;
-  }
+function decide(action) {
+  if (props.busy || (props.uncertainAction && props.uncertainAction !== action)) return;
+  localError.value = reasonError(action === "reject") || (password.value ? "" : "請輸入密碼");
+  if (localError.value) return;
+  clicked.value = action;
+  emit("decide", { action, reason: reason.value.trim(), password: password.value });
+  password.value = "";
 }
 </script>
 
@@ -101,12 +81,12 @@ async function decide(action) {
     </DataTable>
     <q-card-section v-if="canDecide">
       <h2 class="text-h6 q-ma-none q-mb-sm">審批決定</h2>
-      <q-banner v-if="errorMessage" role="alert" class="bg-negative text-white q-mb-sm">{{ errorMessage }}<template v-if="stale" #action><q-btn flat label="重新載入" @click="emit('reload')" /></template></q-banner>
-      <q-input v-model="reason" label="原因（批准選填，拒絕必填）" type="textarea" autogrow maxlength="500" counter :readonly="!!uncertainAction" outlined dense />
+      <q-banner v-if="message" role="alert" class="bg-negative text-white q-mb-sm">{{ message }}<template v-if="stale && !localError" #action><q-btn flat label="重新載入" @click="emit('reload')" /></template></q-banner>
+      <q-input v-model="reason" label="原因（批准選填，拒絕必填）" type="textarea" autogrow maxlength="500" counter :readonly="!!uncertainAction || busy" outlined dense />
       <q-input v-model="password" label="密碼 *" type="password" autocomplete="current-password" class="q-mt-sm" outlined dense />
       <div class="row q-gutter-sm q-mt-sm">
-        <q-btn v-if="actions.includes('approve')" color="primary" label="批准" :loading="pending === 'approve'" :disable="!!pending || (!!uncertainAction && uncertainAction !== 'approve')" @click="decide('approve')" />
-        <q-btn v-if="actions.includes('reject')" outline color="negative" label="拒絕" :loading="pending === 'reject'" :disable="!!pending || (!!uncertainAction && uncertainAction !== 'reject')" @click="decide('reject')" />
+        <q-btn v-if="actions.includes('approve')" color="primary" label="批准" :loading="busy && clicked === 'approve'" :disable="busy || (!!uncertainAction && uncertainAction !== 'approve')" @click="decide('approve')" />
+        <q-btn v-if="actions.includes('reject')" outline color="negative" label="拒絕" :loading="busy && clicked === 'reject'" :disable="busy || (!!uncertainAction && uncertainAction !== 'reject')" @click="decide('reject')" />
       </div>
     </q-card-section>
   </q-card>
