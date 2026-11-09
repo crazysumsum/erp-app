@@ -1,26 +1,28 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"前端測試提案全部批准，TASK-025 可以開始\", answering the consolidated proposal in implementation/P2_task024_client.md: 6 new jsdom cases (4 in the new purchasingApprovals.test.js, 1 in purchasingPurchaseOrderForm.test.js, 1 in client/test/services/purchasing.test.js) and 2 changed existing cases (the lookupApprovers mock in purchasingPurchaseOrderForm.test.js and the TASK-021 navigation pin), in the existing client unit job on every PR. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json, which these changes invalidate as whole receipts, plus support pins for the new and changed pages. After the tech lead's review relayed by the PM on 2026-11-09, the two PASSWORD_INVALID mocks in purchasingApprovals.test.js were aligned from status 401 to the real 403, with no case added and no assertion changed; whether that alignment needs Sam's separate approval is for the PM to confirm. This decision does not authorize the agent to publish the digest",
+  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"A、B、C1、C2、C4 全部批准，C3、C5 暫緩\", answering the approval package docs/purchasing_receiving_management/implementation/P2_approval_package_2026-11-09.md (sha256 f1f80354…) on branch claude/purchasing-task025. C1 approves 29 new jsdom registrations (6 non-final error variants and H1 in client/test/services/purchasing.test.js; 14 UI variants in purchasingApprovals.test.js; 8 in purchasingPurchaseOrderEditor.test.js) and 3 changed existing cases in services/purchasing.test.js, against the TL-accepted source 092c86dd. Earlier approval of 2026-11-09 (\"前端測試提案全部批准，TASK-025 可以開始\") covers the first TASK-024 client cases. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json. This decision does not authorize the agent to publish the digest",
   "purpose": "The my-approvals page requests only the actor's pending list with paging and search and links to detail; the detail page shows the fixed approval snapshot, not the live PO, and shows decision controls only for allowedActions plus purchasing.approval; a failed decision keeps the reason, clears the password and retries an uncertain result with the same action and eventId; the settings page sends version, reason and password through the signed update and keeps the reason after an error; submit with approval on requires an approver and sends it; the TASK-018 to TASK-021 client behaviour stays pinned",
   "data": "No database or network: mocked services, real discovered pages, and small inline objects of at most 1 approval and 1 line. No fixture files",
   "concurrency": "1",
   "repetitions": "1",
   "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
   "trigger": "Routine correctness regression on every PR and push to main, in the existing client test job",
-  "cost": "Measured locally on 2026-11-09: the 7 Purchasing client test files, 121 cases, run in a few seconds together; the new file's 4 cases take about 0.1 s. CI not measured, estimated under 2 s added. No new job and no capacity workload",
+  "cost": "Not measured for the new cases. The previous 121 registrations took 1.67 s locally at 64ca24c8; the expected total is 150 registrations. No new job and no capacity workload",
   "files": [
     {
       "path": "client/test/services/purchasing.test.js",
       "mode": "100644",
-      "blob": "485a8c13fcc1565e1c55433eb096b9210203cb8e",
+      "blob": "4c2af2a823465afc25895b2b145695df84f60d3b",
       "kind": "functional",
       "cases": [
         "create、update、submit、copy 用 eventId 做 Idempotency-Key，body 原封不動",
         "列表映射 DataTable，去走空 filter；detail 同 lookup 轉發 AbortSignal",
+        "審批命令用 eventId 做 Idempotency-Key；設定更新要裝置簽章；待我審批映射 DataTable；approvers 回埋 requireApproval",
+        "結果未確定（%j）就保留原 payload 同 eventId",
         "明確結果之後下一次係新意圖、新 eventId",
-        "reset 之後唔會再用舊 intent",
-        "結果未確定（%j）就保留原 payload 同 eventId (it.each, 5 rows)",
-        "審批命令用 eventId 做 Idempotency-Key；設定更新要裝置簽章；待我審批映射 DataTable；approvers 回埋 requireApproval"
+        "唔同 key 互不影響：新 key 唔用舊 intent，返原 key 仍然用原 eventId 同 payload",
+        "未確定之後 %i %s 證明唔到原交易失敗：保留原 eventId、payload 同未確定，只有原操作成功先解除",
+        "同一 key 只准一個 in-flight，亦唔准換動作：本地 COMMAND_PENDING 唔發 HTTP；未確定 record 由空開始都睇得到"
       ]
     },
     {
@@ -29,6 +31,7 @@
       "blob": "00fd9ba79a18f5ef49ac61c968f752ff0cce3e9c",
       "kind": "functional",
       "cases": [
+        "數量 %s × 單價 %s（%i 位）",
         "Total 係已 round Line Amount 之和；factor 換算同 server 一樣，唔整除就回 null",
         "建立：帶入 Supplier 預設、預設 Buyer 係自己，只送可編輯欄位",
         "用戶改過嘅貨幣同條款，換 Supplier 都唔蓋；未改過嘅照帶；地址一定跟新 Supplier",
@@ -47,22 +50,21 @@
         "Dirty 離開要確認（route 切換、同 route 換 query、瀏覽器關閉）；儲存之後唔再問",
         "客戶端驗證擋住：零數量、超精度、唔整除 Base、交期早過訂單日期、冇明細",
         "提交：未儲存唔准，摘要顯示「確認後可收貨」，送 version 同 eventId；結果未確定用同一 eventId 重試",
+        "審批開住：要揀審批人先可以提交審批，送 assignedApproverId 同 requestNote（§7.3）",
         "提交被拒顯示行號；Version conflict 關 dialog 走 stale 路徑",
-        "選項載入失敗有重試；搜尋失敗有提示",
-        "數量 %s × 單價 %s（%i 位） (it.each, 9 rows)",
-        "審批開住：要揀審批人先可以提交審批，送 assignedApproverId 同 requestNote（§7.3）"
+        "選項載入失敗有重試；搜尋失敗有提示"
       ]
     },
     {
       "path": "client/src/components/purchasing/PurchaseOrderForm.vue",
       "mode": "100644",
-      "blob": "46756f67da942965c44ba090da73c199574c6bd2",
+      "blob": "e31a6624f33508a8cb6f5c60bfef65a16dbd46e5",
       "kind": "support"
     },
     {
       "path": "client/test/pages/purchasing/purchasingPurchaseOrderEditor.test.js",
       "mode": "100644",
-      "blob": "72b4bbb6f588986a2f130cf2a5657a1f3d797d2c",
+      "blob": "c5407e6f48b56737b08877fe6c95175e1612d40b",
       "kind": "functional",
       "cases": [
         "要 view 同 mgmt；採購員預設目前用戶；新單冇 document",
@@ -73,9 +75,15 @@
         "提交成功去詳情頁",
         "版本衝突：輸入保留；確認後載入最新版本",
         "改咗未存：離開要確認，拒絕就留低",
-        "%s：唔出表單，只有返回詳情 (it.each, 2 rows)",
-        "唔合法嘅 id %s 唔會打 API (it.each, 3 rows)",
-        "讀取失敗可重試"
+        "%s：唔出表單，只有返回詳情",
+        "唔合法嘅 id %s 唔會打 API",
+        "讀取失敗可重試",
+        "C8 %s：儲存未確定，Form 卸載重建後顯示原值兼鎖住，重試送原 body",
+        "C9 提交未確定之後 VERSION_CONFLICT：對話框留低、唔入 stale；之後成功都係原 body",
+        "C10 提交 in-flight 期間 Form 重建：新 Form 對話框忙住；成功只由 owner 處理一次",
+        "C15 儲存中換 actor：原 call 之後 409，新畫面冇錯誤、冇 stale、owner 唔通知",
+        "C16 %s——提交其實成功但回應丟失，重新讀取已唔可以編輯，Edit 頁保留未確定提交",
+        "C18 儲存 in-flight 期間 Form 重建：新 Form 鎖住顯示原值；原 call TIMEOUT 之後新 Form 跟住轉未確定，重試送原 body"
       ]
     },
     {
@@ -93,14 +101,14 @@
         "舊 filter 嘅回應遲到，唔會蓋住新結果",
         "風險有文字；進度同未收顯示 server 嘅準確數字",
         "讀取失敗顯示重試，重試成功；空結果有提示",
-        "進度條 %s／%s 係 %s，超收唔超過 100%% (it.each, 6 rows)",
+        "進度條 %s／%s 係 %s，超收唔超過 100%%",
         "只有 view：就算 server 有 action 都唔出寫入按鈕",
         "mgmt：按鈕跟 server；非 Draft 冇編輯",
-        "%s 列印入口：%s（Viewer 都有） (it.each, 5 rows)",
+        "%s 列印入口：%s（Viewer 都有）",
         "快照同目前主資料分開；冇分別就冇目前主資料區",
         "每行分開顯示全部 Base 數量；零價同超收有文字；備註唔當 HTML",
         "多行進度用 BigInt 加總，超過 2^53 都準",
-        "唔合法嘅 id %s 唔會打 API (it.each, 4 rows)",
+        "唔合法嘅 id %s 唔會打 API",
         "讀取失敗可重試，唔會出舊資料",
         "權限變咗就重新讀，按鈕跟新權限",
         "轉 PO 時舊回應遲到唔會蓋住新 PO",
@@ -119,12 +127,12 @@
       "cases": [
         "purchasing.view 就可以印；內容用交易快照，唔用目前主資料",
         "語意 table，100 行都喺度；PO 編號喺重複嘅表頭入面",
-        "%s 係正式版本，冇水印 (it.each, 4 rows)",
+        "%s 係正式版本，冇水印",
         "Draft 有水印同文字，掣寫明係草稿",
-        "%s 唔准印 (it.each, 2 rows)",
+        "%s 唔准印",
         "撳掣用瀏覽器列印，唔打任何 API",
         "冇值就寫未設定；備註當文字",
-        "唔合法嘅 id %s 唔會打 API (it.each, 3 rows)",
+        "唔合法嘅 id %s 唔會打 API",
         "讀取失敗可重試，唔會出列印掣",
         "列印 CSS：A4、表頭每頁重現、行唔切開、藏起 app 外框"
       ]
@@ -136,7 +144,7 @@
       "kind": "functional",
       "cases": [
         "有 purchasing.view 先見到群組，入面只有採購單",
-        "權限 %j 唔見群組 (it.each, 3 rows)",
+        "權限 %j 唔見群組",
         "TASK-024：待我審批要 view＋approval、採購設定要 settings 先入選單；收貨頁未有入口；詳情、新增、編輯、列印唔入選單",
         "群組已登記，排喺供應商同客戶之間，頁面通過啟動驗證",
         "server 每個採購錯誤碼都有繁中訊息，唔係原文代碼",
@@ -160,19 +168,19 @@
     {
       "path": "client/src/pages/purchasing/PurchaseOrderDetailPage.vue",
       "mode": "100644",
-      "blob": "d4bb5eeda0b09b5fa0eaf297f988711ae991582c",
+      "blob": "74bf6c0c799cc3d123b30c27c4029df8e3a29771",
       "kind": "support"
     },
     {
       "path": "client/src/pages/purchasing/PurchaseOrderCreatePage.vue",
       "mode": "100644",
-      "blob": "ae34b43a3fcff83e55112943697cbf3f70c1df51",
+      "blob": "738bbacf9eafd1cdd3e763f07d6a11e7ccb0d4c3",
       "kind": "support"
     },
     {
       "path": "client/src/pages/purchasing/PurchaseOrderEditPage.vue",
       "mode": "100644",
-      "blob": "e8af0806120e70f3599d5d325ac425776a94466a",
+      "blob": "d8d6cf3b725866372098d7995fb9a517d3ac2dd0",
       "kind": "support"
     },
     {
@@ -190,13 +198,25 @@
     {
       "path": "client/test/pages/purchasing/purchasingApprovals.test.js",
       "mode": "100644",
-      "blob": "62d284a9468575079f996ca02aa4c716878d4337",
+      "blob": "fcd75318a9be03ce8e7a4471a0a7384b2914fb65",
       "kind": "functional",
       "cases": [
         "要 view＋approval，入選單；送頁碼同搜尋，按處理入詳情；冇資料有空狀態",
         "快照來自 approval.snapshot 唔係目前 PO；按鈕跟 allowedActions 同權限，mgmt 只見撤回",
         "拒絕要原因；出錯保留原因清密碼；未確定只准同一動作用同一 eventId 重試",
-        "顯示目前值同紀錄；改設定送 version、原因同密碼，出錯保留原因清密碼"
+        "顯示目前值同紀錄；改設定送 version、原因同密碼，出錯保留原因清密碼",
+        "C1 決定未確定後權限刷新令 panel 重建：原因由原 payload 回填、拒絕鎖住，重試用原 eventId",
+        "C2 未確定之後 403：保留原 record，訊息兩樣都講，拒絕仍鎖；之後成功都係原 eventId",
+        "C3 換 PO：另一張 PO 唔見原 record、用新 eventId；返原 PO 仍用原 eventId",
+        "C4 晚到回應：換咗 PO 之後先成功，唔通知、唔重新讀取",
+        "C5 換 actor：新 actor 唔見原 record 嘅鎖或者 banner，批准用新 eventId",
+        "C6 撤回審批未確定後同 context 重新讀取：banner 仍在，重試用原 eventId",
+        "C7 設定未確定之後 VERSION_CONFLICT：唔入 stale、開關鎖住、原因保留；之後成功仍係原 body",
+        "C11 %s——決定其實已 commit 但回應丟失，approval 變 null，panel 消失但頁面保留未確定決定",
+        "C12 in-flight 期間 panel 重建：新 panel 唔可以再發批准或者拒絕；之後 TIMEOUT 拒絕仍鎖",
+        "C13 離開再返同一張 PO：上一次生命週期嘅複製晚到成功，唔跳頁、唔通知",
+        "C14 離開詳情頁之後複製先成功：唔跳返去、唔通知",
+        "C17 %s：dialog 返嚟時 context 已經唔同，唔送任何 request"
       ]
     },
     {
@@ -208,7 +228,7 @@
     {
       "path": "client/src/pages/purchasing/PurchasingSettingsPage.vue",
       "mode": "100644",
-      "blob": "d801c2ae252aafc589a03f6bb6902add02cec186",
+      "blob": "ba536f6b9d643309e04f3a4120be03c0894bf5c5",
       "kind": "support"
     }
   ]
