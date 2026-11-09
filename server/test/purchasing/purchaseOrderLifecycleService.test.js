@@ -1,6 +1,6 @@
 /**
  * TASK-025（§3.2、§8.4）：PO lifecycle 嘅純推導同 transaction 內規則，用假 tx。Sam 2026-11-09 批准 C4（U1～U7，22 個 registration）。
- * 真 SQL、lock、trigger 同並發由 purchasingLifecycle.integration.test.js 驗。
+ * purchasingLifecycle.integration.test.js 經真 HTTP／MySQL 驗 I1～I4；真 lock 次序、trigger 同並發唔喺本批（並發要另外批准）。
  */
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -26,7 +26,7 @@ function fakeTx(row, lines = []) {
     return [{ affectedRows: 1 }];
   } };
 }
-function service(answer = false) {
+function service(answer) {
   const invalidated = [], readerCalls = [];
   const receiptFacts = typeof answer === "function" ? { everConfirmed: async (...args) => { readerCalls.push(args); return answer(); } }
     : answer === "default" ? undefined : { everConfirmed: async (...args) => { readerCalls.push(args); return answer; } };
