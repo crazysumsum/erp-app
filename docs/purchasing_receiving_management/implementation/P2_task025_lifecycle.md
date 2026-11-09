@@ -248,3 +248,27 @@ The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). Th
 - I4-after: 1 PO, 1 line. 2 concurrent POSTs and 1 GET. **This needs Sam's separate approval.**
 
 **Existing assertion:** `purchasingInquiry.integration.test.js` lines 265 to 266 change from `e: ["copy"]` to `e: ["copy", "closeRemaining"]`. Nothing else changes, and the original assertions are kept, with none skipped.
+
+## C4 run (Sam's approval of 2026-11-09; the single grant is used): FAILED, stopped and released
+
+- **Candidate:** `418c4e0ba9f039c9808227b807014172889fa563`. `server/src` is identical to `2cb6fe60`. Migrations end at 0118, and `goods_receipts` was absent after migrating.
+- **Window:**
+  - Started 2026-11-09 12:13:33 +08:00.
+  - Private mysqld 26.7.0, PID 39635, on 127.0.0.1:33619, socket `/private/tmp/m025c4/s.sock`, datadir `/private/tmp/m025c4`, started with `--skip-log-bin --mysqlx=OFF`.
+  - Released 12:15:26 +08:00: the PID exited, the datadir was removed, `lsof` showed no listener on 33619, and `pgrep mysqld` was empty.
+- **Steps:**
+  1. Preflight: head, clean tree, migration set, no mysqld, free port, absent datadir. All passed.
+  2. `validateApplicationConfiguration()` with the 19-variable env built from `ci.yml`: `CONFIG_OK`.
+  3. Initialize, start, and create the `ci.yml` root, `erp_dev` and `erp_user`: exit 0.
+  4. `npm run migrate`: exit 0, 111 migrations up to `0118_create_purchase_order_status_history.js`.
+  5. The literal four-file `npm test -- …`: **exit 1. Tests 43: 39 passed, 4 failed** (8.53 s).
+- **Results:**
+  - Passed: the 22 unit registrations, the 8 inquiry registrations (including the changed assertion) and the 9 approval-command registrations.
+  - **Failed:** all 4 lifecycle integration registrations, I1 to I4. Every lifecycle POST returned `500 INTERNAL_SERVER_ERROR` instead of 503, 200 or 409. I3 and I4 then hit `undefined.status`.
+- **Cause, found by reading the server log and source, not by rerunning:**
+  - `PurchasingOperationService.claim` refuses any `commandType` missing from its `COMMANDS` whitelist with `TypeError("Unsupported Purchasing command")`.
+  - TASK-025 added `WITHDRAW_CONFIRMATION_PURCHASE_ORDER`, `CANCEL_PURCHASE_ORDER` and `CLOSE_REMAINING_PURCHASE_ORDER` (the `${kind}_PURCHASE_ORDER` in `PurchaseOrderService.#claim`) but did not register them.
+  - The TypeError aborts the transaction, so the request ends as a 500.
+  - This is a **product defect in the TASK-025 source**, not a test defect. The unit file calls `PurchaseOrderLifecycleService` directly, and the private `check025.mjs` used a fake transaction, so neither exercised `claim`.
+- **Evidence:** `/Users/sam/Documents/workspace/purchasing-evidence/c4-2026-11-09/`, with `SHA256SUMS` of 22 entries. It holds the commands' logs, exit files, the mysqld error log, and the server system and request logs.
+- No retry and no further run.
