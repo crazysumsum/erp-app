@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { createTestCurrency, migrationFixture } from "../phase1/fixtures.js";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { createTestCurrency, migrationFixture,enterSalesFixtureRequests } from "../phase1/fixtures.js";
 import { createApplication } from "../../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../../src/framework/configuration/applicationConfiguration.js";
 import { SalesOrderService } from "../../../src/modules/sales/SalesOrderService.js";
@@ -14,8 +15,9 @@ export async function setup(t, { waitMs = 2500, backorderEnabled = false } = {})
   const f = await migrationFixture(t, []), source = defaultConfigurationSource();
   const app = await createApplication({ configurationSource: { ...source, application: { ...source.application,port: 0 },sales: { ...source.sales,manualConfirmationWaitMs: waitMs },scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs,
     "sales.confirmationRecovery": { enabled: false }, "sales.backorderAllocate": { enabled: backorderEnabled } } } } });
-  t.after(() => app.shutdown("sales_phase2_confirmation_complete"));
   const database = app.services.require("mysqldatabase"), time = app.services.require("time"), logger = app.services.require("logging").logger;
+  const restoreEntry=enterSalesFixtureRequests(database);
+  t.after(async()=>{restoreEntry();await app.shutdown("sales_phase2_confirmation_complete");});
   const label = `sales-p2-${randomUUID().slice(0, 8)}`;
   const roleId = await f.insert("roles", { name: label, created_at: f.now });
   const userId = await f.insert("users", { username: label, password_hash: "synthetic", display_name: "Synthetic", created_at: f.now, updated_at: f.now });
@@ -69,31 +71,35 @@ export function createOrder(f, database, { customerId = f.customerId, currencyCo
     fulfillmentWarehouseId: f.warehouseId, orderDate: f.time.fileDate(), lines: [{ skuId: f.skuId, skuUomId: f.skuUomId, quantity: "1.000000", unitSellingPrice: "1.0000" }] } }));
 }
 
-// Wraps one Inventory method of a Sales lock holder. On entry, a new Order (`write` gets a database whose transactions pause before
+// Wraps one Inventory method of a Sales lock holder. On entry, a new Order (`write` uses the actual database whose transactions pause before
 // their first sales_order_lines INSERT, when the header FK check already holds the Warehouse share lock) runs to that insert and is
 // released; state.inserted records whether the insert completed within 5s while the holder still owned its Sales locks.
 export function newOrderInsideInventory(f, inventory, method, write) {
-  const reached = Promise.withResolvers(), release = Promise.withResolvers(), inserted = Promise.withResolvers(), database = Object.create(f.database), state = {};
+  const reached = Promise.withResolvers(), release = Promise.withResolvers(), inserted = Promise.withResolvers(), database = f.database, state = {},writer=new AsyncLocalStorage();
+  const transaction=database.withTransaction;
   let paused = false;
-  database.withTransaction = (work, options) => f.database.withTransaction(tx => work(new Proxy(tx, { get(target, key) {
-    const value = Reflect.get(target, key);
-    if (key !== "execute") return typeof value === "function" ? value.bind(target) : value;
-    return async (sql, params) => {
-      if (paused || !sql.startsWith("INSERT INTO sales_order_lines")) return target.execute(sql, params);
+  database.withTransaction = function(work,options){
+    if(!writer.getStore())return transaction.call(this,work,options);
+    return transaction.call(this,async tx=>{
+      const execute=tx.execute;
+      tx.execute=async function(sql,params,queryOptions){
+      if (paused || !sql.startsWith("INSERT INTO sales_order_lines")) return execute.call(this,sql,params,queryOptions);
       paused = true; reached.resolve(); await release.promise;
-      const result = await target.execute(sql, params); inserted.resolve(true); return result;
-    };
-  } })), options);
+      const result = await execute.call(this,sql,params,queryOptions); inserted.resolve(true); return result;
+      };
+      try{return await work(tx);}finally{tx.execute=execute;}
+    },options);
+  };
   const bound = (promise, value) => Promise.race([promise, new Promise(resolve => { setTimeout(resolve, 5000, value); })]);
   const wrapped = new Proxy(inventory, { get(target, key) {
     const value = Reflect.get(target, key);
     if (key !== method) return typeof value === "function" ? value.bind(target) : value;
     return async (...args) => {
-      state.draft = write(database);
+      state.draft = writer.run(true,()=>write(database));
       if (!await bound(Promise.race([reached.promise.then(() => true), state.draft.then(() => false)]), false)) throw new Error("the new Order never reached its line insert");
       release.resolve(); state.inserted = await bound(inserted.promise, false);
       return value.apply(target, args);
     };
   } });
-  return { inventory: wrapped, state, async settle() { release.resolve(); return state.draft?.catch(() => {}); } };
+  return { inventory: wrapped, state, async settle() { release.resolve();try{return await state.draft?.catch(() => {});}finally{database.withTransaction=transaction;} } };
 }
