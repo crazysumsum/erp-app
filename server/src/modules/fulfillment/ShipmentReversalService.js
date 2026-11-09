@@ -111,7 +111,8 @@ export class ShipmentReversalService {
     record.phase="reversal.zero.inventory.finish";const inventoryProof=await inventory.readShipmentReversalZeroEffectInTransaction(tx,inventoryContext);
     record.phase="reversal.zero.inventory.verify";const inventoryResult=await inventory.verifyShipmentReversalZeroEffectProofInTransaction(tx,session,inventoryProof);
     record.phase="reversal.zero.sales.verify";const salesResult=await sales.verifyShipmentReversalZeroEffectProofInTransaction(tx,session,salesProof);
-    if(inventoryResult?.state!=="ABSENT"||salesResult?.state!=="ABSENT")return {state:"UNKNOWN"};
+    // Absence and present write eligibility are independent owner attestations.
+    if(inventoryResult?.state!=="ABSENT"||salesResult?.state!=="ABSENT"||inventoryResult.eligibility!=="ELIGIBLE"||salesResult.eligibility!=="ELIGIBLE")return {state:"UNKNOWN"};
     const final=await this.#inspectionFence(tx,record),row=final.row,now=final.now;
     if(attemptCount>=SHIPMENT_RECOVERY_MAX_ATTEMPTS){
      const [deferred]=await tx.execute("UPDATE fulfillment_operation_requests SET next_attempt_at=GREATEST(COALESCE(next_attempt_at,0),?),updated_at=? WHERE id=? AND event_id=? AND operation_type='REVERSE' AND target_type='SHIPMENT' AND target_id=? AND initiated_by=? AND payload_hash=? AND correlation_id=? AND status='IN_PROGRESS' AND result_json IS NULL AND completed_at IS NULL AND public_error_code='' AND public_error_details IS NULL AND is_document_archived=0 AND lease_owner=? AND attempt_count=? AND lease_expires_at=? AND next_attempt_at<=>?",[now+SHIPMENT_RECOVERY_MAX_DELAY_MS,now,row.id,eventId,durable.request.target.id,durable.actorId,row.payload_hash,durable.request.correlationId,row.lease_owner,attemptCount,row.lease_expires_at,row.next_attempt_at]);
