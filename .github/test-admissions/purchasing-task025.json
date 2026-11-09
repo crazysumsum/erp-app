@@ -298,7 +298,7 @@
     {
       "path": "server/test/integration/purchasingLifecycle.integration.test.js",
       "mode": "100644",
-      "blob": "3889244c96e1f57ecbbca45d39183855291b6ade",
+      "blob": "5939989c56c27eea09fab966c2fc26c69c232835",
       "kind": "functional",
       "cases": [
         "TASK-025 I1 撤回確認：未有權威 GR 事實就 503，乜都唔寫，亦唔宣告呢個動作",
