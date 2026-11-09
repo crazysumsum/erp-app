@@ -78,16 +78,16 @@ describe("useCommandEvent", () => {
     expect(new Set(send.mock.calls.map(([body]) => body.eventId)).size).toBe(3);
   });
 
-  it("唔同 key 互不影響：新 key 唔用舊 intent，返原 key 仍然用原 eventId 同 payload", async () => {
+  it("唔同 key 互不影響：新 key 唔用舊 intent，原 key 仍然未確定", async () => {
     const command = useCommandEvent(), send = vi.fn().mockRejectedValueOnce(failure({ code: "TIMEOUT" })).mockResolvedValue("done");
     await expect(command.run({ notes: "舊" }, send, "a")).rejects.toThrow("failed");
     await command.run({ notes: "新" }, send, "b");
-    await command.run({ notes: "改咗" }, send, "a");
-    const [first, second, third] = send.mock.calls.map(([body]) => body);
+    const [first, second] = send.mock.calls.map(([body]) => body);
+    expect(send).toHaveBeenCalledTimes(2);
     expect(second.notes).toBe("新");
     expect(second.eventId).not.toBe(first.eventId);
-    expect(third).toEqual(first);
-    expect(command.isUncertain("a")).toBe(false);
+    expect(command.isUncertain("a")).toBe(true);
+    expect(command.isUncertain("b")).toBe(false);
   });
 
   it.each([[403, "PASSWORD_INVALID"], [403, "PERMISSION_STALE"], [400, "DEVICE_SIGNATURE_STALE"], [409, "CONCURRENT_OPERATION"], [409, "VERSION_CONFLICT"], [422, "UNKNOWN_FUTURE_CODE"]])(

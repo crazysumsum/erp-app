@@ -41,7 +41,7 @@ beforeEach(() => {
 afterEach(() => { wrapper?.unmount(); wrapper = null; document.body.innerHTML = ""; vi.restoreAllMocks(); });
 
 describe("TASK-020 新增頁", () => {
-  const FormStub = defineComponent({ name: "PurchaseOrderForm", props: ["actor", "document"], emits: ["saved"], setup: (props, { emit }) => () => h("button", { "data-testid": "stub", onClick: () => emit("saved", { ...saved, id: 20, number: "PO-202611-000020", warnings: [{ code: "SKU_NOT_PURCHASABLE", lineNumber: 2 }, { code: "SUPPLIER_NOT_PURCHASABLE" }] }) }, JSON.stringify(props.actor)) });
+  const FormStub = defineComponent({ name: "PurchaseOrderForm", props: ["actor", "document", "commands"], setup: (props) => () => h("button", { "data-testid": "stub", onClick: () => props.commands.saved({ ...saved, id: 20, number: "PO-202611-000020", warnings: [{ code: "SKU_NOT_PURCHASABLE", lineNumber: 2 }, { code: "SUPPLIER_NOT_PURCHASABLE" }] }, props.commands.generation()) }, JSON.stringify(props.actor)) });
 
   it("要 view 同 mgmt；採購員預設目前用戶；新單冇 document", async () => {
     expect(createPage.requires.permissions).toEqual(MANAGE);
