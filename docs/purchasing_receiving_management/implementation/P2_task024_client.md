@@ -41,7 +41,21 @@ Menu entries are declared in each page's `page.menu` under the existing `purchas
 
 No browser validation yet. It needs the app, a MySQL slot and Playwright.
 
-## Test proposal, not executed (needs Sam's approval via the PM)
+## Sam's decision
+
+2026-11-09, in the Purchasing chat: "前端測試提案全部批准，TASK-025 可以開始".
+
+**Approved scope:** items 1 to 7 below, exactly as proposed:
+- 6 new cases and 2 changed existing cases;
+- jsdom only;
+- every PR, in the existing client unit job;
+- no new job, no capacity workload, no timing threshold.
+
+This does not cover:
+- publishing the receipt's digest, which is for the trusted administrator;
+- the Playwright browser pass, which needs a PM slot.
+
+## Test proposal (approved 2026-11-09)
 
 **Business risk:**
 - An approver could act on data other than the snapshot.

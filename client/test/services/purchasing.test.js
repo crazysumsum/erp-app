@@ -33,6 +33,28 @@ describe("Purchasing client contract（§10.4）", () => {
   });
 });
 
+describe("TASK-024 審批及設定 client contract", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("審批命令用 eventId 做 Idempotency-Key；設定更新要裝置簽章；待我審批映射 DataTable；approvers 回埋 requireApproval", async () => {
+    const payload = { eventId: "intent", version: 3, reason: "原因原因", password: "pw" };
+    for (const [method, action] of [["approvePurchaseOrder", "approve"], ["rejectPurchaseOrder", "reject"], ["withdrawPurchaseOrderApproval", "withdraw"]]) {
+      await purchasing[method](8, payload);
+      expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/purchase-orders/8/approval/${action}`, { idempotent: true, idempotencyKey: "intent", body: payload });
+    }
+    await purchasing.updateSettings(payload);
+    expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/purchasing-settings/update", { idempotent: true, idempotencyKey: "intent", body: payload, signed: true });
+    httpClient.get.mockResolvedValue({ items: [{ approvalId: 1 }], total: 4, page: 2, pageSize: 20 });
+    await expect(purchasing.listMyApprovals({ page: 2, rowsPerPage: 20, filter: "", supplierId: 3, signal: "abort" })).resolves.toEqual({ rows: [{ approvalId: 1 }], rowsNumber: 4 });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/purchase-order-approvals/mine", { params: { page: 2, pageSize: 20, supplierId: 3 }, signal: "abort" });
+    httpClient.get.mockResolvedValue({ requireApproval: true, items: [{ id: 5, label: "審批人" }] });
+    await expect(purchasing.lookupApprovers({ signal: "abort" })).resolves.toEqual({ requireApproval: true, items: [{ id: 5, label: "審批人" }] });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/purchasing-lookups/approvers", { params: {}, signal: "abort" });
+    await purchasing.getSettings({ signal: "abort" });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/purchasing-settings", { signal: "abort" });
+  });
+});
+
 describe("useCommandEvent", () => {
   const failure = (fields) => Object.assign(new Error("failed"), fields);
 
