@@ -61,30 +61,65 @@ describe("useCommandEvent", () => {
   it.each([[{ code: "TIMEOUT" }], [{ code: "NETWORK_ERROR" }], [{ code: "TRANSACTION_OUTCOME_UNKNOWN" }], [{ code: "IDEMPOTENCY_IN_PROGRESS" }], [{ status: 503 }]])("結果未確定（%j）就保留原 payload 同 eventId", async (fields) => {
     const command = useCommandEvent(), send = vi.fn().mockRejectedValueOnce(failure(fields)).mockResolvedValue("done");
     await expect(command.run({ notes: "第一次" }, send)).rejects.toThrow("failed");
-    expect(command.uncertain.value).toBe(true);
+    expect(command.isUncertain()).toBe(true);
     await expect(command.run({ notes: "用戶之後改咗" }, send)).resolves.toBe("done");
     expect(send.mock.calls[1][0]).toEqual(send.mock.calls[0][0]);
     expect(send.mock.calls[1][0].notes).toBe("第一次");
     expect(send.mock.calls[0][0].eventId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-    expect(command.uncertain.value).toBe(false);
+    expect(command.isUncertain()).toBe(false);
   });
 
   it("明確結果之後下一次係新意圖、新 eventId", async () => {
     const command = useCommandEvent(), send = vi.fn().mockResolvedValueOnce("first").mockRejectedValueOnce(failure({ status: 409, code: "VERSION_CONFLICT" })).mockResolvedValue("third");
     await command.run({}, send);
     await expect(command.run({}, send)).rejects.toThrow("failed");
-    expect(command.uncertain.value).toBe(false);
+    expect(command.isUncertain()).toBe(false);
     await command.run({}, send);
     expect(new Set(send.mock.calls.map(([body]) => body.eventId)).size).toBe(3);
   });
 
-  it("reset 之後唔會再用舊 intent", async () => {
+  it("唔同 key 互不影響：新 key 唔用舊 intent，返原 key 仍然用原 eventId 同 payload", async () => {
     const command = useCommandEvent(), send = vi.fn().mockRejectedValueOnce(failure({ code: "TIMEOUT" })).mockResolvedValue("done");
-    await expect(command.run({ notes: "舊" }, send)).rejects.toThrow("failed");
-    command.reset();
-    expect(command.uncertain.value).toBe(false);
-    await command.run({ notes: "新" }, send);
-    expect(send.mock.calls[1][0].notes).toBe("新");
-    expect(send.mock.calls[1][0].eventId).not.toBe(send.mock.calls[0][0].eventId);
+    await expect(command.run({ notes: "舊" }, send, "a")).rejects.toThrow("failed");
+    await command.run({ notes: "新" }, send, "b");
+    await command.run({ notes: "改咗" }, send, "a");
+    const [first, second, third] = send.mock.calls.map(([body]) => body);
+    expect(second.notes).toBe("新");
+    expect(second.eventId).not.toBe(first.eventId);
+    expect(third).toEqual(first);
+    expect(command.isUncertain("a")).toBe(false);
+  });
+
+  it.each([[403, "PASSWORD_INVALID"], [403, "PERMISSION_STALE"], [400, "DEVICE_SIGNATURE_STALE"], [409, "CONCURRENT_OPERATION"], [409, "VERSION_CONFLICT"], [422, "UNKNOWN_FUTURE_CODE"]])(
+    "未確定之後 %i %s 證明唔到原交易失敗：保留原 eventId、payload 同未確定，只有原操作成功先解除", async (status, code) => {
+      const command = useCommandEvent();
+      const send = vi.fn().mockRejectedValueOnce(failure({ code: "TIMEOUT" })).mockRejectedValueOnce(failure({ status, code })).mockResolvedValue("done");
+      await expect(command.run({ notes: "原" }, send, "k", { action: "x" })).rejects.toThrow("failed");
+      await expect(command.run({ notes: "新" }, send, "k", { action: "x" })).rejects.toThrow("failed");
+      expect(command.isUncertain("k")).toBe(true);
+      await expect(command.run({ notes: "再新" }, send, "k", { action: "x" })).resolves.toBe("done");
+      expect(command.isUncertain("k")).toBe(false);
+      const bodies = send.mock.calls.map(([body]) => body);
+      expect(bodies).toHaveLength(3);
+      expect(bodies[1]).toEqual(bodies[0]);
+      expect(bodies[2]).toEqual(bodies[0]);
+      expect(bodies[0].notes).toBe("原");
+    });
+
+  it("同一 key 只准一個 in-flight，亦唔准換動作：本地 COMMAND_PENDING 唔發 HTTP；未確定 record 由空開始都睇得到", async () => {
+    const command = useCommandEvent();
+    expect(command.uncertainRecords.value).toEqual([]);
+    let rejectHeld;
+    const send = vi.fn(() => new Promise((_, reject) => { rejectHeld = reject; }));
+    const first = command.run({ n: 1 }, send, "k", { action: "approve" });
+    await expect(command.run({ n: 2 }, send, "k", { action: "approve" })).rejects.toMatchObject({ code: "COMMAND_PENDING" });
+    expect(command.isBusy("k")).toBe(true);
+    rejectHeld(failure({ code: "TIMEOUT" }));
+    await expect(first).rejects.toThrow("failed");
+    expect(command.isBusy("k")).toBe(false);
+    await expect(command.run({ n: 3 }, send, "k", { action: "reject" })).rejects.toMatchObject({ code: "COMMAND_PENDING" });
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(command.isUncertain("k")).toBe(true);
+    expect(command.uncertainRecords.value.map(({ key, meta }) => [key, meta.action])).toEqual([["k", "approve"]]);
   });
 });

@@ -5,10 +5,11 @@ import { h } from "vue";
 import { RouterView, createMemoryHistory, createRouter } from "vue-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/services/purchasing.js", () => ({ default: Object.fromEntries(["listMyApprovals", "getPurchaseOrder", "approvePurchaseOrder", "rejectPurchaseOrder", "withdrawPurchaseOrderApproval", "getSettings", "updateSettings"].map((name) => [name, vi.fn()])) }));
+vi.mock("@/services/purchasing.js", () => ({ default: Object.fromEntries(["listMyApprovals", "getPurchaseOrder", "approvePurchaseOrder", "rejectPurchaseOrder", "withdrawPurchaseOrderApproval", "getSettings", "updateSettings", "copyPurchaseOrder"].map((name) => [name, vi.fn()])) }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn(), promptReason: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 import purchasing from "@/services/purchasing.js";
+import { confirm, promptReason } from "@/framework/ui/confirm.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
 import Approvals, { page as approvalsPage } from "@/pages/purchasing/MyPurchaseOrderApprovalsPage.vue";
 import Detail, { page as detailPage } from "@/pages/purchasing/PurchaseOrderDetailPage.vue";
@@ -44,6 +45,7 @@ async function open(path, permissions) {
   useSessionStore().user = { id: 1, permissions, roles: [] };
   wrapper = mount({ render: () => h(RouterView) }, { global: { plugins: [Quasar, router] }, attachTo: document.body });
   await flushPromises();
+  return router;
 }
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -165,5 +167,248 @@ describe("TASK-024 採購設定", () => {
     expect(purchasing.updateSettings).toHaveBeenLastCalledWith({ version: 3, requirePoApproval: true, reason: "開始需要審批", eventId: expect.any(String), password: "pw2" });
     expect(notifySuccess).toHaveBeenCalledWith(expect.stringContaining("需要審批"));
     expect(purchasing.getSettings).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("TASK-024 R1：未確定 record 跟穩定 owner、單一 in-flight、生命週期", () => {
+  const PATH = "/purchasing/purchase-orders/8", APPROVER = [VIEW, APPROVAL], MANAGER = [VIEW, MGMT];
+  const approved = { id: 8, number: pending.number, status: "CONFIRMED", version: 4, replayed: false };
+  const copied = { id: 20, number: "PO-202611-000020", status: "DRAFT", version: 1, replayed: false, warnings: [] };
+  const po9 = { ...pending, id: 9, number: "PO-202611-000009", approval: { ...pending.approval, id: 22 } };
+  const timeout = () => apiError("逾時", { code: "TIMEOUT" });
+  const deferred = () => { let resolve, reject; const promise = new Promise((done, fail) => { resolve = done; reject = fail; }); return { promise, resolve, reject }; };
+  // 同一 actor 權限刷新：usePurchaseOrder 重新讀取（唔 keep），panel 卸載重建。
+  const refresh = (permissions, id = 1) => { useSessionStore().user = { id, permissions: [...permissions], roles: [] }; return flushPromises(); };
+  const decide = async (label, password) => { await field("密碼").setValue(password); await button(label).trigger("click"); await flushPromises(); };
+  const byId = (rows) => (id) => Promise.resolve(rows[String(id)]);
+  beforeEach(() => {
+    for (const mock of [purchasing.approvePurchaseOrder, purchasing.rejectPurchaseOrder, purchasing.withdrawPurchaseOrderApproval, purchasing.copyPurchaseOrder,
+      purchasing.updateSettings, confirm, promptReason]) mock.mockReset();
+  });
+
+  it("C1 決定未確定後權限刷新令 panel 重建：原因由原 payload 回填、拒絕鎖住，重試用原 eventId", async () => {
+    purchasing.approvePurchaseOrder.mockRejectedValueOnce(timeout()).mockResolvedValue(approved);
+    await open(PATH, APPROVER);
+    await field("原因").setValue("數量已經核對");
+    await decide("批准", "pw1");
+    await refresh([...APPROVER, MGMT]);
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+    expect(field("原因").element.value).toBe("數量已經核對");
+    expect(button("拒絕").attributes("disabled")).toBeDefined();
+    await decide("批准", "pw2");
+    const [first, second] = purchasing.approvePurchaseOrder.mock.calls;
+    expect(first[1]).toMatchObject({ reason: "數量已經核對", password: "pw1" });
+    expect(second).toEqual([8, { ...first[1], password: "pw2" }]);
+  });
+
+  it("C2 未確定之後 403：保留原 record，訊息兩樣都講，拒絕仍鎖；之後成功都係原 eventId", async () => {
+    purchasing.approvePurchaseOrder.mockRejectedValueOnce(timeout())
+      .mockRejectedValueOnce(apiError("請確認你目前的密碼", { code: "PASSWORD_INVALID", status: 403 })).mockResolvedValue(approved);
+    await open(PATH, APPROVER);
+    await decide("批准", "pw1");
+    await decide("批准", "wrong");
+    expect(wrapper.text()).toContain("請確認你目前的密碼。結果尚未確認");
+    expect(button("拒絕").attributes("disabled")).toBeDefined();
+    await decide("批准", "pw3");
+    const bodies = purchasing.approvePurchaseOrder.mock.calls.map(([, { password: _password, ...body }]) => body);
+    expect(bodies).toHaveLength(3);
+    expect(bodies[1]).toEqual(bodies[0]);
+    expect(bodies[2]).toEqual(bodies[0]);
+  });
+
+  it("C3 換 PO：另一張 PO 唔見原 record、用新 eventId；返原 PO 仍用原 eventId", async () => {
+    purchasing.getPurchaseOrder.mockImplementation(byId({ 8: pending, 9: po9 }));
+    purchasing.approvePurchaseOrder.mockRejectedValueOnce(timeout()).mockResolvedValueOnce({ ...approved, id: 9, number: po9.number }).mockResolvedValue(approved);
+    const router = await open(PATH, APPROVER);
+    await decide("批准", "pw1");
+    await router.push("/purchasing/purchase-orders/9");
+    await flushPromises();
+    expect(wrapper.text()).not.toContain("結果尚未確認");
+    expect(button("拒絕").attributes("disabled")).toBeUndefined();
+    await decide("批准", "pw2");
+    await router.push(PATH);
+    await flushPromises();
+    expect(button("拒絕").attributes("disabled")).toBeDefined();
+    await decide("批准", "pw3");
+    const [first, second, third] = purchasing.approvePurchaseOrder.mock.calls;
+    expect(second[0]).toBe(9);
+    expect(second[1].eventId).not.toBe(first[1].eventId);
+    expect(third[0]).toBe(8);
+    expect(third[1].eventId).toBe(first[1].eventId);
+  });
+
+  it("C4 晚到回應：換咗 PO 之後先成功，唔通知、唔重新讀取", async () => {
+    const held = deferred();
+    purchasing.getPurchaseOrder.mockImplementation(byId({ 8: pending, 9: po9 }));
+    purchasing.approvePurchaseOrder.mockReturnValueOnce(held.promise);
+    const router = await open(PATH, APPROVER);
+    await decide("批准", "pw1");
+    await router.push("/purchasing/purchase-orders/9");
+    await flushPromises();
+    held.resolve(approved);
+    await flushPromises();
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(purchasing.approvePurchaseOrder).toHaveBeenCalledTimes(1);
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+  });
+
+  it("C5 換 actor：新 actor 唔見原 record 嘅鎖或者 banner，批准用新 eventId", async () => {
+    purchasing.approvePurchaseOrder.mockRejectedValueOnce(timeout()).mockResolvedValue(approved);
+    await open(PATH, APPROVER);
+    await decide("批准", "pw1");
+    await refresh(APPROVER, 2);
+    expect(button("拒絕").attributes("disabled")).toBeUndefined();
+    expect(wrapper.find('[data-testid="po-detached-decision"]').exists()).toBe(false);
+    await decide("批准", "pw2");
+    const [first, second] = purchasing.approvePurchaseOrder.mock.calls;
+    expect(second[1].eventId).not.toBe(first[1].eventId);
+  });
+
+  it("C6 撤回審批未確定後同 context 重新讀取：banner 仍在，重試用原 eventId", async () => {
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...pending, allowedActions: ["copy", "withdraw"] });
+    promptReason.mockResolvedValue("撤回原因五個字");
+    purchasing.withdrawPurchaseOrderApproval.mockRejectedValueOnce(timeout()).mockResolvedValue({ id: 8, number: pending.number, status: "DRAFT", version: 4, replayed: false });
+    await open(PATH, MANAGER);
+    await button("撤回審批").trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("撤回結果尚未確認");
+    await refresh([...MANAGER, APPROVAL]);
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).toContain("撤回結果尚未確認");
+    await button("重試確認結果").trigger("click");
+    await flushPromises();
+    const [first, second] = purchasing.withdrawPurchaseOrderApproval.mock.calls;
+    expect(first[1]).toMatchObject({ version: 3, reason: "撤回原因五個字" });
+    expect(second).toEqual(first);
+    expect(notifySuccess).toHaveBeenCalledWith(`${pending.number} 已撤回審批，回到草稿。`);
+  });
+
+  it("C7 設定未確定之後 VERSION_CONFLICT：唔入 stale、開關鎖住、原因保留；之後成功仍係原 body", async () => {
+    purchasing.updateSettings.mockRejectedValueOnce(timeout()).mockRejectedValueOnce(apiError("版本已更改", { code: "VERSION_CONFLICT", status: 409 }))
+      .mockResolvedValue({ requirePoApproval: true, version: 4, replayed: false });
+    await open("/purchasing/settings", ["purchasing.settings"]);
+    await wrapper.find('[role="switch"]').trigger("click");
+    await field("變更原因").setValue("開始需要審批");
+    await field("密碼").setValue("pw1");
+    await button("儲存設定").trigger("click");
+    await flushPromises();
+    await field("密碼").setValue("pw2");
+    await button("重試確認結果").trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("版本已更改。結果尚未確認");
+    expect(button("載入最新設定")).toBeUndefined();
+    expect(wrapper.find('[role="switch"]').attributes("aria-disabled")).toBe("true");
+    expect(field("變更原因").element.value).toBe("開始需要審批");
+    await field("密碼").setValue("pw3");
+    await button("重試確認結果").trigger("click");
+    await flushPromises();
+    const bodies = purchasing.updateSettings.mock.calls.map(([{ password: _password, ...body }]) => body);
+    expect(bodies).toHaveLength(3);
+    expect(bodies[1]).toEqual(bodies[0]);
+    expect(bodies[2]).toEqual(bodies[0]);
+    expect(purchasing.getSettings).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ["a 有審批權：用原內容重試", [VIEW, APPROVAL, MGMT], true],
+    ["b 冇審批權：只顯示被擋", [VIEW], false]
+  ])("C11 %s——決定其實已 commit 但回應丟失，approval 變 null，panel 消失但頁面保留未確定決定", async (_, permissions, canReplay) => {
+    purchasing.approvePurchaseOrder.mockRejectedValueOnce(timeout()).mockResolvedValue(approved);
+    await open(PATH, APPROVER);
+    await decide("批准", "pw1");
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...pending, status: "CONFIRMED", approval: null, allowedActions: [] });
+    await refresh([...permissions]);
+    expect(wrapper.find('[data-testid="po-approval-snapshot"]').exists()).toBe(false);
+    const banner = wrapper.find('[data-testid="po-detached-decision"]');
+    expect(banner.text()).toContain("批准結果尚未確認");
+    if (canReplay) {
+      await field("確認用密碼").setValue("pw2");
+      await button("以原內容重試批准").trigger("click");
+      await flushPromises();
+      const [first, second] = purchasing.approvePurchaseOrder.mock.calls;
+      expect(second).toEqual([8, { ...first[1], password: "pw2" }]);
+      expect(wrapper.find('[data-testid="po-detached-decision"]').exists()).toBe(false);
+      expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(3);
+    } else {
+      expect(banner.text()).toContain("你目前沒有審批權限");
+      expect(button("以原內容重試批准")).toBeUndefined();
+      expect(purchasing.approvePurchaseOrder).toHaveBeenCalledTimes(1);
+      expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+    }
+  });
+
+  it("C12 in-flight 期間 panel 重建：新 panel 唔可以再發批准或者拒絕；之後 TIMEOUT 拒絕仍鎖", async () => {
+    const held = deferred();
+    purchasing.approvePurchaseOrder.mockReturnValueOnce(held.promise);
+    await open(PATH, APPROVER);
+    await decide("批准", "pw1");
+    await refresh([...APPROVER, MGMT]);
+    expect(button("批准").attributes("disabled")).toBeDefined();
+    expect(button("拒絕").attributes("disabled")).toBeDefined();
+    await button("拒絕").trigger("click");
+    await button("批准").trigger("click");
+    await flushPromises();
+    expect(purchasing.approvePurchaseOrder).toHaveBeenCalledTimes(1);
+    expect(purchasing.rejectPurchaseOrder).not.toHaveBeenCalled();
+    held.reject(timeout());
+    await flushPromises();
+    expect(button("拒絕").attributes("disabled")).toBeDefined();
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+  });
+
+  it("C13 離開再返同一張 PO：上一次生命週期嘅複製晚到成功，唔跳頁、唔通知", async () => {
+    const held = deferred(), copyable = { ...pending, allowedActions: ["copy"] };
+    purchasing.getPurchaseOrder.mockImplementation(byId({ 8: copyable, 9: { ...po9, allowedActions: ["copy"] } }));
+    confirm.mockResolvedValue(true);
+    purchasing.copyPurchaseOrder.mockReturnValueOnce(held.promise);
+    const router = await open(PATH, MANAGER);
+    await button("複製").trigger("click");
+    await flushPromises();
+    await router.push("/purchasing/purchase-orders/9");
+    await flushPromises();
+    await router.push(PATH);
+    await flushPromises();
+    held.resolve(copied);
+    await flushPromises();
+    expect(router.currentRoute.value.path).toBe(PATH);
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(purchasing.copyPurchaseOrder).toHaveBeenCalledTimes(1);
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(3);
+  });
+
+  it("C14 離開詳情頁之後複製先成功：唔跳返去、唔通知", async () => {
+    const held = deferred();
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...pending, allowedActions: ["copy"] });
+    confirm.mockResolvedValue(true);
+    purchasing.copyPurchaseOrder.mockReturnValueOnce(held.promise);
+    const router = await open(PATH, MANAGER);
+    await button("複製").trigger("click");
+    await flushPromises();
+    await router.push("/purchasing/approvals");
+    await flushPromises();
+    held.resolve(copied);
+    await flushPromises();
+    expect(router.currentRoute.value.path).toBe("/purchasing/approvals");
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(purchasing.copyPurchaseOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["a 複製確認期間換 PO", "copy"],
+    ["b 撤回原因期間換 actor", "withdraw"]
+  ])("C17 %s：dialog 返嚟時 context 已經唔同，唔送任何 request", async (_, action) => {
+    const answer = deferred();
+    purchasing.getPurchaseOrder.mockImplementation(byId({ 8: { ...pending, allowedActions: ["copy", "withdraw"] }, 9: { ...po9, allowedActions: ["copy", "withdraw"] } }));
+    (action === "copy" ? confirm : promptReason).mockReturnValueOnce(answer.promise);
+    const router = await open(PATH, MANAGER);
+    await button(action === "copy" ? "複製" : "撤回審批").trigger("click");
+    await flushPromises();
+    if (action === "copy") await router.push("/purchasing/purchase-orders/9");
+    else useSessionStore().user = { id: 2, permissions: [...MANAGER], roles: [] };
+    await flushPromises();
+    answer.resolve(action === "copy" ? true : "撤回原因五個字");
+    await flushPromises();
+    expect(purchasing.copyPurchaseOrder).not.toHaveBeenCalled();
+    expect(purchasing.withdrawPurchaseOrderApproval).not.toHaveBeenCalled();
   });
 });
