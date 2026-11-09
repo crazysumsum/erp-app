@@ -187,7 +187,7 @@ test("Copy metadata 同 create 一樣要 mgmt 同 idempotency；body 只收 even
   assert.deepEqual(calls, []);
 });
 
-test("Submit metadata：POST、mgmt、idempotency、200；body 只收 eventId 同 version，來源 ID 嚟自 path", async () => {
+test("Submit metadata：POST、mgmt、idempotency、200；body 唔收 status 同 outcome，審批欄位驗類型，來源 ID 嚟自 path", async () => {
   assert.deepEqual([SubmitPurchaseOrderHandler.handlerName, SubmitPurchaseOrderHandler.api.method, SubmitPurchaseOrderHandler.api.path, SubmitPurchaseOrderHandler.api.authType],
     ["submitPurchaseOrder", "POST", "/api/v1/purchase-orders/:id/submit", undefined]);
   assert.deepEqual(SubmitPurchaseOrderHandler.api.authorizationPolicies, [{ name: "hasPermission", options: { permissions: ["purchasing.mgmt"] } }]);
@@ -201,9 +201,11 @@ test("Submit metadata：POST、mgmt、idempotency、200；body 只收 eventId �
     context: { requestId: "req-1", correlationId: "corr-1", ip: "127.0.0.1" } }]]);
   calls.length = 0;
 
-  for (const field of ["assignedApproverId", "status", "requestNote", "outcome"]) {
+  for (const field of ["status", "outcome"]) {
     await assert.rejects(instance.execute(request({ eventId, version: 3, [field]: 1 }, { params })), invalid("body"), field);
   }
+  await assert.rejects(instance.execute(request({ eventId, version: 3, assignedApproverId: "1" }, { params })), invalid("assignedApproverId"));
+  await assert.rejects(instance.execute(request({ eventId, version: 3, requestNote: 1 }, { params })), invalid("requestNote"));
   await assert.rejects(instance.execute(request({ eventId }, { params })), invalid("version"));
   await assert.rejects(instance.execute(request({ eventId, version: "3" }, { params })), invalid("version"));
   await assert.rejects(instance.execute(request({ eventId, version: 3 }, { params, key: randomUUID() })), invalid("eventId"));

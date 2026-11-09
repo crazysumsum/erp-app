@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "decision": "Sam actual user message01a1ae60-1496-7012-a272-d1e1afc327f2 in PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f on2026-11-06,call_4eaa26a1cdaf41b093f31eff6f7a7c33: 批准私有驗證、准入及一次 Draft PR CI. Approved productaa112827fc1a7f001b9ccf8f5dd9ea03449226ff/treeb3298be02a7e3901ac2a172bd209d950841a80db onmain97cb27f184b35862a17c37de90589d0ee6b07f3a and private scripte63e9430015f322daf2bb0b802454dc7971ac5b7ab367bf6d37e74f08a938330. Feature author does not publish or approve this admission digest;trusted independent administrator required. Merge separately decided.",
+  "purpose": "Prevent ordinary root/server/client local functional npm entrypoints from accidentally executing existing catalogued capacity cases. Reuse the single existing catalog and selectors;fail closed for invalid/empty selection. Existing CI client caller remains accepted. No new test registration.",
+  "data": "No new application case,data row,fixture,dataset or capacity workload. Existing functional cases,transaction/permission/idempotency/recovery/rollback assertions and catalog definitions unchanged. One separately authorized private batch used35command scenarios/41controlled groups with inert launchers and catalog/regex metadata only,zero application tests/DB/HTTP/browser/capacity.",
+  "concurrency": "Private batch serial,one group at a time. Existing CI eight independent MySQL shards remain serial within each shard;client and browser jobs retain their existing settings. No job/step/worker/concurrency increase.",
+  "repetitions": "Approved private batch completed once;receipt-only commit must not repeat it. Exactly one normal DraftPR functional CI authorized now;first failure stops,no automatic retry or additional dispatch. Existing functional trigger wiring retained;merge and later publication changes separately decided.",
+  "thresholds": "Private35scenario contracts and41timed groups passed,normalclient/shard/merge CIcaller replays accepted. Each group5seconds,batch180seconds,forced reap5seconds. Existing server92%lines/83%branches/90%functions and39per-file floors,client gates,P1/P2 exact2each,all functional assertions and exclusions unchanged.",
+  "trigger": "Existing normal DraftPR admission route for one functional CI. Root/server/client common local functional entrypoints reuse single-catalog exclusions;no new workflow or trigger. Routine PR/main/schedules remain functional only. Capacity remains post-UAT accepted-main plus external per-case grants.",
+  "cost": "No new CI job or runner concurrency. One existing eight-shard functional CI consumes its normal runner budget;candidate runtime and selector overhead unmeasured. Private one-shot elapsed4.155seconds,with all temporary resources removed. Historical CI timings are not a measurement of this candidate.",
+  "files": [
+    {
+      "path": ".github/scripts/capacity-cases.mjs",
+      "mode": "100644",
+      "blob": "9a5026f34eed1f8707b81e8160f2f4b78dec68a4",
+      "kind": "support"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "blob": "4cbf14854ec75e52104b5d69821271758366a421",
+      "kind": "support"
+    },
+    {
+      "path": "client/package.json",
+      "mode": "100644",
+      "blob": "0d73234ec7d3dda11767c91b48e8a6e5ac068512",
+      "kind": "support"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "blob": "26ff1ccefc57b0c42e877572e0d65e7b073f475b",
+      "kind": "support"
+    },
+    {
+      "path": "server/package.json",
+      "mode": "100644",
+      "blob": "7b6f819d559314dba0f4036ac37c485dd54579de",
+      "kind": "support"
+    }
+  ]
+}

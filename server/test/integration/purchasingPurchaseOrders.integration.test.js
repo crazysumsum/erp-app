@@ -4,7 +4,7 @@
  * Supplier、Item、Business Master provider、sequence、operation 同 audit 全部用真 class。Operation／audit／sequence 有 trigger
  * 擋 DELETE，所以每個案例喺一個外層 transaction 入面做，最後 rollback；service 嘅 `withTransaction()` 用 SAVEPOINT 代替，
  * 失敗時 ROLLBACK TO SAVEPOINT，等「全有或全無」喺同一個外層 transaction 入面睇得到。主檔同月份（2099-11）都係測試專用。
- * 並發案例要真 commit 先證明到 PO 行鎖：佢用 HKD、唔建 Payment Term（TC-001 要求冇 Payment Term），完咗刪走 PO 同主檔；
+ * 並發案例要真 commit 先證明到 PO 行鎖：佢用 HKD、唔建 Payment Term（TC-001 要求冇 Payment Term），完咗刪走 user 同角色；PO 同主檔有 status history，
  * 刪唔走嘅 operation、audit 同隨機 2100 年之後月份嘅 sequence 會留低。
  */
 import assert from "node:assert/strict";
@@ -434,11 +434,8 @@ async function committedMasters(db) {
   const skuId = await insert("item_skus", { item_id: item, sku_code: `RACE-${tag}`, sku_name: "Race", status: "active", created_at: now, updated_at: now });
   const skuUomId = await insert("item_sku_uoms", { sku_id: skuId, uom_id: uom, to_base_factor: 1, is_base: 1, created_at: now, updated_at: now });
   const cleanup = async () => {
-    await db.query("DELETE FROM purchase_order_lines WHERE purchase_order_id IN (SELECT id FROM purchase_orders WHERE created_by = ?)", [actorId]);
-    await db.query("DELETE FROM purchase_orders WHERE created_by = ?", [actorId]);
-    for (const [sql, id] of [["DELETE FROM item_sku_uoms WHERE id = ?", skuUomId], ["DELETE FROM item_skus WHERE id = ?", skuId],
-      ["DELETE FROM items WHERE id = ?", item], ["DELETE FROM item_uoms WHERE id = ?", uom], ["DELETE FROM suppliers WHERE id = ?", supplierId],
-      ["DELETE FROM user_roles WHERE user_id = ?", actorId], ["DELETE FROM role_permissions WHERE role_id = ?", role],
+    // PO 有 status history（只准新增），刪唔到；連帶佢 FK 住嘅主檔都留低，隨機 tag 唔會撞。user FK 係 SET NULL，所以 user 刪得走。
+    for (const [sql, id] of [["DELETE FROM user_roles WHERE user_id = ?", actorId], ["DELETE FROM role_permissions WHERE role_id = ?", role],
       ["DELETE FROM roles WHERE id = ?", role], ["DELETE FROM users WHERE id = ?", actorId]]) await db.query(sql, [id]);
   };
   return { actorId, supplierId, skuId, skuUomId, cleanup, claims: { sub: String(actorId), roles: [`po_race_${tag}`], permissions: ["purchasing.mgmt"] } };

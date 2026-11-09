@@ -2,7 +2,7 @@
  * TASK-015／TC-003：PO Draft create／update 經真 HTTP、真 JWT、真 framework idempotency 同真 MySQL（設計 §5.1、§5.2、§10.4）。
  *
  * 呢度證明嘅係接線：route、auth、permission、Idempotency-Key＝eventId、response schema 同真 provider。業務規則喺
- * purchasingPurchaseOrders.integration.test.js。HTTP 寫入一定 commit：PO 同主檔完咗刪走；operation、audit 同當月
+ * purchasingPurchaseOrders.integration.test.js。HTTP 寫入一定 commit：user 同角色完咗刪走；PO、主檔、status history、operation、audit 同當月
  * purchasing_document_sequences 有 trigger 擋 DELETE，會留低。用 HKD、唔建 Payment Term（TC-001 要求冇 Payment Term）。
  */
 import assert from "node:assert/strict";
@@ -32,14 +32,8 @@ async function setup(t) {
   const insert = async (table, row) => Number((await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId);
   t.after(async () => {
     try {
-      for (const id of [created.buyer, created.viewer].filter(Boolean)) {
-        // Trigger 唔准刪已確認 PO 嘅 Line，所以先返 DRAFT 先清得走。
-        await db.query("UPDATE purchase_orders SET status = 'DRAFT' WHERE created_by = ?", [id]);
-        await db.query("DELETE FROM purchase_order_lines WHERE purchase_order_id IN (SELECT id FROM purchase_orders WHERE created_by = ?)", [id]);
-        await db.query("DELETE FROM purchase_orders WHERE created_by = ?", [id]);
-      }
-      for (const [table, column, id] of [["item_sku_uoms", "id", created.skuUom], ["item_skus", "id", created.sku], ["items", "id", created.item],
-        ["item_uoms", "id", created.uom], ["suppliers", "id", created.supplier], ["user_roles", "user_id", created.buyer],
+      // PO 有 status history（只准新增），刪唔到；連帶佢 FK 住嘅主檔都留低，隨機 tag 唔會撞。user FK 係 SET NULL，所以 user 刪得走。
+      for (const [table, column, id] of [["user_roles", "user_id", created.buyer],
         ["user_roles", "user_id", created.viewer], ["role_permissions", "role_id", created.mgmtRole], ["role_permissions", "role_id", created.viewRole],
         ["roles", "id", created.mgmtRole], ["roles", "id", created.viewRole], ["fr_token_versions", "subject", created.buyer && String(created.buyer)],
         ["fr_token_versions", "subject", created.viewer && String(created.viewer)], ["users", "id", created.buyer], ["users", "id", created.viewer]]) {
