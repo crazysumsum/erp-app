@@ -37,6 +37,7 @@ async function createSalesProviderDatabase(t,{preflightConfiguration=false}={}){
   });
   await admin.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);created=true;db=await mysql.createConnection({...connectionOptions,database:name});
   await initializeSalesBaseline(db,name,connectionOptions);
+  if(preflightConfiguration)await (await import("../../../database/migrations/0100_seed_purchasing_permissions.js")).up(db);
   return {db,name,connectionOptions,cleanup,providerConfig,applicationSource};
 }
 

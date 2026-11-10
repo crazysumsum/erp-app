@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID, createHash } from "node:crypto";
 import test from "node:test";
-import { migrationFixture } from "../sales/phase1/fixtures.js";
+import { migrationFixture, enterSalesFixtureRequests } from "../sales/phase1/fixtures.js";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { formatDateForFile } from "../../src/services/time/timeFormat.js";
@@ -13,8 +13,10 @@ async function setup(t) {
   const f = await migrationFixture(t, []);
   const source = defaultConfigurationSource();
   const app = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
-  t.after(() => app.shutdown("sales_phase1_commands_complete"));
+  let restoreEntry=()=>{};
+  t.after(async()=>{restoreEntry();await app.shutdown("sales_phase1_commands_complete");});
   const database = app.services.require("mysqldatabase"), time = app.services.require("time"), logger = app.services.require("logging").logger;
+  restoreEntry=enterSalesFixtureRequests(database);
   const username = `sales-p1-${randomUUID().slice(0, 8)}`, roleName = `${username}-role`;
   const roleId = await f.insert("roles", { name: roleName, created_at: f.now });
   const userId = await f.insert("users", { username, password_hash: "test-only", display_name: "Sales native probe", created_at: f.now, updated_at: f.now });

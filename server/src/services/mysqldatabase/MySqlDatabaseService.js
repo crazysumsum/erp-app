@@ -636,10 +636,15 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       if (admissionKey) CLOSED_EVENT_TRANSACTIONS.add(transaction);
       TRANSACTION_OUTCOMES.set(transaction, Object.freeze({ state: transactionOutcome }));
       if (eventLockHeld && !connectionDestroyed && !connectionQuarantined) {
+        let cleanupFailure;
         try {
           const [rows] = await raceWithSignal(connection.query({ sql: "SELECT RELEASE_LOCK(?) AS released", timeout: this.config.queryTimeoutMs }, [admissionKey]), controller.signal);
-          if (rows?.[0]?.released !== 1) throw new Error("Event mutex release was not acknowledged");
+          if (rows?.[0]?.released !== 1) cleanupFailure = { error: new Error("Event mutex release was not acknowledged") };
         } catch (error) {
+          cleanupFailure = { error };
+        }
+        if (cleanupFailure) {
+          const { error } = cleanupFailure;
           connectionQuarantined = true;
           onTransactionAbort();
           void this.logger?.error?.("database.event_admission.cleanup_failed", "Event mutex session was quarantined", { requestId: context?.requestId || null, transactionOutcome, error: { name: error.name, code: error.code || null } });

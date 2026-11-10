@@ -4,7 +4,7 @@ import { reversalRecoveryRuntime,facts,observeCommittedInputs,assertCommittedRev
 
 let started=false,stopping=false,runtime,evidence,second,closing,errorReported=false,cleanupTimeoutMs=30000;
 const initialized=Promise.withResolvers(),reads=new Set();
-const send=message=>new Promise((resolve,reject)=>process.send(message,error=>error?reject(error):resolve()));
+const send=message=>new Promise((resolve,reject)=>{process.send(message,error=>error?reject(error):resolve());});
 function running(){if(stopping)throw Object.assign(new Error("TASK036 child stopped"),{code:"TASK036_CANCELLED"});}
 function cancel(){stopping=true;runtime?.abortOwned();runtime?.state.resumePhaseB();}
 async function readFacts(f){

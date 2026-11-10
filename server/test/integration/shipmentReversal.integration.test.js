@@ -52,7 +52,7 @@ test("REVERSE-INTERNAL mapper rejects three misbound source copies",{timeout:100
 
 nativeTest("REVERSE-INTERNAL terminal lookup binds exact command and actor",nativeOptions,async t=>{
  const f=await inventoryNativeFixture(t);await operationsUp(f.db);
- const operations=new FulfillmentOperationService({database:f.database,time:f.time}),reversal=new ShipmentReversalService({database:f.database,time:f.time});
+ const operations=new FulfillmentOperationService({database:f.database,time:f.time}),reversal=new ShipmentReversalService({database:f.database,time:f.time,logger:f.logger});
  const command=eventId=>({eventId,version:3,reason:"Synthetic original dispatch under company control",goodsUnderCompanyControl:true,goodsReturnedToOriginalBins:true});
  const success=command(randomUUID()),failure=command(randomUUID()),request=payload=>({eventId:payload.eventId,operationType:"REVERSE",target:{type:"SHIPMENT",id:"1"},payload,leaseOwner:randomUUID(),correlationId:randomUUID()}),a=request(success),b=request(failure),result={id:"1",status:"REVERSED",version:5,number:"SHP-202611-000001"};
  await f.withActor(tx=>operations.claimInTransaction(tx,a),{isolationLevel:"READ COMMITTED"});

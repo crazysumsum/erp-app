@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "AUTHOR DRAFT, NOT ADMISSION. Sam actual PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f / turn01a1bf29-eeac-7c80-9c2b-6895f8704151 / message01a1bf29-ef08-7ea1-87e7-0c8628a8e006 / call_b7b4910077104e468a2a1d027ef66aaa item0: A approved complete package, one local L1 and one existing functional CI. Exact original plan b65767a1c9d2d1b9e3cbb0f5febf75df6c65f89bd68126a2d98cd644fd4c8761, product f89a04ca0ec94c0c1bc2cc1eacda4474cd2ce521. Actual modified bytes require TL acceptance and trusted non-author registration. Sam actual L1 amendment confirmed in the same PM chat turn01a1bf51-a935-7991-8ea4-dcb095b58719 / message01a1bf51-a98c-7122-ad7c-56fd85896114 / call_1b65274aa1d34587bf8b201f0fcccead item0: approved Receipt correction, other approvals unchanged; exact amendment8a4e1c3e619d648d01ab69c81c6f2e7dd637563815a3a496551fd58bd2d2e17a. This is still not execution/admission authority by itself. Inherited independent approval references remain in the preserved original receipt identified below. Sam actual consolidated amendment: PM turn01a1bf6f-7013-7a43-95af-b3a1b0c797fe / user01a1bf71-080c-70b3-ab1c-577100ff4c2e / call_d4fb59d213f54604b973bf1792fc9006 item0, A approved complete delta, same one L1/one CI. Approves product25047ec90bd4c401704cc9163f74081508b0348f plus exact compat-r2 proposal9597f01ea2eb9480add75a1e193fbc2c828f7dcc89c464819dcb5166a91334a1 and three additional existing-case business calls; no new registrations in those files.",
+  "decision": "AUTHOR DRAFT, NOT ADMISSION. Sam actual PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f / turn01a1bf29-eeac-7c80-9c2b-6895f8704151 / message01a1bf29-ef08-7ea1-87e7-0c8628a8e006 / call_b7b4910077104e468a2a1d027ef66aaa item0: A approved complete package, one local L1 and one existing functional CI. Exact original plan b65767a1c9d2d1b9e3cbb0f5febf75df6c65f89bd68126a2d98cd644fd4c8761, product f89a04ca0ec94c0c1bc2cc1eacda4474cd2ce521. Actual modified bytes require TL acceptance and trusted non-author registration. Sam actual L1 amendment confirmed in the same PM chat turn01a1bf51-a935-7991-8ea4-dcb095b58719 / message01a1bf51-a98c-7122-ad7c-56fd85896114 / call_1b65274aa1d34587bf8b201f0fcccead item0: approved Receipt correction, other approvals unchanged; exact amendment8a4e1c3e619d648d01ab69c81c6f2e7dd637563815a3a496551fd58bd2d2e17a. This is still not execution/admission authority by itself. Inherited independent approval references remain in the preserved original receipt identified below. Sam actual consolidated amendment: PM turn01a1bf6f-7013-7a43-95af-b3a1b0c797fe / user01a1bf71-080c-70b3-ab1c-577100ff4c2e / call_d4fb59d213f54604b973bf1792fc9006 item0, A approved complete delta, same one L1/one CI. Approves product25047ec90bd4c401704cc9163f74081508b0348f plus exact compat-r2 proposal9597f01ea2eb9480add75a1e193fbc2c828f7dcc89c464819dcb5166a91334a1 and three additional existing-case business calls; no new registrations in those files. Sam actual corrective decision: PM turn01a1c307-3ee4-72e1-b5a3-f3023be02e26 / human01a1c323-69f6-79d1-be04-1fc8cdc66dd7 / call_79c1c1d6bc694fa9abf58158a435d2c0 item0: 批准整包一次 CI，控制器首敗仍停報. Exact nine-file patch0f531fb268a7dd2bbfb665816c7d116e918c7a9bc1d3c3f868bc819d62021992; version plan33c44cce12ebb31b556e121c82923c1102ce4166ee05bf53dbed8b4dd7788a45. Approves five existing entry updates and two existing whole-file entries, no new registrations; original four Recovery schemas add existing0100 setup totaling24 SELECT/24 INSERT/24 permission rows and zero role grants. TC038 original two forks gain bounded allowlisted diagnostics only; root cause remains UNPROVEN. Integrate latest main, actual-byte independent review and trusted non-author full metadata/registration/readback precede one ordinary push to original Draft PR349 and one existing eight-shard functional CI. No local parser/import/lint/test/build/DB/L1 rehearsal, no controller retry, functional rerun, capacity, public Job activation or merge. Original decision paragraphs, author_draft counters/trigger and original run42734329394 FAILURE are historical and do not reset execution allowances; this corrective decision controls this publication only. Receipt remains author proposal until independent admission.",
   "purpose": "Close genuine private Recovery / durable source / owner absence versus eligibility / nonce and actual transaction outcome gaps. Adapt existing test ABI with only the approved three-line Intake preflight safety correction. Do not manufacture capabilities, lower safety checks or claim formal UAT/activation.",
   "data": "Six new literal routine families: D1,D2 each eight deterministic fake-connection branches; C1 two lines/SKUs/Reservations, three Balances/Allocations and two original Issues, one zero-shipped line; C2,C3,C4 each one line/SKU/Reservation/Balance/Allocation/original Issue. Four native schemas total, four SO/five lines/five SKU/five Reservations/six Balances/six Allocations/five original Issues. Existing inherited functional workloads retain original scale and approved skips. Private L1 is outside routine discovery and not executed by CI.",
   "concurrency": "Serial per existing eight shards; four C families serial in one file, maximum two business operations in flight. C1 exactly one OS child; C2-C4 same-process. Provider pool2, actual app pool10, existing observer/admin each1: configured maximum14 per C case. No new worker/job/step/HTTP. Dormant 24-case Stocktake opt-in remains unchanged. Original audit-14/audit-15 mixed-file capacity names are pinned for preserved exclusions only; not admitted to this routine execution. All ordinary cases in mixed files remain.",
@@ -543,7 +543,7 @@
         "Existing approved case/helper ABI only, original scale/registrations/assertions/opt-in preserved."
       ],
       "mode": "100644",
-      "blob": "80305eeff62dbc9ec1146afcdf1bb8e60f1ce0b5"
+      "blob": "453aa1a49007053f9fb43739e38f4996d170f495"
     },
     {
       "path": "server/test-support/inventoryPhase005GateNative.mjs.txt",
@@ -1131,7 +1131,7 @@
     {
       "path": "server/test/integration/salesImportPrecheck.integration.test.js",
       "mode": "100644",
-      "blob": "86a0e95e5e31c074d257ba919e95b50d89fcce9a",
+      "blob": "83a2ff9b950a6b7b700f3adc3d837726ee34701d",
       "kind": "mixed",
       "cases": [
         "TC-035 owner precheck batches resolve actual DB collation and preserve missing/inactive without business writes",
@@ -1325,7 +1325,7 @@
     {
       "path": "server/test/integration/shipmentReversal.integration.test.js",
       "mode": "100644",
-      "blob": "d0d5ee0527750ed258788a88cfe11f390d8a46b0",
+      "blob": "2ab5655f369ed648638e6adbaccf77596cda4187",
       "kind": "functional",
       "cases": [
         "REVERSE-INTERNAL preparation and genuine started identity",
@@ -1869,7 +1869,7 @@
     {
       "path": "server/test/sales/phase4/salesFulfillmentFixtures.js",
       "mode": "100644",
-      "blob": "7392bcdb4560b632cdf7fd10dcc7168baceee5ca",
+      "blob": "64c3491d75195742c51a457fbbb030c1f8170907",
       "kind": "functional",
       "cases": [
         "Existing Sales/Fulfillment functional integration families using salesFulfillmentFixture directly or via aggregate, lifecycle and P1 fixtures. No new registrations."
@@ -1878,7 +1878,7 @@
     {
       "path": "server/test/serviceContainer.test.js",
       "mode": "100644",
-      "blob": "58bc12c5640e5b5aaf5e99febe90561b8caad222",
+      "blob": "176427343ac06aca5e2a8089503b384e49eba53e",
       "kind": "functional",
       "cases": [
         "service container initializes singleton dependencies once and shuts down in reverse order",
@@ -1913,6 +1913,42 @@
         "the check counts the wait for a connection, not just the transaction",
         "a budget that exactly fills the request timeout is refused",
         "the shipped defaults leave the transaction inside the request budget"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesOrderRead.integration.test.js",
+      "mode": "100644",
+      "blob": "f63905f09ab06134ead22d1d9067918396192f14",
+      "kind": "functional",
+      "cases": [
+        "TC-019 SO native list count, pagination, filters and exact escaped keys",
+        "TC-019 native exact external hash lookup selects only Active source keys",
+        "TC-019 native detail keeps snapshots, fresh permissions and bounded status history",
+        "TC-019 SO actual HTTP response schemas, strict query and unauthorized ID access"
+      ]
+    },
+    {
+      "path": "server/test/integration/salesBackorder.integration.test.js",
+      "mode": "100644",
+      "blob": "48bd77ad2e0cb0c5be559c8bbcac5d9ae04a4256",
+      "kind": "functional",
+      "cases": [
+        "TC-031 Inventory worker native partial membership replay and fresh lease remain inside the caller rollback",
+        "TC-027 FIFO allocates oldest partial demand, blocks later due entry behind cooldown and wakes whole scope without priority mutation",
+        "TC-031 zero ATP delays queue metadata only and stale zero-demand queue becomes terminal without Inventory",
+        "TC-031 native allocation faults and authority changes roll back every Sales/Inventory projection",
+        "TC-031 native lost COMMIT acknowledgement reconciles the persisted original allocation event once",
+        "TC-031 native proven rollback permits a new allocation event without preserving a fictitious effect",
+        "TC-027 true overlapping allocators fence one FIFO head and cannot over-reserve ATP",
+        "TC-021 an allocator holding its Order mapping locks never blocks another Order's confirmation behind the Warehouse lock",
+        "TC-021 a new draft Order in the allocator's Warehouse never deadlocks the allocator on its line insert",
+        "TC-021 a Quotation conversion in the allocator's Warehouse never deadlocks the allocator on its line insert",
+        "TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping",
+        "TC-031 technical retry persists bounded exponential cooldown across a new allocator and manual wake cannot bypass FIFO",
+        "TC-031 actual registered Scheduler runtime uses SQL cluster admission, overlap and the NULL reserve-only actor",
+        "TC-031 real Scheduler shutdown aborts an in-flight Inventory allocation, preserves FIFO demand and a new registered runtime retries safely",
+        "TC-031 actual manual wake HTTP validates scope/fresh permissions, invokes registered Scheduler and accepts before allocation completion",
+        "TC-031 a terminal Sales owner with positive queued demand fails closed without rewriting business facts"
       ]
     }
   ],
