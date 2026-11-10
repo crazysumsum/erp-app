@@ -72,7 +72,7 @@ This is a structural planning view, not execution evidence or approval.
 | FR-064 | DES-008, DES-024, DES-025 | PHASE-002 | TASK-027 | TC-051 | UAT-041 | APPLICABLE |
 | FR-065 | DES-001, DES-014, DES-024, DES-025 | PHASE-004 | TASK-040 | TC-078, TC-082 | UAT-032 | APPLICABLE |
 | FR-066 | DES-001, DES-014, DES-024, DES-025 | PHASE-004 | TASK-040 | TC-079 | UAT-032, UAT-035 | APPLICABLE |
-| FR-067 | DES-001, DES-024, DES-025 | PHASE-004 | TASK-038, TASK-039 | TC-081 | UAT-032, UAT-033 | APPLICABLE |
+| FR-067 | DES-001, DES-024, DES-025 | PHASE-004 | TASK-038, TASK-039, TASK-052 | TC-081, TC-137 | UAT-032, UAT-033 | APPLICABLE |
 | FR-068 | DES-001, DES-024, DES-025 | PHASE-004 | TASK-038, TASK-040 | TC-083 | UAT-032, UAT-033 | APPLICABLE |
 | FR-069 | DES-001, DES-014, DES-024, DES-025 | PHASE-004 | TASK-038, TASK-039, TASK-040 | TC-080 | UAT-032, UAT-034 | APPLICABLE |
 | FR-070 | DES-001, DES-024, DES-025 | PHASE-004 | TASK-038, TASK-039 | TC-084 | UAT-032 | APPLICABLE |
@@ -259,6 +259,7 @@ This is a structural planning view, not execution evidence or approval.
 | TC-134 | true | true | APPLICABLE | supplier-release-operations | TECHNICAL | PROFILE_SUITE |
 | TC-135 | true | true | APPLICABLE | supplier-release-operations | TECHNICAL | PROFILE_SUITE |
 | TC-136 | true | true | APPLICABLE | supplier-release-operations | TECHNICAL | PROFILE_SUITE |
+| TC-137 | true | true | APPLICABLE | supplier-server-integration | TECHNICAL | PROFILE_SUITE |
 | UAT-001 | true | true | APPLICABLE | supplier-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
 | UAT-002 | true | true | APPLICABLE | supplier-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
 | UAT-003 | true | true | APPLICABLE | supplier-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
