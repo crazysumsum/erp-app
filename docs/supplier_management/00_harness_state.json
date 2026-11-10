@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 531,
+  "revision": 532,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
-    "code_commit": "538dc587d30d47e9555b969bbedd974f6138b918",
-    "source_fingerprint": "63633d48d82fe8278cca7a36060aeb0e935dc0e16e0e9c5ce560669a5e9a137b",
+    "code_commit": "0feecc26f9ea23111fcac16923826444bc9cc077",
+    "source_fingerprint": "087d1547a7583704e1a749276db7a2e14088b8885cafbf99bc572c5044cb9e99",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-profile-capacity-skip",
-    "default_commit": "095ead952065607a74430e808b50aaba0c9611a8",
+    "default_commit": "9762fb59c139b03d114cdfb96a0d03d8aa97898c",
     "mode_entry_commit": "095ead952065607a74430e808b50aaba0c9611a8"
   },
   "runtime": {
@@ -3227,6 +3227,24 @@
         "supplier-management",
         "TASK-052",
         "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-165-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam, PM chat (thread 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, user message 01a1c336-3fdc-7933-ad30-0e29aa77d831, turn 01a1c336-3f7d-77a3-91fa-a79308163d2b), call_11769c0d48cc4f67879f3b27ec934d1d item 0: '批准最終計劃、准入及一次發布／CI'. The question named plan 2d5292cb, receipt digest b9c3f100, the reviewed candidate 8c9fa82b (four files), a sync with latest main, one ordinary push, a Draft PR and one natural functional CI. It approved no merge, no main CI and no local formal TECHNICAL/REGRESSION run. The independent CI admission administrator read the thread directly and saved it as .worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/actual-human-decision.json (sha256 15c1680d...5cb9). The PM relayed it to the Supplier chat.",
+      "recorded_at": "2026-11-10T02:11:26Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "code_commit": "8c9fa82b712f135c44063a9c942ed7c74696b253",
+      "scope": [
+        "supplier-management",
+        "HD-165",
+        "TASK-051"
       ],
       "expires_at": null
     }
@@ -8282,6 +8300,17 @@
       "source_ref": "PR #352 (head 3da01894) merged as 095ead952065607a74430e808b50aaba0c9611a8 at 2026-11-10T01:13:03Z on the Product Owner's word ('CI 已通過'), after the code gate: heads equal, main 2cf4d258 an ancestor; run 42731045332 attempt 1 on d076703e (main + head), 18 jobs SUCCESS and 2 capacity jobs SKIPPED, floors met for 39 files. Recorded in the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-10T01:13:03Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Latest main 9762fb59 (PR #351) merged into claude/supplier-profile-capacity-skip",
+      "code_commit": "0feecc26f9ea23111fcac16923826444bc9cc077",
+      "spec_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_fingerprint": "087d1547a7583704e1a749276db7a2e14088b8885cafbf99bc572c5044cb9e99",
+      "status": "PASS",
+      "source_ref": "Ordinary --no-ff merge with no conflict; parents 8c9fa82b and 9762fb59. The branch diff and the main diff each match their pre-merge diffs exactly. Main changed no Supplier document, receipt pin or Purchasing 03 (927ddc66). All 8 receipt pins still match, receipt sha256 is still b9c3f100, and plan 2d5292cb is unchanged.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T02:11:26Z"
     }
   ],
   "pending_decisions": [
@@ -12219,5 +12248,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-165 A (IMPLEMENT for this change only, because the receipt under .github is rebound) on claude/supplier-profile-capacity-skip: profile argv and max_skipped 7 for the 7 catalog capacity cases, the boundary-doc deltas, and the rebound receipt. Next: independent review. Then, through the PM, one confirmation from the decision-maker that names plan 2d5292cb and the receipt digest. Only the trusted approval administrator publishes the digest and reads it back. After that: one push, one PR and one natural functional CI, and a merge on the decision-maker's word and the code gate. Then a formal TECHNICAL and REGRESSION run of the functional suites on the merged baseline, in a local MySQL slot from the PM; skipped cases must be exactly the 7 named. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Order: the functional part of Technical Acceptance, then formal UAT, then capacity, then Technical Acceptance complete, TC-136 and sign-offs. Source for the order and the approvals: the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1), which says the 14 historical approvals are not re-requested case by case, and that non-functional and capacity work stays after the relevant UAT and is not run earlier because the formal flow lists supplier-performance first. Unrun items keep their real state and are never marked PASS. The 14 approvals (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) stay as recorded on their old baselines; the record was not re-affirmed. After the merge, back to TEST_AND_VERIFY."
+  "next_safe_action": "HD-165 A (IMPLEMENT for this change only, because the receipt under .github is rebound) on claude/supplier-profile-capacity-skip: profile argv and max_skipped 7 for the 7 catalog capacity cases, the boundary-doc deltas, and the rebound receipt. REV-147 APPROVED. APPROVAL-HD-165-PLAN is recorded (Sam, call_11769c0d…). Latest main 9762fb59 is merged in. Next: the trusted CI admission administrator appends b9c3f100 and reads it back. Then one ordinary push, a Draft PR and one natural functional CI, with no re-run. Every skipped name is checked against audit-16..20, 27 and 28. Merge is not approved yet; it needs the decision-maker's word and the code gate. Then, once separately approved with its full scale and a MySQL slot (not approved in HD-165), a formal TECHNICAL and REGRESSION run of the functional suites on the merged baseline, in a local MySQL slot from the PM; skipped cases must be exactly the 7 named. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Order: the functional part of Technical Acceptance, then formal UAT, then capacity, then Technical Acceptance complete, TC-136 and sign-offs. Source for the order and the approvals: the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1), which says the 14 historical approvals are not re-requested case by case, and that non-functional and capacity work stays after the relevant UAT and is not run earlier because the formal flow lists supplier-performance first. Unrun items keep their real state and are never marked PASS. The 14 approvals (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) stay as recorded on their old baselines; the record was not re-affirmed. After the merge, back to TEST_AND_VERIFY."
 }
