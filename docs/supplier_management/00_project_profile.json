@@ -260,7 +260,7 @@
       "result_adapter": "JUNIT",
       "result_path": "supplier-server-integration.xml",
       "min_tests": 620,
-      "max_skipped": 7,
+      "max_skipped": 0,
       "stages": [
         "DEVELOPER",
         "TECHNICAL",
@@ -521,7 +521,7 @@
       "result_adapter": "JUNIT",
       "result_path": "supplier-security.xml",
       "min_tests": 620,
-      "max_skipped": 7,
+      "max_skipped": 0,
       "stages": [
         "DEVELOPER",
         "TECHNICAL",

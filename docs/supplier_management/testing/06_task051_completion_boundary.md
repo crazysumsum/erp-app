@@ -76,11 +76,11 @@ These cases keep their original assertions. They are not re-run while the depend
 
 ## HD-165 — capacity cases deferred from the formal functional suites (2026-11-10)
 
-`supplier-server-integration` and `supplier-security` run every `test/supplier*.test.js` and `test/integration/supplier*.integration.test.js`. Seven cases in those files are listed in the CI capacity catalog (`.github/scripts/capacity-cases.mjs`). AGENTS.md defers capacity until after UAT. As written, a formal run would execute them, and excluding them would fail `max_skipped: 0`.
+`supplier-server-integration` and `supplier-security` run every `test/supplier*.test.js` and `test/integration/supplier*.integration.test.js`. Seven cases in those files are listed in the CI capacity catalog (`.github/scripts/capacity-cases.mjs`). AGENTS.md defers capacity until after UAT. As written, a formal run would execute them.
 
 The Product Owner chose option A on 2026-11-10 ('A，照建議改 profile'):
 - Both suites now run through `npm test` in `server/`. That script adds `--test-skip-pattern` from `capacity-runner.mjs server-pattern`, the same exclusion CI uses.
-- `max_skipped` is now 7 in both suites. Every other value is unchanged: 90 and 10 required IDs, `min_tests` 620, and the coverage floors.
+- `max_skipped` stays 0 in both suites. Every other value is unchanged as well: 90 and 10 required IDs, `min_tests` 620, and the coverage floors. Node 26 leaves a test that matches `--test-skip-pattern` out of the report entirely. It is not counted as skipped, and the junit `tests` total drops. So the exclusion needs no skip allowance, and any skip in the run still fails it. HD-165 first set `max_skipped` to 7 on the wrong assumption that the seven would be reported as skipped. That value would have let seven other cases skip, so it was put back to 0 before merge.
 - No case is deleted and no assertion changes. The seven cases run after UAT, on main, by explicit dispatch with a grant (`docs/ci-capacity-routing.md`). Owner: Supplier.
 
 | Capacity ID | File | Case |
@@ -93,10 +93,16 @@ The Product Owner chose option A on 2026-11-10 ('A，照建議改 profile'):
 | audit-27 | `supplierCsvSchema.test.js` | a file of 10 MB of commas is refused quickly at upload and at precheck (REV-066 M-1) |
 | audit-28 | `supplierCsvSchema.test.js` | precheck lets the event loop run while it parses a large file (REV-067 L-1) |
 
-Limits:
-- `max_skipped` is a count, not a list. An eighth skip fails the run mechanically (`skipped > max_skipped`). The harness does not check names, so a different skip at the same count would pass. Whoever reviews the run checks the skipped names in its junit against this table by hand.
-- If the catalog gains or loses a Supplier case, this table and `max_skipped` change with it.
-- T51 AC 2's "skip fails the Gate" stands, with HD-165 as its only exception.
+Limits and how a formal run shows the exclusion:
+- Mechanical. The harness rejects duplicate runner names. A TC/UAT ID may map to several cases, so each required ID is judged on its aggregate result, which takes the worst status of its cases and must be PASS. The run needs at least 620 executed tests, counting passed plus failed. Reported skipped, not-run and failed counts must all be 0 (`max_skipped: 0`). `npm test` itself fails closed: `capacity-runner.mjs server-pattern` validates the catalog, and the script refuses an empty pattern.
+- By review, because the harness cannot check this mapping. Whoever reviews the run checks four things together; any one alone is not enough:
+  - the run's junit reports `skipped 0`;
+  - none of the seven names below appears as a testcase in the junit;
+  - at the run's commit, the pattern that `node .github/scripts/capacity-runner.mjs server-pattern` prints contains each of the seven names. `npm test` does not echo the expanded pattern, so the run's own log cannot show it;
+  - the catalog at the run's commit still lists exactly these seven entries for the two globs.
+- The evidence does not prove that a case missing from the junit was excluded by the pattern and not lost some other way. The four checks together narrow this down; a full proof would need a per-test inventory, which the harness does not produce.
+- If the catalog gains or loses a Supplier case, this table changes with it. `max_skipped` stays 0.
+- T51 AC 2's "skip fails the Gate" stands with no exception. The seven are excluded, not skipped.
 - Order, per the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1): capacity stays after the relevant UAT and is not run earlier because the formal flow lists `supplier-performance` first; unrun items keep their real state and are never marked PASS. So the functional part of Technical Acceptance (the formal TECHNICAL and REGRESSION run without capacity) comes first, then formal UAT. These seven cases and `supplier-performance` run after UAT, and Technical Acceptance and TC-136 are complete only after that.
 
 ## DEF-034 — OPEN (LOW)
