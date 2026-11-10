@@ -246,11 +246,10 @@
       "id": "supplier-server-integration",
       "kind": "INTEGRATION",
       "argv": [
-        "node",
-        "--test",
+        "npm",
+        "test",
+        "--",
         "--test-concurrency=1",
-        "--import",
-        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-server-integration.xml",
         "test/supplier*.test.js",
@@ -261,7 +260,7 @@
       "result_adapter": "JUNIT",
       "result_path": "supplier-server-integration.xml",
       "min_tests": 620,
-      "max_skipped": 0,
+      "max_skipped": 7,
       "stages": [
         "DEVELOPER",
         "TECHNICAL",
@@ -366,6 +365,13 @@
             "--version"
           ],
           "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "npm",
+            "--version"
+          ],
+          "version_pattern": "^[0-9]+\\."
         },
         {
           "argv": [
@@ -501,11 +507,10 @@
       "id": "supplier-security",
       "kind": "SECURITY",
       "argv": [
-        "node",
-        "--test",
+        "npm",
+        "test",
+        "--",
         "--test-concurrency=1",
-        "--import",
-        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-security.xml",
         "test/supplier*.test.js",
@@ -516,7 +521,7 @@
       "result_adapter": "JUNIT",
       "result_path": "supplier-security.xml",
       "min_tests": 620,
-      "max_skipped": 0,
+      "max_skipped": 7,
       "stages": [
         "DEVELOPER",
         "TECHNICAL",
@@ -541,6 +546,13 @@
             "--version"
           ],
           "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "npm",
+            "--version"
+          ],
+          "version_pattern": "^[0-9]+\\."
         },
         {
           "argv": [

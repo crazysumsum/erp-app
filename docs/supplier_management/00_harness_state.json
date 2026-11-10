@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 527,
+  "revision": 529,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
-    "plan": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
-    "code_commit": "095ead952065607a74430e808b50aaba0c9611a8",
-    "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
+    "plan": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+    "code_commit": "538dc587d30d47e9555b969bbedd974f6138b918",
+    "source_fingerprint": "63633d48d82fe8278cca7a36060aeb0e935dc0e16e0e9c5ce560669a5e9a137b",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-profile-capacity-skip",
     "default_commit": "095ead952065607a74430e808b50aaba0c9611a8",
-    "mode_entry_commit": "2cf4d258a30911116d9b6007447874c52c955f61"
+    "mode_entry_commit": "095ead952065607a74430e808b50aaba0c9611a8"
   },
   "runtime": {
     "instance_id": "supplier-profile-capacity-skip",
@@ -10443,6 +10443,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259. Does not re-affirm the 14 approvals on old baselines."
+    },
+    {
+      "id": "HD-165",
+      "impact": "MAJOR",
+      "question": "supplier-server-integration and supplier-security (TECHNICAL, REGRESSION) glob every Supplier test file, which holds 7 capacity-catalog cases (audit-16 to audit-20, audit-27, audit-28), with max_skipped 0. AGENTS.md defers capacity until after UAT, so a formal functional run as written would execute capacity, and excluding the cases fails the gate. (A) Run both suites through server's npm test, which adds the catalog's --test-skip-pattern, and set max_skipped 0 to 7; the 7 are named as post-UAT deferrals; no case, assertion, floor or other threshold changes; the profile is receipt-bound, so the receipt is rebound. (B) Move the 7 cases into a separate post-UAT capacity suite (test-file and profile changes, wider admission). (C) No change; the formal functional run waits until after UAT, which conflicts with Technical Acceptance before UAT. Recommendation: A.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-136"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner (Sam) in the Supplier chat, 2026-11-10: 'A，照建議改 profile', in reply to the Decision Required above. Applied on this branch: both suites' argv, max_skipped 7, an npm version probe, and the named list in testing/06_task051_completion_boundary.md. Receipt supplier-task052-sku-refs.json rebound (profile pin e50939e1 to 327593c6); its new digest needs the trusted approval administrator. The new plan baseline 2d5292cb has no PLAN approval yet: it was computed after the answer, so the approval waits for the decision-maker's confirmation of this exact hash, together with the receipt."
     }
   ],
   "external_actions": [
@@ -11085,6 +11096,14 @@
       "idempotency_key": "supplier-merge-pr-352",
       "status": "CONFIRMED",
       "source_ref": "Merged as 095ead952065607a74430e808b50aaba0c9611a8; worktree and branches claude/supplier-ledger-pr350 removed after the merge."
+    },
+    {
+      "id": "MODE-CHANGE-529",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-529",
+      "status": "CONFIRMED",
+      "source_ref": "HD-165 A: IMPLEMENT for the profile change and the receipt rebind only"
     }
   ],
   "evidence_files": [
@@ -12188,5 +12207,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-052 merged (PR #350, 2cf4d258). Purchasing re-pins Supplier 03 once and consumes findSkuRefsInTransaction and the verifySource injection in its own tasks (TASK-040, TASK-032/033); until then recordSupply answers 503 SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a post-UAT formal run on main (prior approval needed). Formal business UAT and sign-offs come after Technical Acceptance. The 41 limited-UAT acceptances are not formal UAT. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run."
+  "next_safe_action": "HD-165 A (IMPLEMENT for this change only, because the receipt under .github is rebound) on claude/supplier-profile-capacity-skip: profile argv and max_skipped 7 for the 7 catalog capacity cases, the boundary-doc deltas, and the rebound receipt. Next: independent review. Then, through the PM, one confirmation from the decision-maker that names plan 2d5292cb and the receipt digest. Only the trusted approval administrator publishes the digest and reads it back. After that: one push, one PR and one natural functional CI, and a merge on the decision-maker's word and the code gate. Then a formal TECHNICAL and REGRESSION run of the functional suites on the merged baseline, in a local MySQL slot from the PM; skipped cases must be exactly the 7 named. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Formal UAT, TC-136 and sign-offs come after Technical Acceptance. PM, 2026-11-10: the 14 old-baseline approvals are not to be asked for again, and capacity stays after UAT. After the merge, back to TEST_AND_VERIFY."
 }
