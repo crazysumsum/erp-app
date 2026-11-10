@@ -248,3 +248,73 @@ The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). Th
 - I4-after: 1 PO, 1 line. 2 concurrent POSTs and 1 GET. **This needs Sam's separate approval.**
 
 **Existing assertion:** `purchasingInquiry.integration.test.js` lines 265 to 266 change from `e: ["copy"]` to `e: ["copy", "closeRemaining"]`. Nothing else changes, and the original assertions are kept, with none skipped.
+
+## C4 run (Sam's approval of 2026-11-09; the single grant is used): FAILED, stopped and released
+
+- **Candidate:** `418c4e0ba9f039c9808227b807014172889fa563`. `server/src` is identical to `2cb6fe60`. Migrations end at 0118, and `goods_receipts` was absent after migrating.
+- **Window:**
+  - Started 2026-11-09 12:13:33 +08:00.
+  - Private mysqld 26.7.0, PID 39635, on 127.0.0.1:33619, socket `/private/tmp/m025c4/s.sock`, datadir `/private/tmp/m025c4`, started with `--skip-log-bin --mysqlx=OFF`.
+  - Released 12:15:26 +08:00: the PID exited, the datadir was removed, `lsof` showed no listener on 33619, and `pgrep mysqld` was empty.
+- **Steps:**
+  1. Preflight: head, clean tree, migration set, no mysqld, free port, absent datadir. All passed.
+  2. `validateApplicationConfiguration()` with the 19-variable env built from `ci.yml`: `CONFIG_OK`.
+  3. Initialize, start, and create the `ci.yml` root, `erp_dev` and `erp_user`: exit 0.
+  4. `npm run migrate`: exit 0, 111 migrations up to `0118_create_purchase_order_status_history.js`.
+  5. The literal four-file `npm test -- …`: **exit 1. Tests 43: 39 passed, 4 failed** (8.53 s).
+- **Results:**
+  - Passed: the 22 unit registrations, the 8 inquiry registrations (including the changed assertion) and the 9 approval-command registrations.
+  - **Failed:** all 4 lifecycle integration registrations, I1 to I4. Every lifecycle POST returned `500 INTERNAL_SERVER_ERROR` instead of 503, 200 or 409. I3 and I4 then hit `undefined.status`.
+- **Cause, found by reading the server log and source, not by rerunning:**
+  - `PurchasingOperationService.claim` refuses any `commandType` missing from its `COMMANDS` whitelist with `TypeError("Unsupported Purchasing command")`.
+  - TASK-025 added `WITHDRAW_CONFIRMATION_PURCHASE_ORDER`, `CANCEL_PURCHASE_ORDER` and `CLOSE_REMAINING_PURCHASE_ORDER` (the `${kind}_PURCHASE_ORDER` in `PurchaseOrderService.#claim`) but did not register them.
+  - The TypeError aborts the transaction, so the request ends as a 500.
+  - This is a **product defect in the TASK-025 source**, not a test defect. The unit file calls `PurchaseOrderLifecycleService` directly, and the private `check025.mjs` used a fake transaction, so neither exercised `claim`.
+- **Evidence:** `/Users/sam/Documents/workspace/purchasing-evidence/c4-2026-11-09/`, with `SHA256SUMS` of 22 entries. It holds the commands' logs, exit files, the mysqld error log, and the server system and request logs.
+- No retry and no further run.
+
+## Minimal source fix after the C4 failure (candidate `462a9925`, not run)
+
+**Diff:** `server/src/modules/purchasing/PurchasingOperationService.js` gains 3 lines, mapping `WITHDRAW_CONFIRMATION_PURCHASE_ORDER`, `CANCEL_PURCHASE_ORDER` and `CLOSE_REMAINING_PURCHASE_ORDER` to `"PURCHASE_ORDER"`. The blob goes from `3bea44d0…` to `65fdad29eff247c94ebdbb581c6899deca1f372b`. Nothing else in `server/src` differs from `2cb6fe60`.
+
+**Static checks, done by reading only:**
+- These are exactly the names `PurchaseOrderService.#claim` builds, `${kind}_PURCHASE_ORDER` for the three `LIFECYCLE_KINDS`. The route, permission and target contract is unchanged: `sourceDocumentId` is the PO id, as for every other PO command.
+- `claim` still refuses unknown types. Its hash, actor, event and replay checks, and `complete`, `safeResult` and `run`, are untouched.
+- `safeResult` already accepts the lifecycle summaries `{ id, number, status, version }` with DRAFT, CANCELLED, PARTIALLY_RECEIVED or CLOSED.
+- **Schema:** in migration 0114, `command_type` is `VARCHAR(60)` ascii with no CHECK on its values. The longest new name has 30 characters, and `source_document_type 'PURCHASE_ORDER'` is already allowed. No schema change is needed.
+- No receipt pins this file, so the TASK-025 receipt draft `8a700390…` is unchanged. No test pins the whitelist.
+
+**Regression reasoning:** the change only adds keys to a frozen lookup. Existing keys and their values are unchanged, so the earlier commands resolve exactly as before. In the failed C4 run, the 22 unit, 8 inquiry and 9 approval-command cases passed, and C2 passed. The module is loaded by every file, so a syntax or import error would show in any rerun. I see no uncovered risk for the old commands that would justify rerunning all 43 cases.
+
+**Proposed re-verification (needs Sam's new batch approval; not run):**
+- Exactly the 4 failed cases, once:
+
+  ```
+  cd server && npm test -- test/integration/purchasingLifecycle.integration.test.js
+  ```
+
+- The same env (19 `ci.yml` variables), the same config validator first, and the same own-mysqld setup, migrate (up to 0118), cleanup and release rules as the first C4 run.
+- The same data: 6 POs, 9 lines, 12 POSTs, 3 GETs, 2 actors, 1 app and pool.
+- Default workers, and stop at the first failure.
+- **Honest limit:** the four cases' assertions after the first lifecycle POST have never been reached, so further failures cannot be ruled out until that run.
+
+## Re-verification run (Sam's approval of 2026-11-09, "批准三行修補及原四案一次"; the grant is used): PASSED, released
+
+- **Candidate:** `40fc298c5ea0acbc6ea22769d6ed308f4d5169e8`. It includes fix `462a9925`, with `PurchasingOperationService.js` blob `65fdad29…`. Migrations end at 0118, and `goods_receipts` was absent after migrating.
+- **Window:**
+  - Started 13:40:40 +08:00.
+  - Private mysqld PID 43335 on 127.0.0.1:33619, socket `/private/tmp/m025c4r/s.sock`, datadir `/private/tmp/m025c4r`.
+  - Released 13:42:01 +08:00: the PID exited, the datadir was removed, `lsof` showed no listener on 33619, and `pgrep mysqld` was empty.
+- **Steps:**
+  1. Preflight passed.
+  2. `validateApplicationConfiguration()` with the same 19 variables: `CONFIG_OK`.
+  3. Initialize, start, and create the users: exit 0.
+  4. `npm run migrate`: exit 0, 111 migrations up to 0118.
+  5. `cd server && npm test -- test/integration/purchasingLifecycle.integration.test.js`: **exit 0. Tests 4: 4 passed, 0 failed** (1.25 s). I1 to I4 all passed.
+- **HTTP in the test window**, from the server request log: **12 POSTs and 3 GETs**, as approved.
+- **Combined with the first C4 run:** 22 unit, 8 inquiry and 9 approval-command cases passed there, plus these 4. All C4 registrations have now passed, on two runs; the earlier failure stays on record.
+- **Evidence:** `/Users/sam/Documents/workspace/purchasing-evidence/c4r-2026-11-09/`, with `SHA256SUMS` of 23 entries. It holds the logs, exit files, the env used, the mysqld error log, and the server system and request logs.
+
+## Main integration and re-pin, 2026-11-10
+
+Main `9762fb59` (TASK-024 backend, PR #351) was merged in with no conflicts. The 19 TASK-025 files are byte-identical to `204420a1`. One pin changed: `server/test/purchasing/purchaseOrderApprovalHandlers.test.js` now imports the my-approvals handler from `handlers/purchase-order-approvals/`, the fix Sam approved on 2026-11-10 ("批准修補，恢復採購"). No case, assertion or workload changed. The receipt now has a new digest, which the CI approval administrator must register. The C4 evidence still covers the lifecycle files, which are unchanged.

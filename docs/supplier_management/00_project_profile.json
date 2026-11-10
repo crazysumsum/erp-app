@@ -246,11 +246,10 @@
       "id": "supplier-server-integration",
       "kind": "INTEGRATION",
       "argv": [
-        "node",
-        "--test",
+        "npm",
+        "test",
+        "--",
         "--test-concurrency=1",
-        "--import",
-        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-server-integration.xml",
         "test/supplier*.test.js",
@@ -356,7 +355,8 @@
         "TC-107",
         "TC-108",
         "TC-109",
-        "TC-110"
+        "TC-110",
+        "TC-137"
       ],
       "tool_probes": [
         {
@@ -365,6 +365,13 @@
             "--version"
           ],
           "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "npm",
+            "--version"
+          ],
+          "version_pattern": "^[0-9]+\\."
         },
         {
           "argv": [
@@ -500,11 +507,10 @@
       "id": "supplier-security",
       "kind": "SECURITY",
       "argv": [
-        "node",
-        "--test",
+        "npm",
+        "test",
+        "--",
         "--test-concurrency=1",
-        "--import",
-        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-security.xml",
         "test/supplier*.test.js",
@@ -540,6 +546,13 @@
             "--version"
           ],
           "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "npm",
+            "--version"
+          ],
+          "version_pattern": "^[0-9]+\\."
         },
         {
           "argv": [
