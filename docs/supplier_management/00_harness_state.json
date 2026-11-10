@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 530,
+  "revision": 531,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4931,6 +4931,18 @@
       "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-sku-refs-provider at 6738f48b (git diff origin/main...HEAD)",
       "reviewed_baseline": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
       "source_ref": "docs/supplier_management/implementation/146_rev_146_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-147",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-165)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-profile-capacity-skip at 21ee2136 (git diff 095ead95..HEAD), re-review of 21ee2136..35c12417",
+      "reviewed_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_ref": "First pass CHANGES_REQUESTED. M1: the boundary doc and next_safe_action stated an order that contradicted itself, and quoted the PM without a source. L1: the doc claimed the harness catches a different skip at the same count; it checks only the count (harness_runner.py:179). Nit: npm probe left as in the lint suite. Both fixed in 35c12417; re-review APPROVED. Confirmed: the profile change is exactly HD-165 A; npm test passes the args and adds the catalog skip pattern; the pattern matches exactly audit-16..20, 27 and 28 in the Supplier files; all 8 receipt pins match HEAD; the table is verbatim. Read-only; no tests run.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
