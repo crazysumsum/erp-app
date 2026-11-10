@@ -19,7 +19,7 @@ The approval covers the plan, not new routine CI cases. Those need their own pro
 | 5 | `allowedActions` | `approve` and `reject` for the assigned approver, never the requester. `withdraw` for the requester with `purchasing.mgmt`. Detail only: the list does not read approvals. |
 | 6 | `GET /api/v1/purchasing-settings` | `history`: the latest 50 changes from Audit (FR-SET-007). |
 
-No schema change. `idx_po_approvals_assignee` and `idx_purchasing_audit_action` already cover the new reads. The route lives in `handlers/purchase-orders/` rather than §9's `purchase-order-approvals/`, as HD-016 did for other Purchasing handlers.
+No schema change. `idx_po_approvals_assignee` and `idx_purchasing_audit_action` already cover the new reads. The my-approvals handler lives in `handlers/purchase-order-approvals/`, as §9 says. `handlerConventions.test.js` requires a handler's directory to match the first URL segment. It was first placed in `handlers/purchase-orders/`, and CI caught that, see below.
 
 ## Verification plan
 
@@ -119,3 +119,14 @@ Not on `origin`: this branch, this record and the receipt draft. In the session 
 ## Only next step on resume
 
 The trusted admission administrator's check of this receipt.
+
+## CI run of 2026-11-09 and the fix
+
+Digests registered by the CI approval administrator on 2026-11-09 (Sam's choice A, call_f3b24f). Draft PR #351 at `300e0625`. Admission run 42594900278 passed. CI run 42594941222 failed in server shard 3/8, in one existing case, `handlerConventions.test.js`: `ListMyPurchaseOrderApprovalsHandler` was in `handlers/purchase-orders/` but its path is `/api/v1/purchase-order-approvals/mine`. Every other job passed, and the capacity jobs were skipped. The approved local batch ran only targeted files, so it never ran this test. Evidence: `/Users/sam/Documents/workspace/purchasing-evidence/pr351-ci-2026-11-09/`.
+
+Sam approved on 2026-11-10: "批准修補，恢復採購".
+- The handler moves unchanged to `server/src/handlers/purchase-order-approvals/listMyPurchaseOrderApprovalsHandler.js`, and the old file drops the imports only it used. The URL, policy, schemas and behaviour are unchanged.
+- `purchaseOrderApprovalHandlers.test.js` imports the handler from the new file: one import line becomes two. No case or assertion changes.
+- The receipt re-pins that test file, so it needs a new digest. TASK-025's receipt pins the same file and needs the same re-pin when it integrates this backend.
+
+Local checks after the fix: `handlerConventions.test.js` and `purchaseOrderApprovalHandlers.test.js` 7/7 pass with no database, eslint on the three changed files is clean, and the module boundary check passes.
