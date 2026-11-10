@@ -314,3 +314,7 @@ The TL accepted `2cb6fe60` at source level (relayed by the PM on 2026-11-09). Th
 - **HTTP in the test window**, from the server request log: **12 POSTs and 3 GETs**, as approved.
 - **Combined with the first C4 run:** 22 unit, 8 inquiry and 9 approval-command cases passed there, plus these 4. All C4 registrations have now passed, on two runs; the earlier failure stays on record.
 - **Evidence:** `/Users/sam/Documents/workspace/purchasing-evidence/c4r-2026-11-09/`, with `SHA256SUMS` of 23 entries. It holds the logs, exit files, the env used, the mysqld error log, and the server system and request logs.
+
+## Main integration and re-pin, 2026-11-10
+
+Main `9762fb59` (TASK-024 backend, PR #351) was merged in with no conflicts. The 19 TASK-025 files are byte-identical to `204420a1`. One pin changed: `server/test/purchasing/purchaseOrderApprovalHandlers.test.js` now imports the my-approvals handler from `handlers/purchase-order-approvals/`, the fix Sam approved on 2026-11-10 ("批准修補，恢復採購"). No case, assertion or workload changed. The receipt now has a new digest, which the CI approval administrator must register. The C4 evidence still covers the lifecycle files, which are unchanged.
