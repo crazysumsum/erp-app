@@ -50,7 +50,7 @@ TASK-051 (T51: deployment, smoke, regression and Release Gate) is **not complete
 | UAT-036 | Old PO keeps its Currency and Term snapshot | Defaults changed with a reason | Purchasing owner | PO snapshot exists |
 | UAT-051 (open-matter and new-transaction steps) | Open matters and new transactions | Block steps pass | Purchasing / AP owners | Open-flow provider installed (HD-131 A) |
 | UAT-053 (referenced Bank account) | A payment flow that references the account | Add, edit, default and deactivate pass | AP / payment owner | Payment references exist |
-| Purchasing's pin of the Supplier design | Purchasing's manifest pins an older Supplier design hash | — | Purchasing owner | Purchasing refreshes its pin; raised as [#294](https://github.com/crazysumsum/erp-app/issues/294) |
+| Purchasing's pin of the Supplier design | Purchasing's manifest pinned `e49ac37d`, Supplier's 03 as of main `6d84ee45`, by 2026-11-06. TASK-052 moves 03 again | — | Purchasing owner | Purchasing re-pins once after TASK-052 merges; raised as [#294](https://github.com/crazysumsum/erp-app/issues/294) |
 
 These cases keep their original assertions. They are not re-run while the dependency is unchanged, and no fixture, skip or exception stands in for them.
 

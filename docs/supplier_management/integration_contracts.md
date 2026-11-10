@@ -50,6 +50,7 @@ A list result is only a suggestion. When Purchasing saves an order, it must chec
 
 - `assertUsableInTransaction(connection, supplierId, { purpose: "purchase", atMs })` locks the Supplier row and refuses a Supplier that is no longer Active with `SUPPLIER_NOT_USABLE`.
 - `getPurchaseDefaultsInTransaction(connection, supplierId, { atMs })` returns the Supplier, Currency, Payment Term and ordering address. Purchasing keeps them as its own snapshot (AC-032).
+- `findSkuRefsInTransaction(connection, supplierId, skuIds)` returns a `Map` from `skuId` to `{ relationId, relationshipStatus, supplierItemCode, lastSuppliedAt }`, for at most 100 IDs. It is a plain read of hints, not an eligibility check: `stopped` rows come back, and a SKU with no relation is absent. Take `relationId` from this read, never from the client, because the PO Line foreign key has one column and cannot check the owner.
 
 A `preferred` mark never makes a Supplier usable.
 

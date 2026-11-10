@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision of 2026-11-06 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你發digest，CI綠了就merge\", answering the consolidated proposal for the TASK-024 preparatory backend (HD-022): 4 new cases, 3 in purchasingApprovalCommands.integration.test.js and 1 in purchaseOrderApprovalHandlers.test.js; added history assertions in the existing settings case; a one-time project-owner authorization to publish this receipt's digest. Sam's decision relayed by the PM on 2026-11-06, call_7553be3498ab45f5bdb21bd4a55b3f1f: \"批准完整修補及本機整批一次\", covering reviewed patch 032d52e1 with the purchasingInquiry key-list change and the added lineAmount check in the new detail case. Other pinned files are unchanged re-pins of purchasing-task023.json",
+  "decision": "Sam's explicit decision of 2026-11-06 in Claude Code session f804490c: \"全部批准，我作為project owner 批準你發digest，CI綠了就merge\", answering the consolidated proposal for the TASK-024 preparatory backend (HD-022): 4 new cases, 3 in purchasingApprovalCommands.integration.test.js and 1 in purchaseOrderApprovalHandlers.test.js; added history assertions in the existing settings case; a one-time project-owner authorization to publish this receipt's digest. Sam's decision relayed by the PM on 2026-11-06, call_7553be3498ab45f5bdb21bd4a55b3f1f: \"批准完整修補及本機整批一次\", covering reviewed patch 032d52e1 with the purchasingInquiry key-list change and the added lineAmount check in the new detail case. Other pinned files are unchanged re-pins of purchasing-task023.json. Sam's explicit decision of 2026-11-10 in Claude Code session f804490c: \"批准修補，恢復採購\", approving the fix for CI run 42594941222 (handlerConventions.test.js): ListMyPurchaseOrderApprovalsHandler moves unchanged to handlers/purchase-order-approvals/, and purchaseOrderApprovalHandlers.test.js imports it from there; no case, assertion or workload change",
   "purpose": "The my-approvals list shows only the actor's pending approvals, oldest first, with paging and filters; PO detail returns the pending snapshot at Currency scale, with approval and status history, and decision actions follow the actor; approvers exclude the actor and carry requireApproval; settings show their change history. Existing approval, Inquiry and PO cases keep guarding the same behaviour",
   "data": "A few rows per case: the same small fixtures as purchasing-task023.json, with up to 2 one-line POs in the new cases. No new fixture files and no increase to existing cases' data",
   "concurrency": "1, except the existing case from purchasing-task023.json that sends approve and withdraw at once",
@@ -181,7 +181,7 @@
     {
       "path": "server/test/purchasing/purchaseOrderApprovalHandlers.test.js",
       "mode": "100644",
-      "blob": "c5c135626896e6f5314722376f683d1524d44374",
+      "blob": "29e768b10076951991a7de0cc98031f53669bbc4",
       "kind": "functional",
       "cases": [
         "Metadata：審批決定用 jwt-password＋view＋approval；撤回用 jwt＋mgmt；設定更新用 jwt-device-password",
