@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 532,
+  "revision": 533,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -3236,7 +3236,7 @@
       "authority_kind": "HUMAN",
       "actor": "ERP Product Owner (Sam)",
       "decision": "APPROVED",
-      "source_ref": "Sam, PM chat (thread 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, user message 01a1c336-3fdc-7933-ad30-0e29aa77d831, turn 01a1c336-3f7d-77a3-91fa-a79308163d2b), call_11769c0d48cc4f67879f3b27ec934d1d item 0: '批准最終計劃、准入及一次發布／CI'. The question named plan 2d5292cb, receipt digest b9c3f100, the reviewed candidate 8c9fa82b (four files), a sync with latest main, one ordinary push, a Draft PR and one natural functional CI. It approved no merge, no main CI and no local formal TECHNICAL/REGRESSION run. The independent CI admission administrator read the thread directly and saved it as .worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/actual-human-decision.json (sha256 15c1680d...5cb9). The PM relayed it to the Supplier chat.",
+      "source_ref": "Sam, PM chat (thread 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, user message 01a1c336-3fdc-7933-ad30-0e29aa77d831, turn 01a1c336-3f7d-77a3-91fa-a79308163d2b), call_11769c0d48cc4f67879f3b27ec934d1d item 0: '批准最終計劃、准入及一次發布／CI'. The question named plan 2d5292cb, receipt digest b9c3f100, the reviewed candidate 8c9fa82b (four files), a sync with latest main, one ordinary push, a Draft PR and one natural functional CI. It approved no merge (hence no main-push CI) and no local formal TECHNICAL/REGRESSION run; on the first failure, stop and report, no retry. The independent CI admission administrator read the thread directly and saved it as .worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/actual-human-decision.json (sha256 15c1680d...5cb9). The PM relayed it to the Supplier chat.",
       "recorded_at": "2026-11-10T02:11:26Z",
       "baseline_kind": "PLAN",
       "baseline_sha256": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
@@ -4961,6 +4961,18 @@
       "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-profile-capacity-skip at 21ee2136 (git diff 095ead95..HEAD), re-review of 21ee2136..35c12417",
       "reviewed_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
       "source_ref": "First pass CHANGES_REQUESTED. M1: the boundary doc and next_safe_action stated an order that contradicted itself, and quoted the PM without a source. L1: the doc claimed the harness catches a different skip at the same count; it checks only the count (harness_runner.py:179). Nit: npm probe left as in the lint suite. Both fixed in 35c12417; re-review APPROVED. Confirmed: the profile change is exactly HD-165 A; npm test passes the args and adds the catalog skip pattern; the pattern matches exactly audit-16..20, 27 and 28 in the Supplier files; all 8 receipt pins match HEAD; the table is verbatim. Read-only; no tests run.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-148",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-165)",
+      "reviewer": "agent-skills:code-reviewer (same reviewer as REV-147), incremental review of 8c9fa82b..198608d4",
+      "reviewed_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_ref": "APPROVED. Checked: composition is byte-identical on both sides (cmp); main 9762fb59 touches only Purchasing paths, no Supplier doc, receipt pin or Purchasing 03; the receipt is unchanged at b9c3f100 with all 8 pins matching; APPROVAL-HD-165-PLAN is faithful to actual-human-decision.json (sha256 15c1680d...5cb9) in IDs, quoted answer, plan, digest, scope and timing; no over-claims. Two nits, applied here: name 'no main-push CI' as following from 'no merge', and the stop-and-report-on-first-failure condition. REV-147 stands for the content.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -12248,5 +12260,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-165 A (IMPLEMENT for this change only, because the receipt under .github is rebound) on claude/supplier-profile-capacity-skip: profile argv and max_skipped 7 for the 7 catalog capacity cases, the boundary-doc deltas, and the rebound receipt. REV-147 APPROVED. APPROVAL-HD-165-PLAN is recorded (Sam, call_11769c0d…). Latest main 9762fb59 is merged in. Next: the trusted CI admission administrator appends b9c3f100 and reads it back. Then one ordinary push, a Draft PR and one natural functional CI, with no re-run. Every skipped name is checked against audit-16..20, 27 and 28. Merge is not approved yet; it needs the decision-maker's word and the code gate. Then, once separately approved with its full scale and a MySQL slot (not approved in HD-165), a formal TECHNICAL and REGRESSION run of the functional suites on the merged baseline, in a local MySQL slot from the PM; skipped cases must be exactly the 7 named. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Order: the functional part of Technical Acceptance, then formal UAT, then capacity, then Technical Acceptance complete, TC-136 and sign-offs. Source for the order and the approvals: the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1), which says the 14 historical approvals are not re-requested case by case, and that non-functional and capacity work stays after the relevant UAT and is not run earlier because the formal flow lists supplier-performance first. Unrun items keep their real state and are never marked PASS. The 14 approvals (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) stay as recorded on their old baselines; the record was not re-affirmed. After the merge, back to TEST_AND_VERIFY."
+  "next_safe_action": "HD-165 A (IMPLEMENT for this change only, because the receipt under .github is rebound) on claude/supplier-profile-capacity-skip: profile argv and max_skipped 7 for the 7 catalog capacity cases, the boundary-doc deltas, and the rebound receipt. REV-147 APPROVED. APPROVAL-HD-165-PLAN is recorded (Sam, call_11769c0d…). Latest main 9762fb59 is merged in. Next: the trusted CI admission administrator appends b9c3f100 and reads it back. Then one ordinary push, a Draft PR and one natural functional CI, stopping and reporting on the first failure, with no retry or re-run. Every skipped name is checked against audit-16..20, 27 and 28. Merge is not approved yet; it needs the decision-maker's word and the code gate. Then, once separately approved with its full scale and a MySQL slot (not approved in HD-165), a formal TECHNICAL and REGRESSION run of the functional suites on the merged baseline, in a local MySQL slot from the PM; skipped cases must be exactly the 7 named. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Order: the functional part of Technical Acceptance, then formal UAT, then capacity, then Technical Acceptance complete, TC-136 and sign-offs. Source for the order and the approvals: the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1), which says the 14 historical approvals are not re-requested case by case, and that non-functional and capacity work stays after the relevant UAT and is not run earlier because the formal flow lists supplier-performance first. Unrun items keep their real state and are never marked PASS. The 14 approvals (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) stay as recorded on their old baselines; the record was not re-affirmed. After the merge, back to TEST_AND_VERIFY."
 }
