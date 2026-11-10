@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 525,
+  "revision": 526,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-052",
+  "current_task": "TASK-051",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
-    "code_commit": "c127d4c8e19dc2b61a8bdfd663d8f18957d959dd",
-    "source_fingerprint": "9ff0ee44acdf132a97bf19ff3e4f6f9018d4442fec08525d162304dfb7c5f63c",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider",
-    "default_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f",
-    "mode_entry_commit": "b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f"
+    "code_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
+    "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-ledger-pr350",
+    "default_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
+    "mode_entry_commit": "2cf4d258a30911116d9b6007447874c52c955f61"
   },
   "runtime": {
-    "instance_id": "supplier-sku-refs-provider",
+    "instance_id": "supplier-ledger-pr350",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-sku-refs-provider (claude/supplier-sku-refs-provider, cut from main b28a7d88)"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-ledger-pr350 (claude/supplier-ledger-pr350, cut from main 2cf4d258)"
     },
     "lease_ref": null
   },
@@ -77,7 +77,7 @@
     "TASK-049": "DONE",
     "TASK-050": "DONE",
     "TASK-051": "IN_PROGRESS",
-    "TASK-052": "IN_PROGRESS"
+    "TASK-052": "DONE"
   },
   "approvals": [
     {
@@ -8248,6 +8248,17 @@
       "source_ref": "PR #314 merged as 983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15 at 2026-11-02T01:21:29Z on the Product Owner's word ('CI己通過'), head 98eb47524eeb, CI run 41369884736. Recorded in the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-02T01:21:29Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-052 Supplier SKU refs lookup (PR #350) merged to main",
+      "code_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
+      "spec_baseline": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+      "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
+      "status": "PASS",
+      "source_ref": "PR #350 merged as 2cf4d258a30911116d9b6007447874c52c955f61 (parents main 06caf911 and head 09f266055ab7) at 2026-11-10T00:43:33Z on the Product Owner's word ('恢復工作，做 PR350 code gate 後合併'), after the code gate: local, remote and PR heads equal, main an ancestor. The one functional CI was run 42594811126, attempt 1, dispatched by controller run 42594773651 on cc64dbaf (main + head). It had 18 jobs SUCCESS and 2 capacity jobs SKIPPED. Per-file floors were met for 39 files. TC-137 passed in shard 2 (real MySQL) and shard 1 (no DB). Receipt a2edb259 was registered by the CI admission administrator on Sam's direct confirmation; read-back 40 to 44 grants (.worktrees/ci-pm-handoffs/four-admission-new-authorization-20261109/registration-readback-result.json, sha256 8fbeac03...7bed). Recorded in a records PR on the Product Owner's request.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T00:43:33Z"
     }
   ],
   "pending_decisions": [
@@ -11039,6 +11050,22 @@
       "idempotency_key": "mode-change-517",
       "status": "CONFIRMED",
       "source_ref": "HD-163"
+    },
+    {
+      "id": "MERGE-PR-350",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#350",
+      "idempotency_key": "supplier-merge-pr-350",
+      "status": "CONFIRMED",
+      "source_ref": "Merged as 2cf4d258a30911116d9b6007447874c52c955f61; worktree and branches claude/supplier-sku-refs-provider removed after the merge."
+    },
+    {
+      "id": "MODE-CHANGE-526",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-526",
+      "status": "CONFIRMED",
+      "source_ref": "HD-163 A and HD-164: back to TEST_AND_VERIFY (REPORT_ONLY) after the TASK-052 merge (PR #350); TASK-051 stays IN_PROGRESS"
     }
   ],
   "evidence_files": [
@@ -12142,5 +12169,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-163 A: TASK-052 (findSkuRefsInTransaction, TC-137) on claude/supplier-sku-refs-provider; REV-146 follow-up; HD-164 answered. Wait for the TL's actual admission read-back of the receipt digest, re-check latest main, head and source versions, then one ordinary push, one PR and one existing functional CI; TC-137's MySQL case runs only in that CI; any failure is reported first and not re-run; merge on 'CI 已通過'. Then back to TEST_AND_VERIFY. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance; the 41 limited-UAT acceptances are not formal UAT. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run. Purchasing re-pins Supplier 03 once after the merge."
+  "next_safe_action": "TASK-052 merged (PR #350, 2cf4d258). Purchasing re-pins Supplier 03 once and consumes findSkuRefsInTransaction and the verifySource injection in its own tasks (TASK-040, TASK-032/033); until then recordSupply answers 503 SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a post-UAT formal run on main (prior approval needed). Formal business UAT and sign-offs come after Technical Acceptance. The 41 limited-UAT acceptances are not formal UAT. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run."
 }
