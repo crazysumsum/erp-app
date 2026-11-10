@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "decision": "Human answer 'A' in the Claude Code chat for Supplier management, session 486c4c60-92de-4122-b0e0-a68866140aa1, 2026-11-06, in reply to the Decision Required listing A (two cases, one push), B and C; recorded as HD-163 in docs/supplier_management/00_harness_state.json. The PM read this message and its question directly at 14:29 and passes them to the trusted approval administrator as the decision source; the feature agent does not approve this receipt.",
+  "purpose": "TASK-052: prove findSkuRefsInTransaction reads only this Supplier's rows on the caller's transaction. The PO Line foreign key has one column, so the database cannot catch a wrong Supplier's ref, and a fake cannot prove the SQL.",
+  "data": "No-DB case: fake rows only. MySQL case: 3 items, 3 SKUs, 2 Suppliers, 3 committed relations, 1 relation inserted inside the transaction. Inputs include duplicates, an empty list, 100 IDs and 101 IDs on the fake.",
+  "concurrency": "1 connection and 1 transaction in the MySQL case's own reads and write; serial within the existing shard. No two-connection trial.",
+  "repetitions": "1",
+  "thresholds": "Exact equality on the returned Map; TypeError on invalid input; no locking clause in the SQL. No performance threshold.",
+  "trigger": "Routine functional server tests through existing discovery. One natural CI run on one push. No new job, schedule, dispatch or retry. No capacity: audit-17 and audit-18 are only statically related and are not selected on a PR.",
+  "cost": "Estimated under 1 second for the no-DB case and a few seconds for the MySQL case; not measured. No new job; effect on the CI critical path expected to be negligible, not measured.",
+  "files": [
+    {
+      "path": "server/test/supplierLookupService.test.js",
+      "mode": "100644",
+      "blob": "731170da22e2ff5b6558e76749757a7ca7c772b3",
+      "kind": "functional",
+      "cases": [
+        "TC-137 (SKU-009): TASK-052 (HD-163): SKU refs use the caller's connection, tolerate duplicates and return numeric keys and IDs"
+      ]
+    },
+    {
+      "path": "server/test/integration/supplierSkuLookup.integration.test.js",
+      "mode": "100644",
+      "blob": "ad634ae899bbdc205a8332c52d474739fd1f97d8",
+      "kind": "functional",
+      "cases": [
+        "TC-137 (SKU-009): TASK-052 (HD-163): SKU refs read only this Supplier's rows on the caller's transaction"
+      ]
+    },
+    {
+      "path": "docs/supplier_management/00_module_manifest.json",
+      "mode": "100644",
+      "blob": "9bb71c0fa4e229bbe16f7eff571d042014fdbfdf",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/00_project_profile.json",
+      "mode": "100644",
+      "blob": "e50939e1d3a769a0cea653874ea5ebe316e06ed0",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/03_design_spec.md",
+      "mode": "100644",
+      "blob": "99dd92730d4c204bf47ec17344bbf04da833907b",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/05_development_tasks.md",
+      "mode": "100644",
+      "blob": "ca51e1742dc6cd156c76f180929ba993881fa34f",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/08_traceability.json",
+      "mode": "100644",
+      "blob": "dbc01c25f286e2cf9641f7d4579a609de810dc50",
+      "kind": "support"
+    },
+    {
+      "path": "docs/supplier_management/integration_contracts.md",
+      "mode": "100644",
+      "blob": "5106d9a894ad78a5ae0cf7d761c649ad482787df",
+      "kind": "support"
+    }
+  ]
+}

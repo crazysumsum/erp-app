@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { ApprovePurchaseOrderHandler, ListMyPurchaseOrderApprovalsHandler, RejectPurchaseOrderHandler, WithdrawPurchaseOrderApprovalHandler } from "../../src/handlers/purchase-orders/purchaseOrderApprovalHandlers.js";
+import { ListMyPurchaseOrderApprovalsHandler } from "../../src/handlers/purchase-order-approvals/listMyPurchaseOrderApprovalsHandler.js";
+import { ApprovePurchaseOrderHandler, RejectPurchaseOrderHandler, WithdrawPurchaseOrderApprovalHandler } from "../../src/handlers/purchase-orders/purchaseOrderApprovalHandlers.js";
 import { GetPurchasingSettingsHandler, UpdatePurchasingSettingsHandler } from "../../src/handlers/purchasing-settings/purchasingSettingsHandlers.js";
 import { PurchaseOrderService } from "../../src/modules/purchasing/PurchaseOrderService.js";
 import { PurchasingSettingsService } from "../../src/modules/purchasing/PurchasingSettingsService.js";

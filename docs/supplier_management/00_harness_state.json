@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 516,
+  "revision": 526,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "READY_FOR_TESTING",
@@ -9,21 +9,19 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
-    "design": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
-    "plan": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
-    "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
-    "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-uat",
-    "default_commit": "3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc",
-    "mode_entry_commit": "3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc"
+    "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
+    "plan": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+    "code_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
+    "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-ledger-pr350",
+    "default_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
+    "mode_entry_commit": "2cf4d258a30911116d9b6007447874c52c955f61"
   },
   "runtime": {
-    "instance_id": "supplier-t51-scratch-mysqld-3450",
+    "instance_id": "supplier-ledger-pr350",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-uat (claude/supplier-limited-uat, cut from main 3b9ef58d)",
-      "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
-      "web-port": "3021 (UAT API) and 5216 (UAT client), started and stopped by the supplier-uat-browser suite (Playwright webServer)"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-ledger-pr350 (claude/supplier-ledger-pr350, cut from main 2cf4d258)"
     },
     "lease_ref": null
   },
@@ -78,7 +76,8 @@
     "TASK-048": "DONE",
     "TASK-049": "DONE",
     "TASK-050": "DONE",
-    "TASK-051": "IN_PROGRESS"
+    "TASK-051": "IN_PROGRESS",
+    "TASK-052": "DONE"
   },
   "approvals": [
     {
@@ -3122,6 +3121,114 @@
         "TASK-051"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-163-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Human in the Supplier chat, HD-163 A",
+      "decision": "REVOKED",
+      "source_ref": "Human answer 'A' in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-06, HD-163 A. The PM read the message and question at 14:29 and passes them to the trusted approval administrator as the decision source. Covers this revision only; it re-affirms no other approval. REVOKED by the agent that recorded it (REV-146 High): the 'A' predates these baselines, offered a change, two cases and one push rather than a design or plan revision, and its author is not yet verified as Sam. Not a human approval of this hash.",
+      "recorded_at": "2026-11-06T14:40:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "c5c7e6ca53d2e3a23b37f87c2b2066ff3d7d1dca9180656cf9d6184aa3c8cff6",
+      "code_commit": "a187912490d29dbecbc5a619620dbfd1b65958a8",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-163-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Human in the Supplier chat, HD-163 A",
+      "decision": "REVOKED",
+      "source_ref": "Human answer 'A' in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-06, HD-163 A. The PM read the message and question at 14:29 and passes them to the trusted approval administrator as the decision source. Covers this revision only; it re-affirms no other approval. REVOKED by the agent that recorded it (REV-146 High): the 'A' predates these baselines, offered a change, two cases and one push rather than a design or plan revision, and its author is not yet verified as Sam. Not a human approval of this hash.",
+      "recorded_at": "2026-11-06T14:40:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "debdcb7de7bde174c0d531c203c314545f24d2d93ea80c2b41371650c5a8930d",
+      "code_commit": "a187912490d29dbecbc5a619620dbfd1b65958a8",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-163-DESIGN-R1",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Human in the Supplier chat, HD-163 A",
+      "decision": "REVOKED",
+      "source_ref": "Human answer 'A' in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-06, HD-163 A. The PM read the message and question at 14:29 and passes them to the trusted approval administrator as the decision source. Covers this revision only; it re-affirms no other approval. Supersedes APPROVAL-HD-163-DESIGN, whose recorded_at was set ahead of the clock and whose baseline moved when the receipt path joined the module scope. REVOKED by the agent that recorded it (REV-146 High): the 'A' predates these baselines, offered a change, two cases and one push rather than a design or plan revision, and its author is not yet verified as Sam. Not a human approval of this hash.",
+      "recorded_at": "2026-11-06T06:35:17Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
+      "code_commit": "3963d6e0ed8e2766d10cbecd64c96462520c5485",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-163-PLAN-R1",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Human in the Supplier chat, HD-163 A",
+      "decision": "REVOKED",
+      "source_ref": "Human answer 'A' in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-06, HD-163 A. The PM read the message and question at 14:29 and passes them to the trusted approval administrator as the decision source. Covers this revision only; it re-affirms no other approval. Supersedes APPROVAL-HD-163-PLAN, whose recorded_at was set ahead of the clock and whose baseline moved when the receipt path joined the module scope. REVOKED by the agent that recorded it (REV-146 High): the 'A' predates these baselines, offered a change, two cases and one push rather than a design or plan revision, and its author is not yet verified as Sam. Not a human approval of this hash.",
+      "recorded_at": "2026-11-06T06:35:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+      "code_commit": "3963d6e0ed8e2766d10cbecd64c96462520c5485",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-164-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259.",
+      "recorded_at": "2026-11-06T07:11:54Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
+      "code_commit": "c127d4c8e19dc2b61a8bdfd663d8f18957d959dd",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-164-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259.",
+      "recorded_at": "2026-11-06T07:11:54Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+      "code_commit": "c127d4c8e19dc2b61a8bdfd663d8f18957d959dd",
+      "scope": [
+        "supplier-management",
+        "TASK-052",
+        "TC-137"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -4812,6 +4919,18 @@
       "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-limited-uat at 99ed8c60 (git diff 3b9ef58d..HEAD -- docs/supplier_management)",
       "reviewed_baseline": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
       "source_ref": "docs/supplier_management/implementation/144_rev_145_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-146",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-052)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-sku-refs-provider at 6738f48b (git diff origin/main...HEAD)",
+      "reviewed_baseline": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
+      "source_ref": "docs/supplier_management/implementation/146_rev_146_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -8118,6 +8237,28 @@
       "source_ref": "Checked 2026-11-02: the original screenshots under /tmp/supplier-management-uat-artifacts/34753d87 were lost when /tmp was cleaned, so the junit attachment paths of evidence/20261030T093238-52ea32e0c5b7 point at nothing; the 99 compressed copies on the private review page are the only copies left and are what the Product Owner reviewed (per-case counts match the junit; UAT-040-01, UAT-042-02 and UAT-054-04 are byte-identical, each the expected 冇權限 page). The branch merged main aae9c744 (PR #313: .github/scripts, ci.yml, AGENTS.md, docs/ci-capacity-routing.md; no server or client code), so the accepted behaviour is the tested one; the harness nonetheless counts the run stale (SOURCE_CHANGED; verify_gate UAT_EXECUTION reports it missing).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-02T00:56:38+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Limited business UAT records (PR #314) merged to main",
+      "code_commit": "983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15",
+      "spec_baseline": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
+      "status": "PASS",
+      "source_ref": "PR #314 merged as 983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15 at 2026-11-02T01:21:29Z on the Product Owner's word ('CI己通過'), head 98eb47524eeb, CI run 41369884736. Recorded in the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-02T01:21:29Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-052 Supplier SKU refs lookup (PR #350) merged to main",
+      "code_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
+      "spec_baseline": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+      "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
+      "status": "PASS",
+      "source_ref": "PR #350 merged as 2cf4d258a30911116d9b6007447874c52c955f61 (parents main 06caf911 and head 09f266055ab7) at 2026-11-10T00:43:33Z on the Product Owner's word ('恢復工作，做 PR350 code gate 後合併'), after the code gate: local, remote and PR heads equal, main an ancestor. The one functional CI was run 42594811126, attempt 1, dispatched by controller run 42594773651 on cc64dbaf (main + head). It had 18 jobs SUCCESS and 2 capacity jobs SKIPPED. Per-file floors were met for 39 files. TC-137 passed in shard 2 (real MySQL) and shard 1 (no DB). Receipt a2edb259 was registered by the CI admission administrator on Sam's direct confirmation; read-back 40 to 44 grants (.worktrees/ci-pm-handoffs/four-admission-new-authorization-20261109/registration-readback-result.json, sha256 8fbeac03...7bed). Recorded in a records PR on the Product Owner's request.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T00:43:33Z"
     }
   ],
   "pending_decisions": [
@@ -10268,6 +10409,29 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-30: 'B'. Supersedes HD-161 1A for execution: the agent runs supplier-uat-browser at stage UAT; business acceptance stays with the Product Owner, from the report and evidence. The manual UAT servers (3021, 5216) were stopped first; uatServer.mjs dropped its scratch database erp_t51_rh_uat92f7bb0e and its fixture file."
+    },
+    {
+      "id": "HD-163",
+      "impact": "MAJOR",
+      "question": "Purchasing HD-015 2C leaves supplier_sku_ref_id NULL and the Supplier Item Code empty until Supplier offers a read on the caller's transaction. Purchasing accepted findSkuRefsInTransaction in its H1 handoff (commit 1d206f9a). Continue this one change? (A) Re-enter IMPLEMENT for this change only; add 1 no-DB case to server/test/supplierLookupService.test.js and 1 real-MySQL case to server/test/integration/supplierSkuLookup.integration.test.js (1 connection, 1 transaction, 2 Suppliers, 3 SKUs, 1 repetition, exact equality; routine server tests, no new job); one push and one PR, merge still on 'CI 已通過'. (B) Only the no-DB case. (C) Defer. Not included: two-connection trials, the address read, the stale-read question on getPurchaseDefaultsInTransaction, formal runs, capacity.",
+      "affected_ids": [
+        "TASK-052",
+        "TC-137"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Human in the Supplier chat, 2026-11-06: 'A', in reply to the Decision Required above. The admission procedure needs this checked as Sam's verifiable decision by the trusted approval administrator; a feature agent does not approve its own receipt. Also folded: the TL ruling .worktrees/tech-lead-handoffs/h1-supplier-receiving-contract-20261106.md (sha256 3a6e4d4c...), relayed by the PM on Sam's approval of the handoff, and the PM's and the human's word to fold its text into 03 §6.8 ('授權併入本地候選，只改文件，唔跑任何嘢')."
+    },
+    {
+      "id": "HD-164",
+      "impact": "MAJOR",
+      "question": "Approve the Supplier design and plan on baselines design addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5 and plan 1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5? Four deltas since HD-163 'A': (1) 03 §6.8: sourceLineId is the GR line, first=min and last=max, reversals never move them, a replay skips verifySource, a verifier refuses only by throwing, Purchasing's dedicated instance injects it; 03 §6.8 and §8.7 gain findSkuRefsInTransaction; §11.5 rewording. (2) Plan: T52, TASK-052, TC-137, SKU-009. (3) One added write path, .github/test-admissions/supplier-task052-sku-refs.json. (4) Consumed Purchasing design pin 366abb1f -> 927ddc66, from fbcbebeb; record 145 says no Supplier behaviour change. Merge needs this; the 14 approvals on old baselines and the capacity order are separate and only matter before a formal run.",
+      "affected_ids": [
+        "TASK-052",
+        "TC-137",
+        "HD-163"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259. Does not re-affirm the 14 approvals on old baselines."
     }
   ],
   "external_actions": [
@@ -10870,6 +11034,38 @@
       "idempotency_key": "mode-change-512",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-30: '按你建議，開始做提早有限度嘅 business UAT' then '照建議' (HD-161: 1A Product Owner tests and accepts, 2A local UAT environment, 3A results recorded in a private checklist page, 4A REPORT_ONLY, 5 one records PR at the end). Limited UAT before Technical Acceptance on main 3b9ef58d (PR #309 merge)."
+    },
+    {
+      "id": "MERGE-PR-314",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#314",
+      "idempotency_key": "supplier-merge-pr-314",
+      "status": "CONFIRMED",
+      "source_ref": "Merged as 983f4c8238b6858ebd9ba4c62274e3f1c9bb5e15; worktree and branches claude/supplier-limited-uat removed after the merge."
+    },
+    {
+      "id": "MODE-CHANGE-517",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-517",
+      "status": "CONFIRMED",
+      "source_ref": "HD-163"
+    },
+    {
+      "id": "MERGE-PR-350",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#350",
+      "idempotency_key": "supplier-merge-pr-350",
+      "status": "CONFIRMED",
+      "source_ref": "Merged as 2cf4d258a30911116d9b6007447874c52c955f61; worktree and branches claude/supplier-sku-refs-provider removed after the merge."
+    },
+    {
+      "id": "MODE-CHANGE-526",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-526",
+      "status": "CONFIRMED",
+      "source_ref": "HD-163 A and HD-164: back to TEST_AND_VERIFY (REPORT_ONLY) after the TASK-052 merge (PR #350); TASK-051 stays IN_PROGRESS"
     }
   ],
   "evidence_files": [
@@ -11973,5 +12169,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Limited UAT records PR (claude/supplier-limited-uat): merge main, independent review, then put the push's CI scope (computed with .github/scripts/sales-import-capacity.mjs) to the Product Owner and push only on his approval (AGENTS.md); CI; merge on his word. After that: Technical Acceptance remains blocked by TASK-051 group B, TC-136 and a formal run on the then-current baseline (prior approval needed); formal business UAT and sign-offs after Technical Acceptance. Follow-up: reword 03 §11.5 with the next change to 03."
+  "next_safe_action": "TASK-052 merged (PR #350, 2cf4d258). Purchasing re-pins Supplier 03 once and consumes findSkuRefsInTransaction and the verifySource injection in its own tasks (TASK-040, TASK-032/033); until then recordSupply answers 503 SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a post-UAT formal run on main (prior approval needed). Formal business UAT and sign-offs come after Technical Acceptance. The 41 limited-UAT acceptances are not formal UAT. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run."
 }

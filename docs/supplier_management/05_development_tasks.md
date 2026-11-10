@@ -35,6 +35,7 @@ T04–T24 SUP-CAP-01 Core ─┬→ T25–T31 Approval & Settings
 T31 Approval complete ────────────────────→ T45 activate-mode import
 T41–T42 Import migrations → Item migrations → T38 Supplier–SKU
 T24/T31/T37/T40/T49 ─────────────────────→ T50–T51 Release
+T40 ─────────────────────────────────────→ T52 Purchasing PO Line提示讀取
 ```
 
 ### 1.3 平行化規則
@@ -136,6 +137,7 @@ T24/T31/T37/T40/T49 ────────────────────
 - [ ] T38 建立 Item 依賴與 Supplier–SKU relation 後端
 - [ ] T39 完成 Supplier–SKU relation UI
 - [ ] T40 完成 for-SKU lookup 與整合驗收
+- [ ] T52 提供 PO Line 的 Supplier－SKU 提示讀取（HD-163）
 
 ### SUP-CAP-05：Bulk Import & Export
 
@@ -211,6 +213,7 @@ T24/T31/T37/T40/T49 ────────────────────
 | TASK-049 | T49 | PHASE-004 | DES-016, DES-020, DES-023 |
 | TASK-050 | T50 | PHASE-004 | DES-020, DES-021, DES-022 |
 | TASK-051 | T51 | PHASE-004 | DES-018, DES-023, DES-024, DES-025 |
+| TASK-052 | T52 | PHASE-004 | DES-001, DES-014, DES-024, DES-025 |
 
 ### 2.2 Phase PR gates
 
@@ -221,7 +224,7 @@ T24/T31/T37/T40/T49 ────────────────────
 | PHASE-001 | TASK-001～TASK-024 | Supplier Core、主檔children、生命周期、Business Master及downstream provider contracts可獨立驗收。 |
 | PHASE-002 | TASK-025～TASK-031 | 可配置啟用審批及Supplier-owned settings可獨立驗收。 |
 | PHASE-003 | TASK-032～TASK-037 | Bank資料受控寫入、查看、輪替及復原可獨立安全驗收。 |
-| PHASE-004 | TASK-038～TASK-051 | Supplier–SKU、Import／Export、容量及發布證據完成；全模組回歸通過。 |
+| PHASE-004 | TASK-038～TASK-052 | Supplier–SKU、Import／Export、容量及發布證據完成；全模組回歸通過。 |
 
 ### 2.3 Canonical requirement coverage manifest
 
@@ -1802,6 +1805,33 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Estimated scope：** M（5 files）
 
+## T52：提供 PO Line 的 Supplier－SKU 提示讀取
+
+**Description：** 按Purchasing HD-015 2C及HD-163，於`SupplierLookupService`新增`findSkuRefsInTransaction(connection, supplierId, skuIds)`，令Purchasing在同一transaction取得`supplier_sku_ref_id`及Supplier Item Code提示。不含指定地址讀取、不改既有provider、不改schema。
+
+**Capability：** SUP-CAP-04
+
+**Traceability：** FR-067、DES-001、DES-014、DES-024、DES-025、TC-137
+
+**Acceptance criteria：**
+- [ ] 回`Map<skuId, { relationId, relationshipStatus, supplierItemCode, lastSuppliedAt }>`，Map key及`relationId`均為number；只回該Supplier的row。
+- [ ] 使用呼叫方connection的普通讀取；空陣列不查DB回空Map；最多100個ID，可重複。
+- [ ] `stopped`照回，沒有relation不算錯誤，不驗Supplier／SKU狀態。
+
+**Verification：**
+- [ ] `node --test server/test/supplierLookupService.test.js`
+- [ ] `TC-137`真MySQL案例，只在HD-163批准的範圍（1 connection、1 transaction）內執行。
+
+**Dependencies：** T40
+
+**Files likely touched：**
+- `server/src/modules/supplier/SupplierLookupService.js`
+- `server/test/supplierLookupService.test.js`
+- `server/test/integration/supplierSkuLookup.integration.test.js`
+- `docs/supplier_management/03_design_spec.md`
+
+**Estimated scope：** S（4 files）
+
 ## Final Checkpoint：T49–T51
 
 - [ ] SUP-CAP-05容量／安全證據、全模組效能與observability gates全部通過。
@@ -1933,7 +1963,7 @@ Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未
 
 ### Outcome
 
-交付§2.2中`PHASE-004`的獨立業務結果，包含TASK-038至TASK-051。
+交付§2.2中`PHASE-004`的獨立業務結果，包含TASK-038至TASK-052。
 
 ### Entry criteria
 
@@ -2876,6 +2906,24 @@ Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未
 ### Acceptance criteria
 
 逐項滿足`T51`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-052 — Implement detailed task T52
+
+### Goal
+
+完成上文`T52`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T52`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T52`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
 
 ### Definition of Done
 
