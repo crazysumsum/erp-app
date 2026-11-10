@@ -64,23 +64,29 @@ None of this code exists yet: the GR tables arrive with TASK-027. `TASK-040` is 
 | Supplier's event rules | `eventId` is stable from Purchasing. `(sourceType, sourceId, sourceLineId)` is unique. A replay writes nothing. Never sets preferred. Keeps first and last supplied as minimum and maximum. | Supplier §6.8 |
 | Reconciliation | Backfills the soft projection only, and never changes PO or Inventory records. | Purchasing §12.5, TASK-040 |
 
-### Still open
+### Decided by the tech lead on 2026-11-06
 
-| # | Question | Why it is open | Recommendation | Owner |
-| --- | --- | --- | --- | --- |
-| 1 | Is Supplier's `sourceLineId` the GR line or the GR detail? | No document decides. Inventory's use of the detail does not settle it. | **GR line.** Supply is a fact per Supplier and SKU, and one line can have many physical details. | Purchasing, confirmed by Supplier |
-| 2 | What is the per-line `eventId`? | `confirm_event_id` cannot be used directly: Supplier's `event_id` is unique, so a second line would conflict. | `<confirm_event_id>:<gr_line_id>`. It fits Supplier's 64 visible ASCII characters and needs no new column. | Purchasing |
-| 3 | Which stored value feeds each field? | Not specified. A replay with any changed value gives `IDEMPOTENCY_CONFLICT`, so each must stay fixed after Confirm. | `sourceId` is the GR, `supplierId` is the GR's, `skuId` is the GR line's. `purchaseSkuUomId` and `supplierItemCode` come from the PO Line snapshot. This depends on the server refusing PO edits after a Confirmed GR: §7.4 states it for the UI, so TASK-026 must enforce it. `supplierItemCode` stays empty until Part 1 is wired. | Purchasing |
-| 4 | Is `suppliedAt` `confirmed_at` or `business_receipt_date`? | Not specified. `confirmed_at` is a server fact in ms. The receipt date reflects when goods arrived, but may be back-dated and needs a time-zone rule. | `confirmed_at`. | Purchasing; tech lead if disputed |
-| 5 | What should `verifySource` accept after a reversal? | Not specified. | Accept `CONFIRMED`, `PARTIALLY_REVERSED` and `REVERSED` with `confirmed_at` set, so a replay still works. Refuse `DRAFT` and `CANCELLED`. Check the line, GR, Supplier and SKU all match. | Purchasing |
-| 6 | Does a full reversal undo `last_supplied_at`? | Neither design says, and Supplier has no undo contract. The value affects only ranking. | No change: keep the history, which matches the append-only events. Changing this would need a new Supplier contract. | Tech lead; Sam only if a change is wanted |
-| 7 | Where is the verifier injected? | Production builds `SupplierRelationService` at `supplierSkuRelationHandlers.js:76` without one, which is correct for those routes. | Purchasing's post-commit service builds its own instance with `verifySource`. No Supplier code change. | Supplier to confirm |
-| 8 | What may the verifier lock? | Not specified. It runs inside Supplier's transaction, after the Supplier root lock. Confirm takes Purchasing's locks first and then the Supplier root, so taking GR or PO locks here would invert the order. | Plain reads only. | Purchasing |
-| 9 | How does reconciliation find missed lines? | Purchasing reading `supplier_supply_events` directly would cross the module boundary, and no read contract exists. | Decide in TASK-040. Replaying is safe because a replay writes nothing, but the scan needs a bound. | Purchasing with Supplier |
+`/Users/sam/Documents/workspace/erp-app/.worktrees/tech-lead-handoffs/h1-supplier-receiving-contract-20261106.md`, SHA256 `3a6e4d4ce8aaf8dd7d212963cfc916aba51f70daa13a3b25c55c2765e1854956`. That file is the contract. This table only maps this handoff's earlier questions to it.
+
+| Question | Decision |
+| --- | --- |
+| Supplier's `sourceLineId` | The GR line, as recommended here. |
+| Per-line `eventId` | `<confirm_event_id>:<gr_line_id>`. Never a reversal event or a new UUID. |
+| Field sources | The GR and its line, plus UOM and Supplier Item Code from the PO Line's immutable Confirm source. A NULL code compares as an empty string. Never rebuilt from the current relation. |
+| `suppliedAt` | `confirmed_at`. |
+| After a reversal | Accept `CONFIRMED`, `PARTIALLY_REVERSED` and `REVERSED`. **Stricter than recommended here:** status and `confirmed_at` are not enough. The verifier checks the GR, line, PO Line and PO owner chain, Supplier and SKU, received quantity above zero, the Confirm event and time, and the completed Confirm operation. Every command field must match. |
+| `last_supplied_at` after a reversal | Never rolled back; first is the minimum and last the maximum. No undo contract. |
+| Verifier injection | A Purchasing-owned service instance, with Supplier to confirm. |
+| Verifier locks and failures | Plain reads on Supplier's connection, with no locks and no second connection. **Added:** it succeeds by returning and fails by throwing, because Supplier ignores the return value, so `false` or `null` would pass. |
+| Replay | An identical existing event skips the verifier, so a replay does not re-check the GR. |
+| Finding missed lines | Still open in detail: TASK-040 delivers a bounded backfill. |
+
+**One correction for the owner list:** this handoff said TASK-026 must enforce the refusal of PO edits after a Confirmed GR, and the tech lead's file repeats that. TASK-026 is the UI task. The server rule belongs to **TASK-025**, whose criteria already refuse withdraw, cancel and commerce updates after receipt.
+
+**One point for TASK-025 to get right:** §8.4 guards withdraw and cancel with `has_confirmed_receipt = 0` and "`NOT EXISTS` confirmed GR". A fully reversed GR has status `REVERSED`, so a check on status `CONFIRMED` alone would allow a withdrawal, make the PO editable again and break the immutable source the verifier relies on. The guard must count any GR that was ever confirmed, such as `confirmed_at IS NOT NULL`, and `has_confirmed_receipt` must stay 1 after a reversal.
 
 ## Who needs to act
 
-- **Supplier, through the PM:** state the three details above, confirm items 1 and 7, and check the stale-read note.
-- **Purchasing, at TASK-032 and TASK-040:** record the answers to items 1 to 5, 8 and 9.
-- **Tech lead:** item 6.
+- **Supplier, through the PM:** state the three details above, confirm GR-line granularity and verifier injection, align §6.8's first and last wording to minimum and maximum, and check the stale-read note.
+- **Purchasing:** TASK-025 for the server rule above, TASK-027 for the schema and immutable Confirm source, TASK-032 and TASK-033 for Confirm and GR support in the operation service, TASK-040 for the verifier, the command and the bounded backfill.
 - **Sam, only if a choice of address is wanted in this release:** Part 1, open item 1.

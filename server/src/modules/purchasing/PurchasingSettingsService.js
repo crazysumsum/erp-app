@@ -5,6 +5,8 @@ import { purchasingError } from "./purchasingErrors.js";
 import { eventId, onlyFields, positiveId, reason as validReason } from "./purchasingValidation.js";
 
 const AUDIT_ACTION = "purchasing.setting.updated", LABEL = "purchasing_settings";
+// ponytail: 只回最近 50 次，設定好少改；要睇晒先加分頁。
+const HISTORY_LIMIT = 50;
 
 const typed = (row) => ({ requirePoApproval: Boolean(row.require_po_approval), version: Number(row.version), updatedAt: Number(row.updated_at), updatedByLabel: row.updated_by_label });
 
@@ -24,7 +26,11 @@ export class PurchasingSettingsService {
       await this.#actor(tx, claims);
       const [[row]] = await tx.query("SELECT require_po_approval, version, updated_at, updated_by_label FROM purchasing_settings WHERE id = 1");
       if (!row) throw purchasingError("PURCHASING_DEPENDENCY_UNAVAILABLE");
-      return typed(row);
+      // FR-SET-007：變更歷史就係 Audit，唔另外存一份。
+      const [history] = await tx.query(`SELECT occurred_at, actor_label, reason, detail FROM purchasing_audit_logs WHERE action = ? AND outcome = 'SUCCEEDED'
+        ORDER BY occurred_at DESC, id DESC LIMIT ?`, [AUDIT_ACTION, HISTORY_LIMIT]);
+      return { ...typed(row), history: history.map((entry) => ({ requirePoApproval: entry.detail.requirePoApproval, version: entry.detail.version, reason: entry.reason,
+        actorLabel: entry.actor_label, occurredAt: Number(entry.occurred_at) })) };
     });
   }
 
