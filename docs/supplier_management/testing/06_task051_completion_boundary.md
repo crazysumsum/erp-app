@@ -94,10 +94,10 @@ The Product Owner chose option A on 2026-11-10 ('A，照建議改 profile'):
 | audit-28 | `supplierCsvSchema.test.js` | precheck lets the event loop run while it parses a large file (REV-067 L-1) |
 
 Limits:
-- `max_skipped` is a count, not a list. A formal run must show that its skipped cases are exactly these seven names. An eighth skip, or a different one, fails the run.
+- `max_skipped` is a count, not a list. An eighth skip fails the run mechanically (`skipped > max_skipped`). The harness does not check names, so a different skip at the same count would pass. Whoever reviews the run checks the skipped names in its junit against this table by hand.
 - If the catalog gains or loses a Supplier case, this table and `max_skipped` change with it.
 - T51 AC 2's "skip fails the Gate" stands, with HD-165 as its only exception.
-- Technical Acceptance is not complete until these seven cases and `supplier-performance` have run after UAT.
+- Order, per the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1): capacity stays after the relevant UAT and is not run earlier because the formal flow lists `supplier-performance` first; unrun items keep their real state and are never marked PASS. So the functional part of Technical Acceptance (the formal TECHNICAL and REGRESSION run without capacity) comes first, then formal UAT. These seven cases and `supplier-performance` run after UAT, and Technical Acceptance and TC-136 are complete only after that.
 
 ## DEF-034 — OPEN (LOW)
 
