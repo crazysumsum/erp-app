@@ -2487,7 +2487,8 @@
         "TASK-023",
         "TASK-024",
         "TASK-025",
-        "TASK-026"
+        "TASK-026",
+        "TASK-045"
       ],
       "depends_on": [
         "PHASE-002"
@@ -3238,7 +3239,8 @@
       ],
       "depends_on": [
         "TASK-022",
-        "TASK-023"
+        "TASK-023",
+        "TASK-045"
       ],
       "technical_test_ids": [
         "TC-004"
@@ -3282,7 +3284,9 @@
       "design_ids": [
         "DES-005"
       ],
-      "depends_on": [],
+      "depends_on": [
+        "TASK-045"
+      ],
       "technical_test_ids": [
         "TC-005",
         "TC-009"
@@ -3687,6 +3691,24 @@
         "TC-012",
         "TC-009"
       ]
+    },
+    {
+      "id": "TASK-045",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "FR-052"
+      ],
+      "design_ids": [
+        "DES-005"
+      ],
+      "depends_on": [
+        "TASK-011",
+        "TASK-022"
+      ],
+      "technical_test_ids": [
+        "TC-004",
+        "TC-009"
+      ]
     }
   ],
   "technical_tests": [
@@ -3866,7 +3888,8 @@
         "TASK-023",
         "TASK-024",
         "TASK-025",
-        "TASK-026"
+        "TASK-026",
+        "TASK-045"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4072,7 +4095,8 @@
         "TASK-022",
         "TASK-027",
         "TASK-035",
-        "TASK-044"
+        "TASK-044",
+        "TASK-045"
       ],
       "mandatory": true,
       "blocking": true,

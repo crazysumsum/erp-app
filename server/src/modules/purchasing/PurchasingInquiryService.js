@@ -32,8 +32,13 @@ const invalid = (field) => purchasingError("PURCHASING_INPUT_INVALID", { field }
 const nullableId = (value) => value === null ? null : Number(value);
 const nonNegative = (value) => value > 0n ? value : 0n;
 const placeholders = (values) => values.map(() => "?").join(",");
-// allowedActions 只列已有 route 嘅動作；submit、cancel 等由落地嘅 Task 加。
-const allowedActions = (status, permissions) => !permissions.includes("purchasing.mgmt") ? [] : status === "DRAFT" ? ["edit", "submit", "copy"] : ["copy"];
+// allowedActions 只列已有 route 而且做得到嘅動作；service 喺 transaction 入面會再驗。
+// cancel、withdrawConfirmation 要權威 GR reader 接好先宣告（§8.4），而家 production 一律 503，所以唔列。
+function allowedActions(status, permissions) {
+  if (!permissions.includes("purchasing.mgmt")) return [];
+  if (status === "DRAFT") return ["edit", "submit", "copy"];
+  return status === "PARTIALLY_RECEIVED" ? ["copy", "closeRemaining"] : ["copy"];
+}
 // §7.4：跟操作者。列表唔讀審批，所以呢三個動作只喺詳情出；service 喺 transaction 入面會再驗。
 function decisionActions(pending, actorId, permissions) {
   if (!pending) return [];

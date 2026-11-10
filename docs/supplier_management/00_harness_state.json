@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 526,
+  "revision": 534,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
-    "plan": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
-    "code_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
-    "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-ledger-pr350",
-    "default_commit": "2cf4d258a30911116d9b6007447874c52c955f61",
-    "mode_entry_commit": "2cf4d258a30911116d9b6007447874c52c955f61"
+    "plan": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+    "code_commit": "50d277bde8487448b5a5458df46e6af1c7c6c0a7",
+    "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-profile-capacity-skip",
+    "default_commit": "ca340c464e8414ad86025e22f28ab9a60a9914d6",
+    "mode_entry_commit": "095ead952065607a74430e808b50aaba0c9611a8"
   },
   "runtime": {
-    "instance_id": "supplier-ledger-pr350",
+    "instance_id": "supplier-profile-capacity-skip",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-ledger-pr350 (claude/supplier-ledger-pr350, cut from main 2cf4d258)"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-profile-capacity-skip (claude/supplier-profile-capacity-skip, cut from main 095ead95)"
     },
     "lease_ref": null
   },
@@ -3229,6 +3229,43 @@
         "TC-137"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-165-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam, PM chat (thread 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, user message 01a1c336-3fdc-7933-ad30-0e29aa77d831, turn 01a1c336-3f7d-77a3-91fa-a79308163d2b), call_11769c0d48cc4f67879f3b27ec934d1d item 0: '批准最終計劃、准入及一次發布／CI'. The question named plan 2d5292cb, receipt digest b9c3f100, the reviewed candidate 8c9fa82b (four files), a sync with latest main, one ordinary push, a Draft PR and one natural functional CI. It approved no merge (hence no main-push CI) and no local formal TECHNICAL/REGRESSION run; on the first failure, stop and report, no retry. The independent CI admission administrator read the thread directly and saved it as .worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/actual-human-decision.json (sha256 15c1680d...5cb9). The PM relayed it to the Supplier chat.",
+      "recorded_at": "2026-11-10T02:11:26Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "code_commit": "8c9fa82b712f135c44063a9c942ed7c74696b253",
+      "scope": [
+        "supplier-management",
+        "HD-165",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-166-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam in the Supplier chat (session 486c4c60-92de-4122-b0e0-a68866140aa1), 2026-11-10: 'A，批准 HD-165 修訂'. The question named plan 53ba8970 and receipt ac6e3073, one push and one functional CI; it did not cover a merge or a formal run. The hash existed and was named before the answer.",
+      "recorded_at": "2026-11-10T03:29:51Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+      "code_commit": "50d277bde8487448b5a5458df46e6af1c7c6c0a7",
+      "scope": [
+        "supplier-management",
+        "HD-165",
+        "HD-166",
+        "TASK-051"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -4931,6 +4968,30 @@
       "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-sku-refs-provider at 6738f48b (git diff origin/main...HEAD)",
       "reviewed_baseline": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
       "source_ref": "docs/supplier_management/implementation/146_rev_146_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-147",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-165)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-profile-capacity-skip at 21ee2136 (git diff 095ead95..HEAD), re-review of 21ee2136..35c12417",
+      "reviewed_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_ref": "First pass CHANGES_REQUESTED. M1: the boundary doc and next_safe_action stated an order that contradicted itself, and quoted the PM without a source. L1: the doc claimed the harness catches a different skip at the same count; it checks only the count (harness_runner.py:179). Nit: npm probe left as in the lint suite. Both fixed in 35c12417; re-review APPROVED. Confirmed: the profile change is exactly HD-165 A; npm test passes the args and adds the catalog skip pattern; the pattern matches exactly audit-16..20, 27 and 28 in the Supplier files; all 8 receipt pins match HEAD; the table is verbatim. Read-only; no tests run.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-148",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-165)",
+      "reviewer": "agent-skills:code-reviewer (same reviewer as REV-147), incremental review of 8c9fa82b..198608d4",
+      "reviewed_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_ref": "APPROVED. Checked: composition is byte-identical on both sides (cmp); main 9762fb59 touches only Purchasing paths, no Supplier doc, receipt pin or Purchasing 03; the receipt is unchanged at b9c3f100 with all 8 pins matching; APPROVAL-HD-165-PLAN is faithful to actual-human-decision.json (sha256 15c1680d...5cb9) in IDs, quoted answer, plan, digest, scope and timing; no over-claims. Two nits, applied here: name 'no main-push CI' as following from 'no merge', and the stop-and-report-on-first-failure condition. REV-147 stands for the content.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -8259,6 +8320,61 @@
       "source_ref": "PR #350 merged as 2cf4d258a30911116d9b6007447874c52c955f61 (parents main 06caf911 and head 09f266055ab7) at 2026-11-10T00:43:33Z on the Product Owner's word ('恢復工作，做 PR350 code gate 後合併'), after the code gate: local, remote and PR heads equal, main an ancestor. The one functional CI was run 42594811126, attempt 1, dispatched by controller run 42594773651 on cc64dbaf (main + head). It had 18 jobs SUCCESS and 2 capacity jobs SKIPPED. Per-file floors were met for 39 files. TC-137 passed in shard 2 (real MySQL) and shard 1 (no DB). Receipt a2edb259 was registered by the CI admission administrator on Sam's direct confirmation; read-back 40 to 44 grants (.worktrees/ci-pm-handoffs/four-admission-new-authorization-20261109/registration-readback-result.json, sha256 8fbeac03...7bed). Recorded in a records PR on the Product Owner's request.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-10T00:43:33Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Ledger close for PR #350 (PR #352) merged to main",
+      "code_commit": "095ead952065607a74430e808b50aaba0c9611a8",
+      "spec_baseline": "1c25ef50dfe40c86270afa6112664aab3d36f37d7d6d575b922a557c81f6a9a5",
+      "source_fingerprint": "3dae4457fcae2de8ecae177bbfe9a2a04c51f2dde0761b46ff9231eb529858d3",
+      "status": "PASS",
+      "source_ref": "PR #352 (head 3da01894) merged as 095ead952065607a74430e808b50aaba0c9611a8 at 2026-11-10T01:13:03Z on the Product Owner's word ('CI 已通過'), after the code gate: heads equal, main 2cf4d258 an ancestor; run 42731045332 attempt 1 on d076703e (main + head), 18 jobs SUCCESS and 2 capacity jobs SKIPPED, floors met for 39 files. Recorded in the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T01:13:03Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Latest main 9762fb59 (PR #351) merged into claude/supplier-profile-capacity-skip",
+      "code_commit": "0feecc26f9ea23111fcac16923826444bc9cc077",
+      "spec_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_fingerprint": "087d1547a7583704e1a749276db7a2e14088b8885cafbf99bc572c5044cb9e99",
+      "status": "PASS",
+      "source_ref": "Ordinary --no-ff merge with no conflict; parents 8c9fa82b and 9762fb59. The branch diff and the main diff each match their pre-merge diffs exactly. Main changed no Supplier document, receipt pin or Purchasing 03 (927ddc66). All 8 receipt pins still match, receipt sha256 is still b9c3f100, and plan 2d5292cb is unchanged.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T02:11:26Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-165 defect found at the PR #354 merge gate: pattern-excluded tests are not reported as skipped",
+      "code_commit": "05b6440e3d55df776e1b277c12f626a520b4c18f",
+      "spec_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
+      "status": "FAIL",
+      "source_ref": "CI run 42742132390 (attempt 1, success) on 3a102622 (main 9762fb59 + 05b6440e). None of the 7 Supplier catalog names appears as a reported test line; they appear only in the 8 shards' --test-skip-pattern command lines, while other skipped tests show '# SKIP' (.worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/revision-proposal/ci354-log-excerpt.txt). A private probe (one Bash tool call: node --version and two node --test runs, Node v26.6.0, no prior approval, not project CI or a project test, not re-run) showed a pattern-matched test absent from junit (tests 2, skipped 1) (.worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/revision-proposal/probe-evidence.json). The merge was stopped and PR #354 kept as Draft. The green run stays as history; it is not proof that the profile is correct, because CI does not run the profile.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T03:29:51Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Assumptions in REV-147 and REV-148 corrected (records kept unchanged)",
+      "code_commit": "50d277bde8487448b5a5458df46e6af1c7c6c0a7",
+      "spec_baseline": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+      "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
+      "status": "PASS",
+      "source_ref": "REV-147 item 2 rightly found that the pattern matches exactly audit-16..20, 27 and 28. It assumed they would be counted as skipped, which is wrong: they drop out of the report and the junit total. REV-147 and REV-148 approved max_skipped 7 without checking the runner's reporting, and so did the author. The author's HD-165 premise ('excluding them would fail max_skipped: 0') was also wrong: only the missing exclusion in argv blocked the formal run. Under max_skipped 0, REV-147's points still hold: the npm test pass-through, fail-closed on catalog errors, a run without DB_INTEGRATION_TESTS failing, and min_tests headroom.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T03:29:51Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Latest main ca340c46 (PR #355) merged into claude/supplier-profile-capacity-skip",
+      "code_commit": "50d277bde8487448b5a5458df46e6af1c7c6c0a7",
+      "spec_baseline": "2d5292cb8b157fa9194e38321a44f38854e73599dc04c5be20939e269deaddf7",
+      "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
+      "status": "PASS",
+      "source_ref": "Ordinary --no-ff merge with no conflict; parents 05b6440e and ca340c46. The branch diff and the main diff each match their pre-merge diffs exactly. Main changed only Purchasing paths: no Supplier document, receipt pin, Purchasing 03, capacity catalog or server/package.json.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-10T03:29:51Z"
     }
   ],
   "pending_decisions": [
@@ -10432,6 +10548,28 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Sam, PM chat, call_9e0f3ec8bb2a40f4ad8af06002773a68: '批准 HD-164，沿原 A 一次 CI 推進', relayed by the PM to the Supplier chat, naming design addac695, plan 1c25ef50, the four listed deltas, the single receipt path, candidate c127d4c8 and receipt a2edb259. Does not re-affirm the 14 approvals on old baselines."
+    },
+    {
+      "id": "HD-165",
+      "impact": "MAJOR",
+      "question": "supplier-server-integration and supplier-security (TECHNICAL, REGRESSION) glob every Supplier test file, which holds 7 capacity-catalog cases (audit-16 to audit-20, audit-27, audit-28), with max_skipped 0. AGENTS.md defers capacity until after UAT, so a formal functional run as written would execute capacity, and excluding the cases fails the gate. (A) Run both suites through server's npm test, which adds the catalog's --test-skip-pattern, and set max_skipped 0 to 7; the 7 are named as post-UAT deferrals; no case, assertion, floor or other threshold changes; the profile is receipt-bound, so the receipt is rebound. (B) Move the 7 cases into a separate post-UAT capacity suite (test-file and profile changes, wider admission). (C) No change; the formal functional run waits until after UAT, which conflicts with Technical Acceptance before UAT. Recommendation: A.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-136"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner (Sam) in the Supplier chat, 2026-11-10: 'A，照建議改 profile', in reply to the Decision Required above. Applied on this branch: both suites' argv, max_skipped 7, an npm version probe, and the named list in testing/06_task051_completion_boundary.md. Receipt supplier-task052-sku-refs.json rebound (profile pin e50939e1 to 327593c6); its new digest needs the trusted approval administrator. The new plan baseline 2d5292cb has no PLAN approval yet: it was computed after the answer, so the approval waits for the decision-maker's confirmation of this exact hash, together with the receipt."
+    },
+    {
+      "id": "HD-166",
+      "impact": "MAJOR",
+      "question": "HD-165 revision before merge (PR #354, Draft). Node 26 drops tests matched by --test-skip-pattern from the report and does not count them as skipped, so max_skipped 7 would have allowed 7 arbitrary skips. (A) Keep the npm test argv; set max_skipped back to 0 in supplier-server-integration and supplier-security; replace the boundary doc's verification text (the gate's mechanical checks; four review checks together; the evidence limit; T51 AC 2 with no exception); rebind the receipt's profile pin only. Exact versions: plan 53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847, receipt ac6e3073dd68119c1232954945829bfa84245cc357ec4894d39f68d9f85fb070. Then one push and one functional CI. No merge and no formal run in this decision. (B) Close PR #354 without HD-165. Recommendation: A.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-136"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam in the Supplier chat, 2026-11-10: 'A，批准 HD-165 修訂', in reply to the Decision Required that named plan 53ba8970 and receipt ac6e3073. Applied byte-identical from the private proposal .worktrees/ci-pm-handoffs/supplier-hd165-admission-20261110/revision-proposal (manifest r2; the PM's non-author narrow review asked for one sentence to be fixed, and it was fixed). HD-165 stays as recorded."
     }
   ],
   "external_actions": [
@@ -11066,6 +11204,22 @@
       "idempotency_key": "mode-change-526",
       "status": "CONFIRMED",
       "source_ref": "HD-163 A and HD-164: back to TEST_AND_VERIFY (REPORT_ONLY) after the TASK-052 merge (PR #350); TASK-051 stays IN_PROGRESS"
+    },
+    {
+      "id": "MERGE-PR-352",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#352",
+      "idempotency_key": "supplier-merge-pr-352",
+      "status": "CONFIRMED",
+      "source_ref": "Merged as 095ead952065607a74430e808b50aaba0c9611a8; worktree and branches claude/supplier-ledger-pr350 removed after the merge."
+    },
+    {
+      "id": "MODE-CHANGE-529",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-529",
+      "status": "CONFIRMED",
+      "source_ref": "HD-165 A: IMPLEMENT for the profile change and the receipt rebind only"
     }
   ],
   "evidence_files": [
@@ -12169,5 +12323,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-052 merged (PR #350, 2cf4d258). Purchasing re-pins Supplier 03 once and consumes findSkuRefsInTransaction and the verifySource injection in its own tasks (TASK-040, TASK-032/033); until then recordSupply answers 503 SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE. Technical Acceptance stays blocked by TASK-051 group B, TC-136 and a post-UAT formal run on main (prior approval needed). Formal business UAT and sign-offs come after Technical Acceptance. The 41 limited-UAT acceptances are not formal UAT. The 14 approvals on the old baselines (3 DESIGN, 4 PLAN, 6 SCOPE, 1 RISK) are not re-affirmed: they need the decision-maker's word before a formal gate relies on them. Open, for Sam: AGENTS.md defers capacity until after UAT, but the formal TECHNICAL stage requires supplier-performance, so this order cannot complete as written. Decide before any formal run."
+  "next_safe_action": "HD-166 A (Sam): max_skipped back to 0 and the boundary verification text corrected, applied byte-identical from the private proposal. Plan 53ba8970, receipt ac6e3073. Next: the PM's non-author reviewer re-reads the one corrected sentence and the applied commit. The trusted CI admission administrator registers ac6e3073 and reads it back; b9c3f100 stays registered and is not removed. Then one ordinary push to claude/supplier-profile-capacity-skip (PR #354, Draft) and one natural functional CI. On the first failure, stop and report; no retry. Merge is not approved: it needs the decision-maker's word and the code gate. After merge: back to TEST_AND_VERIFY. A formal TECHNICAL and REGRESSION run needs its own approval, with the full scale and a MySQL slot. Its reviewer applies the four checks in testing/06_task051_completion_boundary.md. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Order: the functional part of Technical Acceptance, then formal UAT, then capacity, then Technical Acceptance complete, TC-136 and sign-offs. Source: the PM's direction in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1). The 14 old-baseline approvals stay as recorded and were not re-affirmed."
 }

@@ -263,7 +263,7 @@ integrationTest("詳情回交易快照同逐行進度，目前主資料另外放
     assert.deepEqual(clean.orderingAddress, address);
     assert.deepEqual(clean.paymentTerm, term);
     assert.deepEqual({ a: clean.confirmedAt, b: clean.cancelledAt, c: clean.hasConfirmedReceipt, d: clean.hasOutstanding, e: clean.allowedActions, f: clean.createdByLabel },
-      { a: NOW - 5, b: null, c: true, d: true, e: ["copy"], f: "maker" });
+      { a: NOW - 5, b: null, c: true, d: true, e: ["copy", "closeRemaining"], f: "maker" });
     const progress = (line) => [line.orderedBaseQuantity, line.grossReceivedBaseQuantity, line.reversedBaseQuantity, line.netReceivedBaseQuantity, line.outstandingBaseQuantity,
       line.overReceivedBaseQuantity, line.closedRemainingBaseQuantity];
     assert.deepEqual(progress(clean.lines[0]), ["10", "5", "1", "4", "4", "0", "2"]);
