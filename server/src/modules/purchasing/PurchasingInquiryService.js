@@ -34,6 +34,14 @@ const nonNegative = (value) => value > 0n ? value : 0n;
 const placeholders = (values) => values.map(() => "?").join(",");
 // allowedActions 只列已有 route 嘅動作；submit、cancel 等由落地嘅 Task 加。
 const allowedActions = (status, permissions) => !permissions.includes("purchasing.mgmt") ? [] : status === "DRAFT" ? ["edit", "submit", "copy"] : ["copy"];
+// §7.4：跟操作者。列表唔讀審批，所以呢三個動作只喺詳情出；service 喺 transaction 入面會再驗。
+function decisionActions(pending, actorId, permissions) {
+  if (!pending) return [];
+  // 審批人一定係另一個人（提交時驗咗），所以 assigned 唔使再排除提交人。
+  const assigned = Number(pending.assigned_approver_id) === actorId && permissions.includes("purchasing.approval");
+  const requester = Number(pending.requested_by) === actorId && permissions.includes("purchasing.mgmt");
+  return [...(assigned ? ["approve", "reject"] : []), ...(requester ? ["withdraw"] : [])];
+}
 
 function listQuery(input) {
   const query = { page: 1, pageSize: 20, sortBy: "updatedAt", descending: true, ...input };
@@ -49,9 +57,10 @@ function listQuery(input) {
   return { ...query, q };
 }
 
-function listWhere(query, search) {
+function listWhere(query, search, scope = null) {
   const clauses = [], values = [];
   const add = (clause, ...params) => { clauses.push(clause); values.push(...params); };
+  if (scope) add(...scope);
   if (query.status !== undefined) { const statuses = [query.status].flat(); add(`po.status IN (${placeholders(statuses)})`, ...statuses); }
   if (query.supplierId !== undefined) add("po.supplier_id = ?", query.supplierId);
   if (query.buyerId !== undefined) add("po.buyer_id = ?", query.buyerId);
@@ -112,9 +121,27 @@ function toPurchaseOrderLine(row, receiving, places) {
   };
 }
 
-function toPurchaseOrderDetail(row, lines, permissions) {
+const toApprovalSummary = (row) => ({ id: Number(row.id), status: row.status, purchaseOrderVersion: Number(row.purchase_order_version), requestedByLabel: row.requested_by_label,
+  approverLabel: row.approver_label, requestNote: row.request_note, decisionReason: row.decision_reason, requestedAt: Number(row.requested_at), decidedAt: nullableId(row.decided_at) });
+const toStatusHistory = (row) => ({ sequenceNo: Number(row.sequence_no), fromStatus: row.from_status, toStatus: row.to_status, action: row.action, reason: row.reason,
+  version: Number(row.purchase_order_version_after), actorLabel: row.actor_label, occurredAt: Number(row.occurred_at) });
+const toMyApproval = (row) => ({ approvalId: Number(row.id), purchaseOrderId: Number(row.purchase_order_id), number: row.po_number, purchaseOrderVersion: Number(row.purchase_order_version),
+  supplierCode: row.supplier_code_snapshot, supplierName: row.supplier_name_snapshot, currencyCode: row.currency_code,
+  totalAmount: storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot)), requestedByLabel: row.requested_by_label, requestNote: row.request_note, requestedAt: Number(row.requested_at) });
+
+/** §2.8（HD-009）：API 一律回 Currency 小數位。儲存嘅快照同 hash 唔郁，只喺回傳時格式化。 */
+function toApprovalSnapshot(snapshot) {
+  const places = snapshot.currency.decimalPlaces;
+  return { ...snapshot, subtotalAmount: storedAmount(snapshot.subtotalAmount, places), totalAmount: storedAmount(snapshot.totalAmount, places),
+    lines: snapshot.lines.map((line) => ({ ...line, lineAmount: storedAmount(line.lineAmount, places) })) };
+}
+
+function toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot, history, actorId }) {
+  const header = toHeader(row, permissions);
   return {
-    ...toHeader(row, permissions), orderingAddressId: nullableId(row.ordering_address_id), orderingAddress: row.ordering_address_snapshot,
+    ...header, allowedActions: [...header.allowedActions, ...decisionActions(pending, actorId, permissions)],
+    approval: pending && { ...toApprovalSummary(pending), snapshot: toApprovalSnapshot(snapshot) }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
+    orderingAddressId: nullableId(row.ordering_address_id), orderingAddress: row.ordering_address_snapshot,
     currencyName: row.currency_name_snapshot, currencyDecimalPlaces: Number(row.currency_decimal_places_snapshot),
     paymentTermId: nullableId(row.payment_term_id), paymentTerm: row.payment_term_snapshot,
     defaultReceivingWarehouseId: nullableId(row.default_receiving_warehouse_id), defaultWarehouseCode: row.default_warehouse_code_snapshot,
@@ -127,7 +154,7 @@ function toPurchaseOrderDetail(row, lines, permissions) {
 /**
  * PO 列表同詳情（設計 §5.2、§5.6、§8.9；TASK-016）。每個 response 都係具名 mapping，唔 spread DB row；Supplier 銀行同內部欄位根本唔讀。
  * Query 數量固定（§8.9：先查 ID page，再用 batch 載 summary），唔跟 PO 或 Line 數量增加。
- * 冇 approval、GR 同 status history 欄位（HD-017 3A）：佢哋張表由 TASK-022、TASK-027 加，到時先回，唔回假嘅空陣列。
+ * 冇 GR 欄位（HD-017 3A）：張表由 TASK-027 加，到時先回，唔回假嘅空陣列。
  */
 export class PurchasingInquiryService {
   constructor({ database, logger, time, suppliers }) {
@@ -166,14 +193,37 @@ export class PurchasingInquiryService {
     });
   }
 
+  /** §5.2：待我審批，舊嘅排先（idx_po_approvals_assignee）。快照可以去到 1MiB，所以唔喺列表回，揀咗先由詳情攞。 */
+  async myApprovals({ claims, input = {} }) {
+    const query = listQuery(input);
+    return this.database.withTransaction(async (tx) => {
+      const { id: actorId, permissions } = await this.#actor(tx, claims);
+      if (!permissions.includes("purchasing.approval")) throw permissionStaleError();
+      const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null, ["a.assigned_approver_id = ? AND a.status = 'PENDING'", actorId]);
+      const from = `FROM purchase_order_approvals a JOIN purchase_orders po ON po.id = a.purchase_order_id${where}`;
+      const [[{ total }]] = await tx.query(`SELECT COUNT(*) AS total ${from}`, values);
+      const [rows] = await tx.query(`SELECT a.id, a.purchase_order_id, a.purchase_order_version, a.requested_by_label, a.request_note, a.requested_at, po.po_number, po.supplier_code_snapshot,
+        po.supplier_name_snapshot, po.currency_code, po.currency_decimal_places_snapshot, po.total_amount ${from} ORDER BY a.requested_at, a.id LIMIT ? OFFSET ?`,
+      [...values, query.pageSize, (query.page - 1) * query.pageSize]);
+      return { items: rows.map(toMyApproval), total: Number(total), page: query.page, pageSize: query.pageSize };
+    });
+  }
+
   async get({ claims, id }) {
     positiveId(id, "id");
     const detail = await this.database.withTransaction(async (tx) => {
-      const { permissions } = await this.#actor(tx, claims);
+      const { id: actorId, permissions } = await this.#actor(tx, claims);
       const [[row]] = await tx.query(`SELECT ${DETAIL} FROM purchase_orders WHERE id = ?`, [id]);
       if (!row) throw purchasingError("PURCHASE_ORDER_NOT_FOUND");
       const [lines] = await tx.query(`SELECT ${LINE} FROM purchase_order_lines WHERE purchase_order_id = ? ORDER BY line_number`, [id]);
-      return toPurchaseOrderDetail(row, lines, permissions);
+      const [approvals] = await tx.query(`SELECT id, status, purchase_order_version, requested_by, assigned_approver_id, requested_by_label, approver_label, request_note, decision_reason,
+        requested_at, decided_at FROM purchase_order_approvals WHERE purchase_order_id = ? ORDER BY requested_at, id`, [id]);
+      // 只讀 Pending 嗰份快照：§7.4 要完整顯示，但舊申請每份都可以去到 1MiB。
+      const pending = approvals.find((approval) => approval.status === "PENDING") ?? null;
+      const [[stored]] = pending ? await tx.query("SELECT approval_snapshot FROM purchase_order_approvals WHERE id = ?", [pending.id]) : [[null]];
+      const [history] = await tx.query(`SELECT sequence_no, from_status, to_status, action, reason, purchase_order_version_after, actor_label, occurred_at
+        FROM purchase_order_status_history WHERE purchase_order_id = ? ORDER BY sequence_no`, [id]);
+      return toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot: stored?.approval_snapshot, history, actorId });
     });
     return { ...detail, currentMasterDifferences: await this.#differences(detail) };
   }

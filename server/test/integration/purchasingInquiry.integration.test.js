@@ -256,10 +256,10 @@ integrationTest("詳情回交易快照同逐行進度，目前主資料另外放
 
     const clean = await inquiry.get({ claims: f.manager.claims, id: po.id });
     assert.deepEqual(clean.currentMasterDifferences, { supplier: null, lines: [] }, "冇變就冇差異");
-    assert.deepEqual(Object.keys(clean).sort(), ["allowedActions", "buyerId", "buyerLabel", "cancelledAt", "closedAt", "confirmedAt", "createdAt", "createdByLabel", "currencyCode",
+    assert.deepEqual(Object.keys(clean).sort(), ["allowedActions", "approval", "approvalHistory", "buyerId", "buyerLabel", "cancelledAt", "closedAt", "confirmedAt", "createdAt", "createdByLabel", "currencyCode",
       "currencyDecimalPlaces", "currencyName", "currentMasterDifferences", "defaultReceivingWarehouseId", "defaultWarehouseCode", "expectedDeliveryDate", "hasConfirmedReceipt",
-      "hasOutstanding", "id", "lines", "notes", "number", "orderDate", "orderingAddress", "orderingAddressId", "paymentTerm", "paymentTermId", "status", "subtotalAmount", "supplierCode",
-      "supplierId", "supplierName", "supplierReference", "totalAmount", "updatedAt", "updatedByLabel", "version"], "冇銀行、冇 DB 欄位名，亦冇未有表嘅 approval／GR／history（HD-017 3A）");
+      "hasOutstanding", "id", "lines", "notes", "number", "orderDate", "orderingAddress", "orderingAddressId", "paymentTerm", "paymentTermId", "status", "statusHistory", "subtotalAmount", "supplierCode",
+      "supplierId", "supplierName", "supplierReference", "totalAmount", "updatedAt", "updatedByLabel", "version"], "冇銀行、冇 DB 欄位名，亦冇未有表嘅 GR（HD-017 3A）");
     assert.deepEqual(clean.orderingAddress, address);
     assert.deepEqual(clean.paymentTerm, term);
     assert.deepEqual({ a: clean.confirmedAt, b: clean.cancelledAt, c: clean.hasConfirmedReceipt, d: clean.hasOutstanding, e: clean.allowedActions, f: clean.createdByLabel },

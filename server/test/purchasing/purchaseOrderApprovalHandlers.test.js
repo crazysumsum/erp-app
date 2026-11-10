@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
+import { ListMyPurchaseOrderApprovalsHandler } from "../../src/handlers/purchase-order-approvals/listMyPurchaseOrderApprovalsHandler.js";
 import { ApprovePurchaseOrderHandler, RejectPurchaseOrderHandler, WithdrawPurchaseOrderApprovalHandler } from "../../src/handlers/purchase-orders/purchaseOrderApprovalHandlers.js";
 import { GetPurchasingSettingsHandler, UpdatePurchasingSettingsHandler } from "../../src/handlers/purchasing-settings/purchasingSettingsHandlers.js";
 import { PurchaseOrderService } from "../../src/modules/purchasing/PurchaseOrderService.js";
@@ -74,5 +75,17 @@ test("設定更新：password 唔會交畀 service；未知欄位拒絕", async 
   assert.deepEqual(calls[0].input, { eventId, version: 1, requirePoApproval: true, reason: "開始需要審批" });
   await assert.rejects(instance.execute(request({ ...body, extra: 1 })), invalid("body"));
   await assert.rejects(instance.execute(request({ ...body, requirePoApproval: "true" })), invalid("requirePoApproval"));
+  assert.equal(calls.length, 1);
+});
+
+test("待我審批：GET、view＋approval；query 驗完先打 service，未知欄位拒絕", async () => {
+  const { api, handlerName } = ListMyPurchaseOrderApprovalsHandler;
+  assert.deepEqual([handlerName, api.method, api.path, api.authType], ["listMyPurchaseOrderApprovals", "GET", "/api/v1/purchase-order-approvals/mine", undefined]);
+  assert.deepEqual(api.authorizationPolicies, [{ name: "hasPermission", options: { permissions: decision } }]);
+  const instance = new ListMyPurchaseOrderApprovalsHandler(services), calls = [];
+  instance.inquiry = { myApprovals: async (command) => { calls.push(command); return { items: [], total: 0, page: 2, pageSize: 5 }; } };
+  await instance.execute({ input: { query: { page: "2", pageSize: "5", q: "PO-" } }, auth: { claims } });
+  assert.deepEqual(calls, [{ claims, input: { page: 2, pageSize: 5, q: "PO-" } }]);
+  await assert.rejects(instance.execute({ input: { query: { status: "DRAFT" } }, auth: { claims } }), invalid("query"));
   assert.equal(calls.length, 1);
 });
