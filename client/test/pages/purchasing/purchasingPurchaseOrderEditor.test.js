@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/services/purchasing.js", () => ({ default: { getPurchaseOrder: vi.fn(), updatePurchaseOrder: vi.fn(), submitPurchaseOrder: vi.fn(), lookupCurrencies: vi.fn(), lookupPaymentTerms: vi.fn() } }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 import purchasing from "@/services/purchasing.js";
-import { notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
+import { notifyError, notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 import Create, { page as createPage } from "@/pages/purchasing/PurchaseOrderCreatePage.vue";
 import Edit, { page as editPage } from "@/pages/purchasing/PurchaseOrderEditPage.vue";
 import { useSessionStore } from "@/stores/session.js";
@@ -41,7 +41,7 @@ beforeEach(() => {
 afterEach(() => { wrapper?.unmount(); wrapper = null; document.body.innerHTML = ""; vi.restoreAllMocks(); });
 
 describe("TASK-020 新增頁", () => {
-  const FormStub = defineComponent({ name: "PurchaseOrderForm", props: ["actor", "document"], emits: ["saved"], setup: (props, { emit }) => () => h("button", { "data-testid": "stub", onClick: () => emit("saved", { ...saved, id: 20, number: "PO-202611-000020", warnings: [{ code: "SKU_NOT_PURCHASABLE", lineNumber: 2 }, { code: "SUPPLIER_NOT_PURCHASABLE" }] }) }, JSON.stringify(props.actor)) });
+  const FormStub = defineComponent({ name: "PurchaseOrderForm", props: ["actor", "document", "commands"], setup: (props) => () => h("button", { "data-testid": "stub", onClick: () => props.commands.saved({ ...saved, id: 20, number: "PO-202611-000020", warnings: [{ code: "SKU_NOT_PURCHASABLE", lineNumber: 2 }, { code: "SUPPLIER_NOT_PURCHASABLE" }] }, props.commands.generation()) }, JSON.stringify(props.actor)) });
 
   it("要 view 同 mgmt；採購員預設目前用戶；新單冇 document", async () => {
     expect(createPage.requires.permissions).toEqual(MANAGE);
@@ -167,5 +167,145 @@ describe("TASK-020 編輯頁", () => {
     await button("重試").trigger("click");
     await flushPromises();
     expect(price().exists()).toBe(true);
+  });
+});
+
+describe("TASK-024 R1：Edit 頁係儲存／提交 record 嘅穩定 owner", () => {
+  const PATH = "/purchasing/purchase-orders/8/edit";
+  const timeout = () => Object.assign(new Error("逾時"), { code: "TIMEOUT" });
+  const conflict = () => Object.assign(new Error("版本已更改"), { code: "VERSION_CONFLICT", status: 409, details: { currentVersion: 9 } });
+  const confirmed = { id: 8, number: draft.number, status: "CONFIRMED", outcome: "CONFIRMED", version: 3, warnings: [], replayed: false };
+  const deferred = () => { let resolve, reject; const promise = new Promise((done, fail) => { resolve = done; reject = fail; }); return { promise, resolve, reject }; };
+  // 同一 actor 權限刷新（仍有 mgmt）：usePurchaseOrder 重新讀取唔 keep，父頁 loading 令 Form 卸載再重建。
+  const refresh = (permissions = [...MANAGE, "purchasing.approval"], user = { id: 5, displayName: "採購員甲", username: "buyer" }) => {
+    useSessionStore().user = { ...user, permissions: [...permissions], roles: [] };
+    return flushPromises();
+  };
+  const dialogButton = (label) => [...document.body.querySelectorAll(".q-dialog button")].find((node) => node.textContent.trim() === label);
+  const save = async () => { await button("儲存草稿").trigger("click"); await flushPromises(); };
+  const openSubmit = async () => { await button("提交").trigger("click"); await flushPromises(); dialogButton("確認提交").click(); await flushPromises(); };
+  beforeEach(() => { purchasing.updatePurchaseOrder.mockReset(); purchasing.submitPurchaseOrder.mockReset(); });
+
+  it.each([
+    ["a 權限刷新（仍有 mgmt）", false],
+    ["b 同一張 PO 讀取失敗後重試", true]
+  ])("C8 %s：儲存未確定，Form 卸載重建後顯示原值兼鎖住，重試送原 body", async (_, failOnce) => {
+    purchasing.updatePurchaseOrder.mockRejectedValueOnce(timeout()).mockResolvedValue(saved);
+    await open(PATH);
+    await price().setValue("20");
+    await save();
+    expect(wrapper.text()).toContain("結果尚未確認");
+    if (failOnce) purchasing.getPurchaseOrder.mockRejectedValueOnce(new Error("讀取失敗"));
+    await refresh();
+    if (failOnce) {
+      expect(wrapper.find('[role="alert"]').text()).toContain("讀取失敗");
+      expect(price().exists()).toBe(false);
+      expect(wrapper.find('[data-testid="po-hidden-unknown"]').text()).toContain("儲存結果尚未確認");
+      await button("重試").trigger("click");
+      await flushPromises();
+    }
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(failOnce ? 3 : 2);
+    expect(price().element.value).toBe("20");
+    expect(price().element.matches(":disabled")).toBe(true);
+    await button("重試確認結果").trigger("click");
+    await flushPromises();
+    const [first, second] = purchasing.updatePurchaseOrder.mock.calls;
+    expect(purchasing.updatePurchaseOrder).toHaveBeenCalledTimes(2);
+    expect(second).toEqual(first);
+  });
+
+  it("C9 提交未確定之後 VERSION_CONFLICT：對話框留低、唔入 stale；之後成功都係原 body", async () => {
+    purchasing.submitPurchaseOrder.mockRejectedValueOnce(timeout()).mockRejectedValueOnce(conflict()).mockResolvedValue(confirmed);
+    const router = await open(PATH);
+    await openSubmit();
+    dialogButton("重試確認結果").click();
+    await flushPromises();
+    expect(wrapper.text()).not.toContain("最新版本 9");
+    expect(dialogButton("重試確認結果")).toBeDefined();
+    dialogButton("重試確認結果").click();
+    await flushPromises();
+    const [first, second, third] = purchasing.submitPurchaseOrder.mock.calls;
+    expect(second).toEqual(first);
+    expect(third).toEqual(first);
+    expect(router.currentRoute.value.path).toBe("/purchasing/purchase-orders/8");
+  });
+
+  it("C10 提交 in-flight 期間 Form 重建：新 Form 對話框忙住；成功只由 owner 處理一次", async () => {
+    const held = deferred();
+    purchasing.submitPurchaseOrder.mockReturnValueOnce(held.promise);
+    const router = await open(PATH);
+    await openSubmit();
+    await refresh();
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+    expect(document.body.querySelector('[data-testid="po-submit-summary"]')).not.toBeNull();
+    expect(dialogButton("確認提交").disabled).toBe(true);
+    held.resolve(confirmed);
+    await flushPromises();
+    expect(router.currentRoute.value.path).toBe("/purchasing/purchase-orders/8");
+    expect(notifySuccess).toHaveBeenCalledTimes(1);
+    expect(purchasing.submitPurchaseOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it("C15 儲存中換 actor：原 call 之後 409，新畫面冇錯誤、冇 stale、owner 唔通知", async () => {
+    const held = deferred();
+    purchasing.updatePurchaseOrder.mockReturnValueOnce(held.promise);
+    await open(PATH);
+    await price().setValue("20");
+    await save();
+    await refresh(MANAGE, { id: 6, displayName: "採購員乙", username: "buyer2" });
+    held.reject(conflict());
+    await flushPromises();
+    expect(wrapper.text()).not.toContain("最新版本 9");
+    expect(wrapper.text()).not.toContain("版本已更改");
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(price().element.matches(":disabled")).toBe(false);
+    expect(purchasing.updatePurchaseOrder).toHaveBeenCalledTimes(1);
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ["a 有 mgmt：用原內容重試", [...MANAGE, "purchasing.approval"], true],
+    ["b 冇 mgmt：只顯示被擋", VIEW, false]
+  ])("C16 %s——提交其實成功但回應丟失，重新讀取已唔可以編輯，Edit 頁保留未確定提交", async (_, permissions, canReplay) => {
+    purchasing.submitPurchaseOrder.mockRejectedValueOnce(timeout()).mockResolvedValue({ ...confirmed, status: "PENDING_APPROVAL", outcome: "PENDING_APPROVAL", replayed: true });
+    const router = await open(PATH);
+    await openSubmit();
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...draft, status: "PENDING_APPROVAL", version: 3, allowedActions: ["copy"] });
+    await refresh(permissions);
+    expect(price().exists()).toBe(false);
+    const banner = wrapper.find('[data-testid="po-hidden-unknown"]');
+    expect(banner.text()).toContain("提交結果尚未確認");
+    if (canReplay) {
+      await button("以原內容重試提交").trigger("click");
+      await flushPromises();
+      const [first, second] = purchasing.submitPurchaseOrder.mock.calls;
+      expect(second).toEqual(first);
+      expect(router.currentRoute.value.path).toBe("/purchasing/purchase-orders/8");
+      expect(notifySuccess.mock.calls.at(-1)[0]).toContain("已提交審批");
+    } else {
+      expect(banner.text()).toContain("沒有採購管理權限");
+      expect(button("以原內容重試提交")).toBeUndefined();
+      expect(purchasing.submitPurchaseOrder).toHaveBeenCalledTimes(1);
+    }
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+  });
+
+  it("C18 儲存 in-flight 期間 Form 重建：新 Form 鎖住顯示原值；原 call TIMEOUT 之後新 Form 跟住轉未確定，重試送原 body", async () => {
+    const held = deferred();
+    purchasing.updatePurchaseOrder.mockReturnValueOnce(held.promise).mockResolvedValue(saved);
+    await open(PATH);
+    await price().setValue("20");
+    await save();
+    await refresh();
+    expect(price().element.value).toBe("20");
+    expect(price().element.matches(":disabled")).toBe(true);
+    held.reject(timeout());
+    await flushPromises();
+    expect(wrapper.text()).toContain("結果尚未確認");
+    expect(price().element.value).toBe("20");
+    await button("重試確認結果").trigger("click");
+    await flushPromises();
+    const [first, second] = purchasing.updatePurchaseOrder.mock.calls;
+    expect(second).toEqual(first);
   });
 });
