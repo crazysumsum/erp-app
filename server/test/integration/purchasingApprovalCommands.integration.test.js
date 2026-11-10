@@ -208,6 +208,82 @@ integrationTest("設定：讀要 settings 權限；改要裝置簽署同密碼�
   const good = payload(), updated = await signed(good);
   assert.deepEqual([updated.status, updated.body.data], [200, { requirePoApproval: true, version: version + 1, replayed: false }]);
   assert.equal((await signed(good)).status, 200);
+  const after = await f.send("/api/v1/purchasing-settings", { method: "GET", token: f.admin.token });
+  const { occurredAt, actorLabel, ...change } = after.body.data.history[0];
+  assert.deepEqual(change, { requirePoApproval: true, version: version + 1, reason: "開始需要審批" });
+  assert.match(actorLabel, /^po_apr_admin_/u);
+  assert.equal(typeof occurredAt, "number");
   assert.deepEqual([(await f.statusOf(pendingBefore.id)).status], ["DRAFT"], "改設定唔掃描亦唔改現有 PO");
   assert.deepEqual(failure(await f.command(pendingBefore.id, "submit", f.maker.token, { version: 1 })), [409, "PO_APPROVAL_REQUIRED"]);
+});
+
+integrationTest("待我審批：只回指派畀自己嘅 Pending，舊嘅排先；有分頁同篩選；要 view＋approval", async (t) => {
+  const f = await setup(t);
+  await f.setPolicy(true);
+  const first = await f.pending(), second = await f.pending();
+  const mine = (token, query = "") => f.send(`/api/v1/purchase-order-approvals/mine${query}`, { method: "GET", token });
+  const listed = await mine(f.approver.token);
+  assert.equal(listed.status, 200, JSON.stringify(listed.body));
+  assert.deepEqual([listed.body.data.total, listed.body.data.items.map((row) => row.purchaseOrderId)], [2, [first.id, second.id]]);
+  const [row] = listed.body.data.items;
+  assert.deepEqual([row.number, row.purchaseOrderVersion, row.supplierName, row.currencyCode, row.totalAmount, row.requestNote], [first.number, 2, "Approval Supplier", "HKD", "2.50", "請批"]);
+  assert.equal(Object.hasOwn(row, "snapshot"), false);
+  const page = await mine(f.approver.token, "?page=2&pageSize=1");
+  assert.deepEqual([page.body.data.total, page.body.data.page, page.body.data.items.map((item) => item.purchaseOrderId)], [2, 2, [second.id]]);
+  assert.deepEqual((await mine(f.approver.token, `?q=${second.number}`)).body.data.items.map((item) => item.purchaseOrderId), [second.id]);
+  assert.equal((await mine(f.approver.token, `?supplierId=${f.supplier + 1}`)).body.data.total, 0);
+  assert.equal((await mine(f.other.token)).body.data.total, 0, "其他審批人睇唔到");
+  assert.deepEqual(failure(await mine(f.approver.token, "?status=DRAFT")), [400, "PURCHASING_INPUT_INVALID"]);
+  assert.equal((await mine(f.viewer.token)).status, 403);
+  assert.equal((await f.send("/api/v1/purchase-order-approvals/mine", { method: "GET" })).status, 401);
+  const done = await f.command(first.id, "approval/reject", f.approver.token, { version: 2, password: PASSWORD, reason: "價錢要再傾" });
+  assert.equal(done.status, 200, JSON.stringify(done.body));
+  assert.deepEqual((await mine(f.approver.token)).body.data.items.map((item) => item.purchaseOrderId), [second.id]);
+});
+
+integrationTest("詳情：待審批回完整快照；allowedActions 跟操作者；決定之後留歷史", async (t) => {
+  const f = await setup(t);
+  await f.setPolicy(true);
+  const po = await f.pending();
+  const read = (token) => f.send(`/api/v1/purchase-orders/${po.id}`, { method: "GET", token });
+  const detail = await read(f.approver.token);
+  assert.equal(detail.status, 200, JSON.stringify(detail.body));
+  const { approval, approvalHistory, statusHistory, allowedActions } = detail.body.data;
+  assert.deepEqual(allowedActions, ["approve", "reject"]);
+  assert.deepEqual((await read(f.maker.token)).body.data.allowedActions, ["copy", "withdraw"], "提交人有 approval 都批唔到自己");
+  assert.deepEqual((await read(f.other.token)).body.data.allowedActions, ["copy"]);
+  assert.deepEqual((await read(f.viewer.token)).body.data.allowedActions, []);
+  assert.deepEqual([approval.status, approval.purchaseOrderVersion, approval.requestNote, approval.decidedAt], ["PENDING", 2, "請批", null]);
+  assert.deepEqual([approval.snapshot.number, approval.snapshot.supplier.name, approval.snapshot.totalAmount, approval.snapshot.lines.map((line) => [line.orderedQuantity, line.unitPrice, line.lineAmount])],
+    [po.number, "Approval Supplier", "2.50", [["2.000000", "1.2500", "2.50"]]]);
+  assert.deepEqual(approvalHistory.map((row) => [row.id, row.status]), [[approval.id, "PENDING"]]);
+  assert.equal(Object.hasOwn(approvalHistory[0], "snapshot"), false);
+  assert.deepEqual(statusHistory.map((row) => [row.sequenceNo, row.fromStatus, row.toStatus, row.action, row.version]), [[1, "", "DRAFT", "CREATE", 1], [2, "DRAFT", "PENDING_APPROVAL", "SUBMIT", 2]]);
+
+  const withdrawn = await f.command(po.id, "approval/withdraw", f.maker.token, { version: 2, reason: "要改交期先再提交" });
+  assert.equal(withdrawn.status, 200, JSON.stringify(withdrawn.body));
+  const after = (await read(f.maker.token)).body.data;
+  assert.equal(after.approval, null);
+  assert.deepEqual(after.allowedActions, ["edit", "submit", "copy"]);
+  assert.deepEqual(after.approvalHistory.map((row) => [row.status, row.decisionReason]), [["WITHDRAWN", "要改交期先再提交"]]);
+  assert.equal(typeof after.approvalHistory[0].decidedAt, "number");
+  assert.deepEqual(after.statusHistory.at(-1).action, "WITHDRAW");
+});
+
+integrationTest("審批人選項：要 mgmt；只有 approval 權限嘅人，排除自己；requireApproval 跟設定", async (t) => {
+  const f = await setup(t);
+  const approvers = (token) => f.send("/api/v1/purchasing-lookups/approvers?q=User", { method: "GET", token });
+  await f.setPolicy(true);
+  const on = await approvers(f.maker.token);
+  assert.equal(on.status, 200, JSON.stringify(on.body));
+  assert.equal(on.body.data.requireApproval, true);
+  const ids = on.body.data.items.map((row) => row.id);
+  assert.deepEqual([ids.includes(f.approver.id), ids.includes(f.other.id), ids.includes(f.maker.id), ids.includes(f.viewer.id), ids.includes(f.admin.id)], [true, true, false, false, false]);
+  assert.deepEqual(on.body.data.items.find((row) => row.id === f.approver.id), { id: f.approver.id, label: "User approver" });
+  assert.equal(on.body.data.items.some((row) => row.id === f.other.id && row.label === "User other"), true);
+  assert.equal((await f.send("/api/v1/purchasing-lookups/approvers?q=nobody-here", { method: "GET", token: f.maker.token })).body.data.items.length, 0);
+  await f.setPolicy(false);
+  assert.equal((await approvers(f.maker.token)).body.data.requireApproval, false);
+  assert.equal((await approvers(f.approver.token)).status, 403, "冇 mgmt");
+  assert.equal((await f.send("/api/v1/purchasing-lookups/approvers", { method: "GET" })).status, 401);
 });
