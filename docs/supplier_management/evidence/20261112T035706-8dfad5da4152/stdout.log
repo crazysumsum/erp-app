@@ -1,0 +1,4 @@
+
+> @erp/server@0.1.0 test
+> sh -c 'capacity_pattern=$(NODE_V8_COVERAGE= node ../.github/scripts/capacity-runner.mjs server-pattern) && [ -n "$capacity_pattern" ] && exec node --test --import ./test-support/testEnv.js --test-skip-pattern="$capacity_pattern" "$@"' -- --test-concurrency=1 --test-reporter=junit --test-reporter-destination=/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112/docs/supplier_management/evidence/20261112T035706-8dfad5da4152/supplier-server-integration.xml test/supplier*.test.js test/integration/supplier*.integration.test.js
+
