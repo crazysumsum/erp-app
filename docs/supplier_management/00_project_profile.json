@@ -213,7 +213,7 @@
         "--reporter=junit",
         "--outputFile={run_dir}/supplier-phase-001-client.xml",
         "test/pages/suppliers",
-        "test/services/supplier"
+        "test/services/supplier.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
