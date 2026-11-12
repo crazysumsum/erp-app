@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "decision": "DRAFT - NO DECISION YET. Awaiting Sam's explicit decision on docs/purchasing_receiving_management/implementation/P2_task024_browser_admission_proposal.md; to be replaced with his verifiable decision text by the TL/PM who records it. This draft grants nothing and must not be digested",
+  "purpose": "The TASK-024 approval UI end to end against the real API and MySQL: U3 enables PO approval (wrong password rejected, reason kept), U1 creates and submits two POs and withdraws and resubmits one, U2 checks the decision form focus order, gets 403 on a wrong password, approves through a response lost after the server committed, stays locked while uncertain, replays the same eventId to the committed decision (Idempotency-Replayed header, identical body), then rejects the second PO; no uncaught page or console errors",
+  "data": "Per run with a unique suffix, inserted into the already-migrated erp_dev: 4 users via server/scripts/createUser.js (1 disabled bootstrap), 3 roles, 1 supplier, 1 item, 1 UOM, 1 SKU, 1 SKU-UOM, 3 device approvals via server/scripts/approveDevice.js; the run creates 2 purchase orders of 1 line each. Sets purchasing_settings row 1 require_po_approval=0 before the run",
+  "concurrency": "1 worker, 1 browser context at a time (3 sequential contexts), no parallel requests",
+  "repetitions": "1 (no retries)",
+  "thresholds": "The junit report has exactly 1 testcase and no failure, error or skipped element; no timing threshold",
+  "trigger": "Proposed: server-tests shard 1, in the existing real-MySQL browser step after coverage and the shard identity record: every admitted PR dispatch, every push to main and the existing weekly schedule",
+  "cost": "Measured locally on an already-migrated database, excluding migrate: 12.8-14.3 s over 3 runs at 9c1680fb. Not measured in CI. No new job, no new service, no capacity workload",
+  "files": [
+    {"path": "client/e2e/purchasing-receiving-management/purchasing-approval-flow.spec.js", "mode": "100644",
+     "blob": "22e1d62bd9edbaac9387cd339870982363325c04", "kind": "functional",
+     "cases": ["PO approval: settings, submit, withdraw/resubmit, approve through a lost response, reject"]},
+    {"path": "client/e2e/purchasing-receiving-management/playwright.config.js", "mode": "100644",
+     "blob": "7dd2630e4331ee3818395a44e3e61a2af10b5ab6", "kind": "support", "cases": []},
+    {"path": "server/scripts/createUser.js", "mode": "100644",
+     "blob": "d413b18098e0d91988f6a3a6284344ba99c3269e", "kind": "support", "cases": []},
+    {"path": "server/scripts/approveDevice.js", "mode": "100644",
+     "blob": "6802933a6be1a05ba61d3a60c138cdeee0748aa1", "kind": "support", "cases": []}
+  ]
+}
