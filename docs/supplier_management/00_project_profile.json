@@ -210,10 +210,10 @@
         "--workspace",
         "client",
         "--",
-        "test/pages/suppliers",
-        "test/services/supplier.test.js",
         "--reporter=junit",
-        "--outputFile={run_dir}/supplier-phase-001-client.xml"
+        "--outputFile={run_dir}/supplier-phase-001-client.xml",
+        "test/pages/suppliers",
+        "test/services/supplier"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -603,10 +603,10 @@
         "--workspace",
         "client",
         "--",
-        "--config",
-        "test/supplier-management.vitest.config.js",
         "--reporter=junit",
-        "--outputFile={run_dir}/supplier-client-ui.xml"
+        "--outputFile={run_dir}/supplier-client-ui.xml",
+        "test/pages/suppliers",
+        "test/services/supplier"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
