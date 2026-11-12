@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 535,
+  "revision": 537,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "READY_FOR_TESTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
-    "code_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
+    "code_commit": "4ddad41ea96778ca48a1c6b5333923b6ccbd777d",
     "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112",
     "default_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
@@ -22,7 +22,9 @@
     "owner": "Primary Harness agent",
     "resources": {
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112 (claude/supplier-technical-20261112, cut from main 11c9a839)",
-      "database": "private mysqld 26.7.0 on 127.0.0.1:3450, datadir /private/tmp/claude-501/sft2/data, DB erp_t51 migrated from empty to 0118"
+      "database": "private mysqld 26.7.0 on 127.0.0.1:3450, datadir /private/tmp/claude-501/sft2/data, DB erp_t51 migrated from empty to 0118",
+      "mysql-schema": "erp_t51, and the erp_t51_rh_*/erp_t51_mig_* (and test-created erp_restore_*/skr_*) scratch schemas the tests create and drop, on a throwaway mysqld 26.7.0 at 127.0.0.1:3450 (datadir /private/tmp/claude-501/sft2/data, --skip-log-bin); no production data; never erp_t51p",
+      "web-port": "ephemeral only: the Supplier server tests listen on 127.0.0.1 port 0; no fixed web port"
     },
     "lease_ref": null
   },
@@ -11481,7 +11483,10 @@
     "evidence/20261030T034802-0c3c0f91d809/run.json",
     "evidence/20261030T034810-14d1ccd1c16d/run.json",
     "evidence/20261030T034819-b8b65bdb3861/run.json",
-    "evidence/20261030T093238-52ea32e0c5b7/run.json"
+    "evidence/20261030T093238-52ea32e0c5b7/run.json",
+    "evidence/20261112T035706-8dfad5da4152/run.json",
+    "evidence/20261112T035943-185f6d7ee8c8/run.json",
+    "evidence/20261112T040210-1ae486ef5844/run.json"
   ],
   "defects": [
     {
@@ -12362,5 +12367,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Back to TEST_AND_VERIFY (REPORT_ONLY) at main 11c9a839 after PR #354. Sam decided on 2026-11-12 ('改回一般測試', relayed by the TL and confirmed by Sam in the Supplier chat, session 486c4c60-92de-4122-b0e0-a68866140aa1): the private batch-owner/session-gate/hold mechanism (proposal r1-r6; r6 source-accepted by the TL, review r6/review.md 90d18dd9) is retired and is not executed. The three functional TECHNICAL suites supplier-server-integration, supplier-security and supplier-bank-security run locally through the profile argv on a private MySQL with DB_INTEGRATION_TESTS=1; min_tests 620/620/135, max_skipped 0; the 7 catalog capacity cases stay excluded and run after UAT. Results are run_check run.json evidence. Then: TASK-051 group B waits for Purchasing, Receiving and AP; formal UAT, then capacity after UAT by main dispatch with a grant; TC-136 and sign-offs. The 14 old-baseline approvals stay as recorded and were not re-affirmed."
+  "next_safe_action": "TECHNICAL functional runs on 2026-11-12 at 4ddad41e (main 11c9a839 plus this ledger commit; product fingerprint 14f41e28 unchanged), local mysqld 127.0.0.1:3450, DB_INTEGRATION_TESTS=1, through the profile argv as Sam decided ('改回一般測試'): supplier-server-integration PASS 730/730 (0 skipped, 115 required cases PASS), supplier-security PASS 730/730 (0 skipped), supplier-bank-security PASS 142/142 (0 skipped, 19 required cases PASS); the 7 catalog capacity cases were excluded and are deferred to after UAT. The retired private batch-owner (proposal r1-r6) was not executed. Still open before Technical Acceptance: supplier-client-ui (profile --config rejected by the client test script since ce8821e8; separate admission-path proposal), TASK-051 group B (waits for Purchasing, Receiving and AP), formal UAT, capacity after UAT by main dispatch with a grant, TC-136 and sign-offs. These are local isolated results under HD-157; independent review of the evidence is still required. The 14 old-baseline approvals stay as recorded and were not re-affirmed."
 }
