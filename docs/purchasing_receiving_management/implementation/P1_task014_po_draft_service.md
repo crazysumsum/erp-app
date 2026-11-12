@@ -25,7 +25,7 @@ Sam's decision, 2026-11-03: "全部按你的建議執行", accepting 1B, 2C, 3A 
 - **Expected delivery dates are not earlier than the Order Date**, on lines (requirement §248) and on the header.
 - **A non-zero price with a zero-price reason is refused** rather than silently dropping the reason.
 - **The event hash covers the normalized draft plus the PO ID**, so `"1.5"` and `"1.50"` are the same request here. `purchasingPayloadHash()` itself is unchanged.
-- **A replay returns the stored summary with `warnings: []` and `replayed: true`**; the warnings described the masters at the time and are not recomputed.
+- **A replay returns the stored summary with `warnings: []` and `replayed: true`**（service 層回傳值；HTTP 重放見 P1_task017）; the warnings described the masters at the time and are not recomputed.
 - **Supplier or SKU not found is reported as not purchasable**, the same as an inactive one. Business Master refusals (`CURRENCY_NOT_ACTIVE`, `PAYMENT_TERM_NOT_ACTIVE`) and `BUSINESS_MASTER_NOT_READY` pass through with their own public codes.
 - **The address snapshot is the §4.5 whitelist** (three address lines, city, state/region, postal code, country, phone) and refuses more than 2048 bytes.
 - **Only 4xx ApplicationErrors write a REJECTED audit.** 5xx and unexpected errors are failures, not rejections. If the REJECTED insert itself fails, the original error is still thrown and `purchasing.audit.rejected_not_persisted` is logged; the audit is never reported as persisted.

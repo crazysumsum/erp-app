@@ -266,7 +266,7 @@ Runs only after the PM grants an exclusive slot. Nothing goes into `client/e2e`.
 1. Log in as U3. Turn approval on: device-signed with password, first with a wrong password (expect 403, reason kept), then the correct one.
 2. Log in as U1. Submit PO-A with U2 as approver. Withdraw PO-B's approval after submitting it.
 3. Log in as U2. The list shows PO-A. Reject once with a wrong password (expect 403, reason kept).
-4. **UNKNOWN:** `page.route` lets the first approve reach the server, then aborts the response. The UI shows "結果尚未確認". A wrong-password retry gets 403 and stays locked. A correct retry replays as CONFIRMED.
+4. **UNKNOWN:** `page.route` lets the first approve reach the server, then aborts the response. The UI shows "結果尚未確認". A wrong-password retry gets 403 and stays locked. A correct retry replays as CONFIRMED. HTTP 重放回應的 body 為首次儲存的 body（replayed:false 原樣），重放標記在 Idempotency-Replayed header（IdempotencyService.sendReplay）；spec 斷言 header 加 body 與首次一致。
 5. Keyboard: the focus order through reason, password, approve and reject works, and the h1 and h2 exist.
 
 **Bounds:**
