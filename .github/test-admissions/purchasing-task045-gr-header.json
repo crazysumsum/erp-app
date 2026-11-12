@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Conditional reference, not an approval. Prepared before any decision; this JSON grants nothing by itself and its author does not approve it. It takes effect only through Sam's future explicit affirmative answer in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f to purchasing-task045-reader-design-20261112/PACKAGE.md (sha256 4d2b921de75843e8eb57fe4b5e3fae7879720156da5377b41bd954436d304361), naming this receipt's final digest and the pinned blobs: server/database/migrations/0119_create_goods_receipts.js 597c6eb4dc1cb5ba2985e2e39025d215c7072563, server/database/migrations/0114_create_purchasing_operation_requests.js a262c9b94f65a89bd3f4b2832df62c6f98ae0ffa, docs/purchasing_receiving_management/implementation/P2_task045_gr_header.md 1024b27afdd10621649a7f5b9b8d28722cb58125. The trusted approval administrator must independently verify that answer before registering the digest",
+  "purpose": "TASK-045 partial inactive header foundation: the complete goods_receipts header (0119) with its constraints, indexes and two immutable-history triggers, created through the existing 0114 ensureTriggers helper. No reader, lifecycle or inquiry wiring, UI, state or flag. Production keeps the unavailable receiptFacts composition and the hidden cancel/withdrawConfirmation actions. TASK-045 acceptance and P2 stay incomplete.",
+  "data": "No fixture rows and no new test data. Where a migration runner applies 0119 to a fresh schema it issues one CREATE TABLE IF NOT EXISTS, one information_schema trigger read and up to two CREATE TRIGGER statements, plus the unchanged runner ledger check and write. On replay the existing helper only checks the definitions.",
+  "concurrency": "Unchanged. Each existing migration path applies migrations sequentially on its own database.",
+  "repetitions": "Unchanged existing counts: once per database each existing path migrates. Computed external execution sites, by source at main 11c9a839: the ci.yml server-tests 'Apply database migrations' step (ci.yml:231–236) on each of the 8 shard databases; the server-capacity step (ci.yml:426–430) only where capacity runs, which is skipped without a grant; and the dynamic scratch paths that apply all migrations or those above 0088: fulfillmentQueue.integration.test.js:123–125, fulfillmentCreate.integration.test.js:94–96, test/fulfillment/p1Fixture.js:43–44, supplierScratchDatabase.js:47 (scripts/migrate.js), test-support/inventoryPurchaseFixtures.js:93 (fullSchema) and supplierMigrationAcceptance.integration.test.js:25,58–65. These also read the ledger and directory listing, and still match: inventoryWarehouseOperationsApi, inventoryTask025Api, inventoryStocktakeApi, UiApi, Safety and ExportRecovery. Excluded: salesFulfillmentFixtures.js:50 (<= 0088), and the client e2e p1.spec.js and supplier uatServer.mjs, which are outside routine server CI shards. To be re-enumerated at the actual candidate.",
+  "thresholds": "No new assertion or registration. Every existing assertion, coverage floor and gate is unchanged.",
+  "trigger": "One ordinary push to the existing crazysumsum/erp-app branch claude/purchasing-task045, one Draft PR and one functional CI run through the existing admission controller on the reviewed merge candidate. Stop and report after this run. No retry, merge, main push, capacity, new job or production migration. A later merge and its natural main-push CI require a separate explicit decision; preserve all existing gates.",
+  "cost": "Existing completed functional CI baseline: https://github.com/crazysumsum/erp-app/actions/runs/42751488035 attempt 1, merge SHA 18ffd8b34b71997a3dbac76d92fab530b4cc6c12. 20 jobs: 18 successful and 2 capacity jobs skipped; existing eight server shards. Run start to last completed job: 801 seconds (13m21s); run start to metadata updated_at: 802 seconds (13m22s). Sum of observed successful job intervals: 4,209 seconds (70.15 job-minutes), with parallel jobs; not elapsed wall time or billed/weighted runner charges. Billing is UNKNOWN. Incremental 0119 time and cost remain UNMEASURED; C5's 9.623-second private batch is not a CI estimate. No extra measurement run.",
+  "files": [
+    {
+      "path": "server/database/migrations/0119_create_goods_receipts.js",
+      "mode": "100644",
+      "blob": "597c6eb4dc1cb5ba2985e2e39025d215c7072563",
+      "kind": "support"
+    },
+    {
+      "path": "server/database/migrations/0114_create_purchasing_operation_requests.js",
+      "mode": "100644",
+      "blob": "a262c9b94f65a89bd3f4b2832df62c6f98ae0ffa",
+      "kind": "support"
+    },
+    {
+      "path": "docs/purchasing_receiving_management/implementation/P2_task045_gr_header.md",
+      "mode": "100644",
+      "blob": "1024b27afdd10621649a7f5b9b8d28722cb58125",
+      "kind": "support"
+    }
+  ]
+}
