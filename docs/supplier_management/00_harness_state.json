@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 537,
+  "revision": 538,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
-    "code_commit": "4ddad41ea96778ca48a1c6b5333923b6ccbd777d",
+    "code_commit": "bebed130140146c98635cd40e42fc17281bd3b16",
     "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112",
     "default_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
-    "mode_entry_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c"
+    "mode_entry_commit": "bebed130140146c98635cd40e42fc17281bd3b16"
   },
   "runtime": {
     "instance_id": "supplier-technical-20261112",
@@ -11261,6 +11261,14 @@
       "idempotency_key": "mode-change-535",
       "status": "CONFIRMED",
       "source_ref": "Sam 2026-11-12 ('改回一般測試', confirmed in the Supplier chat): back to TEST_AND_VERIFY (REPORT_ONLY) at main 11c9a839 after PR #354, for the three functional TECHNICAL suites via the profile argv"
+    },
+    {
+      "id": "MODE-CHANGE-538",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-538",
+      "status": "CONFIRMED",
+      "source_ref": "Sam 2026-11-12 in the Supplier chat ('批准兩項，寫 receipt'): IMPLEMENT to add the PR #356 evidence receipt only"
     }
   ],
   "evidence_files": [
@@ -12367,5 +12375,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TECHNICAL functional runs on 2026-11-12 at 4ddad41e (main 11c9a839 plus this ledger commit; product fingerprint 14f41e28 unchanged), local mysqld 127.0.0.1:3450, DB_INTEGRATION_TESTS=1, through the profile argv as Sam decided ('改回一般測試'): supplier-server-integration PASS 730/730 (0 skipped, 115 required cases PASS), supplier-security PASS 730/730 (0 skipped), supplier-bank-security PASS 142/142 (0 skipped, 19 required cases PASS); the 7 catalog capacity cases were excluded and are deferred to after UAT. The retired private batch-owner (proposal r1-r6) was not executed. Still open before Technical Acceptance: supplier-client-ui (profile --config rejected by the client test script since ce8821e8; separate admission-path proposal), TASK-051 group B (waits for Purchasing, Receiving and AP), formal UAT, capacity after UAT by main dispatch with a grant, TC-136 and sign-offs. These are local isolated results under HD-157; independent review of the evidence is still required. The 14 old-baseline approvals stay as recorded and were not re-affirmed."
+  "next_safe_action": "TECHNICAL functional runs on 2026-11-12 at 4ddad41e (main 11c9a839 plus this ledger commit; product fingerprint 14f41e28 unchanged), local mysqld 127.0.0.1:3450, DB_INTEGRATION_TESTS=1, through the profile argv as Sam decided ('改回一般測試'): supplier-server-integration PASS 730/730 (0 skipped, 115 required cases PASS), supplier-security PASS 730/730 (0 skipped), supplier-bank-security PASS 142/142 (0 skipped, 19 required cases PASS); the 7 catalog capacity cases were excluded and are deferred to after UAT. The retired private batch-owner (proposal r1-r6) was not executed. Still open before Technical Acceptance: supplier-client-ui (profile --config rejected by the client test script since ce8821e8; separate admission-path proposal), TASK-051 group B (waits for Purchasing, Receiving and AP), formal UAT, capacity after UAT by main dispatch with a grant, TC-136 and sign-offs. These are local isolated results under HD-157; independent review of the evidence is still required. The 14 old-baseline approvals stay as recorded and were not re-affirmed. 2026-11-12: PR #356 admission rejected 6 evidence inputs (three run.json and three stdout.log, run 43165266220). Sam approved a receipt for them ('批准兩項，寫 receipt'): IMPLEMENT for .github/test-admissions/supplier-technical-evidence-20261112.json only. Next: the trusted admission administrator registers its digest, then one push to #356 and one admitted functional CI; on failure stop and report. Back to TEST_AND_VERIFY in the next Supplier PR after the merge."
 }
