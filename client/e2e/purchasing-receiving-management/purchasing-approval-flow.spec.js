@@ -7,6 +7,8 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import mysql from "mysql2/promise";
+import { createApplication } from "../../../server/src/framework/application/createApplication.js";
+import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
 
 const serverDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../server");
 const run = Date.now().toString(36);
@@ -19,7 +21,7 @@ const users = Object.fromEntries(["U1", "U2", "U3"].map((k) => [k, {
 }]));
 const R = { R1: "E2E 開啟採購審批", R5: "E2E 撤回重交", R11: "E2E 拒絕測試" };
 
-let db;
+let db, app;
 const po = {};
 
 const createUser = (username, name, password) =>
@@ -40,7 +42,8 @@ test.beforeAll(async () => {
     await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)", [role.insertId, perms]);
     await db.execute("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username = ?", [role.insertId, users[key].username]);
   }
-  // Approval starts off, so U3's switch turns it on (also on a reused database).
+  // Approval starts off, so U3's switch turns it on (also on a reused database). Deliberate set-up write to the shared
+  // settings row: in CI this step runs after coverage and the shard identity record, on a per-job throwaway erp_dev.
   await db.execute("UPDATE purchasing_settings SET require_po_approval = 0 WHERE id = 1");
   const ins = async (table, row) => (await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId;
   await ins("suppliers", { supplier_code: supplierCode, supplier_code_key: supplierCode.toLowerCase(), supplier_name: `PW Supplier ${run}`,
@@ -50,9 +53,21 @@ test.beforeAll(async () => {
   const skuId = await ins("item_skus", { item_id: itemId, sku_code: skuCode, sku_name: `PW SKU ${run}`, status: "active", tracking_policy: "none",
     purchasable: 1, inventory_tracked: 1, min_receipt_life_days: null, created_at: now, updated_at: now });
   await ins("item_sku_uoms", { sku_id: skuId, uom_id: uomId, to_base_factor: 1, is_base: 1, created_at: now, updated_at: now });
+
+  // The real API in-process (fulfillment p1 style); its database settings come from DB_* through the default source.
+  const source = defaultConfigurationSource();
+  app = await createApplication({ configurationSource: { ...source,
+    application: { ...source.application, host: "127.0.0.1", port: Number(process.env.PURCHASING_TEST_API_PORT) },
+    security: { ...source.security, cors: { ...source.security.cors, allowedOrigins: `http://127.0.0.1:${process.env.PURCHASING_TEST_CLIENT_PORT}` } },
+    scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs, "sales.backorderAllocate": { enabled: false }, "sales.importWorker": { enabled: false },
+      "sales.quotationExpire": { enabled: false }, "sales.confirmationRecovery": { enabled: false } } } } });
+  await app.start();
 });
 
-test.afterAll(async () => { await db?.end(); });
+test.afterAll(async () => {
+  await app?.shutdown("purchasing_approval_browser_complete");
+  await db?.end();
+});
 
 /** A fresh context per actor; uncaught errors and console errors are collected. The expected 403s and the deliberately
  * aborted approve log only "Failed to load resource", which is excluded. */
