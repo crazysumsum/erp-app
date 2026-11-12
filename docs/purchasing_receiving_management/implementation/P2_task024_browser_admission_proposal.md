@@ -2,8 +2,10 @@
 
 **Status: proposal, no decision yet.** Sam decides. The receipt draft is
 `.github/test-admissions/purchasing-task024-approval-browser.json`. Its
-`decision` field says it is a draft. Nothing is wired into `ci.yml` before
-Sam decides.
+`decision` field is a conditional reference to Sam's future answer and
+approves nothing. The `ci.yml` wiring exists only on the local candidate
+branch (`ef6f4e59`, by the TL). It is not published or activated: nothing is
+pushed and no digest is registered before Sam decides.
 
 ## Business risk and coverage gap
 
@@ -58,15 +60,16 @@ The TL owns the `ci.yml` lines (TL 952e2aad, 20d0bf7a, 3004169d):
 - **Measured locally:** 14.3 s, 12.8 s and 13.0 s over 3 runs at `9c1680fb`.
   These runs used a private mysqld on an already-migrated database. The time
   excludes migrate and the Chromium install, which already happen in shard 1.
-- **Not measured in CI.** Shard 1's wall time rises by about that amount.
-  Whether shard 1 is on the critical path is not measured.
+- **Not measured in CI.** The increase to shard 1's wall time is unknown and
+  is not guaranteed to match the local figure. Whether shard 1 is on the
+  critical path is not measured either.
 - No new job, no new service and no capacity workload.
 
 ## Alternatives
 
 | Option | Effect |
 | --- | --- |
-| A. Admit as proposed (recommended) | The real approval path is gated per PR for about 13 s on one shard. |
+| A. Admit as proposed (recommended) | The real approval path is gated per PR on one shard. The cost was 12.8–14.3 s locally; the CI cost is not measured. |
 | B. Main pushes and the weekly schedule only | PRs are not gated. A regression is found after merge. |
 | C. Local only, like item-management's executable UAT | No CI cost. No gate; the result depends on someone running it. |
 
