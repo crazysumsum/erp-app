@@ -1,27 +1,28 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 534,
+  "revision": 535,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
-    "code_commit": "50d277bde8487448b5a5458df46e6af1c7c6c0a7",
+    "code_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
     "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-profile-capacity-skip",
-    "default_commit": "ca340c464e8414ad86025e22f28ab9a60a9914d6",
-    "mode_entry_commit": "095ead952065607a74430e808b50aaba0c9611a8"
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112",
+    "default_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
+    "mode_entry_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c"
   },
   "runtime": {
-    "instance_id": "supplier-profile-capacity-skip",
+    "instance_id": "supplier-technical-20261112",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-profile-capacity-skip (claude/supplier-profile-capacity-skip, cut from main 095ead95)"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112 (claude/supplier-technical-20261112, cut from main 11c9a839)",
+      "database": "private mysqld 26.7.0 on 127.0.0.1:3450, datadir /private/tmp/claude-501/sft2/data, DB erp_t51 migrated from empty to 0118"
     },
     "lease_ref": null
   },
@@ -8375,6 +8376,28 @@
       "source_ref": "Ordinary --no-ff merge with no conflict; parents 05b6440e and ca340c46. The branch diff and the main diff each match their pre-merge diffs exactly. Main changed only Purchasing paths: no Supplier document, receipt pin, Purchasing 03, capacity catalog or server/package.json.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-10T03:29:51Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-165/166 Supplier profile change (PR #354) merged to main",
+      "code_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
+      "spec_baseline": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+      "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
+      "status": "PASS",
+      "source_ref": "PR #354 merged as 11c9a8391a04c327e92f85db8d00ff4961d90e6c (head b2b272e293cd) at 2026-11-10T04:44:20Z with Sam's approval relayed by the PM (call_1e0da08d), after the code gate.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-12T03:55:40Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Main push CI after PR #354",
+      "code_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
+      "spec_baseline": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+      "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 42757748942 (push, head 11c9a839): completed/success, 17 jobs success, 3 skipped by design. Observed with gh run view on 2026-11-12.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-12T03:55:40Z"
     }
   ],
   "pending_decisions": [
@@ -11220,6 +11243,22 @@
       "idempotency_key": "mode-change-529",
       "status": "CONFIRMED",
       "source_ref": "HD-165 A: IMPLEMENT for the profile change and the receipt rebind only"
+    },
+    {
+      "id": "MERGE-PR-354",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#354",
+      "idempotency_key": "supplier-merge-pr-354",
+      "status": "CONFIRMED",
+      "source_ref": "Merged as 11c9a8391a04c327e92f85db8d00ff4961d90e6c."
+    },
+    {
+      "id": "MODE-CHANGE-535",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-535",
+      "status": "CONFIRMED",
+      "source_ref": "Sam 2026-11-12 ('改回一般測試', confirmed in the Supplier chat): back to TEST_AND_VERIFY (REPORT_ONLY) at main 11c9a839 after PR #354, for the three functional TECHNICAL suites via the profile argv"
     }
   ],
   "evidence_files": [
@@ -12323,5 +12362,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-166 A (Sam): max_skipped back to 0 and the boundary verification text corrected, applied byte-identical from the private proposal. Plan 53ba8970, receipt ac6e3073. Next: the PM's non-author reviewer re-reads the one corrected sentence and the applied commit. The trusted CI admission administrator registers ac6e3073 and reads it back; b9c3f100 stays registered and is not removed. Then one ordinary push to claude/supplier-profile-capacity-skip (PR #354, Draft) and one natural functional CI. On the first failure, stop and report; no retry. Merge is not approved: it needs the decision-maker's word and the code gate. After merge: back to TEST_AND_VERIFY. A formal TECHNICAL and REGRESSION run needs its own approval, with the full scale and a MySQL slot. Its reviewer applies the four checks in testing/06_task051_completion_boundary.md. Capacity (the 7 and supplier-performance) runs after UAT, by main dispatch with a grant. Downstream: Purchasing re-pins Supplier 03 and wires TASK-040 and TASK-032/033. Group B UAT waits for Purchasing, Receiving and AP. Order: the functional part of Technical Acceptance, then formal UAT, then capacity, then Technical Acceptance complete, TC-136 and sign-offs. Source: the PM's direction in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1). The 14 old-baseline approvals stay as recorded and were not re-affirmed."
+  "next_safe_action": "Back to TEST_AND_VERIFY (REPORT_ONLY) at main 11c9a839 after PR #354. Sam decided on 2026-11-12 ('改回一般測試', relayed by the TL and confirmed by Sam in the Supplier chat, session 486c4c60-92de-4122-b0e0-a68866140aa1): the private batch-owner/session-gate/hold mechanism (proposal r1-r6; r6 source-accepted by the TL, review r6/review.md 90d18dd9) is retired and is not executed. The three functional TECHNICAL suites supplier-server-integration, supplier-security and supplier-bank-security run locally through the profile argv on a private MySQL with DB_INTEGRATION_TESTS=1; min_tests 620/620/135, max_skipped 0; the 7 catalog capacity cases stay excluded and run after UAT. Results are run_check run.json evidence. Then: TASK-051 group B waits for Purchasing, Receiving and AP; formal UAT, then capacity after UAT by main dispatch with a grant; TC-136 and sign-offs. The 14 old-baseline approvals stay as recorded and were not re-affirmed."
 }
