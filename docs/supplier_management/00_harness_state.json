@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 539,
+  "revision": 541,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,21 +10,21 @@
   "current_task": "TASK-051",
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
-    "plan": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
-    "code_commit": "bebed130140146c98635cd40e42fc17281bd3b16",
-    "source_fingerprint": "14f41e2867d85d37eb9532eafc5739029c6b8f5926ecba6816ea7d7bf84f11be",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112",
-    "default_commit": "11c9a8391a04c327e92f85db8d00ff4961d90e6c",
+    "plan": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+    "code_commit": "6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32",
+    "source_fingerprint": "e10081e15a233427de461ea984704ea33c24d2ea2b94495c98f60c74844deb5e",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-client-ui-20261112",
+    "default_commit": "6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32",
     "mode_entry_commit": "bebed130140146c98635cd40e42fc17281bd3b16"
   },
   "runtime": {
-    "instance_id": "supplier-technical-20261112",
+    "instance_id": "supplier-client-ui-20261112",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-technical-20261112 (claude/supplier-technical-20261112, cut from main 11c9a839)",
-      "database": "private mysqld 26.7.0 on 127.0.0.1:3450, datadir /private/tmp/claude-501/sft2/data, DB erp_t51 migrated from empty to 0118",
-      "mysql-schema": "erp_t51, and the erp_t51_rh_*/erp_t51_mig_* (and test-created erp_restore_*/skr_*) scratch schemas the tests create and drop, on a throwaway mysqld 26.7.0 at 127.0.0.1:3450 (datadir /private/tmp/claude-501/sft2/data, --skip-log-bin); no production data; never erp_t51p",
-      "web-port": "ephemeral only: the Supplier server tests listen on 127.0.0.1 port 0; no fixed web port"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-client-ui-20261112 (claude/supplier-client-ui-20261112, cut from main 6bf4db87)",
+      "database": "none: the private mysqld at 127.0.0.1:3450 was shut down and released on 2026-11-12; the client-ui suites use jsdom only",
+      "mysql-schema": "none for this PR; a later formal server rerun needs a new private mysqld and erp_t51 only, never erp_t51p",
+      "web-port": "none: the client suites open no port"
     },
     "lease_ref": null
   },
@@ -3267,6 +3267,41 @@
         "HD-165",
         "HD-166",
         "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-CLIENTUI-B-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam's approval in the PM session (call_cb2041d1c4bd4425b8747c97b7046ed2, item 0), relayed to the Supplier agent by the PM over agentmsg (message bcfe9d61, 2026-11-12). Recorded as relayed: the Supplier agent did not see the PM session itself. Approved by name: final plan 3818ec73, receipts fda88da4 (supplier-task052-sku-refs.json) and 2f0537d1 (local-functional-entrypoints.json), one push to a Draft PR and one admitted functional CI run. It does not cover a merge, a formal profile run, UAT or capacity. Selections: supplier-client-ui 21 files / 208 tests (same as the removed config); supplier-phase-001-client keeps 17 files / 195 tests (TL ruling 6955bcd0). Origin: option B, Sam 2026-11-12 '批准兩項，寫 receipt' item 2 in the Supplier chat.",
+      "recorded_at": "2026-11-12T08:08:23Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+      "code_commit": "a9ceae9a0ff87db62f22bc5f327a7e7d14f2aac9",
+      "scope": [
+        "supplier-management",
+        "client-ui-option-B",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-CLIENTUI-B-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Sam's approval in the PM session (call_cb2041d1c4bd4425b8747c97b7046ed2, item 0), relayed to the Supplier agent by the PM over agentmsg (message bcfe9d61, 2026-11-12). Recorded as relayed: the Supplier agent did not see the PM session itself. Covers the one-off write outside allowed_write_paths: client/package.json, the test script's case arm only (admits --reporter=junit and --outputFile=*), for this PR alone. The TL agreed to that write (agentmsg ecad64b7: a one-off write scoped to the case arm and to this PR). The TL itself committed 5d10496d to .github/test-admissions/local-functional-entrypoints.json (pin-only refresh, agentmsg 937c9b2f); that is the TL's governance change, not a Supplier write.",
+      "recorded_at": "2026-11-12T08:08:23Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+      "code_commit": "a9ceae9a0ff87db62f22bc5f327a7e7d14f2aac9",
+      "scope": [
+        "supplier-management",
+        "client/package.json"
       ],
       "expires_at": null
     }
@@ -8400,6 +8435,28 @@
       "source_ref": "GitHub Actions run 42757748942 (push, head 11c9a839): completed/success, 17 jobs success, 3 skipped by design. Observed with gh run view on 2026-11-12.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-12T03:55:40Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Supplier TECHNICAL functional evidence (PR #356) merged to main",
+      "code_commit": "6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32",
+      "spec_baseline": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+      "source_fingerprint": "e10081e15a233427de461ea984704ea33c24d2ea2b94495c98f60c74844deb5e",
+      "status": "PASS",
+      "source_ref": "PR #356 merged as 6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32 (head b991868407fc, base 11c9a839) at 2026-11-12T07:34:29Z by the PM after its code gate, with Sam's approval given in the PM session (call_94d7de7639d844f398032fc2495046ff item 0), relayed by agentmsg f2116a66. I checked the merge parents through the GitHub API (11c9a839, b9918684). The separate-agent review (sha256 5ce9ac22…f177) was CHANGES_REQUIRED with no blocker; Sam chose option A in the Supplier chat ('照 A 做'): H-1 disclosed in the PR body, no further push, and the ledger corrections M-1, M-2, L-1 and L-2 deferred to this commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-12T07:49:14Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Main push CI after PR #356",
+      "code_commit": "6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32",
+      "spec_baseline": "53ba8970f6adec933457717a5c29098a26978ecad2f301798385997d80795847",
+      "source_fingerprint": "e10081e15a233427de461ea984704ea33c24d2ea2b94495c98f60c74844deb5e",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 43176267041 (push, head 6bf4db87, attempt 1): completed/success, 17 jobs success, 3 skipped by design (Related server capacity, Related client capacity, publish-admitted-result). Observed with gh run view on 2026-11-12. Not rerun.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-12T07:49:14Z"
     }
   ],
   "pending_decisions": [
@@ -11269,6 +11326,14 @@
       "idempotency_key": "mode-change-538",
       "status": "CONFIRMED",
       "source_ref": "Sam 2026-11-12 in the Supplier chat ('批准兩項，寫 receipt'): IMPLEMENT to add the PR #356 evidence receipt only"
+    },
+    {
+      "id": "MERGE-PR-356",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#356",
+      "idempotency_key": "supplier-merge-pr-356",
+      "status": "CONFIRMED",
+      "source_ref": "Merged by the PM as 6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32."
     }
   ],
   "evidence_files": [
@@ -12375,5 +12440,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TECHNICAL functional runs on 2026-11-12 at 4ddad41e (main 11c9a839 plus this ledger commit; product fingerprint 14f41e28 unchanged), local mysqld 127.0.0.1:3450, DB_INTEGRATION_TESTS=1, through the profile argv as Sam decided ('改回一般測試'): supplier-server-integration PASS 730/730 (0 skipped, 115 required cases PASS), supplier-security PASS 730/730 (0 skipped), supplier-bank-security PASS 142/142 (0 skipped, 19 required cases PASS); the 7 catalog capacity cases were excluded and are deferred to after UAT. The retired private batch-owner (proposal r1-r6) was not executed. Still open before Technical Acceptance: supplier-client-ui (profile --config rejected by the client test script since ce8821e8; separate admission-path proposal), TASK-051 group B (waits for Purchasing, Receiving and AP), formal UAT, capacity after UAT by main dispatch with a grant, TC-136 and sign-offs. These are local isolated results under HD-157; independent review of the evidence is still required. The 14 old-baseline approvals stay as recorded and were not re-affirmed. 2026-11-12: PR #356 admission rejected 6 evidence inputs (three run.json and three stdout.log, run 43165266220). Sam approved a receipt for them ('批准兩項，寫 receipt'): IMPLEMENT only to rebind the existing receipt .github/test-admissions/supplier-task052-sku-refs.json with six support pins (the module scope allows only that receipt path). Next: the trusted admission administrator registers its digest, then one push to #356 and one admitted functional CI; on failure stop and report. Back to TEST_AND_VERIFY in the next Supplier PR after the merge."
+  "next_safe_action": "2026-11-12, PR #356 merged (6bf4db87) and main CI 43176267041 passed. What PR #356 proved: three TECHNICAL functional runs at 4ddad41e, harness source fingerprint 14f41e28 (the tested tree, not HEAD): supplier-server-integration 730/730 (90/90 required cases; 115 TC IDs observed), supplier-security 730/730 (10/10 required), supplier-bank-security 142/142 (15/15 required; 19 observed), 0 skipped, capacity excluded. Gate gap (review H-1): the receipt rebind in b9918684 moved the fingerprint to e10081e1, so verify_gate TECHNICAL_ACCEPTANCE does not accept these runs at HEAD (16 REQUIRED_RUN_MISSING). TL decision (agentmsg 79082fb7, narrowed in e4aaddbd): fix the evidence false positive in .github/scripts/test-admission.mjs (author chosen by the PM; needs its own receipt, Sam's decision and a new policy digest). After that merges, rerun the three suites locally on the final candidate (ask Sam first) and prove acceptance with verify_gate; do not assume it. Still open before Technical Acceptance: TECHNICAL supplier-client-ui (this PR), supplier-resilience, supplier-recovery, supplier-release-operations and supplier-performance (performance only after UAT); the whole REGRESSION stage (8 suites); TASK-051 group B (waits for Purchasing, Receiving and AP); formal UAT; capacity after UAT by main dispatch with a grant; TC-136 and sign-offs. The 14 old-baseline approvals stay as recorded. Now: IMPLEMENT for client-ui option B only (Sam 2026-11-12 '批准兩項，寫 receipt' item 2; TL SCOPE for client/package.json, agentmsg ecad64b7): the test case arm admits only --reporter=junit and --outputFile=*, both client suites' argv use that pair plus path filters, and client/test/supplier-management.vitest.config.js is removed. Done: the TL accepted the candidate (937c9b2f, 4d30aee4); final plan 3818ec73 and receipts fda88da4 and 2f0537d1 approved by Sam (APPROVAL-CLIENTUI-B-PLAN, -SCOPE). Next: the trusted administrator registers the two digests and I read them back; then one push to a Draft PR in the PM's window and one admitted functional CI run; on any drift or failure stop and report, no retry. Merge, the formal supplier-client-ui run, UAT and capacity are separate decisions. Back to TEST_AND_VERIFY in the next Supplier PR after this one merges."
 }
