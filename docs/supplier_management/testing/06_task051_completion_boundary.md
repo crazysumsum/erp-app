@@ -46,11 +46,11 @@ TASK-051 (T51: deployment, smoke, regression and Release Gate) is **not complete
 | UAT-005; UAT-050 (referenced-identifier step) | A transaction that references the Supplier or identifier | The rest of UAT-050 passes | Purchasing / Receiving / AP owners | A reference checker provider is installed (HD-131 A) |
 | UAT-016, UAT-024, UAT-029 (Buyer steps) | Purchasing's Supplier selector | Supplier steps pass (suspend; activate without term; activate without bank) | Purchasing owner | The Purchasing selector UI ships (HD-124 A) |
 | UAT-032, UAT-033, UAT-034 | Buyer selector ranking and status refusal | 033: preferred relation added. 034: that Supplier suspended. 032: no Supplier step | Purchasing owner | Same as above |
-| UAT-035 | A completed purchase creating a soft relation | none possible | Purchasing / Receiving owners | PO and receipt flow, with the supply-event call |
+| UAT-035 | A completed purchase creating a soft relation | none possible | Purchasing / Receiving owners | PO and receipt flow, with the supply-event call: Purchasing TASK-040 injects `verifySource` into its own `SupplierRelationService` instance; until then `recordSupply` answers 503 `SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE` |
 | UAT-036 | Old PO keeps its Currency and Term snapshot | Defaults changed with a reason | Purchasing owner | PO snapshot exists |
 | UAT-051 (open-matter and new-transaction steps) | Open matters and new transactions | Block steps pass | Purchasing / AP owners | Open-flow provider installed (HD-131 A) |
 | UAT-053 (referenced Bank account) | A payment flow that references the account | Add, edit, default and deactivate pass | AP / payment owner | Payment references exist |
-| Purchasing's pin of the Supplier design | Purchasing's manifest pinned `e49ac37d`, Supplier's 03 as of main `6d84ee45`, by 2026-11-06. TASK-052 moves 03 again | — | Purchasing owner | Purchasing re-pins once after TASK-052 merges; raised as [#294](https://github.com/crazysumsum/erp-app/issues/294) |
+| Purchasing's pin of the Supplier design | Purchasing's manifest pinned `e49ac37d`, Supplier's 03 as of main `6d84ee45`, by 2026-11-06. TASK-052 (`findSkuRefsInTransaction`) merged in PR #350 (`2cf4d258`, 2026-11-10) and moved 03 | — | Purchasing owner | Purchasing re-pins once; no longer waiting on Supplier; raised as [#294](https://github.com/crazysumsum/erp-app/issues/294) |
 
 These cases keep their original assertions. They are not re-run while the dependency is unchanged, and no fixture, skip or exception stands in for them.
 
@@ -66,13 +66,44 @@ These cases keep their original assertions. They are not re-run while the depend
 | Rollback across 0103 in production | TC-006 (production) | The production rehearsal is waived by HD-157; the local rehearsal stands. Still open: a rollback to a release before 0103 needs a maintenance window and the three statements in 0103's header (rehearsed locally in A). The order users set is lost. Rolling forward renumbers the rows in display order. The runbook must say so, and the loss must be accepted. | Operations (runbook), Product Owner (accept the loss) | `operations.md` written; release review |
 | Production-like UI smoke (T51 Verification 3) | — | Waived by HD-157 (2026-10-30): no production-like re-test; the local result stands. The local UAT runs in A covered these flows on the developer stack. | — | Done (HD-157) |
 | T51 deliverables (T51 AC 1, AC 3) | — | Drafts exist: `operations.md` (runbook, rollback boundary, Bank key dependency), `release_evidence.md` (sign-off sheet), and `smokeSupplierManagement.js` (HD-148 B: `check` read-only on the deployed environment, `copy` write smoke on a restored copy; rehearsed locally only). The profile has `supplier-deployment-check` and `supplier-deployment-copy` since HD-149 A (12d52ff3); a formal run of them in the isolated environment is a local rehearsal only. Remaining: Operations' review of the drafts. Running both smoke modes on a production-like environment is waived by HD-157; the local rehearsal stands. | Supplier (drafts); Operations (review and runs) | Before release sign-off |
-| Harness formal evidence (T51 AC 2, formal part) | all suites | Formal `run_check` at TECHNICAL and REGRESSION ran on 2026-10-28 and 2026-10-29 (`07_technical_acceptance_report.md`). HD-157 moves the plan baseline, so that evidence is stale: a fresh formal run on the HD-157 baseline is open. | Supplier | After the HD-157 merge |
+| Harness formal evidence (T51 AC 2, formal part) | all suites | Formal `run_check` at TECHNICAL and REGRESSION ran on 2026-10-28 and 2026-10-29 (`07_technical_acceptance_report.md`). HD-157 moves the plan baseline, so that evidence is stale: a fresh formal run on the HD-157 baseline is open. Since then the HD-164 baselines (TASK-052, TC-137) and HD-165 (below) moved it again. The run needs the current plan approved and a local MySQL slot from the PM. `supplier-performance` waits until after UAT. | Supplier | HD-165 merged, plan approved, DB slot |
 | Consumed-contract pins (HD-147 B) | — | Refreshed under HD-149 A (12d52ff3): Item added DES-022, a Receiving provider; Purchasing changed its Inventory reversal provider. Neither touches a contract Supplier consumes (REV-130). The approvals were re-recorded on the new baselines. | Supplier | Done on merge of the baseline refresh PR |
 | Release gate | TC-136 | `verify_gate` over the candidate's CI and suite evidence, open P0/P1 cases and defects, and the Product Owner's GO | Product Owner, QA | All of the above |
 | Business UAT | UAT-001…UAT-055 | Execution by the business roles; 07's Status stays NOT_RUN until then. Automation PASS is not business acceptance. | BA / Product Owner | Formal UAT window |
 | Sign-offs and release approval (T51 AC 4) | — | BA/Product Owner, Technical Lead, QA, Security and Operations; a separate release approval | Those roles | After everything above |
 | 07 amendments | UAT-037, 038, 043, 044, 046, 047, 055 | Done: HD-145 A and HD-146 A under HD-149 A; REV-130 N3 and N6, and UAT-044's 3 s for SKU selection, under HD-157 (2026-10-30). | — | Done |
 | Deferred defects (risk-approved, HD-116) | DEF-004, 007, 008, 012, 013, 014, 015, 016, 017, 018, 019, 023 | Accept or close at release | Product Owner | Release review |
+
+## HD-165 — capacity cases deferred from the formal functional suites (2026-11-10)
+
+`supplier-server-integration` and `supplier-security` run every `test/supplier*.test.js` and `test/integration/supplier*.integration.test.js`. Seven cases in those files are listed in the CI capacity catalog (`.github/scripts/capacity-cases.mjs`). AGENTS.md defers capacity until after UAT. As written, a formal run would execute them.
+
+The Product Owner chose option A on 2026-11-10 ('A，照建議改 profile'):
+- Both suites now run through `npm test` in `server/`. That script adds `--test-skip-pattern` from `capacity-runner.mjs server-pattern`, the same exclusion CI uses.
+- `max_skipped` stays 0 in both suites. Every other value is unchanged as well: 90 and 10 required IDs, `min_tests` 620, and the coverage floors. Node 26 leaves a test that matches `--test-skip-pattern` out of the report entirely. It is not counted as skipped, and the junit `tests` total drops. So the exclusion needs no skip allowance, and any skip in the run still fails it. HD-165 first set `max_skipped` to 7 on the wrong assumption that the seven would be reported as skipped. That value would have let seven other cases skip, so it was put back to 0 before merge.
+- No case is deleted and no assertion changes. The seven cases run after UAT, on main, by explicit dispatch with a grant (`docs/ci-capacity-routing.md`). Owner: Supplier.
+
+| Capacity ID | File | Case |
+| --- | --- | --- |
+| audit-16 | `integration/supplierDuplicateCandidates.integration.test.js` | TASK-050 (HD-084): the bounded search returns what comparing every Supplier would, among names full of common grams |
+| audit-17 | `integration/supplierImport.integration.test.js` | TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes precheck against 2,000 Suppliers well inside the job timeout |
+| audit-18 | `integration/supplierImport.integration.test.js` | TASK-045 (HD-048 3): each row, job lock included, finishes far inside DB_TRANSACTION_TIMEOUT_MS |
+| audit-19 | `integration/supplierSimilarNameReport.integration.test.js` | HD-057 A: thousands of identical or near-identical names finish with bounded output |
+| audit-20 | `integration/supplierSkuRelations.integration.test.js` | TASK-038 (REV-086 M-1): creates and first projections above the pool size all succeed |
+| audit-27 | `supplierCsvSchema.test.js` | a file of 10 MB of commas is refused quickly at upload and at precheck (REV-066 M-1) |
+| audit-28 | `supplierCsvSchema.test.js` | precheck lets the event loop run while it parses a large file (REV-067 L-1) |
+
+Limits and how a formal run shows the exclusion:
+- Mechanical. The harness rejects duplicate runner names. A TC/UAT ID may map to several cases, so each required ID is judged on its aggregate result, which takes the worst status of its cases and must be PASS. The run needs at least 620 executed tests, counting passed plus failed. Reported skipped, not-run and failed counts must all be 0 (`max_skipped: 0`). `npm test` itself fails closed: `capacity-runner.mjs server-pattern` validates the catalog, and the script refuses an empty pattern.
+- By review, because the harness cannot check this mapping. Whoever reviews the run checks four things together; any one alone is not enough:
+  - the run's junit reports `skipped 0`;
+  - none of the seven names below appears as a testcase in the junit;
+  - at the run's commit, the pattern that `node .github/scripts/capacity-runner.mjs server-pattern` prints contains each of the seven names. `npm test` does not echo the expanded pattern, so the run's own log cannot show it;
+  - the catalog at the run's commit still lists exactly these seven entries for the two globs.
+- The evidence does not prove that a case missing from the junit was excluded by the pattern and not lost some other way. The four checks together narrow this down; a full proof would need a per-test inventory, which the harness does not produce.
+- If the catalog gains or loses a Supplier case, this table changes with it. `max_skipped` stays 0.
+- T51 AC 2's "skip fails the Gate" stands with no exception. The seven are excluded, not skipped.
+- Order, per the PM's direction relayed in the Supplier chat on 2026-11-10 (session 486c4c60-92de-4122-b0e0-a68866140aa1): capacity stays after the relevant UAT and is not run earlier because the formal flow lists `supplier-performance` first; unrun items keep their real state and are never marked PASS. So the functional part of Technical Acceptance (the formal TECHNICAL and REGRESSION run without capacity) comes first, then formal UAT. These seven cases and `supplier-performance` run after UAT, and Technical Acceptance and TC-136 are complete only after that.
 
 ## DEF-034 — OPEN (LOW)
 
