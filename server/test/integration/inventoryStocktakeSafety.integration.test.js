@@ -99,7 +99,7 @@ async function native(operation, input) {
   const [family, method] = operation.split(":");
   const service = family === "stocktake" ? new InventoryStocktakeService(options()) : family === "transfer" ? new InventoryTransferService(options()) : new InventoryPostingService(options());
   const proof = ["post", "cancel", "postAdjustment", "postStatusTransfer", "reverseMovement"].includes(method.replace(/InTransaction$/u, "")) ? await nativeProof(input) : undefined;
-  return method.endsWith("InTransaction") ? db.withTransaction(tx => service[method](tx, input, proof)) : service[method](input, proof);
+  return method.endsWith("InTransaction") ? db.withTransaction(tx => service[method](tx, input, proof),method==="postFulfillmentIssueInTransaction"?{eventAdmissionId:input.source.eventId}:{}) : service[method](input, proof);
 }
 async function snapshot(includeAudit = true) {
   const state = {}; for (const table of [...tables, ...(includeAudit ? ["inventory_audit_logs"] : [])]) state[table] = (await db.query(`SELECT * FROM ${table} ORDER BY id`))[0];
@@ -230,7 +230,8 @@ async function processJob(operation, input, checkpoint, keepAlive = false) {
   child.on("error", error => { entry.failure = error; }); child.on("exit", (code, signal) => { entry.exit = { code, signal }; });
   entry.message = async type => { let found; await waitFor(() => { found = entry.messages.find(message => message.type === type); if (!found && (entry.exit || entry.failure)) assert.fail(`owned child ended before ${type}: ${entry.failure?.code ?? entry.exit?.code}`); return found; }, `owned child did not reach ${type}`); return found; };
   await entry.message("ready"); assert.ok(child.pid > 1 && child.pid !== process.pid);
-  entry.workSent = true; child.send({ type: "run", operation, input, checkpoint, keepAlive });
+  entry.workSent = true; child.send({ type: "run", operation, input, checkpoint, keepAlive,
+    ...(operation==="writer:postFulfillmentIssueInTransaction"?{transactionConfig:{queryTimeoutMs:db.config.queryTimeoutMs,transactionTimeoutMs:db.config.transactionTimeoutMs,acquireTimeoutMs:db.config.acquireTimeoutMs}}:{}) });
   return entry;
 }
 async function finish(entry) {
@@ -366,7 +367,7 @@ integrationTest("ST041-S04 ordinary and Fulfillment Issue entrypoints reach the 
   for (const frozen of [false, true]) for (const method of ["postIssue", "postIssueInTransaction", "postFulfillmentIssueInTransaction"]) {
     const w = await makeWriter("issue"), control = await makeWriter("issue");
     const adapt = input => method !== "postFulfillmentIssueInTransaction" ? input : { actor: { userId: fulfillment.id, serviceName: "", claimedRoles: [fulfillment.role], claimedPermissions: fulfillment.permissions }, source: { documentId: randomUUID(), lineId: "1", eventId: randomUUID() }, correlationId: input.correlationId, payload: input.payload };
-    const run = input => method === "postIssue" ? native("writer:postIssue", adapt(input)) : db.withTransaction(tx => new InventoryPostingService(options())[method](tx, adapt(input)));
+    const run = input => { const body=adapt(input);return method === "postIssue" ? native("writer:postIssue", body) : db.withTransaction(tx => new InventoryPostingService(options())[method](tx, body),method==="postFulfillmentIssueInTransaction"?{eventAdmissionId:body.source.eventId}:{}); };
     assert.ok((await run(control.input)).operationId); await lockWriter(w, frozen); await rejected(() => run(w.input));
     observations.push({ kind: "realInternalAlias", method, permission: method === "postFulfillmentIssueInTransaction" ? "fulfillment.operation" : "inventory.operation", frozen });
   }

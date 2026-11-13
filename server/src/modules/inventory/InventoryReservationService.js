@@ -4,7 +4,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
-import { InventoryOperationService, inventoryOperationHash } from "./InventoryOperationService.js";
+import { InventoryOperationService, inventoryOperationHash, inventoryEventAdmissionOptions } from "./InventoryOperationService.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
 import { loadInventoryCandidates, recommendInventoryCandidates } from "./InventoryPickSequenceService.js";
 import { inventoryError } from "./inventoryErrors.js";
@@ -197,7 +197,7 @@ export class InventoryReservationService {
     this.authorizeSalesBackorder = authorizeSalesBackorder;
     this.authorizeSalesIntake = authorizeSalesIntake;
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
-    this.operations = operations ?? new InventoryOperationService();
+    this.operations = operations ?? new InventoryOperationService({ database });
     this.locks = locks ?? new InventoryLockService();
     this.fulfillment = fulfillment ?? new InventoryFulfillmentService({database,logger,time,itemLookup:this.itemLookup,audit:this.audit,operations:this.operations,locks:this.locks});
   }
@@ -567,7 +567,7 @@ export class InventoryReservationService {
   }
 
   create(command) {
-    return this.database.withTransaction((transaction) => this.createInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.createInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   createInTransaction(transaction, command) {
@@ -692,7 +692,7 @@ export class InventoryReservationService {
   }
 
   release(command) {
-    return this.database.withTransaction((transaction) => this.releaseInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.releaseInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   releaseInTransaction(transaction, command) {
@@ -706,7 +706,7 @@ export class InventoryReservationService {
   }
 
   cancel(command) {
-    return this.database.withTransaction((transaction) => this.cancelInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.cancelInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   cancelInTransaction(transaction, command) {
@@ -800,11 +800,11 @@ export class InventoryReservationService {
   }
 
   allocate(command) {
-    return this.database.withTransaction((transaction) => this.allocateInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.allocateInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   releaseAllocation(command) {
-    return this.database.withTransaction((transaction) => this.releaseAllocationInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.releaseAllocationInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   releaseAllocationInTransaction(transaction, command) {
@@ -1199,7 +1199,7 @@ export class InventoryReservationService {
   }
 
   reallocateAllocation(command) {
-    return this.database.withTransaction((transaction) => this.reallocateAllocationInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.reallocateAllocationInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   reallocateAllocationInTransaction(transaction, command) {

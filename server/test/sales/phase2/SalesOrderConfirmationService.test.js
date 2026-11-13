@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { SalesOrderConfirmationService } from "../../../src/modules/sales/SalesOrderConfirmationService.js";
+import { salesMemoryDatabase } from "../phase1/fixtures.js";
 
 const claims = { actorId: 7, claimedRoles: ["sales"], claimedPermissions: ["sales.mgmt", "sales.view"] };
 function fixture({ status = "DRAFT", auditFailure = false, revoked = false } = {}) {
@@ -32,7 +33,8 @@ function fixture({ status = "DRAFT", auditFailure = false, revoked = false } = {
       throw new Error("Unexpected fixture write");
     }
   };
-  const database = { async withTransaction(work) { const before = structuredClone(state); try { return await work(tx); } catch (e) { state = before; throw e; } } };
+  let before;
+  const database = salesMemoryDatabase({...tx,beginTransaction(){before=structuredClone(state);},rollback(){state=before;}});
   const service = () => new SalesOrderConfirmationService({ database, time: { nowMs: () => 1 } });
   return { service, revoke() { revoked = true; }, state: () => state, request: () => ({ claims, id: 1, input: { eventId: randomUUID(), version: 1 } }) };
 }
@@ -76,6 +78,6 @@ test("TC-030 Phase A rechecks permissions before replay and rolls back required 
   await assert.rejects(() => replay.service().startConfirmation(request), { code: "PERMISSION_STALE" });
   assert.equal(replay.state().intents.length, 1); assert.equal(replay.state().order.version, 2);
   const failing = fixture({ auditFailure: true });
-  await assert.rejects(() => failing.service().startConfirmation(failing.request()), /Required audit unavailable/u);
+  await assert.rejects(() => failing.service().startConfirmation(failing.request()), error=>error.cause?.message==="Required audit unavailable");
   assert.equal(failing.state().intents.length, 0); assert.equal(failing.state().history.length, 0); assert.equal(failing.state().order.status, "DRAFT");
 });

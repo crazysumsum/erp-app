@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { migrationFixture } from "../sales/phase1/fixtures.js";
+import { migrationFixture,enterSalesFixtureRequests } from "../sales/phase1/fixtures.js";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { up as sequenceUp } from "../../database/migrations/0068_create_sales_document_sequences.js";
@@ -18,14 +18,19 @@ async function setup(t) {
   await sequenceUp(f.scoped); await operationUp(f.scoped); await auditUp(f.scoped); await quotationUp(f.scoped);
   const source = defaultConfigurationSource();
   const app = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
-  t.after(() => app.shutdown("sales_sequence_operation_complete"));
   const database = app.services.require("mysqldatabase"), time = app.services.require("time");
-  const sequence = new SalesSequenceService({ time }), operations = new SalesOperationService(), audit = new SalesAuditService();
-  const scope = tx => Object.fromEntries(["query", "execute"].map(method => [method, (sql, args = []) => {
-    for (const [name, mapped] of Object.entries(f.names)) sql = sql.replace(new RegExp(`\\b${name}\\b`, "gu"), mapped);
-    return tx[method](sql, args);
-  }]));
-  const run = work => operations.run(database, tx => work(scope(tx)));
+  const restoreEntry=enterSalesFixtureRequests(database);
+  t.after(async()=>{restoreEntry();await app.shutdown("sales_sequence_operation_complete");});
+  const sequence = new SalesSequenceService({ time }), operations = new SalesOperationService({database}), audit = new SalesAuditService();
+  const scope = async(tx,work) => {
+    const originals=Object.fromEntries(["query","execute"].map(method=>[method,tx[method]]));
+    for(const method of Object.keys(originals))tx[method]=function(sql,args=[],options){
+      for(const [name,mapped] of Object.entries(f.names))sql=sql.replace(new RegExp(`\\b${name}\\b`,"gu"),mapped);
+      return originals[method].call(this,sql,args,options);
+    };
+    try{return await work(tx);}finally{Object.assign(tx,originals);}
+  };
+  const run = (work,options) => operations.run(database, tx => scope(tx,work),options);
   const username = `sales-p1-${randomUUID().slice(0, 8)}`;
   const userId = await f.insert("users", { username, password_hash: "test-only", display_name: "Sales native probe", created_at: f.now, updated_at: f.now });
   return { ...f, sequence, operations, audit, database, scope, run, actor: { id: userId, username } };
@@ -67,18 +72,29 @@ integrationTest("TC-013 Sales sequence rolls back allocations and fails closed a
 integrationTest("Sales operation service races one event, replays one durable result and rejects changed intent/owner", async t => {
   const f = await setup(t);
   const request = { eventId: randomUUID(), commandType: "CREATE_QUOTATION", payload: { customerId: f.customerId }, actor: f.actor, nowMs: f.now };
-  const execute = () => f.run(async tx => {
+  const reached=Promise.withResolvers(),release=Promise.withResolvers();let attempts=0,callbacks=0;
+  const execute = hold => {attempts++;return f.run(async tx => {
+    callbacks++;
     const claim = await f.operations.claim(tx, request);
     if (claim.replay) return claim.replay;
+    if(hold){reached.resolve();await release.promise;}
     const number = await f.sequence.nextNumberInTransaction(tx, { documentType: "QUOTATION", nowMs: f.now });
     const result = await insertQuotation(tx, f, number);
     await f.operations.succeed(tx, { operationId: claim.operationId, result, nowMs: f.now });
     return result;
-  });
-  const results = await Promise.all([execute(), execute()]);
+  },{eventAdmissionId:request.eventId});};
+  const first=execute(true),settled=Promise.allSettled([first]);let won;
+  try{
+    await Promise.race([reached.promise,first.then(()=>assert.fail("winner did not reach its owned gate"))]);
+    await assert.rejects(execute(false),{code:"DATABASE_EVENT_ADMISSION_UNAVAILABLE",statusCode:503});
+    assert.equal(callbacks,1,"Contending caller never entered BEGIN callback");
+    assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${f.names.sales_quotations}`))[0][0].n,0);
+  }finally{release.resolve();[won]=await settled;}
+  if(won.status==="rejected")throw won.reason;
+  const results=[won.value,await execute(false)];assert.equal(attempts,3);assert.equal(callbacks,2);
   assert.deepEqual(results[0], results[1]);
   assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${f.names.sales_quotations}`))[0][0].n, 1);
-  await assert.rejects(() => f.run(tx => f.operations.claim(tx, { ...request, payload: { customerId: f.customerId + 1 } })), { code: "SALES_EVENT_CONFLICT" });
+  await assert.rejects(() => f.run(tx => f.operations.claim(tx, { ...request, payload: { customerId: f.customerId + 1 } }),{eventAdmissionId:request.eventId}), { code: "SALES_EVENT_CONFLICT" });
   assert.equal(await f.run(tx => f.operations.getForActor(tx, { eventId: request.eventId, actor: { ...f.actor, id: f.actor.id + 1 } })), null);
   assert.deepEqual((await f.run(tx => f.operations.getForActor(tx, request))).result, results[0]);
 });
@@ -93,15 +109,15 @@ integrationTest("Sales unknown commit outcome is resolved by original event with
     await f.operations.succeed(tx, { operationId: claim.operationId, result, nowMs: f.now });
     return result;
   };
-  const ackLost = { async withTransaction(callback) {
-    await f.database.withTransaction(tx => callback(f.scope(tx)));
+  const ackLost = { async withTransaction(callback,options) {
+    await f.database.withTransaction(tx => f.scope(tx,callback),options);
     // Real COMMIT precedes a synthetic lost acknowledgment; this is not a mocked database effect.
     throw Object.assign(new Error("probe lost commit acknowledgment"), { code: "DATABASE_TRANSACTION_INDETERMINATE" });
   } };
-  await assert.rejects(() => f.operations.run(ackLost, work), { code: "TRANSACTION_OUTCOME_UNKNOWN" });
+  await assert.rejects(() => f.operations.run(ackLost, work,{eventAdmissionId:eventId}), { code: "TRANSACTION_OUTCOME_UNKNOWN" });
   const fact = await f.run(tx => f.operations.getForActor(tx, request));
   assert.equal(fact.status, "SUCCEEDED");
-  assert.deepEqual(await f.run(work), fact.result);
+  assert.deepEqual(await f.run(work,{eventAdmissionId:eventId}), fact.result);
   assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${f.names.sales_quotations}`))[0][0].n, 1);
 });
 
@@ -115,6 +131,6 @@ integrationTest("Sales required Audit failure rolls back document, operation and
     await f.audit.record(tx, { ...request, action: "sales_quotation.created", targetId: result.id, targetNumber: result.number,
       details: { version: 1, lineCount: 1, totalAmount: "0.0000", currencyCode: f.currency } });
     await f.operations.succeed(tx, { operationId: claim.operationId, result, nowMs: f.now });
-  }), error => error.cause?.code === "ER_SIGNAL_EXCEPTION");
+  },{eventAdmissionId:request.eventId}), error => error.cause?.code === "ER_SIGNAL_EXCEPTION");
   for (const table of Object.values(f.names)) assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n, 0);
 });

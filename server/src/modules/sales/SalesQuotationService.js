@@ -91,7 +91,7 @@ export class SalesQuotationService {
     this.customers = customerProvider ?? new CustomerLookupService({ database });
     this.items = itemProvider ?? new ItemLookupService({ database, time, logger });
     this.businessMaster = businessMaster ?? new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
-    this.sequence = new SalesSequenceService({ time }); this.operations = new SalesOperationService(); this.audit = audit ?? new SalesAuditService();
+    this.sequence = new SalesSequenceService({ time }); this.operations = new SalesOperationService({database}); this.audit = audit ?? new SalesAuditService();
   }
   authorizeWrite(claims) { return this.database.withTransaction(tx => requireSalesWriteActor(tx, claims)).then(() => true); }
   create(request) { return this.#save(request, false); }
@@ -211,7 +211,7 @@ export class SalesQuotationService {
         reason: command.reason ?? "", details: { fromStatus: before.status, toStatus: status, version: result.version } });
       await this.operations.succeed(tx, { operationId: claim.operationId, result, nowMs });
       return { quotation: await this.#detail(tx, id), operation: result, warnings: [] };
-    });
+    },{eventAdmissionId:command.eventId});
   }
 
   async #conversion(tx, id, lock = true) {
@@ -282,7 +282,7 @@ export class SalesQuotationService {
       await this.operations.succeed(tx, { operationId: claim.operationId, result, nowMs });
       if (document.currencyCode !== prepared.customer.defaultCurrencyCode) warnings.push({ code: "CUSTOMER_CURRENCY_DIFFERENT", field: "currencyCode" });
       return { quotation: await this.#detail(tx, id), salesOrder: result, differenceSummary: difference, operation: result, warnings };
-    });
+    },{eventAdmissionId:eventId});
   }
 
   async #save({ claims, input, id, trace = {} }, update) {
@@ -332,7 +332,7 @@ export class SalesQuotationService {
       await this.operations.succeed(tx, { operationId: claim.operationId, result, nowMs });
       if (document.currencyCode !== prepared.customer.defaultCurrencyCode) warnings.push({ code: "CUSTOMER_CURRENCY_DIFFERENT", field: "currencyCode" });
       return { quotation: await this.#detail(tx, id), operation: result, warnings };
-    });
+    },{eventAdmissionId:input?.eventId});
   }
 
 

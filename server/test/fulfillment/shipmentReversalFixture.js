@@ -10,6 +10,8 @@ import { ShipmentReversalService } from "../../src/modules/fulfillment/ShipmentR
 import { salesFulfillmentIntentHash } from "../../src/modules/sales/SalesFulfillmentService.js";
 import { salesPayloadHash } from "../../src/modules/sales/salesCanonicalHash.js";
 import { getActiveTransactionIsolation } from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
+import { getTransactionOutcome } from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
+import { FulfillmentDownstreamMatterService } from "../../src/modules/fulfillment/FulfillmentDownstreamMatterService.js";
 import { up as issueUp } from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
 import { up as archiveUp,FULFILLMENT_ARCHIVE_TABLES } from "../../database/migrations/0099_create_fulfillment_archives.js";
 
@@ -24,8 +26,8 @@ export async function supportFacts(f){
 }
 export const nativeActor=(f,work)=>f.context.storage.run({databaseTransaction:null,signal:null,auth:{claims:{sub:String(f.actor.userId),roles:f.actor.claimedRoles,permissions:f.actor.claimedPermissions}}},work);
 
-export async function reversalFixture(t,{twoLines=false,archives=false,noDownstream=false}={}){
- const f=twoLines?await p1Fixture(t,5):await shipmentDraftFixture(t);
+export async function reversalFixture(t,{twoLines=false,archives=false,noDownstream=false,preflightConfiguration=false}={}){
+ const f=twoLines?await p1Fixture(t,5,{preflightConfiguration}):await shipmentDraftFixture(t,{preflightConfiguration});
  const second=twoLines?await addSourceLine(f,5):null;
  await issueUp(f.db);
  if(archives){await archiveUp(f.db);for(const spec of FULFILLMENT_ARCHIVE_TABLES){const [[row]]=await f.db.query(`SELECT COUNT(*) AS total FROM ${spec.table}`);assert.equal(Number(row.total),0,spec.table);}}
@@ -49,15 +51,16 @@ export async function reversalFixture(t,{twoLines=false,archives=false,noDownstr
  const confirming=await f.execute(()=>confirmation.startConfirmation(draft.outcome.id,{eventId:originalEventId,version:1}));
  const shipped=await f.execute(()=>confirmation.completeConfirmation(confirming));assert.equal(shipped.outcome,"SHIPPED");
  const [[shipment]]=await f.db.query("SELECT * FROM shipments WHERE id=?",[draft.outcome.id]);assert.equal(shipment.status,"SHIPPED");assert.equal(Number(shipment.version),3);
- const reversal=new ShipmentReversalService({...options,sales:confirmation.sales,inventoryLookup:confirmation.inventoryLookup,...(noDownstream?{downstreamRegistry:fixtureRegistry}:{})});
+ const reversal=new ShipmentReversalService({...options,...(noDownstream?{downstreamRegistry:fixtureRegistry}:{})});
  assert.ok(confirmation.sales.inventoryFulfillment===confirmation.inventoryLookup.fulfillment,"Actual same-instance Inventory receipt verifier");
+ assert.ok(reversal.sales.inventoryFulfillment===reversal.inventoryLookup.fulfillment,"Actual REVERSE same-instance Inventory receipt verifier");
  const command={eventId:randomUUID(),version:3,reason:"Synthetic wrong dispatch remains under company control",goodsUnderCompanyControl:true,goodsReturnedToOriginalBins:true};
  return {...f,options,confirmation,reversal,shipment,shipmentId:String(shipment.id),originalEventId,command,startCalls:0,completionCalls:0};
 }
 export async function startReversal(f){f.startCalls++;const started=await f.execute(()=>f.reversal.startReversal(f.shipmentId,f.command));if(!f.started)f.started=started;return started;}
 export function completeReversal(f,started=f.started,options={}){f.completionCalls++;return f.execute(()=>f.reversal.completeReversalPhaseB(started,options));}
 export function observeCommittedInputs(f){
- const inventory=f.confirmation.inventoryLookup.fulfillment,sales=f.confirmation.sales,post=inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction,lock=sales.lockLinesForFulfillmentInTransaction,apply=sales.applyFulfillmentResultInTransaction;
+ const inventory=f.reversal.inventoryLookup.fulfillment,sales=f.reversal.sales,post=inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction,lock=sales.lockLinesForFulfillmentInTransaction,apply=sales.applyFulfillmentResultInTransaction;
  const observed=f.posting={posts:0,locks:0,applies:0};
  inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=async function(tx,command,proof){observed.posts++;assert.equal(observed.posts,1);assert.ok(tx===f.database.context.get()?.databaseTransaction);observed.command=command;observed.proof=proof;const result=await post.call(this,tx,command,proof);observed.inventoryResult=result;return result;};
  sales.lockLinesForFulfillmentInTransaction=async function(tx,intent){observed.locks++;assert.equal(observed.locks,1);assert.ok(tx===f.database.context.get()?.databaseTransaction);observed.intent=intent;observed.salesHash=salesFulfillmentIntentHash(intent);return lock.call(this,tx,intent);};
@@ -72,7 +75,7 @@ export async function removeReversePermission(f,userId){
 }
 // Observe only the actual business executor, not a proxy or a replacement context.
 export function observeReverseClaim(f,observe){
- const inventory=f.confirmation.inventoryLookup.fulfillment,original=inventory.claimFulfillmentBatchInTransaction;
+ const inventory=f.reversal.inventoryLookup.fulfillment,original=inventory.claimFulfillmentBatchInTransaction;
  let calls=0;
  inventory.claimFulfillmentBatchInTransaction=async function(tx,input){
   assert.ok(this===inventory&&tx===f.database.context.get()?.databaseTransaction,"Real owner and actual context executor");assert.equal(getActiveTransactionIsolation(tx),"READ COMMITTED");
@@ -155,4 +158,130 @@ export function mapperData(){
  const sales={salesOrderId:"3",shipmentId:"2",originalConfirmationEventId:shipment.confirmation_event_id,customerId:"4",warehouseId:"5",observedVersion:2,lines:[{salesOrderLineId:"11",observedVersion:2,baseQuantity:"3",reservations:[{claimId:"30",salesReservationMappingId:"41",inventoryReservationId:"40",originalInventoryOperationId:"100",baseQuantity:"3",inventoryVersionFloor:3,consumedBaseQuantity:"3",outstandingBaseQuantity:"2"}]}]};
  const inventory={fulfillmentId:"1",shipmentId:"2",originalOperationId:"120",lines:[{fulfillmentLineId:"10",salesOrderLineId:"11",baseQuantity:"3",reservations:[{claimId:"30",inventoryReservationId:"40",originalInventoryOperationId:"100",expectedVersion:3,baseQuantity:"3",currentState:{originalQuantity:"5",consumedQuantity:"3",releasedQuantity:"0",outstandingQuantity:"2",status:"PARTIALLY_CONSUMED",version:3},allocations:issues.map(row=>({inventoryAllocationId:row.inventory_allocation_id,originalMovementId:row.inventory_movement_id,baseQuantity:row.issued_base_quantity,expectedBalanceVersion:2,bucketSnapshot:{warehouseId:"5",warehouseCode:"WH",binId:row.bin_id,binCode:row.bin_code_snapshot,lotId:null,lotNumber:null,expiryDate:null,stockStatus:"AVAILABLE",skuId:"12",skuCode:"SYN",skuName:"Synthetic",baseUomId:"13",baseUomCode:"EA",postedAt:1}}))}]}]};
  return {snapshot:{root,shipment,lines:[line],shipmentLines:[child],claims:[claim],allocations,issues},sales,inventory};
+}
+
+// Fixed TASK036 native Job harness. Every interception forwards the real receiver,
+// executor, arguments and result; no capability or owner proof is manufactured.
+export async function boundReversalCleanup(work,timeoutMs){
+ let timer;
+ try{return await Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error("TASK036 owned work did not drain within its existing cleanup budget")),timeoutMs);})]);}
+ finally{clearTimeout(timer);}
+}
+export async function reversalRecoveryRuntime({applicationSource,eventId,shipmentId,restart=false}){
+ const {createApplication}=await import("../../src/framework/application/createApplication.js");
+ const app=await createApplication({configurationSource:applicationSource});
+ const database=app.services.require("mysqldatabase"),scheduler=app.services.require("scheduler"),name="fulfillment.reversalRecovery";
+ const reached=Promise.withResolvers(),resume=Promise.withResolvers();
+ const state={service:null,declared:false,missingIssue:false,loseTakeoverAck:false,cloneChecks:restart,dispatches:0,recoveries:[],proofs:[],takeovers:[],phaseBs:0,posts:0,preclaims:0,missingRows:0,cloneRefusals:0,ackLosses:0,destroys:0,releasesAfterAck:0,unknownOutcomes:[],phaseBReached:reached.promise,resumePhaseB:resume.resolve};
+ const originalRecover=ShipmentReversalService.prototype.recoverExpiredReversal,originalPhaseB=ShipmentReversalService.prototype.completeReversalPhaseB;
+ const restorers=[],executors=new WeakMap(),wrapped=new WeakSet(),callbacks=new Set(),dispatches=new Set();
+ function observeOwner(owner,method,label){
+  const original=owner[method];
+  owner[method]=async function(tx,session,proof){
+   if(state.cloneChecks){await assert.rejects(original.call(this,tx,session,structuredClone(proof)),{code:label==="inventory"?"INVENTORY_SOURCE_CONFLICT":"SALES_FULFILLMENT_CONTRACT_MISMATCH"});state.cloneRefusals++;}
+   const result=await original.call(this,tx,session,proof);state.proofs.push({owner:label,result:structuredClone(result)});return result;
+  };
+  restorers.push(()=>{owner[method]=original;});
+ }
+ ShipmentReversalService.prototype.recoverExpiredReversal=async function(id,...args){
+  if(this.database!==database||id!==eventId)return originalRecover.call(this,id,...args);
+  if(!state.service){
+   state.service=this;
+   observeOwner(this.inventoryLookup,"verifyShipmentReversalZeroEffectProofInTransaction","inventory");
+   observeOwner(this.sales,"verifyShipmentReversalZeroEffectProofInTransaction","sales");
+   const inventory=this.inventoryLookup.fulfillment,claim=inventory.claimFulfillmentBatchInTransaction,post=inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction;
+   inventory.claimFulfillmentBatchInTransaction=function(...input){state.preclaims++;return claim.apply(this,input);};
+   inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=function(...input){state.posts++;return post.apply(this,input);};
+   restorers.push(()=>{inventory.claimFulfillmentBatchInTransaction=claim;inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction=post;});
+  }
+  assert.equal(this,state.service,"One genuine private Job-held service");
+  if(state.declared&&!(this.downstream instanceof FulfillmentDownstreamMatterService&&state.installedDownstream===this.downstream)){
+   const previous=this.downstream;this.downstream=new FulfillmentDownstreamMatterService({database,registry:fixtureRegistry});state.installedDownstream=this.downstream;restorers.push(()=>{this.downstream=previous;});
+  }
+  try{const result=await originalRecover.call(this,id,...args);state.recoveries.push({state:result.state});return result;}
+  catch(error){state.recoveries.push({error:error.code??error.name});throw error;}
+ };
+ ShipmentReversalService.prototype.completeReversalPhaseB=async function(...args){
+  if(this.database!==database)return originalPhaseB.apply(this,args);
+  state.phaseBs++;
+  if(restart){reached.resolve();await resume.promise;}
+  return originalPhaseB.apply(this,args);
+ };
+ const originalTransaction=database.withTransaction;
+ database.withTransaction=async function(work,options){
+  let actual;
+  try{return await originalTransaction.call(this,(tx,details)=>{actual=tx;executors.set(tx.target,tx);const callback=Promise.resolve().then(()=>work(tx,details));callbacks.add(callback);callback.then(()=>callbacks.delete(callback),()=>callbacks.delete(callback));return callback;},options);}
+  finally{if(actual&&getTransactionOutcome(actual)?.state==="INDETERMINATE")state.unknownOutcomes.push(getTransactionOutcome(actual));}
+ };
+ const originalGet=database.pool.getConnection;
+ database.pool.getConnection=async function(){
+  const connection=await originalGet.call(this);if(wrapped.has(connection))return connection;wrapped.add(connection);
+  const query=connection.query,execute=connection.execute,commit=connection.commit,destroy=connection.destroy,release=connection.release;
+  let takeover=false,ambiguous=false;
+  connection.query=async function(input,values){
+   const result=await query.call(this,input,values),sql=input.sql??input;
+   if(state.missingIssue&&sql.includes("FROM shipment_issue_details")&&String(values?.[0])===shipmentId){
+    assert.ok(result[0].length>0);state.missingRows++;return [result[0].slice(1),result[1]];
+   }
+   return result;
+  };
+  connection.execute=async function(input,values){
+   const result=await execute.call(this,input,values),sql=input.sql??input;
+   if(sql.startsWith("UPDATE fulfillment_operation_requests SET lease_owner=?,lease_expires_at=?,attempt_count=attempt_count+1")&&values?.[4]===eventId){
+    assert.equal(result[0].affectedRows,1);takeover=true;state.takeovers.push({nonce:values[0],oldAttempt:Number(values[10]),tx:executors.get(connection)});
+   }
+   return result;
+  };
+  connection.commit=async function(){
+   const result=await commit.call(this);
+   if(takeover){takeover=false;if(state.loseTakeoverAck){state.loseTakeoverAck=false;ambiguous=true;state.ackLosses++;throw Object.assign(new Error("TASK036 takeover committed; synthetic ACK loss"),{code:"PROTOCOL_CONNECTION_LOST"});}}
+   return result;
+  };
+  connection.destroy=function(){if(ambiguous)state.destroys++;return destroy.call(this);};
+  connection.release=function(){if(ambiguous)state.releasesAfterAck++;return release.call(this);};
+  restorers.push(()=>{connection.query=query;connection.execute=execute;connection.commit=commit;connection.destroy=destroy;connection.release=release;});
+  return connection;
+ };
+ let job,closing;
+ const abortOwned=()=>{for(const entry of scheduler.running.values())entry.controller.abort(new Error("TASK036 owned cleanup"));};
+ const close=async()=>{
+  return closing??=(async()=>{
+   abortOwned();resume.resolve();
+   const budget=applicationSource.application.shutdownTimeoutMs,deadline=performance.now()+budget;
+   const stopped=await scheduler.stop({timeoutMs:budget});assert.equal(stopped.drained,true,"Actual Scheduler jobs drained before hook/DB teardown");
+   await boundReversalCleanup(Promise.allSettled([...callbacks,...dispatches]),Math.max(1,deadline-performance.now()));
+   assert.equal(callbacks.size,0);assert.equal(dispatches.size,0);assert.equal(scheduler.running.size,0);
+   const refresh={...scheduler.stats.get("tokenRevocation.refresh")};assert.ok(refresh.runs+refresh.failures<=8);assert.equal(refresh.failures,0);assert.equal(refresh.timeouts,0);
+   const result=await app.shutdown("task036_owned_functional_complete");assert.equal(result.exitCode,0);assert.equal(result.schedulerDrained,true);assert.equal(result.servicesClosed,true);
+   state.cleanup={drained:true,callbacks:callbacks.size,dispatches:dispatches.size,jobs:scheduler.running.size,shutdownExitCode:result.exitCode,refreshRuns:refresh.runs,refreshFailures:refresh.failures};
+   ShipmentReversalService.prototype.recoverExpiredReversal=originalRecover;ShipmentReversalService.prototype.completeReversalPhaseB=originalPhaseB;
+   database.withTransaction=originalTransaction;database.pool.getConnection=originalGet;
+   for(const restore of restorers.reverse())restore();
+  })();
+ };
+ return {app,database,scheduler,state,close,abortOwned,
+  async start(){
+   await app.start();
+   assert.equal(database.config.transactionTimeoutMs,20000);assert.equal(database.config.connectionLimit,10);
+   const refresh=scheduler.jobs.get("tokenRevocation.refresh");assert.equal(refresh?.enabled,true);assert.equal(refresh.intervalMs,30000);
+   assert.equal(scheduler.jobs.has(name),false,"No product activation");
+   const service=await app.services.resolve("job.fulfillmentReversalRecovery"),prepare=scheduler.prepareAndSchedule;
+   let prepared;
+   scheduler.prepareAndSchedule=function(candidate){const result=prepare.call(this,candidate);if(candidate.name===name)prepared=result;return result;};
+   try{scheduler.register(service);assert.ok(prepared);await prepared;}
+   finally{scheduler.prepareAndSchedule=prepare;}
+   job=scheduler.jobs.get(name);assert.ok(job?.enabled);const timer=scheduler.timers.get(name);assert.ok(timer);scheduler.clearTimer(timer);scheduler.timers.delete(name);
+   return service;
+  },
+  async dispatch(expected){
+   assert.ok(job);assert.ok(["succeeded","failed"].includes(expected));const previous=state.recoveries.length,before={...scheduler.stats.get(name)};state.dispatches++;
+   const execution=scheduler.execute(job);dispatches.add(execution);
+   try{await execution;}finally{dispatches.delete(execution);}
+   assert.equal(scheduler.running.has(name),false);
+   const stats=scheduler.stats.get(name);assert.equal(stats.lastOutcome,expected);
+   assert.equal(stats.runs,before.runs+(expected==="succeeded"?1:0));assert.equal(stats.failures,before.failures+(expected==="failed"?1:0));assert.equal(stats.runs+stats.failures,state.dispatches);
+   for(const field of ["timeouts","skippedNotLeader","skippedOverlapping"])assert.equal(stats[field],before[field],field);
+   return state.recoveries.slice(previous);
+  }
+ };
 }
