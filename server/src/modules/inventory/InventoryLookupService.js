@@ -18,6 +18,10 @@ export class InventoryLookupService {
     this.purchase=new InventoryPurchaseService(options);
   }
   findOperationsBySource(tx,query) { return this.purchase.findOperationsBySource(tx,query); }
+  readShipmentEventAdmissionInTransaction(tx,source){return this.fulfillment.readShipmentEventAdmissionInTransaction(tx,source);}
+  prepareShipmentReversalZeroEffectReadInTransaction(tx,session){return this.fulfillment.prepareShipmentReversalZeroEffectReadInTransaction(tx,session);}
+  readShipmentReversalZeroEffectInTransaction(tx,context){return this.fulfillment.readShipmentReversalZeroEffectInTransaction(tx,context);}
+  verifyShipmentReversalZeroEffectProofInTransaction(tx,session,proof){return this.fulfillment.verifyShipmentReversalZeroEffectProofInTransaction(tx,session,proof);}
   prepareShipmentIssueOutcomeReadInTransaction(tx,session){return this.fulfillment.prepareShipmentIssueOutcomeReadInTransaction(tx,session);}
   readShipmentIssueOutcomeInTransaction(tx,context){return this.fulfillment.readShipmentIssueOutcomeInTransaction(tx,context);}
   verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof){return this.fulfillment.verifyShipmentIssueOutcomeProofInTransaction(tx,session,proof);}

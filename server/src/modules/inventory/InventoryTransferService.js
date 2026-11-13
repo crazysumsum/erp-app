@@ -3,7 +3,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
-import { InventoryOperationService } from "./InventoryOperationService.js";
+import { InventoryOperationService, inventoryEventAdmissionOptions } from "./InventoryOperationService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import { inventoryStringHasInvalidCharacters } from "./inventorySafeJson.js";
 import { assertCompleteTransferLines, assertTransferWarehouses, transferTransition } from "./inventoryStateMachines.js";
@@ -84,24 +84,24 @@ export class InventoryTransferService {
     this.itemLookup = itemLookup ?? new ItemLookupService({ database, logger, time });
     this.authorize = authorize;
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
-    this.operations = operations ?? new InventoryOperationService();
+    this.operations = operations ?? new InventoryOperationService({ database });
     this.locks = locks ?? new InventoryLockService();
   }
 
   create(command) {
-    return this.database.withTransaction((tx) => this.createInTransaction(tx, command));
+    return this.database.withTransaction((tx) => this.createInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source));
   }
   update(command) {
-    return this.database.withTransaction((tx) => this.updateInTransaction(tx, command));
+    return this.database.withTransaction((tx) => this.updateInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source));
   }
   cancel(command) {
-    return this.database.withTransaction((tx) => this.cancelInTransaction(tx, command));
+    return this.database.withTransaction((tx) => this.cancelInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source));
   }
   dispatch(command) {
-    return this.database.withTransaction((tx) => this.dispatchInTransaction(tx, command));
+    return this.database.withTransaction((tx) => this.dispatchInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source));
   }
   receive(command) {
-    return this.database.withTransaction((tx) => this.receiveInTransaction(tx, command));
+    return this.database.withTransaction((tx) => this.receiveInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source));
   }
   dispatchInTransaction(tx, command) {
     return this.#post(tx, command, "dispatch");

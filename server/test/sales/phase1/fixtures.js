@@ -1,5 +1,43 @@
 import { randomUUID, randomBytes } from "node:crypto";
 import mysql from "mysql2/promise";
+import { MySqlDatabaseService } from "../../../src/services/mysqldatabase/MySqlDatabaseService.js";
+import { RequestContextService } from "../../../src/services/context/RequestContextService.js";
+
+// Direct service fixtures need a current request store, while HTTP/Job stores
+// retain their real identity. Keep the actual database and executor unchanged.
+export function enterSalesFixtureRequests(database) {
+  const original=database.withTransaction;
+  database.withTransaction=function(work,options){
+    if(this.context.get())return original.call(this,work,options);
+    return this.context.storage.run({databaseTransaction:null,signal:null},()=>original.call(this,work,options));
+  };
+  return ()=>{database.withTransaction=original;};
+}
+
+// Existing Sales unit programs supply domain facts; only these fixed lifecycle
+// and empty Fulfillment-classification facts are added. This is not native proof.
+export function salesMemoryDatabase(program) {
+  const connection={
+    async query(input,parameters=[],options){
+      const sql=input.sql??input;
+      if(sql==="SELECT GET_LOCK(?,0) AS acquired")return [[{acquired:1}]];
+      if(sql==="SELECT RELEASE_LOCK(?) AS released")return [[{released:1}]];
+      if(["SET TRANSACTION ISOLATION LEVEL REPEATABLE READ","SET TRANSACTION ISOLATION LEVEL READ COMMITTED"].includes(sql))return [[],[]];
+      if(sql==="SELECT * FROM fulfillment_operation_requests WHERE event_id=? LIMIT 2 FOR SHARE")return [[],[]];
+      return program.query(sql,parameters,options);
+    },
+    execute:(input,parameters,options)=>program.execute(input.sql??input,parameters,options),
+    beginTransaction:async()=>program.beginTransaction?.(),
+    commit:async()=>program.commit?.(),
+    rollback:async()=>program.rollback?.(),
+    release(){},destroy(){}
+  };
+  const context=new RequestContextService({services:{require:()=>({timestamp:()=>1})}});
+  const database=new MySqlDatabaseService({context,logger:{},pool:{query:(...args)=>connection.query(...args),getConnection:async()=>connection},
+    config:{database:"sales-fixture-memory",queryTimeoutMs:2500,acquireTimeoutMs:5000,transactionTimeoutMs:5000,abandonedConnectionAction:"destroy"}});
+  enterSalesFixtureRequests(database);
+  return database;
+}
 
 export async function lockSalesFixture(db) {
   // ponytail: serialize fixture DDL per schema; real transaction races run inside each test.

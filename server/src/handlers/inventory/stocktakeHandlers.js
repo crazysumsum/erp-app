@@ -4,6 +4,7 @@ import { AuthenticationError } from "../../framework/auth/AuthenticationError.js
 import { assertActorFresh } from "../../modules/authorization/directoryLookups.js";
 import { permissionStaleError } from "../../modules/authorization/adminGuard.js";
 import { InventoryStocktakeService } from "../../modules/inventory/InventoryStocktakeService.js";
+import { inventoryEventAdmissionOptions } from "../../modules/inventory/InventoryOperationService.js";
 import { InventoryInquiryService } from "../../modules/inventory/InventoryInquiryService.js";
 import { InventoryStocktakeExportService } from "../../modules/inventory/InventoryStocktakeExportService.js";
 import { InventoryAuditService } from "../../modules/inventory/InventoryAuditService.js";
@@ -119,7 +120,7 @@ class StocktakeWriteHandler extends StocktakeHandler {
         const result = await this.inventory[method](tx, record.command, record.proof);
         // The unchanged ordinary domain methods do not own HTTP JWT/time; check before the caller's commit.
         await record.current(tx, { locking: true }); return result;
-      }, { signal: req.requestTimeout?.signal }).catch(error => {
+      }, { signal: req.requestTimeout?.signal, ...inventoryEventAdmissionOptions(record.command.source) }).catch(error => {
         if (["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"].includes(error?.cause?.code ?? error?.code)) throw inventoryError("CONCURRENT_OPERATION");
         throw error;
       });

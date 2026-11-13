@@ -121,6 +121,7 @@ nativeTest("P0 four real providers share the caller transaction in Sales, Custom
   const [{salesFulfillmentFixture},{InventoryFulfillmentService}]=await Promise.all([
     import("../sales/phase4/salesFulfillmentFixtures.js"),import("../../src/modules/inventory/InventoryFulfillmentService.js")]);
   const f=await salesFulfillmentFixture(t),time={...f.time,fileDate:()=>"2023-11-14"},s=f.s;
+  await (await import("../../database/migrations/0092_create_fulfillment_operations_and_sequences.js")).up(f.db);
   await f.db.execute("INSERT INTO customer_address_purposes(address_id,customer_id,purpose_code,is_default,created_at,updated_at) VALUES (?,?,'shipping',1,?,?)",[s.addressId,s.customerId,s.now,s.now]);
   const contactId=await s.insert("customer_contacts",{customer_id:s.customerId,name:"Synthetic",created_at:s.now,updated_at:s.now});
   await f.db.execute("INSERT INTO customer_contact_purposes(contact_id,customer_id,purpose_code,is_default,created_at,updated_at) VALUES (?,?,'shipping',1,?,?)",[contactId,s.customerId,s.now,s.now]);
@@ -161,7 +162,7 @@ nativeTest("P0 four real providers share the caller transaction in Sales, Custom
     assert.ok(positions.every((position,i)=>position>=0&&(i===0||position>positions[i-1])),"real owner SQL follows Sales → Address → Contact → Item → Inventory locks");
     assert.ok(sql.every((statement,i)=>!/INSERT INTO inventory_operation_requests/u.test(statement)||i<positions[0]),"all operation preclaims precede Sales roots");
     return result;
-  });
+  },{isolationLevel:"READ COMMITTED",eventAdmissionId:issue.source.eventId});
   const before=await snapshot();await assert.rejects(()=>run(2),{code:"VERSION_CONFLICT"});assert.deepEqual(await snapshot(),before);
   assert.equal((await run(1)).status,"COMPLETED");
 });

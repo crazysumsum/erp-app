@@ -31,6 +31,12 @@ async function readBinLocks(tx,binIds){
 export function markFulfillmentReconciliationRead(tx){if(WRITE_TRANSACTIONS.has(tx))fail();READ_TRANSACTIONS.add(tx);}
 export function enterFulfillmentWriteMode(tx){if(READ_TRANSACTIONS.has(tx))fail();WRITE_TRANSACTIONS.add(tx);}
 
+// The caller holds the genuine early event gate; this is admission, not a zero-effect proof.
+export async function readFulfillmentShipmentEventAdmission(tx,eventId){
+ const [rows]=await tx.query("SELECT id FROM inventory_operation_requests WHERE source_module='FULFILLMENT' AND source_document_type IN ('SHIPMENT','SHIPMENT_LEG') AND source_event_id=? LIMIT 1",[eventId]);
+ return {state:rows.length?"UNKNOWN":"CLEAR"};
+}
+
 // Authority is checked by the owner's private verifier before calling these SQL helpers.
 export async function prepareFulfillmentIssueOutcome(tx,source){
  const [[scope]]=await tx.query("SELECT * FROM inventory_operation_requests WHERE source_module='FULFILLMENT' AND source_document_type='PICK_SCOPE' AND source_document_id=? AND source_line_id='' AND source_event_id='scope-v1' FOR SHARE",[source.fulfillmentId]);
@@ -66,11 +72,11 @@ function selection(source){
 
 async function readAnchors(tx,source,work){
  const skuIds=unique(work.members.map(entry=>entry.line.skuId)),balanceIds=unique(work.legs.map(entry=>entry.leg.inventoryBalanceId)),reservationIds=unique(work.members.map(entry=>entry.member.inventoryReservationId)),allocationIds=unique(work.legs.map(entry=>entry.leg.inventoryAllocationId));
- const [[warehouse]]=await tx.query("SELECT id FROM inventory_warehouses WHERE id=? FOR SHARE",[source.warehouseId]);if(!warehouse)fail();
+ const [[warehouse]]=await tx.query("SELECT id,status FROM inventory_warehouses WHERE id=? FOR SHARE",[source.warehouseId]);if(!warehouse)fail();
  const [controls]=await tx.query(`SELECT * FROM inventory_stock_controls WHERE warehouse_id=? AND sku_id IN (${marks(skuIds)}) ORDER BY warehouse_id,sku_id FOR SHARE`,[source.warehouseId,...skuIds]);if(controls.length!==skuIds.length)fail();
  const [references]=await tx.query(`SELECT * FROM inventory_stock_balances WHERE id IN (${marks(balanceIds)}) ORDER BY id`,balanceIds);if(references.length!==balanceIds.length||references.some(row=>key(row.warehouse_id)!==source.warehouseId))fail();const referenceById=indexed(references);
  const binIds=unique(references.map(row=>key(row.bin_id))),[bins]=await tx.query(`SELECT * FROM inventory_bins WHERE id IN (${marks(binIds)}) ORDER BY id FOR SHARE`,binIds);if(bins.length!==binIds.length||bins.some(row=>key(row.warehouse_id)!==source.warehouseId))fail();
- await readBinLocks(tx,binIds);
+ const binLocks=await readBinLocks(tx,binIds);
  const lotIds=unique(references.filter(row=>row.lot_id!==null).map(row=>key(row.lot_id))),[lots]=lotIds.length?await tx.query(`SELECT * FROM inventory_lots WHERE id IN (${marks(lotIds)}) ORDER BY sku_id,normalized_lot_number FOR SHARE`,lotIds):[[]];if(lots.length!==lotIds.length)fail();
  const [balances]=await tx.query(`SELECT * FROM inventory_stock_balances WHERE id IN (${marks(balanceIds)}) ORDER BY warehouse_id,sku_id,bin_id,lot_scope,stock_status FOR SHARE`,balanceIds),lotById=indexed(lots),balanceById=indexed(balances);
  if(balances.length!==balanceIds.length)fail();for(const row of balances){const before=referenceById.get(key(row.id)),lot=row.lot_id===null?null:lotById.get(key(row.lot_id));if(!before||["warehouse_id","sku_id","bin_id","lot_id","stock_status"].some(field=>key(before[field])!==key(row[field]))||quantity(row.allocated_quantity)>quantity(row.on_hand_quantity)||row.lot_id!==null&&(!lot||key(lot.sku_id)!==key(row.sku_id)))fail();}
@@ -91,7 +97,7 @@ async function readAnchors(tx,source,work){
   if(!row||!balance||key(row.reservation_id)!==member.inventoryReservationId||key(row.stock_balance_id)!==leg.inventoryBalanceId||key(balance.sku_id)!==line.skuId||balance.stock_status!=="AVAILABLE"||quantity(row.allocated_quantity)!==quantity(row.consumed_quantity)+quantity(row.released_quantity)+quantity(row.outstanding_quantity))fail();
   counterStatus(row);fulfillmentInventoryVersion(Number(row.version));fulfillmentInventoryVersion(Number(balance.version));
  }
- return {reservationById,allocationById};
+ return {reservationById,allocationById,balanceById,controlBySku,warehouse,bins,binLocks};
 }
 
 export async function finishFulfillmentIssueOutcome(tx,prepared,source){
@@ -175,4 +181,71 @@ export async function finishFulfillmentReversalOutcome(tx,prepared,source){
  }
  if(reverseRows.length!==movementIds.size||reverseRows.some(row=>!movementIds.has(key(row.id))||!originalMovementIds.has(key(row.reversal_of_movement_id))))fail();
  return {state:"SUCCEEDED",result:decoded.result,requestHash:root.request_hash};
+}
+
+export async function finishFulfillmentReversalZeroEffect(tx,prepared,source){
+ if(!prepared.available||prepared.rows.length)return {state:"UNKNOWN"};
+ const work=selection(source),anchors=await readAnchors(tx,source,work);
+ const references=source.originalIssue.references,byAllocation=indexed(references,"inventoryAllocationId");
+ if(references.length!==work.legs.length)fail();
+ const original=await readOriginalFulfillmentIssueBatch(tx,{shipmentId:source.shipmentId,
+  members:unique(references.map(row=>row.originalInventoryOperationId)).map(originalInventoryOperationId=>({originalInventoryOperationId}))});
+ if(original.fulfillmentId!==source.fulfillmentId||original.root.source_event_id!==source.originalIssue.eventId||original.result.lines.length!==work.lines.length)fail();
+ for(const line of work.lines){
+  const old=original.result.lines.find(row=>row.fulfillmentLineId===line.fulfillmentLineId&&row.salesOrderLineId===line.salesOrderLineId);
+  if(!old||old.baseQuantity!==line.baseQuantity||old.reservations.length!==line.reservations.length)fail();
+  for(const member of line.reservations){
+   const prior=old.reservations.find(row=>row.claimId===member.claimId&&row.inventoryReservationId===member.inventoryReservationId);
+   const reservation=anchors.reservationById.get(member.inventoryReservationId);
+   if(!prior||prior.baseQuantity!==member.baseQuantity||prior.allocations.length!==member.allocations.length||
+       Number(reservation.version)<prior.version||quantity(reservation.consumed_quantity)<BigInt(member.baseQuantity))fail();
+   for(const leg of member.allocations){
+    const effect=prior.allocations.find(row=>row.inventoryAllocationId===leg.inventoryAllocationId&&row.inventoryBalanceId===leg.inventoryBalanceId);
+    const reference=byAllocation.get(leg.inventoryAllocationId),allocation=anchors.allocationById.get(leg.inventoryAllocationId),balance=anchors.balanceById.get(leg.inventoryBalanceId);
+    if(!effect||effect.baseQuantity!==leg.baseQuantity||!reference||reference.originalInventoryOperationId!==prior.inventoryOperationId||
+        reference.originalMovementId!==effect.movementId||effect.bucketSnapshot.warehouseId!==source.warehouseId||
+        allocation.status!=="CONSUMED"||quantity(allocation.outstanding_quantity)!==0n||quantity(allocation.consumed_quantity)!==BigInt(leg.baseQuantity)||
+        Number(allocation.version)!==effect.allocationVersion)fail();
+    const bucket=effect.bucketSnapshot;
+    if(key(balance.warehouse_id)!==bucket.warehouseId||key(balance.sku_id)!==bucket.skuId||key(balance.bin_id)!==bucket.binId||
+        (balance.lot_id===null?null:key(balance.lot_id))!==bucket.lotId||balance.stock_status!==bucket.stockStatus)fail();
+   }
+  }
+ }
+ // Domain locks remain held. Inspect every original pointer, regardless of reverse event/target.
+ const originals=unique(references.map(row=>row.originalMovementId));
+ for(let start=0;start<originals.length;start+=100){
+  const ids=originals.slice(start,start+100),[rows]=await tx.query(`SELECT id,reversal_of_movement_id FROM inventory_movements FORCE INDEX (uq_inventory_movement_reversal) WHERE reversal_of_movement_id IN (${marks(ids)}) ORDER BY reversal_of_movement_id FOR SHARE`,ids);
+  if(rows.length)return {state:"UNKNOWN"};
+ }
+ const balances=unique(work.legs.map(entry=>entry.leg.inventoryBalanceId));
+ for(let start=0;start<balances.length;start+=100){
+  const ids=balances.slice(start,start+100),[rows]=await tx.query(`SELECT b.id,b.allocated_quantity,COALESCE(SUM(a.outstanding_quantity),0) AS outstanding FROM inventory_stock_balances b LEFT JOIN inventory_allocations a ON a.stock_balance_id=b.id WHERE b.id IN (${marks(ids)}) GROUP BY b.id,b.allocated_quantity ORDER BY b.id`,ids);
+  if(rows.length!==ids.length||rows.some(row=>quantity(row.allocated_quantity)!==quantity(row.outstanding)))fail();
+ }
+ // Re-read the full event class, not just this shipment/root; all participants share the early gate.
+ if((await readFulfillmentShipmentEventAdmission(tx,source.eventId)).state!=="CLEAR")return {state:"UNKNOWN"};
+ const locations=[anchors.warehouse,...anchors.bins];
+ let eligibility=locations.some(row=>row.status==="INACTIVE")||anchors.binLocks.length?"INELIGIBLE"
+  :locations.every(row=>row.status==="ACTIVE")?"ELIGIBLE":"UNKNOWN";
+ const balanceGains=new Map(),skuGains=new Map(),balanceWrites=new Map(),skuWrites=new Map(),safe=BigInt(Number.MAX_SAFE_INTEGER),maxVersion=4294967295;
+ for(const {line,member}of work.members){
+  const reservation=anchors.reservationById.get(member.inventoryReservationId),q=BigInt(member.baseQuantity);
+  if(!["ACTIVE","PARTIALLY_CONSUMED","CONSUMED"].includes(reservation.status)||quantity(reservation.outstanding_quantity)+q>safe||Number(reservation.version)>=maxVersion)eligibility="INELIGIBLE";
+  skuGains.set(line.skuId,(skuGains.get(line.skuId)??0n)+q);
+  skuWrites.set(line.skuId,(skuWrites.get(line.skuId)??0)+1);
+ }
+ for(const {leg}of work.legs){
+  balanceGains.set(leg.inventoryBalanceId,(balanceGains.get(leg.inventoryBalanceId)??0n)+BigInt(leg.baseQuantity));
+  balanceWrites.set(leg.inventoryBalanceId,(balanceWrites.get(leg.inventoryBalanceId)??0)+1);
+ }
+ for(const [id,q]of balanceGains){
+  const balance=anchors.balanceById.get(id);
+  if(quantity(balance.on_hand_quantity)+q>safe||Number(balance.version)+balanceWrites.get(id)>maxVersion)eligibility="INELIGIBLE";
+ }
+ for(const [skuId,q]of skuGains){
+  const control=anchors.controlBySku.get(skuId);
+  if(quantity(control.reserved_quantity)+q>safe||Number(control.version)+skuWrites.get(skuId)>maxVersion)eligibility="INELIGIBLE";
+ }
+ return {state:"ABSENT",eligibility};
 }

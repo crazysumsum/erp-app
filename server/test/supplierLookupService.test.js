@@ -168,6 +168,32 @@ test("unknown purpose, invalid timestamp, missing transaction and unavailable re
   );
 });
 
+test("TC-137 (SKU-009): TASK-052 (HD-163): SKU refs use the caller's connection, tolerate duplicates and return numeric keys and IDs", async () => {
+  const database = fakeDatabase([[
+    { id: "11", sku_id: "5", relationship_status: "stopped", supplier_item_code: "A-1", last_supplied_at: "2000", bank_account: "must-not-leak" },
+    { id: 12, sku_id: 6, relationship_status: "preferred", supplier_item_code: "", last_supplied_at: null }
+  ]]);
+  database.withTransaction = () => assert.fail("must not open a transaction of its own");
+  const service = serviceFor(database);
+
+  const refs = await service.findSkuRefsInTransaction(database.connection, 7, [5, "6", 5, 9]);
+  assert.deepEqual([...refs.entries()], [
+    [5, { relationId: 11, relationshipStatus: "stopped", supplierItemCode: "A-1", lastSuppliedAt: 2000 }],
+    [6, { relationId: 12, relationshipStatus: "preferred", supplierItemCode: "", lastSuppliedAt: null }]
+  ]);
+  assert.equal(database.calls.length, 1);
+  assert.deepEqual(database.calls[0].params, [7, 5, 6, 9]);
+  assert.doesNotMatch(database.calls[0].sql, /FOR UPDATE|SHARE/u, "a plain read takes no gap locks on missing refs");
+
+  assert.equal((await service.findSkuRefsInTransaction(database.connection, 7, [])).size, 0);
+  assert.equal(database.calls.length, 1, "an empty list sends no query");
+  await service.findSkuRefsInTransaction(database.connection, 7, Array(100).fill(5));
+  for (const args of [[null, 7, [1]], [database.connection, 0, [1]], [database.connection, 7, "1"], [database.connection, 7, [0]],
+    [database.connection, 7, [1.5]], [database.connection, 7, Array(101).fill(5)]]) {
+    await assert.rejects(() => service.findSkuRefsInTransaction(...args), TypeError);
+  }
+});
+
 // ---- TASK-040：listForSku（設計 §8.7，HD-094）----
 
 function poolDatabase(responses = []) {

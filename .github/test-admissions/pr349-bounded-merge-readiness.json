@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "decision": "Decision reference to be verified independently: Sam explicit affirmative response in PM Codex chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f to the consolidated 2026-11-12 PR349 bounded-merge governance request binding workflow Git blob 586bdd9c88e7f979ba7dedde02044b71f61c6fd7 and this exact receipt digest. Prepared as an UNAPPROVED candidate; at preparation no such approval is claimed. The JSON itself never grants permission. Before registering, PM codex-erp-app-pm-01 must read the actual human proposal and answer, verify exact workload/source/final digest and the independent TL source review. Author codex-erp-app-ci-01 cannot self-approve or register this package. Bootstrap failure stops; no required-check waiver or protection exception is approved.",
+  "purpose": "Wait for the event exact head/base mergeability, then bind fetched candidate to API merge SHA AND original exact ordered parents. Historical stale-ref root cause remains an inference; preserve admission trust and diagnose immutable metadata without replaying old events.",
+  "data": "No new test or business fixture/data. Metadata API projection is state, mergeable, head SHA, base SHA and merge SHA only; each response capture <=4096 bytes.",
+  "concurrency": "One existing controller step; one Node helper plus its timeout watchdog, one gh read at a time, at most12PR metadata queries, no new jobs/workers.",
+  "repetitions": "One bounded readiness phase per new natural controller event. At most12successful-null readiness polls, <=11sleeps up to5seconds; first false/API error/mismatch fails immediately. No controller/job/run retries.",
+  "thresholds": "60second watchdog over helper/child queries/sleeps, and a single shared monotonic deadline inside helper; per-query timeout from remaining time. API state open and head/base exactly event; mergeable true and valid40hex merge SHA; candidate equals API SHA AND original ordered BASE_SHA HEAD_SHA. Otherwise fail closed. No gate waived.",
+  "trigger": "PROPOSAL: one ordinary governance Draft PR/new controller and up to1existing functional round; only after normal required gates/review pass and authorized merge, one automatic main functional round. After installed-main success, composed PR349 one new ordinary publication/controller and up to1functional round. Bootstrap failure stops; no direct merge, rerun, dispatch or protection exception. No new governance execution is approved at preparation. Two proposed offline syntax checks (step bash -n, helper node --check), once each with5second timeout, are separately included in the same pending decision; no private probe.",
+  "cost": "No new test/capacity workload. Additional controller latency0to60seconds per new event plus unmeasured process/runner overhead; <=12metadataAPI GETs per event and1extra Git tree read. Proposed maximum2controller events and3existing functional rounds if all succeed; historical different-baseline10m34/61.9server-runner-min per round suggests~32min serial and186server-runner-min plus otherjobs/queue, estimates only.",
+  "files": [
+    {
+      "path": ".github/workflows/pr-admission.yml",
+      "mode": "100644",
+      "blob": "586bdd9c88e7f979ba7dedde02044b71f61c6fd7",
+      "kind": "support"
+    }
+  ]
+}

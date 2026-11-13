@@ -4,11 +4,12 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { documentTotal, lineAmount } from "./moneyMath.js";
 import { PurchaseApprovalService } from "./PurchaseApprovalService.js";
+import { LIFECYCLE_KINDS, PurchaseOrderLifecycleService } from "./PurchaseOrderLifecycleService.js";
 import { appendStatusHistory } from "./purchaseOrderStatusHistory.js";
 import { nextPurchaseOrderStatus } from "./purchaseOrderStateMachine.js";
 import { purchasingError } from "./purchasingErrors.js";
 import { draftProjection } from "./purchasingProjections.js";
-import { eventId, onlyFields, positiveId, reason as validReason, shortNote } from "./purchasingValidation.js";
+import { eventId, onlyFields, positiveId, reason as validReason, requireItems, shortNote } from "./purchasingValidation.js";
 import { toBaseQuantity } from "./quantityMath.js";
 
 // Serial 唔支援；DB CHECK 亦只收呢三個，所以就算係容許照存嘅舊 Line 都要擋（設計 §4.6）。
@@ -22,7 +23,8 @@ const LINE_COLUMNS = ["id", "purchase_order_id", "line_number", "sku_id", "sku_c
   "unit_price", "line_amount", "zero_price_reason", "expected_delivery_date", "line_note", "version", "created_at", "updated_at"];
 
 const AUDIT_ACTION = Object.freeze({ CREATE: "purchase_order.created", UPDATE: "purchase_order.updated", COPY: "purchase_order.copied", SUBMIT: "purchase_order.confirmed",
-  APPROVE: "purchase_order.approved", REJECT: "purchase_order.rejected", WITHDRAW_APPROVAL: "purchase_order.approval_withdrawn" });
+  APPROVE: "purchase_order.approved", REJECT: "purchase_order.rejected", WITHDRAW_APPROVAL: "purchase_order.approval_withdrawn",
+  WITHDRAW_CONFIRMATION: "purchase_order.confirmation_withdrawn", CANCEL: "purchase_order.cancelled", CLOSE_REMAINING: "purchase_order.remaining_closed" });
 // 審批決定：狀態機動作同 status history 動作。
 const DECISION = Object.freeze({ APPROVE: { transition: "APPROVE", history: "APPROVE" }, REJECT: { transition: "REJECT", history: "REJECT" },
   WITHDRAW_APPROVAL: { transition: "WITHDRAW_APPROVAL", history: "WITHDRAW" } });
@@ -59,6 +61,7 @@ export class PurchaseOrderService {
       throw new TypeError("PurchaseOrderService requires all of its dependencies");
     }
     Object.assign(this, { database, logger, time, suppliers, businessMaster, sequences, operations, audit, config, approvals });
+    this.lifecycle = new PurchaseOrderLifecycleService({ approvals });
   }
 
   /** `claims` 係 JWT claims（sub、roles、permissions）；`context` 係 requestId、correlationId、ip。 */
@@ -92,7 +95,28 @@ export class PurchaseOrderService {
     return this.#command({ kind: "WITHDRAW_APPROVAL", claims, purchaseOrderId, input, context });
   }
 
+  /** §8.4：撤回確認、取消、Close Remaining 都要原因同目前 version（FR-LIFE-012）。 */
+  withdrawConfirmation({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "WITHDRAW_CONFIRMATION", claims, purchaseOrderId, input, context });
+  }
+
+  cancel({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "CANCEL", claims, purchaseOrderId, input, context });
+  }
+
+  /** 冇 `lineIds` 就關晒仲有 outstanding 嘅 Lines。 */
+  closeRemaining({ claims, purchaseOrderId, input, context = {} }) {
+    return this.#command({ kind: "CLOSE_REMAINING", claims, purchaseOrderId, input, context });
+  }
+
   #request({ kind, input }) {
+    if (LIFECYCLE_KINDS.includes(kind)) {
+      const close = kind === "CLOSE_REMAINING";
+      const { eventId: event, version, reason, lineIds } = onlyFields(input, ["eventId", "version", "reason", ...(close ? ["lineIds"] : [])], "body");
+      const ids = lineIds === undefined ? undefined : requireItems(lineIds, this.config.maxPurchaseOrderLines, "lineIds").map((id, index) => positiveId(id, `lineIds.${index}`));
+      if (ids && new Set(ids).size !== ids.length) throw invalid("lineIds");
+      return { eventId: eventId(event), version: positiveId(version, "version"), reason: validReason(reason), ...(ids ? { lineIds: ids } : {}) };
+    }
     if (kind === "COPY") return { eventId: eventId(onlyFields(input, ["eventId"], "body").eventId) };
     if (kind === "SUBMIT") {
       const { eventId: event, version, assignedApproverId, requestNote } = onlyFields(input, ["eventId", "version", "assignedApproverId", "requestNote"], "body");
@@ -113,6 +137,7 @@ export class PurchaseOrderService {
       if (command.kind !== "CREATE") positiveId(command.purchaseOrderId, "purchaseOrderId");
       const request = this.#request(command);
       return await this.operations.run(this.database, (tx) => command.kind === "SUBMIT" ? this.#submit(tx, command, request)
+        : LIFECYCLE_KINDS.includes(command.kind) ? this.#lifecycle(tx, command, request)
         : Object.hasOwn(DECISION, command.kind) ? this.#decide(tx, command, request) : this.#save(tx, command, request));
     } catch (error) {
       if (error instanceof ApplicationError && error.statusCode >= 400 && error.statusCode < 500) await this.#rejected(command, error);
@@ -238,6 +263,16 @@ export class PurchaseOrderService {
     const summary = { id, number: current.po_number, status, version };
     await this.audit.record(tx, { actor, action: AUDIT_ACTION[kind], targetId: id, targetLabel: current.po_number, reason, detail: { version }, nowMs, ip: context.ip,
       requestId: context.requestId, correlationId: context.correlationId });
+    await this.operations.complete(tx, { operationId, result: summary, nowMs });
+    return { ...summary, replayed: false };
+  }
+
+  async #lifecycle(tx, command, request) {
+    const { kind, purchaseOrderId, context } = command, nowMs = this.time.nowMs();
+    const { actor, trace, operationId, replay } = await this.#claim(tx, command, request, nowMs);
+    if (replay) return { ...replay, replayed: true };
+    const { summary, audit } = await this.lifecycle.runInTransaction(tx, { kind, purchaseOrderId, request, actor, nowMs });
+    await this.audit.record(tx, { actor, ...audit, targetId: summary.id, targetLabel: summary.number, nowMs, ip: context.ip, ...trace });
     await this.operations.complete(tx, { operationId, result: summary, nowMs });
     return { ...summary, replayed: false };
   }

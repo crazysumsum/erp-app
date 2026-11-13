@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 import mysql from "mysql2/promise";
+import { MySqlDatabaseService } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
+import { RequestContextService } from "../src/services/context/RequestContextService.js";
 
 import { InventoryPostingService } from "../src/modules/inventory/InventoryPostingService.js";
 import { InventoryStocktakeService } from "../src/modules/inventory/InventoryStocktakeService.js";
@@ -70,7 +72,7 @@ async function trustedContext(input, operation) {
   });
 }
 
-function transactionDatabase(checkpoint) {
+function transactionDatabase(checkpoint,transactionConfig) {
   let hits = 0, reached = false;
   const pattern = checkpoint ? new RegExp(checkpoint.pattern, "u") : null;
   async function barrier(stage, sql, threadId) {
@@ -81,6 +83,33 @@ function transactionDatabase(checkpoint) {
     releaseCheckpoint = { resolve, reject };
     try { await send({ type: "checkpoint", stage, threadId, pid: process.pid }); await released; }
     finally { releaseCheckpoint = null; }
+  }
+  if(transactionConfig){
+    for(const name of ["queryTimeoutMs","transactionTimeoutMs","acquireTimeoutMs"])assert.ok(Number.isSafeInteger(transactionConfig[name])&&transactionConfig[name]>0&&transactionConfig[name]<=20000);
+    const context=new RequestContextService({services:{require:()=>time}});
+    return new MySqlDatabaseService({context,logger,config:{...transactionConfig,database:process.env.DB_NAME,abandonedConnectionAction:"destroy"},pool:{
+      query:(...args)=>pool.query(...args),
+      async getConnection(){
+        const connection=await pool.getConnection();activeConnection=connection;
+        const threadId=connection.threadId;
+        try{await connection.query("SET SESSION innodb_lock_wait_timeout=15");}
+        catch(error){connection.destroy();activeConnection=null;throw error;}
+        // A fresh wrapper around this same physical connection; the real service
+        // exclusively owns COMMIT/ROLLBACK/quarantine/release decisions.
+        const target={};
+        for(const method of ["query","execute"])target[method]=async(sql,params)=>{
+          const text=sql.sql??sql;
+          if(/SELECT[\s\S]*FROM\s+inventory_warehouses\b[\s\S]*FOR UPDATE/iu.test(text))await send({type:"warehouseAttempt",threadId});
+          const result=await connection[method](sql,params);await barrier(method==="query"?"afterQuery":"afterExecute",text,threadId);return result;
+        };
+        target.beginTransaction=async()=>{await connection.beginTransaction();await send({type:"transaction",threadId});};
+        target.commit=async()=>{await barrier("beforeCommit","COMMIT",threadId);const result=await connection.commit();await barrier("afterCommit","COMMIT",threadId);return result;};
+        target.rollback=()=>connection.rollback();
+        target.release=()=>{activeConnection=null;connection.release();};
+        target.destroy=()=>{activeConnection=null;connection.destroy();};
+        return target;
+      }
+    }});
   }
   return {
     query: (...args) => pool.query(...args),
@@ -135,11 +164,17 @@ async function run(message) {
   assert.equal(extra, undefined);
   assert.ok(kind === "stocktake" ? Object.hasOwn(stocktakeMethods, action)
     : kind === "writer" ? writerMethods.includes(action) : kind === "transfer" && ["create", "dispatch", "receive"].includes(action));
-  const database = transactionDatabase(message.checkpoint), options = { database, time, logger };
+  const admitted=action==="postFulfillmentIssueInTransaction";
+  if(admitted)assert.ok(message.transactionConfig);
+  const database = transactionDatabase(message.checkpoint,admitted?message.transactionConfig:undefined), options = { database, time, logger };
   const service = kind === "stocktake" ? new InventoryStocktakeService(options)
     : kind === "writer" ? new InventoryPostingService(options) : new InventoryTransferService(options);
   const method = kind === "stocktake" ? stocktakeMethods[action] : action;
   const context = await trustedContext(message.input, message.operation);
+  if(admitted){
+    const actor=message.input.actor;
+    return database.context.storage.run({databaseTransaction:null,auth:{claims:{sub:String(actor.userId),roles:actor.claimedRoles,permissions:actor.claimedPermissions}}},()=>database.withTransaction(tx=>service[method](tx,message.input,context),{eventAdmissionId:message.input.source.eventId}));
+  }
   return method.endsWith("InTransaction")
     ? database.withTransaction(tx => service[method](tx, message.input, context))
     : service[method](message.input, context);
