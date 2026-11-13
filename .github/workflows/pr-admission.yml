@@ -41,9 +41,50 @@ jobs:
           CI_TEST_ADMISSION_DIGESTS: ${{ vars.CI_TEST_ADMISSION_DIGESTS }}
         run: |
           set -euo pipefail
+          # GitHub recalculates merge refs asynchronously; wait without changing the accepted parents.
+          api_merge_sha=$(timeout --signal=KILL 60s node --input-type=module <<'NODE'
+          import { execFileSync } from "node:child_process";
+          import { setTimeout as sleep } from "node:timers/promises";
+          const deadline = performance.now() + 60_000;
+          const stop = message => { console.error(message); process.exit(1); };
+          const remaining = () => {
+            const ms = Math.floor(deadline - performance.now());
+            if (ms <= 0) stop("Merge readiness deadline expired");
+            return ms;
+          };
+          for (let attempt = 1; attempt <= 12; attempt += 1) {
+            let pr;
+            try {
+              pr = JSON.parse(execFileSync("gh", ["api", `repos/${process.env.GITHUB_REPOSITORY}/pulls/${process.env.PR}`,
+                "--jq", "{state,mergeable,merge_commit_sha,head:.head.sha,base:.base.sha}"],
+                { encoding: "utf8", timeout: remaining(), killSignal: "SIGKILL", maxBuffer: 4096 }));
+            } catch {
+              stop("Merge readiness API failed or exceeded its remaining budget");
+            }
+            remaining();
+            if (pr.state !== "open" || pr.head !== process.env.HEAD_SHA || pr.base !== process.env.BASE_SHA) {
+              stop("PR state, head or base differs from the admitted event");
+            }
+            if (pr.mergeable === false) stop("PR mergeability is false");
+            if (pr.mergeable === true) {
+              if (!/^[0-9a-f]{40}$/u.test(pr.merge_commit_sha ?? "")) stop("Missing valid API merge SHA");
+              remaining();
+              process.stdout.write(pr.merge_commit_sha);
+              process.exit(0);
+            }
+            if (pr.mergeable !== null) stop("Unsupported mergeability response");
+            if (attempt === 12) stop("PR mergeability remains unknown after 12 queries");
+            await sleep(Math.min(5000, remaining()));
+          }
+          NODE
+          )
           git fetch --no-tags origin "refs/pull/$PR/merge"
           candidate=$(git rev-parse FETCH_HEAD)
-          test "$(git show -s --format=%P "$candidate")" = "$BASE_SHA $HEAD_SHA"
+          parents=$(git show -s --format=%P "$candidate")
+          tree=$(git rev-parse "$candidate^{tree}")
+          printf 'candidate=%s parents=%s expected=%s tree=%s api_merge=%s\n' "$candidate" "$parents" "$BASE_SHA $HEAD_SHA" "$tree" "$api_merge_sha"
+          test "$candidate" = "$api_merge_sha"
+          test "$parents" = "$BASE_SHA $HEAD_SHA"
           GITHUB_SHA="$candidate" node .github/scripts/test-admission.mjs --static-only
           tag="ci-admitted/pr-$PR/$candidate"
           # A branch can advance between approval and dispatch. Use the exact
