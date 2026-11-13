@@ -43,10 +43,13 @@ export class SalesJobRuntimeService extends BaseService {
   }
   async processImports(signal) {
     const principal=this.importPrincipal();if(!principal||signal!==principal.signal)throw new Error("Sales Import worker unavailable");
-    let result,intake;try{result=await this.importer.runPrecheckBatch({signal});intake=await this.importer.runProcessingBatch({signal});}catch{throw new Error("Sales Import processing failed");}
-    if(result.processed)await this.logger.info("sales.import_precheck_completed","Import precheck batch completed",result);
-    if(intake.processed)await this.logger.info("sales.intake_processing_completed","Intake processing batch completed",intake);
-    return {...result,intake};
+    const context=this.services.require("mysqldatabase").context;if(typeof context?.storage?.run!=="function")throw new Error("Sales Import worker unavailable");
+    return context.storage.run({signal,auth:null,databaseTransaction:null},async()=>{
+      let result,intake;try{result=await this.importer.runPrecheckBatch({signal});intake=await this.importer.runProcessingBatch({signal});}catch{throw new Error("Sales Import processing failed");}
+      if(result.processed)await this.logger.info("sales.import_precheck_completed","Import precheck batch completed",result);
+      if(intake.processed)await this.logger.info("sales.intake_processing_completed","Intake processing batch completed",intake);
+      return {...result,intake};
+    });
   }
   bindBackorderScheduler(scheduler) {
     const job=scheduler.jobs.get("sales.backorderAllocate");
