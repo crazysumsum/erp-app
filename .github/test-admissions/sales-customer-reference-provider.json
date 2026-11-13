@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "decision": "Sam actual PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f user01a1be61-c413-72a0-8518-bc133fd9d0f3/turn01a1be55-fdbc-7921-b3d3-9ad356bfd691/questioncall_ceddf5c88978418b8c8a9f4c6670be55:「批准准入、指定發布及一次 CI（建議）」. Exact provider/test from6b52e9cebd26567037ba3409b50406eeca48f41b retained on9631d08f6e7c65757d238b36fa270d9b816a70f9 after main06caf9119d72d940d88192d6ebc1cd6eb065847c integration. Approves necessary receipt and ordinary push to https://github.com/crazysumsum/erp-app.git branchcodex/sales-customer-reference-provider, Draft PR and one current eight-shard functional CI only after main#348run42557160760SUCCESS, independent final admission registration/readback and PM release window. Merge separate decision; no retry or local rerun. Prior case/local decision: user01a1bdca-e773-7f32-a093-40f438ad44c8/questioncall_503a839998834f83a1fb9feb03154386; one local allowance already used.",
+  "purpose": "Deliver the partial Sales live Customer reference reader and three approved ordinary functional cases; direct positive/zero/error behavior was not covered by Fulfillment-only composition evidence. NOT_READY/UNKNOWN remain; zero never proves absence and no Customer archive/delete activation or factory wiring is included.",
+  "data": "Exactly3literal ordinary functional cases/11fixed variants:2positive+6uncertain+3boundary. Exactly8in-memory stub query calls:2+6+0. Existing inline DTOs only;0real DB rows/SQL/HTTP/browser/capacity. No extra fixture, sample, case or source revision.",
+  "concurrency": "No increase:1worker for this serial ordinary test file; existing eight independent server coverage shards and all existing jobs/workers unchanged. No new job/step/runner slot.",
+  "repetitions": "One approved natural Draft PR functional CI batch; each existing case follows unchanged routine discovery. No added repetitions/retries,manualdispatch,local test/build/validator rerun. Original one local3PASS execution remains historical exact-source evidence, not current integrated CI PASS.",
+  "thresholds": "Exact original assertions retained. Provider inspectReadiness NOT_READY and registry aggregate UNKNOWN; positive reference observation only, no NO_REFERENCE from zero. Existing server global92/83/90, all39highriskfilefloors and existing client/browser/lint/build/audit/required aggregate/review gates unchanged. Nonfunctional validation deferred until related UAT; noDR.",
+  "trigger": "Existing main-target Draft PR admission controller only, once after #348mainSUCCESS and independent final receipt readback/PM release. Ordinary PR/main/schedule functional routing unchanged; no workflow edit,manualdispatch,newjob,capacity execution or retry. Merge and natural main execution separately decided.",
+  "cost": "Candidate-specific incremental CI runtime,criticalpath impact and billed cost unknown. Original approved marginal estimate1–3seconds unmeasured in CI; local exactsource3PASS process0.135seconds is not a CI estimate or performance benchmark. Full existing CI duration unknown; no pre-run/load executed to estimate. Alternative retain local source/evidence and delay Customer main-based import; recommend independent thin-slice publication under named limits.",
+  "files": [
+    {
+      "path": "server/src/modules/sales/SalesCustomerReferenceProvider.js",
+      "mode": "100644",
+      "blob": "f0c2e11be27577b1e7d4d77020fb9b126d4429fa",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/salesCustomerReferenceProvider.test.js",
+      "mode": "100644",
+      "blob": "c41b0578bd9be624dd110e115abc4f5faad0dca2",
+      "kind": "functional",
+      "cases": [
+        "Sales reader returns positive live references from numeric and string aggregates",
+        "Sales uncertainty remains UNKNOWN without error details",
+        "Sales invalid input and NOT_READY protect the registry boundary"
+      ]
+    }
+  ]
+}
