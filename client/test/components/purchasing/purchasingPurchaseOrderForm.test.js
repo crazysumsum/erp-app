@@ -3,7 +3,7 @@ import { QSelect, Quasar } from "quasar";
 import { h } from "vue";
 import { createMemoryHistory, createRouter, RouterView } from "vue-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-vi.mock("@/services/purchasing.js", () => ({ default: Object.fromEntries(["lookupSuppliers", "getSupplierDefaults", "lookupSkus", "lookupCurrencies", "lookupPaymentTerms", "lookupWarehouses", "lookupBuyers", "createPurchaseOrder", "updatePurchaseOrder", "submitPurchaseOrder"].map((name) => [name, vi.fn()])) }));
+vi.mock("@/services/purchasing.js", () => ({ default: Object.fromEntries(["lookupSuppliers", "getSupplierDefaults", "lookupSkus", "lookupCurrencies", "lookupPaymentTerms", "lookupWarehouses", "lookupBuyers", "createPurchaseOrder", "updatePurchaseOrder", "submitPurchaseOrder", "lookupApprovers"].map((name) => [name, vi.fn()])) }));
 import purchasing from "@/services/purchasing.js";
 import Form from "@/components/purchasing/PurchaseOrderForm.vue";
 import { previewBaseQuantity, previewLineAmount, previewTotal } from "@/components/purchasing/purchasingEditorMath.js";
@@ -43,6 +43,7 @@ beforeEach(() => {
   purchasing.lookupCurrencies.mockResolvedValue([{ code: "HKD", name: "港元", decimalPlaces: 2 }, { code: "JPY", name: "日圓", decimalPlaces: 0 }, { code: "USD", name: "美元", decimalPlaces: 2 }]);
   purchasing.lookupPaymentTerms.mockResolvedValue([{ id: 42, code: "T2", name: "條款" }, { id: 43, code: "T3", name: "條款" }, { id: 44, code: "T4", name: "手動" }]);
   purchasing.getSupplierDefaults.mockImplementation((id) => Promise.resolve(defaults(id)));
+  purchasing.lookupApprovers.mockResolvedValue({ requireApproval: false, items: [] });
 });
 afterEach(() => { wrapper?.unmount(); wrapper = null; vi.restoreAllMocks(); window.document.body.innerHTML = ""; });
 
@@ -314,6 +315,27 @@ describe("TC-003 PO form", () => {
     const [first, second] = purchasing.submitPurchaseOrder.mock.calls;
     expect(first).toEqual([8, { version: 2, eventId: expect.any(String) }]);
     expect(second).toEqual(first);
+    expect(form.emitted("submitted")).toHaveLength(1);
+  });
+
+  it("審批開住：要揀審批人先可以提交審批，送 assignedApproverId 同 requestNote（§7.3）", async () => {
+    purchasing.lookupApprovers.mockResolvedValue({ requireApproval: true, items: [{ id: 5, label: "審批人乙" }] });
+    purchasing.submitPurchaseOrder.mockResolvedValue({ ...saved, status: "PENDING_APPROVAL", outcome: "PENDING_APPROVAL" });
+    const { form } = await mountForm({ document: draft });
+    await button("提交").trigger("click");
+    await flushPromises();
+    expect(window.document.body.textContent).not.toContain("確認後可收貨");
+    const approve = () => [...window.document.body.querySelectorAll(".q-dialog button")].find((b) => b.textContent.trim() === "提交審批");
+    expect(approve().disabled).toBe(true);
+    await pick("審批人 *", 5);
+    const note = [...window.document.body.querySelectorAll(".q-dialog .q-field")].find((node) => node.querySelector(".q-field__label")?.textContent.startsWith("提交備註")).querySelector("textarea");
+    note.value = "  請今日批  ";
+    note.dispatchEvent(new Event("input"));
+    await flushPromises();
+    expect(approve().disabled).toBe(false);
+    approve().click();
+    await flushPromises();
+    expect(purchasing.submitPurchaseOrder).toHaveBeenCalledWith(8, { version: 2, assignedApproverId: 5, requestNote: "請今日批", eventId: expect.any(String) });
     expect(form.emitted("submitted")).toHaveLength(1);
   });
 

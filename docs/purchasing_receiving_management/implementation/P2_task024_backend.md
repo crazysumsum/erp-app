@@ -130,3 +130,7 @@ Sam approved on 2026-11-10: "批准修補，恢復採購".
 - The receipt re-pins that test file, so it needs a new digest. TASK-025's receipt pins the same file and needs the same re-pin when it integrates this backend.
 
 Local checks after the fix: `handlerConventions.test.js` and `purchaseOrderApprovalHandlers.test.js` 7/7 pass with no database, eslint on the three changed files is clean, and the module boundary check passes.
+
+## Merged, 2026-11-10
+
+Sam approved on 2026-11-10: "批准 push 一次和功能 CI 一次". `284ea710` merges main `095ead95` into the fix `a0aa3565`, and was pushed once to PR #351. Admission run 42738289351 passed. CI run 42738323675 passed: 20 jobs, with the two capacity jobs skipped, at merge tree `b47e9cab` (`284ea710` + main `095ead95`). The TL reviewed `a0aa3565`: 0 Required. The merge followed Sam's 2026-11-06 "CI綠了就merge" after the gate passed: equal heads, main an ancestor, every non-capacity job SUCCESS. PR #351 merged at 2026-11-10T02:02:14Z as `9762fb59c139b03d114cdfb96a0d03d8aa97898c`. The branch and its worktree were removed.
