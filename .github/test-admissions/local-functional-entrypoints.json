@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam actual user message01a1ae60-1496-7012-a272-d1e1afc327f2 in PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f on2026-11-06,call_4eaa26a1cdaf41b093f31eff6f7a7c33: 批准私有驗證、准入及一次 Draft PR CI. Approved productaa112827fc1a7f001b9ccf8f5dd9ea03449226ff/treeb3298be02a7e3901ac2a172bd209d950841a80db onmain97cb27f184b35862a17c37de90589d0ee6b07f3a and private scripte63e9430015f322daf2bb0b802454dc7971ac5b7ab367bf6d37e74f08a938330. Feature author does not publish or approve this admission digest;trusted independent administrator required. Merge separately decided.",
+  "decision": "Sam actual user message01a1ae60-1496-7012-a272-d1e1afc327f2 in PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f on2026-11-06,call_4eaa26a1cdaf41b093f31eff6f7a7c33: 批准私有驗證、准入及一次 Draft PR CI. Approved productaa112827fc1a7f001b9ccf8f5dd9ea03449226ff/treeb3298be02a7e3901ac2a172bd209d950841a80db onmain97cb27f184b35862a17c37de90589d0ee6b07f3a and private scripte63e9430015f322daf2bb0b802454dc7971ac5b7ab367bf6d37e74f08a938330. Feature author does not publish or approve this admission digest;trusted independent administrator required. Merge separately decided. Pin refresh 2026-11-12 by the TL: client/package.json blob 0d73234e -> 70d073b0 after Supplier client-ui option B (the functional test entry additionally accepts --reporter=junit and --outputFile=<path>; TL SCOPE approval ecad64b7); capacity pattern, the other four pins and this receipt's own workload are unchanged.",
   "purpose": "Prevent ordinary root/server/client local functional npm entrypoints from accidentally executing existing catalogued capacity cases. Reuse the single existing catalog and selectors;fail closed for invalid/empty selection. Existing CI client caller remains accepted. No new test registration.",
   "data": "No new application case,data row,fixture,dataset or capacity workload. Existing functional cases,transaction/permission/idempotency/recovery/rollback assertions and catalog definitions unchanged. One separately authorized private batch used35command scenarios/41controlled groups with inert launchers and catalog/regex metadata only,zero application tests/DB/HTTP/browser/capacity.",
   "concurrency": "Private batch serial,one group at a time. Existing CI eight independent MySQL shards remain serial within each shard;client and browser jobs retain their existing settings. No job/step/worker/concurrency increase.",
@@ -24,7 +24,7 @@
     {
       "path": "client/package.json",
       "mode": "100644",
-      "blob": "0d73234ec7d3dda11767c91b48e8a6e5ac068512",
+      "blob": "70d073b0db1519ad1dc1f4658fe9328f0c9c10f7",
       "kind": "support"
     },
     {
