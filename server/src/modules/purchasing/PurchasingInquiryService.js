@@ -19,9 +19,9 @@ const MAX_SEARCH_IDS = 100; // 設計 §8.9：名稱搜尋最多 100 個 ID。
 const date = (column) => `DATE_FORMAT(${column}, '%Y-%m-%d') AS ${column}`;
 const SUMMARY = `id, po_number, status, version, supplier_id, supplier_code_snapshot, supplier_name_snapshot, currency_code,
   currency_decimal_places_snapshot, ${date("order_date")},
-  ${date("expected_delivery_date")}, buyer_id, buyer_label, supplier_reference, total_amount, has_outstanding, created_at, updated_at`;
+  ${date("expected_delivery_date")}, buyer_id, buyer_label, supplier_reference, total_amount, has_outstanding, has_confirmed_receipt, created_at, updated_at`;
 const DETAIL = `${SUMMARY}, ordering_address_id, ordering_address_snapshot, currency_name_snapshot, payment_term_id,
-  payment_term_snapshot, default_receiving_warehouse_id, default_warehouse_code_snapshot, notes, subtotal_amount, has_confirmed_receipt, created_by_label,
+  payment_term_snapshot, default_receiving_warehouse_id, default_warehouse_code_snapshot, notes, subtotal_amount, created_by_label,
   updated_by_label, confirmed_at, closed_at, cancelled_at`;
 const LINE = `id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, tracking_policy_snapshot, inventory_tracked_snapshot,
   minimum_receipt_life_days_snapshot, base_uom_id, base_uom_code_snapshot, purchase_sku_uom_id, purchase_uom_code_snapshot, uom_to_base_factor_snapshot,
@@ -33,10 +33,14 @@ const nullableId = (value) => value === null ? null : Number(value);
 const nonNegative = (value) => value > 0n ? value : 0n;
 const placeholders = (values) => values.map(() => "?").join(",");
 // allowedActions 只列已有 route 而且做得到嘅動作；service 喺 transaction 入面會再驗。
-// cancel、withdrawConfirmation 要權威 GR reader 接好先宣告（§8.4），而家 production 一律 503，所以唔列。
-function allowedActions(status, permissions) {
+// TASK-045：cancel、withdrawConfirmation 用 has_confirmed_receipt 投影過濾；呢個 flag 只係 UI 過濾，
+// 權威仍然係 lifecycle 喺鎖住 PO 之後問 GoodsReceiptFacts（§8.4），所以列出嘅動作都可能最終失敗。
+export function allowedActions(status, permissions, hasConfirmedReceipt) {
   if (!permissions.includes("purchasing.mgmt")) return [];
-  if (status === "DRAFT") return ["edit", "submit", "copy"];
+  const cancel = hasConfirmedReceipt ? [] : ["cancel"];
+  if (status === "DRAFT") return ["edit", "submit", "copy", ...cancel];
+  if (status === "PENDING_APPROVAL") return ["copy", ...cancel];
+  if (status === "CONFIRMED") return ["copy", ...cancel, ...(hasConfirmedReceipt ? [] : ["withdrawConfirmation"])];
   return status === "PARTIALLY_RECEIVED" ? ["copy", "closeRemaining"] : ["copy"];
 }
 // §7.4：跟操作者。列表唔讀審批，所以呢三個動作只喺詳情出；service 喺 transaction 入面會再驗。
@@ -106,7 +110,7 @@ function toHeader(row, permissions) {
     supplierCode: row.supplier_code_snapshot, supplierName: row.supplier_name_snapshot, currencyCode: row.currency_code, orderDate: row.order_date,
     expectedDeliveryDate: row.expected_delivery_date, buyerId: nullableId(row.buyer_id), buyerLabel: row.buyer_label, supplierReference: row.supplier_reference,
     totalAmount: storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot)), hasOutstanding: Boolean(row.has_outstanding) && RECEIVING.includes(row.status),
-    createdAt: Number(row.created_at), updatedAt: Number(row.updated_at), allowedActions: allowedActions(row.status, permissions)
+    createdAt: Number(row.created_at), updatedAt: Number(row.updated_at), allowedActions: allowedActions(row.status, permissions, Boolean(row.has_confirmed_receipt))
   };
 }
 

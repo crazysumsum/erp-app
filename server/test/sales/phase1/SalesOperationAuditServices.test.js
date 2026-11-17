@@ -4,30 +4,36 @@ import { randomUUID } from "node:crypto";
 import { SalesOperationService } from "../../../src/modules/sales/SalesOperationService.js";
 import { SalesAuditService } from "../../../src/modules/sales/SalesAuditService.js";
 import { salesPayloadHash } from "../../../src/modules/sales/salesCanonicalHash.js";
+import { salesMemoryDatabase } from "./fixtures.js";
 
 const actor = { id: 7, username: "synthetic" };
 const input = () => ({ eventId: randomUUID(), commandType: "CREATE_QUOTATION", targetId: null,
   payload: { quantity: "1.000000" }, actor, nowMs: 1 });
 test("Sales operation claims a global event with canonical business payload and fixed command target", async () => {
   let args;
-  const service = new SalesOperationService();
-  const tx = { async execute(sql, values) { args = values; return [{ insertId: 9 }]; } };
+  const program = { async execute(sql, values) { args = values; return [{ insertId: 9 }]; } };
+  const database=salesMemoryDatabase(program),service=new SalesOperationService({database});
   const request = input();
+  await database.withTransaction(async tx=>{
   assert.deepEqual(await service.claim(tx, request), { operationId: 9, replay: null });
   assert.equal(args[2], "QUOTATION");
   assert.equal(args[4], salesPayloadHash(request.payload));
   await assert.rejects(() => service.claim(tx, { ...request, commandType: "CONFIRM_ORDER" }), TypeError);
+  },{eventAdmissionId:request.eventId});
 });
 test("Sales operation replays only the same actor, command, target and payload", async () => {
-  const service = new SalesOperationService(), request = input();
+  const request = input();
   const row = { id: 9, actor_user_id: actor.id, command_type: request.commandType, target_type: "QUOTATION", target_id: null,
     request_hash: salesPayloadHash(request.payload), status: "SUCCEEDED", result_summary: { id: 3, number: "QT-202610-000001", status: "DRAFT", version: 1 } };
-  const tx = { async execute() { throw Object.assign(new Error("duplicate"), { code: "ER_DUP_ENTRY" }); }, async query() { return [[row]]; } };
+  const program = { async execute() { throw Object.assign(new Error("duplicate"), { code: "ER_DUP_ENTRY" }); }, async query() { return [[row]]; } };
+  const database=salesMemoryDatabase(program),service=new SalesOperationService({database});
+  await database.withTransaction(async tx=>{
   assert.deepEqual((await service.claim(tx, request)).replay, row.result_summary);
   for (const patch of [{ actor: { ...actor, id: 8 } }, { commandType: "CREATE_ORDER" }, { targetId: 2 }, { payload: { quantity: "2.000000" } }])
     await assert.rejects(() => service.claim(tx, { ...request, ...patch }), { code: "SALES_EVENT_CONFLICT" });
   row.status = "IN_PROGRESS";
   await assert.rejects(() => service.claim(tx, request), { code: "CONCURRENT_OPERATION" });
+  },{eventAdmissionId:request.eventId});
 });
 test("Sales operation completion guards durable result fields and refuses double completion", async () => {
   const service = new SalesOperationService();

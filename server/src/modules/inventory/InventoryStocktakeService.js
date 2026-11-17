@@ -5,7 +5,7 @@ import { ItemLookupService } from "../item/ItemLookupService.js";
 import { uomConversionInvalid } from "../item/itemErrors.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
-import { InventoryOperationService } from "./InventoryOperationService.js";
+import { InventoryOperationService, inventoryEventAdmissionOptions } from "./InventoryOperationService.js";
 import { consumeInventoryStocktakeCancelContext } from "./inventoryStocktakeCancelContext.js";
 import { consumeInventoryHighRiskContext } from "./inventoryHighRiskContext.js";
 import { INVENTORY_STOCK_STATUSES } from "./inventoryConstants.js";
@@ -94,17 +94,17 @@ export class InventoryStocktakeService {
       throw new TypeError("InventoryStocktakeService requires database, time and authorization services");
     }
     Object.assign(this, { database, logger, time, authorize, itemLookup, inventoryProfileLookupFactory, audit: audit ?? new InventoryAuditService({ database, logger, time }),
-      operations: operations ?? new InventoryOperationService(), locks: locks ?? new InventoryLockService() });
+      operations: operations ?? new InventoryOperationService({ database }), locks: locks ?? new InventoryLockService() });
   }
-  create(command) { return this.database.withTransaction(tx => this.createInTransaction(tx, command)).catch(concurrent); }
-  update(command) { return this.database.withTransaction(tx => this.updateInTransaction(tx, command)).catch(concurrent); }
-  cancelDraft(command) { return this.database.withTransaction(tx => this.cancelDraftInTransaction(tx, command)).catch(concurrent); }
-  start(command) { return this.database.withTransaction(tx => this.startInTransaction(tx, command)).catch(concurrent); }
-  saveCounts(command) { return this.database.withTransaction(tx => this.saveCountsInTransaction(tx, command)).catch(concurrent); }
-  addLine(command) { return this.database.withTransaction(tx => this.addLineInTransaction(tx, command)).catch(concurrent); }
-  ready(command) { return this.database.withTransaction(tx => this.readyInTransaction(tx, command)).catch(concurrent); }
-  cancel(command, proof) { return this.database.withTransaction(tx => this.cancelInTransaction(tx, command, proof)).catch(concurrent); }
-  post(command, proof) { return this.database.withTransaction(tx => this.postInTransaction(tx, command, proof)).catch(concurrent); }
+  create(command) { return this.database.withTransaction(tx => this.createInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  update(command) { return this.database.withTransaction(tx => this.updateInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  cancelDraft(command) { return this.database.withTransaction(tx => this.cancelDraftInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  start(command) { return this.database.withTransaction(tx => this.startInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  saveCounts(command) { return this.database.withTransaction(tx => this.saveCountsInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  addLine(command) { return this.database.withTransaction(tx => this.addLineInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  ready(command) { return this.database.withTransaction(tx => this.readyInTransaction(tx, command), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  cancel(command, proof) { return this.database.withTransaction(tx => this.cancelInTransaction(tx, command, proof), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
+  post(command, proof) { return this.database.withTransaction(tx => this.postInTransaction(tx, command, proof), inventoryEventAdmissionOptions(command?.source)).catch(concurrent); }
 
   async postInTransaction(tx, command, proof) {
     const context = validateInventoryCommandContext(tx, command, { purpose: "stocktake.post", requiredCallerPermission: "inventory.adjust" });

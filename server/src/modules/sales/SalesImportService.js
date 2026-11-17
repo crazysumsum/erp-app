@@ -14,6 +14,7 @@ import {transitionImportJob} from "./salesIntakeStateMachine.js";
 import {salesPayloadHash} from "./salesCanonicalHash.js";
 import {salesEventId} from "./salesValidation.js";
 import {salesError} from "./salesErrors.js";
+import {assertShipmentEventAdmissionInTransaction} from "../fulfillment/shipmentEventAdmission.js";
 
 const invalid=()=>salesError("SALES_IMPORT_FILE_INVALID");
 export function validateSalesImportCommand(input){
@@ -47,7 +48,7 @@ function summary(row,warnings=[]) {
 export class SalesImportService {
  constructor({database,time,root="storage/sales-imports",tempRoot="storage/uploads/tmp",...options}={}) {
   this.workerOptions=options;this.database=database;this.time=time;this.root=prepareDiskTempDirectory(root,"Sales import");
-  this.tempRoot=prepareDiskTempDirectory(tempRoot,"Sales import temp");this.operations=new SalesOperationService();this.sequence=new SalesSequenceService({time});this.audit=options.audit??new SalesAuditService();
+  this.tempRoot=prepareDiskTempDirectory(tempRoot,"Sales import temp");this.operations=new SalesOperationService({database});this.sequence=new SalesSequenceService({time});this.audit=options.audit??new SalesAuditService();
  }
  runPrecheckBatch(request){
   this.precheck??=new SalesImportPrecheckWorker({...this.workerOptions,database:this.database,time:this.time,root:this.root,checkFile});
@@ -79,7 +80,7 @@ export class SalesImportService {
    await this.audit.record(tx,{actor,action:status==="QUEUED"?"sales_import.confirmed":"sales_import.cancelled",targetId:id,targetNumber:job.batch_number,eventId,nowMs,...trace,details:{fromStatus:job.status,toStatus:status,version:version+1}});
    const result={id,number:job.batch_number,status,version:version+1};await this.operations.succeed(tx,{operationId:claim.operationId,result,nowMs});
    abortSignal?.throwIfAborted();return {importJob:{id,batchNumber:job.batch_number,status,version:version+1},warnings:[]};
-  },{signal:abortSignal});
+  },{signal:abortSignal,eventAdmissionId:eventId});
  }
  async resolveResultDownload({claims,id,abortSignal}){
   if(!Number.isSafeInteger(id)||id<1)throw salesError("SALES_INPUT_INVALID");
@@ -112,6 +113,7 @@ export class SalesImportService {
   const intent={fileHash:file.contentHash,fileSize:file.size,templateVersion:"1.0"},hash=salesPayloadHash(intent),nowMs=this.time.nowMs();
   const stage=await this.operations.run(this.database,async tx=>{
    const actor=await actorInTransaction(tx,claims);abortSignal?.throwIfAborted();
+   await assertShipmentEventAdmissionInTransaction(this.database,tx,{eventId});
    let operationId;
    try {
     const [inserted]=await tx.execute(`INSERT INTO sales_operation_requests
@@ -133,12 +135,13 @@ export class SalesImportService {
    const id=Number(inserted.insertId);
    await tx.execute("UPDATE sales_operation_requests SET target_id=?,recovery_payload=? WHERE id=?",[id,JSON.stringify(intent),operationId]);
    return {operationId,job:{id,batch_number:number,status:"UPLOADED",version:1,source_file_path:""},admitted:false};
-  },{signal:abortSignal});
+  },{signal:abortSignal,eventAdmissionId:eventId});
   if(stage.admitted)return stage.result;
   const directory=path.join(this.root,stage.job.batch_number),relative=`${stage.job.batch_number}/source.csv`,destination=path.join(this.root,relative);
   try {
    return await this.operations.run(this.database,async tx=>{
     const actor=await actorInTransaction(tx,claims);
+    await assertShipmentEventAdmissionInTransaction(this.database,tx,{eventId});
     const [[operation]]=await tx.query("SELECT status,target_id,request_hash,actor_user_id,result_summary FROM sales_operation_requests WHERE id=? FOR UPDATE",[stage.operationId]);
     if(!operation||operation.request_hash!==hash||Number(operation.target_id)!==Number(stage.job.id))throw salesError("SALES_EVENT_CONFLICT");
     const [[job]]=await tx.query("SELECT id,batch_number,status,version,source_file_path FROM sales_import_jobs WHERE id=? FOR UPDATE",[stage.job.id]);
@@ -159,13 +162,14 @@ export class SalesImportService {
     await this.audit.record(tx,{actor,action:"sales_import.uploaded",targetId:Number(job.id),targetNumber:job.batch_number,eventId,nowMs:this.time.nowMs(),...trace,details:{version:Number(job.version)}});
     await tx.execute("UPDATE sales_operation_requests SET status='SUCCEEDED',result_type='IMPORT_JOB',result_id=?,result_summary=?,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS'",[job.id,JSON.stringify(result),this.time.nowMs(),this.time.nowMs(),stage.operationId]);
     return result;
-   },{signal:abortSignal});
+   },{signal:abortSignal,eventAdmissionId:eventId});
   }catch(error){
    // A moved file belongs to the durable staging Job even when COMMIT acknowledgement is lost.
    let moved=true;try{await lstat(destination);}catch(probe){if(probe.code!=="ENOENT")throw error;moved=false;}
    if(!moved&&error.code!=="TRANSACTION_OUTCOME_UNKNOWN") {
     try {
      await this.database.withTransaction(async tx=>{
+      await assertShipmentEventAdmissionInTransaction(this.database,tx,{eventId});
       const [[operation]]=await tx.query("SELECT status FROM sales_operation_requests WHERE id=? FOR UPDATE",[stage.operationId]);
       if(operation?.status!=="IN_PROGRESS")return;
       const [[job]]=await tx.query("SELECT status,source_file_path FROM sales_import_jobs WHERE id=? FOR UPDATE",[stage.job.id]);
@@ -174,7 +178,7 @@ export class SalesImportService {
       try{await lstat(destination);return;}catch(probe){if(probe.code!=="ENOENT")throw probe;}
       await tx.execute("DELETE FROM sales_import_jobs WHERE id=? AND status='UPLOADED' AND source_file_path=''",[stage.job.id]);
       await tx.execute("DELETE FROM sales_operation_requests WHERE id=? AND status='IN_PROGRESS'",[stage.operationId]);
-     });
+     },{eventAdmissionId:eventId});
      await rmdir(directory).catch(failure=>{if(!["ENOENT","ENOTEMPTY"].includes(failure.code))throw failure;});
     }catch{throw salesError("SALES_DEPENDENCY_UNAVAILABLE");}
    }

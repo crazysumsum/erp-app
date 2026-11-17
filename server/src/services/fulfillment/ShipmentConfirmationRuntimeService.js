@@ -91,7 +91,7 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
   const context=this.database.context?.get(),record=this.#beginRequest(context);
   try{
    // Keep the original-instance capability private; request auth is read afresh through this shared context.
-   this.#reversal??=new ShipmentReversalService({database:this.database,time:this.time,operationLeaseMs:this.#confirmation.operations.leaseMs,sales:this.#confirmation.sales,inventoryLookup:this.#confirmation.inventoryLookup});
+   this.#reversal??=new ShipmentReversalService({database:this.database,time:this.time,logger:this.services.require("logging").logger,operationLeaseMs:this.#confirmation.operations.leaseMs});
    const preparation=await this.database.context.storage.run({...context,signal:record.controller.signal,databaseTransaction:null},()=>this.#reversal.prepareReversalReadOnly(shipmentId,input,started));
    if(this.#closed||record.controller.signal.aborted||performance.now()>=record.deadline)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
    return preparation;

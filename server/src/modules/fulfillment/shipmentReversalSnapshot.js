@@ -146,6 +146,11 @@ export async function readShipmentReversalSnapshot(database,shipmentId){
   const actor=await assertActorFresh(tx,{actorId:Number(claims.sub),claimedRoles:claims.roles,claimedPermissions:claims.permissions});
   if(!actor.username||!["fulfillment.view","fulfillment.reverse"].every(permission=>actor.permissions.includes(permission)))throw fulfillmentError("FULFILLMENT_PERMISSION_DENIED");
 
+  return readOriginalSnapshot(tx,shipmentId);
+ },{isolationLevel:"REPEATABLE READ"});
+}
+
+async function readOriginalSnapshot(tx,shipmentId){
   const [[shipment]]=await tx.query("SELECT id,fulfillment_id,sales_order_id,customer_id,warehouse_id,line_count,confirmation_event_id FROM shipments WHERE id=?",[shipmentId]);
   if(!shipment)throw fulfillmentError("SHIPMENT_NOT_FOUND");
   const [[root]]=await tx.query("SELECT id,sales_order_id,customer_id,warehouse_id,active_shipment_id,line_count FROM fulfillments WHERE id=?",[shipment.fulfillment_id]);
@@ -162,5 +167,10 @@ export async function readShipmentReversalSnapshot(database,shipmentId){
   const snapshot={root,shipment,lines,shipmentLines,claims:sourceClaims,allocations,issues};
   await assertOriginalShipInTransaction(tx,snapshot);
   return snapshot;
- },{isolationLevel:"REPEATABLE READ"});
+}
+
+// Only the actual gated E_R inspection uses this current-read bootstrap. Parent locks follow owner journals.
+export async function readCurrentShipmentReversalBootstrap(database,tx,shipmentId){
+ assertFulfillmentTransaction(database,tx);
+ return readOriginalSnapshot(tx,shipmentId);
 }
