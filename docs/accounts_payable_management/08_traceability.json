@@ -1,0 +1,491 @@
+{
+  "schema_version": "2.0",
+  "module_id": "accounts-payable-management",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-002",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-003",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-004",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-005",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-006",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-007",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-008",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-009",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-010",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-011",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-012",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-013",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-014",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-015",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-016",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-017",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-018",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-019",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-020",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-021",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-022",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-023",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-024",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-025",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-026",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-027",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-028",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-029",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-030",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-031",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-032",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-033",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-034",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-035",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-036",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-037",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-038",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-039",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-040",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-041",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-042",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-043",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-044",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-045",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-001",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-002",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-003",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-004",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-005",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-006",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-001",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-002",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-003",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-004",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-005",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-006",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-007",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-008",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-009",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    }
+  ],
+  "designs": [],
+  "phases": [],
+  "tasks": [],
+  "technical_tests": [],
+  "uat_tests": []
+}

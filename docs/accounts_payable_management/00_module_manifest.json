@@ -1,0 +1,48 @@
+{
+  "schema_version": "2.0",
+  "module_id": "accounts-payable-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/accounts_payable_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [],
+    "test_paths": [],
+    "allowed_write_paths": [
+      "docs/accounts_payable_management/**"
+    ],
+    "approval_required_paths": [],
+    "forbidden_paths": [],
+    "schema_paths": [],
+    "shared_resources": []
+  },
+  "contracts": {
+    "provided": [],
+    "consumed": [],
+    "data_ownership": {
+      "owned": [],
+      "read_only": [],
+      "forbidden_direct_writes": []
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [],
+    "technical": [],
+    "regression": [],
+    "uat": []
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

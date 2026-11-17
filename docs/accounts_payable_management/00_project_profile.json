@@ -1,0 +1,45 @@
+{
+  "schema_version": "2.0",
+  "module_id": "accounts-payable-management",
+  "environment": {
+    "id": "UNCONFIRMED",
+    "kind": "LOCAL_ISOLATED",
+    "data_reference": "UNCONFIRMED",
+    "authorization_ref": null
+  },
+  "permissions": {
+    "product_write": [],
+    "test_script_write": [],
+    "docs_write": [
+      "DESIGN_AND_PLAN",
+      "IMPLEMENT",
+      "TEST_AND_VERIFY",
+      "REVIEW_AND_ALIGN"
+    ],
+    "isolated_data_write": [],
+    "schema_execute": [],
+    "deployment": [],
+    "external_effects": [],
+    "evidence_export": []
+  },
+  "runtime_policy": {
+    "strategy": "ISOLATED",
+    "required_resources": [],
+    "cleanup_owner": "UNCONFIRMED"
+  },
+  "suites": [],
+  "ci": {
+    "provider": "UNCONFIRMED",
+    "required_checks": []
+  },
+  "acceptance": {
+    "business_required": true,
+    "release_approval_required": true,
+    "require_clean_candidate": true
+  },
+  "evidence": {
+    "directory": "evidence",
+    "max_report_bytes": 2097152,
+    "allow_export": false
+  }
+}

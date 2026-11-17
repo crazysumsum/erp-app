@@ -1,0 +1,35 @@
+{
+  "schema_version": "2.0",
+  "module_id": "accounts-payable-management",
+  "revision": 0,
+  "mode": "DESIGN_AND_PLAN",
+  "active_mode": "DESIGN_AND_PLAN",
+  "status": "BOOTSTRAPPED",
+  "resume_status": null,
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": null,
+    "plan": null,
+    "code_commit": "6a34b8c23aec7d2595e675f50b4ea17d0dbc0cd6",
+    "source_fingerprint": null,
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.claude/worktrees/accounts-payable-design",
+    "default_commit": null,
+    "mode_entry_commit": "6a34b8c23aec7d2595e675f50b4ea17d0dbc0cd6"
+  },
+  "runtime": {
+    "instance_id": "UNCONFIRMED",
+    "owner": "UNCONFIRMED",
+    "resources": {},
+    "lease_ref": null
+  },
+  "tasks": {},
+  "approvals": [],
+  "reviews": [],
+  "observations": [],
+  "pending_decisions": [],
+  "external_actions": [],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Inspect confirmed project sources; complete module/profile/specifications and obtain actual decisions. This scaffold is not ready for implementation."
+}
