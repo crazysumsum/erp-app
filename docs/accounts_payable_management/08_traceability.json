@@ -686,6 +686,46 @@
         "NFR-006",
         "SEC-009"
       ]
+    },
+    {
+      "id": "DES-024",
+      "requirement_ids": [
+        "FR-002",
+        "FR-008",
+        "FR-018",
+        "NFR-004",
+        "SEC-006"
+      ]
+    },
+    {
+      "id": "DES-025",
+      "requirement_ids": [
+        "NFR-001"
+      ]
+    },
+    {
+      "id": "DES-026",
+      "requirement_ids": [
+        "FR-033",
+        "SEC-001",
+        "SEC-002",
+        "SEC-005"
+      ]
+    },
+    {
+      "id": "DES-027",
+      "requirement_ids": [
+        "FR-017",
+        "NFR-003"
+      ]
+    },
+    {
+      "id": "DES-028",
+      "requirement_ids": [
+        "FR-043",
+        "SEC-004",
+        "SEC-006"
+      ]
     }
   ],
   "phases": [],
