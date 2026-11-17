@@ -4,10 +4,16 @@ import test from "node:test";
 import { salesFulfillmentFixture } from "../sales/phase4/salesFulfillmentFixtures.js";
 import { ItemLookupService } from "../../src/modules/item/ItemLookupService.js";
 
+import { up as admissionUp } from "../../database/migrations/0092_create_fulfillment_operations_and_sequences.js";
+import { componentReversalAdmission } from "../fulfillment/eventAdmissionComponentFixture.js";
+
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 async function jointFixture(t,baseQuantity=1){
   const [{InventoryFulfillmentService},{InventoryLookupService}]=await Promise.all([import("../../src/modules/inventory/InventoryFulfillmentService.js"),import("../../src/modules/inventory/InventoryLookupService.js")]);
   const f=await salesFulfillmentFixture(t,baseQuantity),time={...f.time,fileDate:()=>"2023-11-14"};
+  await admissionUp(f.db);
+  const reversalEvents=new Map(),eventAdmissionVerifier=componentReversalAdmission(f.database,reversalEvents);
+  const reversalOwner=actorId=>Object.freeze({actorId:String(actorId),shipmentId:"1",fulfillmentId:"1",salesOrderId:String(f.s.orderId),customerId:String(f.s.customerId),warehouseId:String(f.s.warehouseId)});
   // Complete the confirmed-order fixture's existing reserve provenance; allocation must not rewrite its Sales last-sync version.
   const [[reservation]]=await f.db.query("SELECT create_operation_id FROM inventory_reservations WHERE id=?",[f.reservationId]);
   await f.db.execute("UPDATE inventory_operation_requests SET source_module='SALES',source_document_type='SALES_ORDER',source_document_id=?,source_line_id=? WHERE id=?",[String(f.s.orderId),String(f.s.lineId),reservation.create_operation_id]);
@@ -15,7 +21,7 @@ async function jointFixture(t,baseQuantity=1){
   const binId=await f.s.insert("inventory_bins",{warehouse_id:f.s.warehouseId,bin_code:"JOINT",normalized_code:"joint",status:"ACTIVE",created_at:f.s.now,updated_at:f.s.now});
   const balanceId=String(await f.s.insert("inventory_stock_balances",{warehouse_id:f.s.warehouseId,bin_id:binId,sku_id:f.s.skuId,stock_status:"AVAILABLE",on_hand_quantity:10,allocated_quantity:0,fifo_anchor_date:"2023-11-13",created_at:f.s.now,updated_at:f.s.now}));
   await f.s.insert("inventory_stock_controls",{warehouse_id:f.s.warehouseId,sku_id:f.s.skuId,reserved_quantity:baseQuantity,created_at:f.s.now,updated_at:f.s.now});
-  const inventory=new InventoryFulfillmentService({database:f.database,time,logger:{error(){}}}),sales=f.createService({inventoryFulfillment:inventory}),item=new ItemLookupService({database:f.database,time,logger:{error(){}}});
+  const inventory=new InventoryFulfillmentService({database:f.database,time,logger:{error(){}},eventAdmissionVerifier}),sales=f.createService({inventoryFulfillment:inventory,eventAdmissionVerifier}),item=new ItemLookupService({database:f.database,time,logger:{error(){}}});
   const actor={...f.command().actor,userId:f.userId};
   const allocation={actor,source:{documentId:"1",eventId:randomUUID()},correlationId:"",payload:{fulfillmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(f.s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:1,baseQuantity:"1",overrideReason:"",allocations:[{inventoryBalanceId:balanceId,expectedBalanceVersion:1,baseQuantity:"1"}]}]}]}};
   let allocated;
@@ -31,7 +37,7 @@ async function jointFixture(t,baseQuantity=1){
   assert.equal((await f.db.query("SELECT inventory_version FROM sales_order_line_reservations WHERE id=?",[f.mappingId]))[0][0].inventory_version,1);
   const issue={actor,source:{documentId:"1",eventId:randomUUID()},correlationId:"",payload:{fulfillmentId:"1",shipmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(f.s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:member.version,baseQuantity:"1",allocations:[{inventoryAllocationId:leg.inventoryAllocationId,inventoryBalanceId:balanceId,expectedVersion:leg.allocationVersion,expectedBalanceVersion:leg.balanceVersion,baseQuantity:"1"}]}]}]}};
   const lookup=new InventoryLookupService({fulfillment:inventory,time});
-  return {...f,time,inventory,sales,item,lookup,allocated,issue,balanceId};
+  return {...f,time,inventory,sales,item,lookup,allocated,issue,balanceId,reversalEvents,reversalOwner};
 }
 async function confirm(f,sales=f.sales,{changeIntent,changeResult}={}){
   return f.run({claims:f.claims},async tx=>{
@@ -49,7 +55,7 @@ async function confirm(f,sales=f.sales,{changeIntent,changeResult}={}){
     const claims=sql.map((statement,index)=>/INSERT INTO inventory_operation_requests/u.test(statement)?index:-1).filter(index=>index>=0);
     assert.ok((locked.replay||root>=0&&claims.every(index=>index<root))&&claims.length>0,"all Inventory operation preclaims precede the first Sales domain root; post must not claim");
     return {result,inventoryResult,intent,locked};
-  });
+  },{isolationLevel:"READ COMMITTED",eventAdmissionId:f.issue.source.eventId});
 }
 async function stateOf(f){
   const tables=["sales_orders","sales_order_lines","sales_order_line_reservations","sales_operation_requests","sales_order_status_history","sales_audit_logs","inventory_operation_requests","inventory_stock_controls","inventory_stock_balances","inventory_reservations","inventory_allocations","inventory_movements","inventory_audit_logs"];
@@ -83,6 +89,7 @@ nativeTest("actual joint exact replay returns the original result after real rev
   const f=await jointFixture(t),confirmed=await confirm(f),issued=confirmed.inventoryResult.lines[0].reservations[0],leg=issued.allocations[0];
   const beforeReplay=await stateOf(f);assert.deepEqual((await confirm(f)).result,confirmed.result);assert.deepEqual(await stateOf(f),beforeReplay);
   const reverseEvent=randomUUID(),reverse={actor:f.issue.actor,source:{documentId:"1",eventId:reverseEvent},correlationId:"",payload:{fulfillmentId:"1",shipmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(f.s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:issued.version,baseQuantity:"1",originalInventoryOperationId:issued.inventoryOperationId,allocations:[{shipmentIssueId:"1",originalMovementId:leg.movementId,inventoryAllocationId:leg.inventoryAllocationId,expectedBalanceVersion:leg.balanceVersion,baseQuantity:"1"}]}]}]}};
+  f.reversalEvents.set(reverseEvent,f.reversalOwner(f.userId));
   const reverseOnce=()=>f.run({claims:f.claims},async tx=>{
     const proof=await f.inventory.claimFulfillmentBatchInTransaction(tx,{action:"REVERSE",command:reverse});
     const intent=f.command();Object.assign(intent,{purpose:"SHIPMENT_REVERSED",eventId:reverseEvent,originalConfirmationEventId:confirmed.intent.eventId,expectedOrderVersion:2,inventoryRequestHash:proof.requestHash});
@@ -90,7 +97,7 @@ nativeTest("actual joint exact replay returns the original result after real rev
     await f.sales.lockLinesForFulfillmentInTransaction(tx,intent);
     const inventoryResult=await f.inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,reverse,proof);
     return f.sales.applyFulfillmentResultInTransaction(tx,{intent,inventoryResult});
-  });
+  },{isolationLevel:"READ COMMITTED",eventAdmissionId:reverseEvent});
   const reversed=await reverseOnce();assert.equal(reversed.status,"CONFIRMED");assert.equal(reversed.version,3);
   const [[allocation]]=await f.db.query("SELECT status,consumed_quantity,outstanding_quantity,version FROM inventory_allocations WHERE id=?",[leg.inventoryAllocationId]);
   assert.deepEqual([allocation.status,Number(allocation.consumed_quantity),Number(allocation.outstanding_quantity),allocation.version],["CONSUMED",1,0,2]);
@@ -170,13 +177,14 @@ nativeTest("real Reverse accepts a fresh reverse-only principal and consumed Res
   await f.db.execute("UPDATE items SET status='inactive' WHERE id=(SELECT item_id FROM item_skus WHERE id=?)",[f.s.skuId]);
   assert.equal((await f.db.query("SELECT status FROM inventory_reservations WHERE id=?",[f.reservationId]))[0][0].status,"CONSUMED");
   const eventId=randomUUID(),command={actor,source:{documentId:"1",eventId},correlationId:"",payload:{fulfillmentId:"1",shipmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(f.s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:member.version,baseQuantity:"1",originalInventoryOperationId:member.inventoryOperationId,allocations:[{shipmentIssueId:"1",originalMovementId:leg.movementId,inventoryAllocationId:leg.inventoryAllocationId,expectedBalanceVersion:leg.balanceVersion,baseQuantity:"1"}]}]}]}};
+  f.reversalEvents.set(eventId,f.reversalOwner(actor.userId));
   const result=await f.run({claims},async tx=>{
     const proof=await f.inventory.claimFulfillmentBatchInTransaction(tx,{action:"REVERSE",command});
     const intent=f.command();Object.assign(intent,{actor:{...actor,userId:String(actor.userId)},purpose:"SHIPMENT_REVERSED",eventId,originalConfirmationEventId:confirmed.intent.eventId,expectedOrderVersion:2,inventoryRequestHash:proof.requestHash});intent.lines[0].expectedVersion=2;Object.assign(intent.lines[0].reservations[0],{expectedVersion:member.version,originalInventoryOperationId:member.inventoryOperationId});
     await f.sales.lockLinesForFulfillmentInTransaction(tx,intent);
     const inventoryResult=await f.inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,proof);
     return f.sales.applyFulfillmentResultInTransaction(tx,{intent,inventoryResult});
-  });
+  },{isolationLevel:"READ COMMITTED",eventAdmissionId:eventId});
   assert.equal(result.status,"CONFIRMED");assert.equal(result.version,3);
   assert.equal((await f.db.query("SELECT outstanding_quantity FROM inventory_reservations WHERE id=?",[f.reservationId]))[0][0].outstanding_quantity,1);
 });
@@ -225,13 +233,14 @@ function reversePayload(f,advisory){
 }
 async function restoreFromPayload(f,payload,eventId,untrustedPreparation){
   const command={actor:f.reverse.actor,source:{documentId:"1",eventId},correlationId:"",payload};
+  f.reversalEvents.set(eventId,f.reversalOwner(f.reverse.actor.userId));
   return f.run({claims:f.reverse.claims},async tx=>{
     if(untrustedPreparation)await assert.rejects(()=>f.inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,untrustedPreparation),{code:"INVENTORY_SOURCE_CONFLICT"});
     const proof=await f.inventory.claimFulfillmentBatchInTransaction(tx,{action:"REVERSE",command});
     const intent=f.command();Object.assign(intent,{actor:{...f.reverse.actor,userId:String(f.reverse.actor.userId)},purpose:"SHIPMENT_REVERSED",eventId,originalConfirmationEventId:f.confirmed.intent.eventId,expectedOrderVersion:2,inventoryRequestHash:proof.requestHash});intent.lines[0].expectedVersion=2;Object.assign(intent.lines[0].reservations[0],{expectedVersion:payload.lines[0].reservations[0].expectedVersion,originalInventoryOperationId:f.original.inventoryOperationId});
     await f.sales.lockLinesForFulfillmentInTransaction(tx,intent);
     const inventoryResult=await f.inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,proof);return f.sales.applyFulfillmentResultInTransaction(tx,{intent,inventoryResult});
-  });
+  },{isolationLevel:"READ COMMITTED",eventAdmissionId:eventId});
 }
 nativeTest("real F2 neutral CAS and reverse-only historical advisory prepare the original F1 restore without granting proof authority",async t=>{
   const f=await f2ReversalFixture(t),before=await stateOf(f),advisory=await readReversalPreparation(f),member=advisory.lines[0].reservations[0];

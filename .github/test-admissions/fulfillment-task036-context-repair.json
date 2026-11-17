@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "decision": "PROSPECTIVE CONDITIONAL REFERENCE ONLY, NOT AN APPROVAL. The prior call_94d7de governance/package decision and receipt5a1 do not approve these four changed blobs or additional unit invocations. This exact private receipt takes effect only after Sam explicitly approves the complete new four-file package in PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, naming its final SHA256, combined patch9bead95a998b5c050267fa7d640a0851945f624881a32270dbe55459146bbd1f, manifest131e1d2321e2ce0f8983f5bde46cf0178a18a14bc97076e81df2786753c03424, exact pins, additional logical unit workload and publication/CI scope. Independent administrator must verify the actual answer before final-candidate admission/registration. No self-approval or execution is granted by this file.",
+  "purpose": "Repair the existing TC030 independent logical-request fixture boundary; establish per-invocation production Import worker context only after live Scheduler principal and exact-signal checks; preserve actual DB identity for existing TC038 result-write observation. Existing unit registration adds explicit fresh-store/foreign-store restoration/missing-context rejection assertions. Retain production actor/lease/event-admission guards and all native recovery assertions. Original CI43358697232 remains FAILURE; TC038 bottom-level cause is not retrospectively proven.",
+  "data": "All existing whole-file native cases and datasets remain byte-for-byte except the TC030 update wrapper. That case remains one update plus one cancel, quantity7 and finalcancelled7/version3. Existing TC038 parent and datasets are unchanged: two modes/forks, three sources per mode, batchSize3, original result/temp-file, idempotency, audit and recovery facts. Unit: same one literal registration; one added valid invocation under one synthetic foreign store (foreign signal/auth/transaction markers), plus one missing-context rejection; two observed invocation stores. Real unit SQL/transactions/HTTP/DB rows0. Existing138 TASK036 pins, all unrelated approvals/limits and catalog exclusions are preserved.",
+  "concurrency": "Unchanged existing eight independent MySQL CI shards, serial test-file execution/worker configuration. TC030 preserves its intended one cancel and one independently scoped interposed update, with no new business command or connection-pool setting. TC038 retains two sequential owned child modes and original real SIGKILL/parent cleanup; no extra fork, source, batch or observer pool. Unit remains one serial worker with two sequential valid invocations and three rejection invocations; no parallel workload.",
+  "repetitions": "Proposed future normal inclusion only after actual Sam approval: retain existing admitted PR/main/weekly functional discovery, each existing file once. Unit service.run total3to5: valid1to2, existing invalid2 unchanged, missing-context rejection+1. Precheck callbacks1to2, processing callbacks1to2, successful precheck info stub1to2; processing info stub remains0. No additional literal registration. One proposed new ordinary publication and one new natural existing eight-shard functional CI for PR349; original once allowance was consumed FAILURE and cannot be reused. No local batch, manual dispatch, automatic retry or extra CI is included in this proposed scope.",
+  "thresholds": "Every original functional/rollback/quantity/version/recovery assertion retained. Principal, exact running signal, actor freshness, lease, same-DB transaction event admission and actual executor identity unchanged; missing context fails closed. Each invocation receives a fresh signal/auth:null/databaseTransaction:null store and restores parent store afterward. TC038 must reach the exact existing IPC window, perform real SIGKILL, recover all3 sources, preserve original identities/audit and remove the owned temporary; original15000ms window and all transaction/deadline limits unchanged. Global coverage92/83/90 and all39 per-file floors unchanged; first actual failure stops new validation/publication, no retry or merge/publicJob grant.",
+  "trigger": "FUTURE PROPOSAL ONLY: original author may apply these approved exact bytes and this receipt only after a new actual Sam decision, then independent final-candidate review/admission and PM publication window, then one ordinary push on existing codex/fulfillment-task036-functional-admission-20261109 to update Draft349 and one natural functional CI. Subsequent unchanged cases remain in existing admitted PR/main/weekly functional discovery. No new workflow/trigger/job/service/worker, performance/capacity/L1, merge or public Job activation. This private file is outside discovery and is not active.",
+  "cost": "UNMEASURED. Native case/data/fork/deadline limits and eight-shard job count unchanged; two extra logical in-memory unit invocations and one extra successful call of each existing worker stub/info logger are explicit increases. Per-invocation production context allocation has not been benchmarked. Extra CI elapsed time and billed runner cost are UNKNOWN; no load or timing run was performed. One proposed new normal functional CI requires explicit approval; no guarantee of green or average10min/max15min is made.",
+  "files": [
+    {
+      "path": "server/test/integration/salesLifecycle.integration.test.js",
+      "mode": "100644",
+      "blob": "d8bb79cabc97aaa908b8f25b40fd2b5096156181",
+      "kind": "functional",
+      "cases": [
+        "TC-028 withdraw releases partial/full/zero commitments, re-fetches current Draft masters and replays once",
+        "TC-030 Draft cancel never calls Inventory/Fulfillment; Confirmed cancel moves reserve+backorder to cancelled",
+        "TC-030 Confirmed cancel moves reserve+backorder to cancelled atomically",
+        "${caseId} ${action} missing/tampered Inventory release or required Audit fails with actual complete native rollback",
+        "TC-029 real provider OPEN/UNKNOWN and registered unavailable block release before any Inventory call",
+        "TC-030 stale version, second event, invalid states and revoked replay leave committed facts intact",
+        "TC-030 close remaining preserves synthetic existing fulfilled history and cancels only unfulfilled demand",
+        "TC-029 installed migration history blocks absence exception; original applied history is preserved",
+        "TC-030 close remaining releases outstanding partially consumed native reservation and preserves fulfilled quantity",
+        "TC-029 real HTTP lifecycle validates strict input, terminal schema, same event replay and freshly revoked access",
+        "TC-029 inactive current Customer/SKU do not invent a new withdrawal restriction; Draft names refresh before release",
+        "TC-021 cancel and withdrawal never deadlock with a new Order in the same Warehouse",
+        "TC-030 cancel holding its Order's Sales locks never blocks another Order's ${label} insert behind the Warehouse lock",
+        "TC-030 HD013 lifecycle RC cancels the current saved Draft rather than the earlier actor-read snapshot"
+      ]
+    },
+    {
+      "path": "server/src/services/salesJobs/SalesJobRuntimeService.js",
+      "mode": "100644",
+      "blob": "d24fdc4e85128ebaeb9c1df751604960a89cccf7",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/test-support/salesProcessingCrashChild.js",
+      "mode": "100644",
+      "blob": "de7d64278328a80e98e2aee73032857b4a1e441f",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/test/sales/phase3/SalesImportJob.test.js",
+      "mode": "100644",
+      "blob": "884a89e428cf81243b489f9eb6cbb9138b84268f",
+      "kind": "functional",
+      "cases": [
+        "TC-035 registered Import job exposes only its active running signal and fixed cluster principal"
+      ]
+    }
+  ]
+}

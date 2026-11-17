@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
 import {randomUUID,createHash} from "node:crypto";
+import {AsyncLocalStorage} from "node:async_hooks";
 import {mkdtemp,writeFile,rm,readdir,readFile,unlink} from "node:fs/promises";
-import {migrationFixture} from "../sales/phase1/fixtures.js";
+import {migrationFixture,enterSalesFixtureRequests} from "../sales/phase1/fixtures.js";
 import {createApplication} from "../../src/framework/application/createApplication.js";
 import {defaultConfigurationSource} from "../../src/framework/configuration/applicationConfiguration.js";
 import {prepareDiskTempDirectory} from "../../src/framework/upload/normalizeUploadConfig.js";
@@ -15,8 +16,9 @@ async function setup(t) {
  const f=await migrationFixture(t,[]),source=defaultConfigurationSource();
  const base=prepareDiskTempDirectory(`storage/test-sales-upload-native-${randomUUID()}`),tempRoot=prepareDiskTempDirectory(path.join(base,"temp")),root=prepareDiskTempDirectory(path.join(base,"jobs"));
  const app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},api:{...source.api,upload:{...source.api.upload,diskTempDirectory:tempRoot}}}});
- t.after(()=>app.shutdown("sales_import_upload_complete"));t.after(()=>rm(base,{recursive:true,force:true}));
  const database=app.services.require("mysqldatabase"),time=app.services.require("time"),name="import-native-"+randomUUID().slice(0,8);
+ const restoreEntry=enterSalesFixtureRequests(database);
+ t.after(async()=>{restoreEntry();await app.shutdown("sales_import_upload_complete");});t.after(()=>rm(base,{recursive:true,force:true}));
  const roleId=await f.insert("roles",{name,created_at:f.now}),userId=await f.insert("users",{username:name,password_hash:"synthetic-only",display_name:"Synthetic Importer",created_at:f.now,updated_at:f.now});
  await f.db.execute("INSERT INTO user_roles (user_id,role_id) VALUES (?,?)",[userId,roleId]);
  for(const permission of ["sales.view","sales.import"])await f.db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name=?",[roleId,permission]);
@@ -50,19 +52,21 @@ integrationTest("TC-034 native upload atomically owns file, replays original eve
 });
 integrationTest("TC-034 native move failure compensates staging Job and original operation",async t=>{
  const f=await setup(t),file=await f.file(),eventId=randomUUID();let calls=0;
- const database={withTransaction:async(fn,options)=>{if(++calls===2)await unlink(file.path);return f.database.withTransaction(fn,options);}};
+ const database=f.database,transaction=database.withTransaction;
+ database.withTransaction=async function(fn,options){if(++calls===2)await unlink(file.path);return transaction.call(this,fn,options);};
  const service=new SalesImportService({database,time:f.time,root:f.root,tempRoot:f.tempRoot});
- await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file}),{code:"SALES_IMPORT_FILE_INVALID"});assert.equal(await f.jobs(),0);
+ try{await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file}),{code:"SALES_IMPORT_FILE_INVALID"});}finally{database.withTransaction=transaction;}assert.equal(await f.jobs(),0);
  assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE event_id=?",[eventId]))[0][0].n,0);assert.deepEqual(await readdir(f.root),[]);
  assert.equal((await f.service.createFromUpload({claims:f.claims,eventId,file:await f.file()})).importJob.status,"UPLOADED");
 });
 integrationTest("TC-034 native SQL rollback after move retains only recoverable private stage and retries original facts",async t=>{
  const f=await setup(t),eventId=randomUUID();let failed=false;
- const database={withTransaction:(fn,options)=>f.database.withTransaction(tx=>fn({query:tx.query.bind(tx),execute:async(sql,args)=>{
-  if(!failed&&sql.startsWith("UPDATE sales_import_jobs SET source_file_path")){failed=true;throw new Error("synthetic admission rollback");}return tx.execute(sql,args);
- }}),options)};
+ const database=f.database,transaction=database.withTransaction;
+ database.withTransaction=function(fn,options){return transaction.call(this,async tx=>{const execute=tx.execute;tx.execute=function(sql,args,queryOptions){
+  if(!failed&&sql.startsWith("UPDATE sales_import_jobs SET source_file_path")){failed=true;throw new Error("synthetic admission rollback");}return execute.call(this,sql,args,queryOptions);
+ };try{return await fn(tx);}finally{tx.execute=execute;}},options);};
  const service=new SalesImportService({database,time:f.time,root:f.root,tempRoot:f.tempRoot});
- await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file:await f.file()}),error=>error.cause?.message==="synthetic admission rollback");
+ try{await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file:await f.file()}),error=>error.cause?.message==="synthetic admission rollback");}finally{database.withTransaction=transaction;}
  const [[stage]]=await f.db.query("SELECT id,batch_number,source_file_path FROM sales_import_jobs WHERE created_by=?",[f.userId]);assert.equal(stage.source_file_path,"");
  assert.equal(await readFile(path.join(f.root,stage.batch_number,"source.csv"),"utf8"),buildSalesImportTemplate());
  const recovered=await f.service.createFromUpload({claims:f.claims,eventId,file:await f.file()});assert.equal(recovered.importJob.id,Number(stage.id));assert.equal(await f.jobs(),1);
@@ -70,18 +74,20 @@ integrationTest("TC-034 native SQL rollback after move retains only recoverable 
 integrationTest("TC-034 native lost COMMIT acknowledgements query original stage or success before retry",async t=>{
  for(const unknownAt of [1,2]) await t.test(`ack-${unknownAt}`,async t=>{
   const f=await setup(t),eventId=randomUUID();let calls=0;
-  const database={withTransaction:async(fn,options)=>{const result=await f.database.withTransaction(fn,options);if(++calls===unknownAt)throw new ApplicationError("synthetic lost acknowledgement",{code:"DATABASE_TRANSACTION_INDETERMINATE",statusCode:500});return result;}};
+  const database=f.database,transaction=database.withTransaction;
+  database.withTransaction=async function(fn,options){const result=await transaction.call(this,fn,options);if(++calls===unknownAt)throw new ApplicationError("synthetic lost acknowledgement",{code:"DATABASE_TRANSACTION_INDETERMINATE",statusCode:500});return result;};
   const service=new SalesImportService({database,time:f.time,root:f.root,tempRoot:f.tempRoot});
-  await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file:await f.file()}),{code:"TRANSACTION_OUTCOME_UNKNOWN"});assert.equal(await f.jobs(),1);
+  try{await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file:await f.file()}),{code:"TRANSACTION_OUTCOME_UNKNOWN"});}finally{database.withTransaction=transaction;}assert.equal(await f.jobs(),1);
   const recovered=await f.service.createFromUpload({claims:f.claims,eventId,file:await f.file()});assert.equal(await f.jobs(),1);
   assert.equal(await readFile(path.join(f.root,recovered.importJob.batchNumber,"source.csv"),"utf8"),buildSalesImportTemplate());
  });
 });
 integrationTest("TC-034 native fresh permission revocation between staging and move denies admission and compensates",async t=>{
  const f=await setup(t),eventId=randomUUID();let calls=0;
- const database={withTransaction:async(fn,options)=>{const result=await f.database.withTransaction(fn,options);if(++calls===1)await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.import'",[f.roleId]);return result;}};
+ const database=f.database,transaction=database.withTransaction;
+ database.withTransaction=async function(fn,options){const result=await transaction.call(this,fn,options);if(++calls===1)await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.import'",[f.roleId]);return result;};
  const service=new SalesImportService({database,time:f.time,root:f.root,tempRoot:f.tempRoot});
- await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file:await f.file()}),{code:"PERMISSION_STALE"});assert.equal(await f.jobs(),0);assert.deepEqual(await readdir(f.root),[]);
+ try{await assert.rejects(async()=>service.createFromUpload({claims:f.claims,eventId,file:await f.file()}),{code:"PERMISSION_STALE"});}finally{database.withTransaction=transaction;}assert.equal(await f.jobs(),0);assert.deepEqual(await readdir(f.root),[]);
 });
 integrationTest("TC-034 real HTTP multipart enforces schema/file/auth, owned cleanup and fresh replay revocation",async t=>{
  const f=await setup(t),{url}=await f.app.start(),token=await f.app.services.require("jwt").issue({roles:f.claims.claimedRoles,permissions:f.claims.claimedPermissions},{subject:String(f.userId),version:await f.app.services.require("tokenRevocation").currentVersion(String(f.userId)),authTime:Math.floor(f.now/1000)});
@@ -100,20 +106,23 @@ integrationTest("TC-034 real HTTP multipart enforces schema/file/auth, owned cle
 
 integrationTest("TC-034 native compensation locks and rechecks moved stage before deleting original facts",async t=>{
  const f=await setup(t),eventId=randomUUID(),entered=Promise.withResolvers(),resume=Promise.withResolvers();let calls=0;
- const databaseA={withTransaction:async(fn,options)=>{
-  const call=++calls;if(call===3){entered.resolve();await resume.promise;}
-  return f.database.withTransaction(tx=>fn(call===2?{execute:tx.execute.bind(tx),query:async(sql,args)=>{
-   if(sql.startsWith("SELECT status,target_id"))throw new Error("synthetic premove failure");return tx.query(sql,args);
-  }}:tx),options);
- }};
- const serviceA=new SalesImportService({database:databaseA,time:f.time,root:f.root,tempRoot:f.tempRoot});
- const resultA=serviceA.createFromUpload({claims:f.claims,eventId,file:await f.file()});resultA.catch(()=>{});await entered.promise;
- const databaseB={withTransaction:(fn,options)=>f.database.withTransaction(tx=>fn({query:tx.query.bind(tx),execute:async(sql,args)=>{
-  if(sql.startsWith("UPDATE sales_import_jobs SET source_file_path"))throw new Error("synthetic admission rollback");return tx.execute(sql,args);
- }}),options)};
- const serviceB=new SalesImportService({database:databaseB,time:f.time,root:f.root,tempRoot:f.tempRoot});
- try{await assert.rejects(async()=>serviceB.createFromUpload({claims:f.claims,eventId,file:await f.file()}),error=>error.cause?.message==="synthetic admission rollback");}finally{resume.resolve();}
- await assert.rejects(()=>resultA,error=>error.cause?.message==="synthetic premove failure");
+ const database=f.database,transaction=database.withTransaction,role=new AsyncLocalStorage();
+ database.withTransaction=async function(fn,options){
+  const current=role.getStore(),call=current==="A"?++calls:0;
+  if(current==="A"&&call===3){entered.resolve();await resume.promise;}
+  return transaction.call(this,async tx=>{const query=tx.query,execute=tx.execute;
+   tx.query=function(sql,args,queryOptions){if(current==="A"&&call===2&&sql.startsWith("SELECT status,target_id"))throw new Error("synthetic premove failure");return query.call(this,sql,args,queryOptions);};
+   tx.execute=function(sql,args,queryOptions){if(current==="B"&&sql.startsWith("UPDATE sales_import_jobs SET source_file_path"))throw new Error("synthetic admission rollback");return execute.call(this,sql,args,queryOptions);};
+   try{return await fn(tx);}finally{tx.query=query;tx.execute=execute;}
+  },options);
+ };
+ const serviceA=new SalesImportService({database,time:f.time,root:f.root,tempRoot:f.tempRoot}),serviceB=new SalesImportService({database,time:f.time,root:f.root,tempRoot:f.tempRoot});
+ const fileA=await f.file(),resultA=role.run("A",()=>serviceA.createFromUpload({claims:f.claims,eventId,file:fileA}));resultA.catch(()=>{});
+ try{
+  await Promise.race([entered.promise,resultA.then(()=>assert.fail("original compensation did not reach its pre-admission pause"))]);
+  try{await assert.rejects(()=>role.run("B",async()=>serviceB.createFromUpload({claims:f.claims,eventId,file:await f.file()})),error=>error.cause?.message==="synthetic admission rollback");}finally{resume.resolve();}
+  await assert.rejects(()=>resultA,error=>error.cause?.message==="synthetic premove failure");
+ }finally{resume.resolve();await Promise.allSettled([resultA]);database.withTransaction=transaction;}
  assert.equal(await f.jobs(),1);const recovered=await f.service.createFromUpload({claims:f.claims,eventId,file:await f.file()});
  assert.equal(await readFile(path.join(f.root,recovered.importJob.batchNumber,"source.csv"),"utf8"),buildSalesImportTemplate());assert.equal(await f.jobs(),1);
 });

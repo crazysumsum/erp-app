@@ -3,6 +3,7 @@ import {SalesOrderConfirmationService} from "./SalesOrderConfirmationService.js"
 import {SalesOperationService} from "./SalesOperationService.js";
 import {requireSalesImportActorById,requireSalesImportWorker} from "./salesAuthorization.js";
 import {salesError} from "./salesErrors.js";
+import {assertShipmentEventAdmissionInTransaction} from "../fulfillment/shipmentEventAdmission.js";
 import {salesEventId} from "./salesValidation.js";
 import {randomUUID} from "node:crypto";
 import {salesSourceHash,sourceOrderPayloadHash,precheckSalesOrders} from "./salesImportPrecheck.js";
@@ -15,7 +16,7 @@ const terminal=["SUCCEEDED","DUPLICATE","FAILED"];
 const businessErrors=["CUSTOMER_NOT_SALEABLE","CUSTOMER_CREDIT_ON_HOLD","SKU_NOT_SALEABLE","SKU_UOM_INVALID","SALES_UOM_CONVERSION_INVALID","SALES_QUANTITY_INVALID","SALES_PRICE_INVALID","SALES_INPUT_INVALID","WAREHOUSE_INVALID","SALES_IMPORT_ORDER_INVALID","SALES_LINE_MERGE_CONFLICT"];
 export class SalesIntakeService {
  constructor({database,time,logger,config=defaults,authorizeSalesImport,channelVerifier,orderService,confirmationService,customerProvider,itemProvider}={}){
-  this.database=database;this.time=time;this.logger=logger;this.config=config;this.authorize=authorizeSalesImport;this.channelVerifier=channelVerifier;this.operations=new SalesOperationService();
+  this.database=database;this.time=time;this.logger=logger;this.config=config;this.authorize=authorizeSalesImport;this.channelVerifier=channelVerifier;this.operations=new SalesOperationService({database});
   this.orders=orderService??new SalesOrderService({database,time,logger});this.confirmation=confirmationService??new SalesOrderConfirmationService({database,time,logger,config,authorizeSalesIntake:authorizeSalesImport});
   this.customers=customerProvider;this.items=itemProvider;
  }
@@ -70,6 +71,7 @@ export class SalesIntakeService {
   if(expiresAt!==undefined&&expiresAt<=fresh.nowMs)throw salesError("CONCURRENT_OPERATION");
  }
  async #operation(tx,intake,actor,nowMs){
+  await assertShipmentEventAdmissionInTransaction(this.database,tx,{eventId:intake.processing_event_id});
   try{const [row]=await tx.execute(`INSERT INTO sales_operation_requests (event_id,command_type,target_type,target_id,request_hash,status,actor_user_id,actor_label,created_at,updated_at)
    VALUES (?,'PROCESS_INTAKE','INTAKE_ORDER',?,?,'IN_PROGRESS',?,?,?,?)`,[intake.processing_event_id,intake.id,intake.payload_hash,actor.id,actor.username,nowMs,nowMs]);return {id:Number(row.insertId)};}
   catch(error){if((error.cause?.code??error.code)!=="ER_DUP_ENTRY")throw error;const [[row]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=? FOR UPDATE",[intake.processing_event_id]);
@@ -92,8 +94,15 @@ export class SalesIntakeService {
  async process(request){
   if(!request||Object.keys(request).some(key=>!["intakeOrderId","jobClaimToken","signal"].includes(key))||!Number.isSafeInteger(request.intakeOrderId)||request.intakeOrderId<1)throw salesError("SALES_INPUT_INVALID");
   const {intakeOrderId,jobClaimToken,signal}=request;if(jobClaimToken!==undefined)salesEventId(jobClaimToken);let original;
+  // Reject an untrusted runtime before the advisory read; the transaction still revalidates its fresh fence.
+  const principal=await this.authorize?.();
+  if(!principal||principal.signal!==signal||signal?.aborted!==false||typeof principal.leaseOwner!=="string"||!principal.leaseOwner)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+  const [[candidate]]=await this.database.query("SELECT id,processing_event_id,payload_hash FROM sales_intake_orders WHERE id=?",[intakeOrderId]);
+  if(!candidate)throw salesError("SALES_IMPORT_NOT_FOUND");
+  const eventAdmissionId=salesEventId(candidate.processing_event_id);
   try{return await this.operations.run(this.database,async tx=>{
-   const fence=await this.#fence(tx,signal),[[initial]]=await tx.query("SELECT * FROM sales_intake_orders WHERE id=?",[intakeOrderId]);if(!initial)throw salesError("SALES_IMPORT_NOT_FOUND");salesEventId(initial.processing_event_id);
+   const fence=await this.#fence(tx,signal),[[initial]]=await tx.query("SELECT * FROM sales_intake_orders WHERE id=?",[intakeOrderId]);if(!initial)throw salesError("SALES_IMPORT_NOT_FOUND");
+   if(Number(initial.id)!==Number(candidate.id)||initial.processing_event_id!==eventAdmissionId||initial.payload_hash!==candidate.payload_hash)throw salesError("CONCURRENT_OPERATION");
    const actor=await this.#actor(tx,initial);original={intake:initial,actor};
    if(terminal.includes(initial.status)){let result=this.#result(initial);if(initial.status!=="FAILED"){const [[operation]]=await tx.query("SELECT * FROM sales_operation_requests WHERE event_id=?",[initial.processing_event_id]);result=this.#replay(operation,initial,actor);if(result.status!==initial.status||result.salesOrderId!==(initial.sales_order_id===null?null:Number(initial.sales_order_id))||result.salesOrderNumber!==initial.sales_order_number)throw salesError("SALES_EVENT_CONFLICT");}await this.#fence(tx,signal,fence);return result;}
    const operation=await this.#operation(tx,initial,actor,fence.nowMs);await this.#job(tx,initial,jobClaimToken,actor);const [[intake]]=await tx.query("SELECT * FROM sales_intake_orders WHERE id=? FOR UPDATE",[intakeOrderId]);
@@ -112,14 +121,16 @@ export class SalesIntakeService {
    await tx.execute("UPDATE sales_intake_orders SET sales_order_id=?,sales_order_number=? WHERE id=?",[draft.salesOrder.id,number,intakeOrderId]);
    const confirmed=await this.confirmation.confirmIntakeDraftInTransaction(tx,{order:draft.salesOrder,actor,eventId:intake.processing_event_id,nowMs:fence.nowMs}),result={status:"SUCCEEDED",salesOrderId:confirmed.salesOrder.id,salesOrderNumber:number,isArchived:false,warnings:[...new Set([...draft.warnings,...confirmed.warnings].map(w=>w.code))]};
    await tx.execute("UPDATE sales_external_order_keys SET status='SUCCEEDED',sales_order_id=?,sales_order_number=?,updated_at=? WHERE id=? AND status='PROCESSING'",[result.salesOrderId,number,fence.nowMs,key.insertId]);await this.#complete(tx,intake,operation,result,fence.nowMs);await this.#endEffect(tx,intake,jobClaimToken,actor,signal,fence);return result;
-  },{signal,timeoutMs:this.config.transactionTimeoutMs});}
+  },{signal,timeoutMs:this.config.transactionTimeoutMs,eventAdmissionId});}
   catch(error){if(!original||!businessErrors.includes(error.code))throw error;
    return this.operations.run(this.database,async tx=>{
-    const fence=await this.#fence(tx,signal),actor=await this.#actor(tx,original.intake);if(actor.id!==original.actor.id||actor.id===null&&actor.username!==original.actor.username)throw salesError("SALES_EVENT_CONFLICT");await this.#job(tx,original.intake,jobClaimToken,actor);const [[intake]]=await tx.query("SELECT * FROM sales_intake_orders WHERE id=? FOR UPDATE",[intakeOrderId]);
+    const fence=await this.#fence(tx,signal);
+    await assertShipmentEventAdmissionInTransaction(this.database,tx,{eventId:eventAdmissionId});
+    const actor=await this.#actor(tx,original.intake);if(actor.id!==original.actor.id||actor.id===null&&actor.username!==original.actor.username)throw salesError("SALES_EVENT_CONFLICT");await this.#job(tx,original.intake,jobClaimToken,actor);const [[intake]]=await tx.query("SELECT * FROM sales_intake_orders WHERE id=? FOR UPDATE",[intakeOrderId]);
     if(!intake||intake.processing_event_id!==original.intake.processing_event_id||intake.payload_hash!==original.intake.payload_hash||!["QUEUED","PROCESSING"].includes(intake.status))throw salesError("CONCURRENT_OPERATION");
     await tx.execute("UPDATE sales_intake_orders SET status='FAILED',result_code=?,completed_at=?,updated_at=? WHERE id=?",[error.code,fence.nowMs,fence.nowMs,intakeOrderId]);await tx.execute("INSERT INTO sales_intake_errors (intake_order_id,row_no,field_path,error_code,safe_message,created_at) VALUES (?,?,?,?,?,?)",[intakeOrderId,intake.first_row_no,error.publicDetails?.field??"order",error.code,"來源訂單未能建立，請檢查指定欄位",fence.nowMs]);
     await this.#endEffect(tx,intake,jobClaimToken,actor,signal,fence);return this.#result({...intake,status:"FAILED"});
-   },{signal,timeoutMs:this.config.transactionTimeoutMs});
+   },{signal,timeoutMs:this.config.transactionTimeoutMs,eventAdmissionId});
   }
  }
 }

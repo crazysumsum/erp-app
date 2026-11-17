@@ -4,10 +4,14 @@ import test from "node:test";
 import { salesPayloadHash } from "../../src/modules/sales/salesCanonicalHash.js";
 import { salesFulfillmentFixture } from "../sales/phase4/salesFulfillmentFixtures.js";
 
+import { up as admissionUp } from "../../database/migrations/0092_create_fulfillment_operations_and_sequences.js";
+
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 // Sales SQL/codec component only: the Inventory verification boundary is a test double, not owner/joint Gate evidence.
 nativeTest("Sales transaction component with Inventory verifier test double: atomic apply, original replay and reversal codec",async t=>{
-  const f=await salesFulfillmentFixture(t),{db,s,run,claims,command,createService,reservationId,mappingId}=f;
+  const f=await salesFulfillmentFixture(t),{db,s,claims,command,createService,reservationId,mappingId}=f;
+  await admissionUp(db);
+  const run=(auth,work)=>f.run(auth,work,{isolationLevel:"READ COMMITTED",eventAdmissionId:intent.eventId});
   let intent=command(),dto={operationId:"91",lines:[{fulfillmentLineId:"11",salesOrderLineId:String(s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(reservationId),expectedVersion:1,version:2,baseQuantity:"1",inventoryOperationId:"92",allocations:[]}]}]};
   const inventoryFulfillment={async verifyFulfillmentBatchReceiptInTransaction(tx,input){
     assert.deepEqual(input,{action:intent.purpose,operationId:dto.operationId,shipmentId:intent.shipmentId,eventId:intent.eventId,requestHash:intent.inventoryRequestHash});

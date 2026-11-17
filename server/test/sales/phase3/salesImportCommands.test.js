@@ -7,10 +7,11 @@ import {SalesAuditService} from "../../../src/modules/sales/SalesAuditService.js
 import {safeSalesCsvCell} from "../../../src/modules/sales/salesCsv.js";
 import {ConfirmSalesImportHandler,CancelSalesImportHandler} from "../../../src/handlers/sales-imports/salesImportCommandHandlers.js";
 import {DownloadSalesImportResultHandler} from "../../../src/handlers/sales-imports/downloadSalesImportResultHandler.js";
+import {salesMemoryDatabase} from "../phase1/fixtures.js";
 const actor={id:1,username:"synthetic",permissions:["sales.view","sales.import"]},claims={actorId:1,claimedRoles:["importer"],claimedPermissions:actor.permissions};
 function fixture({status="READY",version=1,replay=null,permissions=actor.permissions,purged=null}={}){
- const calls=[],job={id:2,batch_number:"SI-261008-000001",status,version,source_file_path:"SI-261008-000001/source.csv",files_purged_at:purged},tx={async query(sql,params){calls.push({sql,params});if(sql.startsWith("SELECT username FROM users"))return [[{username:actor.username}]];if(sql.includes("FROM roles r JOIN user_roles"))return [[{name:"importer"}]];if(sql.includes("SELECT DISTINCT p.name"))return [permissions.map(name=>({name}))];if(sql.includes("FROM sales_import_jobs"))return [[job]];throw Error("Unexpected query");},async execute(sql,params){calls.push({sql,params});return [{affectedRows:1}];}},service=new SalesImportService({database:{withTransaction:work=>work(tx)},time:{nowMs:()=>10}});
- service.operations={run:(database,work)=>database.withTransaction(work),claim:async()=>({operationId:4,replay}),succeed:async(tx,result)=>calls.push({succeeded:result})};service.audit={record:async(tx,data)=>calls.push({audit:data})};return {service,calls,job};
+ const calls=[],job={id:2,batch_number:"SI-261008-000001",status,version,source_file_path:"SI-261008-000001/source.csv",files_purged_at:purged},tx={async query(sql,params){calls.push({sql,params});if(sql.startsWith("SELECT username FROM users"))return [[{username:actor.username}]];if(sql.includes("FROM roles r JOIN user_roles"))return [[{name:"importer"}]];if(sql.includes("SELECT DISTINCT p.name"))return [permissions.map(name=>({name}))];if(sql.includes("FROM sales_import_jobs"))return [[job]];throw Error("Unexpected query");},async execute(sql,params){calls.push({sql,params});return [{affectedRows:1}];}},service=new SalesImportService({database:{withTransaction:(work,options)=>work(tx,options)},time:{nowMs:()=>10}});
+ service.operations={run:(database,work,options)=>database.withTransaction(work,options),claim:async()=>({operationId:4,replay}),succeed:async(tx,result)=>calls.push({succeeded:result})};service.audit={record:async(tx,data)=>calls.push({audit:data})};return {service,calls,job};
 }
 test("TC-037 Import commands reject unknown fields, invalid version and event before a transaction",()=>{
  const eventId=randomUUID();assert.deepEqual(validateSalesImportCommand({eventId,version:1}),{eventId,version:1});
@@ -32,10 +33,12 @@ test("TC-037 confirmation and cancellation enforce precise READY/QUEUED diagram 
  await assert.rejects(()=>fixture({status:"QUEUED"}).service.confirm({claims,id:2,input:{eventId:randomUUID(),version:1}}),{code:"SALES_STATE_CONFLICT"});
 });
 test("TC-037 generic operation persists Import identity and accepts only narrow SI summaries",async()=>{
- const operations=new SalesOperationService(),calls=[],tx={async execute(sql,params){calls.push({sql,params});return [{insertId:4,affectedRows:1}];}},eventId=randomUUID();
+ const calls=[],program={async execute(sql,params){calls.push({sql,params});return [{insertId:4,affectedRows:1}];}},eventId=randomUUID(),database=salesMemoryDatabase(program),operations=new SalesOperationService({database});
+ await database.withTransaction(async tx=>{
  await operations.claim(tx,{eventId,commandType:"CONFIRM_IMPORT",targetId:2,payload:{version:1},actor,nowMs:1});assert.equal(calls[0].params[2],"IMPORT_JOB");
  await operations.succeed(tx,{operationId:4,result:{id:2,number:"SI-261008-000001",status:"QUEUED",version:2},nowMs:1});assert.equal(calls[1].params[0],"IMPORT_JOB");
  for(const result of [{id:2,number:"SI-261008-000001",status:"CONFIRMED",version:2},{id:2,number:"SO-261008-000001",status:"QUEUED",version:2}])await assert.rejects(()=>operations.succeed(tx,{operationId:4,result,nowMs:1}),TypeError);
+ },{eventAdmissionId:eventId});
 });
 test("TC-037 import audit uses bounded action-specific facts, excludes source payload and preserves required failure",async()=>{
  const service=new SalesAuditService(),request={actor,action:"sales_import.prechecked",targetId:2,targetNumber:"SI-261008-000001",eventId:randomUUID(),nowMs:1,details:{version:1,rowCount:100000,sourceOrderCount:10000,validCount:9999,invalidCount:1,duplicateCount:0}};let calls=0;
