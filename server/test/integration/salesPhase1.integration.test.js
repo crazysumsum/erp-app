@@ -1,21 +1,23 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { migrationFixture, createTestCurrency } from "../sales/phase1/fixtures.js";
+import { migrationFixture, createTestCurrency,enterSalesFixtureRequests } from "../sales/phase1/fixtures.js";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { formatDateForFile } from "../../src/services/time/timeFormat.js";
 import { SalesAuditService } from "../../src/modules/sales/SalesAuditService.js";
 import { SalesOrderService } from "../../src/modules/sales/SalesOrderService.js";
 import { SalesQuotationService } from "../../src/modules/sales/SalesQuotationService.js";
+import { getActiveTransactionIsolation } from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
 async function setup(t) {
   const f = await migrationFixture(t, []);
   const source = defaultConfigurationSource();
   const app = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
-  t.after(() => app.shutdown("sales_phase1_commands_complete"));
   const database = app.services.require("mysqldatabase"), time = app.services.require("time"), logger = app.services.require("logging").logger;
+  const restoreEntry=enterSalesFixtureRequests(database);
+  t.after(async()=>{restoreEntry();await app.shutdown("sales_phase1_commands_complete");});
   const username = `sales-p1-${randomUUID().slice(0, 8)}`, roleName = `${username}-role`;
   const roleId = await f.insert("roles", { name: roleName, created_at: f.now });
   const userId = await f.insert("users", { username, password_hash: "test-only", display_name: "Sales native probe", created_at: f.now, updated_at: f.now });
@@ -57,7 +59,21 @@ integrationTest("TC-011 Quotation Draft creates merged exact amounts and snapsho
 });
 integrationTest("TC-011 Quotation simultaneous event replay reads the committed document under REPEATABLE READ", async t => {
   const f = await setup(t), input = f.input();
-  const results = await Promise.all([f.quotation.create({ claims: f.claims, input }), f.quotation.create({ claims: f.claims, input })]);
+  const reached=Promise.withResolvers(),release=Promise.withResolvers(),claim=f.quotation.operations.claim,transaction=f.database.withTransaction;
+  let paused=false,callbacks=0,attempts=0,first,won;
+  f.database.withTransaction=function(work,options){return transaction.call(this,(tx,...args)=>{callbacks++;assert.equal(getActiveTransactionIsolation(tx),"REPEATABLE READ");return work(tx,...args);},options);};
+  f.quotation.operations.claim=async function(...args){const result=await claim.apply(this,args);if(!result.replay&&!paused){paused=true;reached.resolve();await release.promise;}return result;};
+  const create=()=>{attempts++;return f.quotation.create({claims:f.claims,input});};
+  let results;
+  try{
+    first=create();const settled=Promise.allSettled([first]);
+    try{
+      await Promise.race([reached.promise,first.then(()=>assert.fail("winner did not reach its owned event gate"))]);
+      await assert.rejects(create(),{code:"DATABASE_EVENT_ADMISSION_UNAVAILABLE",statusCode:503});assert.equal(callbacks,1);
+    }finally{release.resolve();[won]=await settled;}
+    if(won.status==="rejected")throw won.reason;
+    results=[won.value,await create()];assert.equal(attempts,3);assert.equal(callbacks,2);
+  }finally{release.resolve();if(first)await Promise.allSettled([first]);f.quotation.operations.claim=claim;f.database.withTransaction=transaction;}
   assert.deepEqual(results[0].operation, results[1].operation);
   assert.equal(results[0].quotation.id, results[1].quotation.id);
   assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_quotations WHERE customer_id=?", [f.customerId]))[0][0].n, 1);

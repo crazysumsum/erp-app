@@ -11,11 +11,11 @@ export function assertFulfillmentTransaction(database, transaction) {
 export class FulfillmentTransactionService {
   constructor({ database }) { this.database = database; }
 
-  withTransaction(work) {
+  withTransaction(work, { eventAdmissionId } = {}) {
     if (typeof work !== "function" || this.database.context?.get()?.databaseTransaction) {
       throw new TypeError("Fulfillment requires a new non-nested caller transaction");
     }
     return this.database.withTransaction(transaction => work(assertFulfillmentTransaction(this.database, transaction)),
-      { isolationLevel: "READ COMMITTED" });
+      { isolationLevel: "READ COMMITTED", eventAdmissionId });
   }
 }

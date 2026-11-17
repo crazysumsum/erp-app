@@ -119,6 +119,6 @@ export class SalesOrderLifecycleService {
       if (Number(updated.affectedRows) !== 1) throw salesError("CONCURRENT_OPERATION");
       const result = { id,number: order.number,status,version };await this.order.operations.succeed(tx,{ operationId: claim.operationId,result,nowMs });
       return { salesOrder: await readSalesOrderDetail(tx,id),operation: result };
-    },{ signal,timeoutMs: this.config.transactionTimeoutMs,isolationLevel: "READ COMMITTED" });
+    },{ signal,timeoutMs: this.config.transactionTimeoutMs,isolationLevel: "READ COMMITTED",eventAdmissionId:input.eventId });
   }
 }

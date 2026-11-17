@@ -8,8 +8,8 @@ import { FulfillmentLockService } from "../../src/modules/fulfillment/Fulfillmen
 import { ItemLookupService } from "../../src/modules/item/ItemLookupService.js";
 import { InventoryFulfillmentService } from "../../src/modules/inventory/InventoryFulfillmentService.js";
 import { InventoryLookupService } from "../../src/modules/inventory/InventoryLookupService.js";
-export async function p1Fixture(t,baseQuantity=1){
-  const f=await fixture(t,baseQuantity);await auditUp(f.db);await shipmentsUp(f.db);f.time.timeZone="Asia/Hong_Kong";
+export async function p1Fixture(t,baseQuantity=1,{preflightConfiguration=false}={}){
+  const f=await fixture(t,baseQuantity,{preflightConfiguration});await auditUp(f.db);await shipmentsUp(f.db);f.time.timeZone="Asia/Hong_Kong";
   await f.db.execute("UPDATE item_skus SET inventory_tracked=1 WHERE id=?",[f.s.skuId]);
   await f.s.insert("inventory_stock_controls",{warehouse_id:f.s.warehouseId,sku_id:f.s.skuId,reserved_quantity:baseQuantity,created_at:f.s.now,updated_at:f.s.now});
   const logger={error(){}},fulfillments=new FulfillmentService({database:f.database,time:f.time,logger}),inventory=new InventoryFulfillmentService({database:f.database,time:f.time,logger});

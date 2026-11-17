@@ -9,19 +9,36 @@ import { SalesFulfillmentService } from "../../../src/modules/sales/SalesFulfill
 import { MySqlDatabaseService } from "../../../src/services/mysqldatabase/MySqlDatabaseService.js";
 import { RequestContextService } from "../../../src/services/context/RequestContextService.js";
 
-async function createSalesProviderDatabase(t){
+export async function task036ApplicationSource(connectionOptions,name){
+  const {defaultConfigurationSource}=await import("../../../src/framework/configuration/applicationConfiguration.js"),source=defaultConfigurationSource();
+  const jobs={...source.scheduler.jobs};
+  for(const job of ["sales.backorderAllocate","sales.importWorker","sales.quotationExpire","sales.confirmationRecovery","sales.fileRetention","fulfillment.confirmationRecovery","logging.retentionCleanup","supplier.metrics","supplier.import.purge","itemImport.fileCleanup","customerAttachment.recover","requestLimit.purge","idempotency.purge","scheduler.statsFlush","deviceBinding.purgeNonces","deviceBinding.purgeStaleDevices","itemMedia.cleanupOrphans"])jobs[job]={enabled:false};
+  return {...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs},database:{...source.database,...connectionOptions,database:name,multipleStatements:false,connectionLimit:10}};
+}
+
+async function createSalesProviderDatabase(t,{preflightConfiguration=false}={}){
   if(process.env.DB_INTEGRATION_TESTS!=="1"||typeof process.env.DB_NAME!=="string"||! /^[A-Za-z0-9_]{1,30}$/u.test(process.env.DB_NAME))throw new Error("Explicit isolated Sales provider environment required");
   const name=`${process.env.DB_NAME}_sf_${randomUUID().replaceAll("-","").slice(0,12)}`;
   const connectionOptions={host:process.env.DB_HOST,port:Number(process.env.DB_PORT||3306),socketPath:process.env.DB_SOCKET_PATH,user:process.env.DB_ADMIN_USER??process.env.DB_USER,password:process.env.DB_ADMIN_PASSWORD??process.env.DB_PASSWORD,multipleStatements:true};
+  const providerConfig={database:name,queryTimeoutMs:5000,transactionTimeoutMs:10000,acquireTimeoutMs:5000,abandonedConnectionAction:"destroy"};
+  let applicationSource;
+  if(preflightConfiguration){
+    applicationSource=await task036ApplicationSource(connectionOptions,name);
+    const {validateApplicationConfiguration}=await import("../../../src/framework/configuration/applicationConfiguration.js");
+    validateApplicationConfiguration(applicationSource);
+    validateApplicationConfiguration({...applicationSource,database:{...applicationSource.database,...providerConfig,connectionLimit:2}});
+  }
   const admin=await mysql.createConnection(connectionOptions),cleanup={shutdown:null};let db=null,created=false;
   t.after(async()=>{
     const errors=[];
-    for(const close of [()=>cleanup.shutdown?.(),()=>db?.end(),()=>created&&admin.query(`DROP DATABASE \`${name}\``),()=>admin.end()]){try{await close();}catch(error){errors.push(error);}}
+    for(const close of [()=>cleanup.shutdown?.(),()=>db?.end(),()=>created&&!cleanup.preserveSchema&&admin.query(`DROP DATABASE \`${name}\``),()=>admin.end()]){try{await close();}catch(error){errors.push(error);}}
+    if(cleanup.preserveSchema)errors.push(new Error("Owned fixture schema retained because business work did not provably drain"));
     if(errors.length)throw new AggregateError(errors,"Sales provider owned resource cleanup failed");
   });
   await admin.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);created=true;db=await mysql.createConnection({...connectionOptions,database:name});
   await initializeSalesBaseline(db,name,connectionOptions);
-  return {db,name,connectionOptions,cleanup};
+  if(preflightConfiguration)await (await import("../../../database/migrations/0100_seed_purchasing_permissions.js")).up(db);
+  return {db,name,connectionOptions,cleanup,providerConfig,applicationSource};
 }
 
 // Node isolates test files in separate processes. Cache only the schema and
@@ -74,8 +91,8 @@ async function seedFulfillmentSalesOrder(db,baseQuantity) {
   return {orderId,lineId,customerId,warehouseId,uomId,skuId,skuUomId,addressId,now,insert};
 }
 
-export async function salesFulfillmentFixture(t,baseQuantity=1){
-  const f=await createSalesProviderDatabase(t),db=f.db,s=await seedFulfillmentSalesOrder(db,baseQuantity),label="sf_"+randomUUID().slice(0,12),time={nowMs:()=>s.now+1,timestamp:()=>s.now+1};
+export async function salesFulfillmentFixture(t,baseQuantity=1,{preflightConfiguration=false}={}){
+  const f=await createSalesProviderDatabase(t,{preflightConfiguration}),db=f.db,s=await seedFulfillmentSalesOrder(db,baseQuantity),label="sf_"+randomUUID().slice(0,12),time={nowMs:()=>s.now+1,timestamp:()=>s.now+1};
   const userId=await s.insert("users",{username:label,password_hash:"synthetic-only",display_name:"Synthetic",created_at:s.now,updated_at:s.now}),roleId=await s.insert("roles",{name:label,created_at:s.now});
   await db.query("INSERT INTO user_roles(user_id,role_id) VALUES (?,?)",[userId,roleId]);
   for(const name of ["fulfillment.view","fulfillment.operation","fulfillment.reverse"]){const [[permission]]=await db.query("SELECT id FROM permissions WHERE name=?",[name]);const id=permission?.id??await s.insert("permissions",{name,created_at:s.now});await db.query("INSERT INTO role_permissions(role_id,permission_id) VALUES (?,?)",[roleId,id]);}
@@ -84,7 +101,7 @@ export async function salesFulfillmentFixture(t,baseQuantity=1){
   const mappingId=await s.insert("sales_order_line_reservations",{sales_order_line_id:s.lineId,inventory_reservation_id:reservationId,inventory_operation_id:root,source_event_id:reserveEvent,original_base_quantity:baseQuantity,outstanding_base_quantity:baseQuantity,status:"ACTIVE",inventory_version:1,created_at:s.now,updated_at:s.now});
   await db.query("UPDATE sales_orders SET status='CONFIRMED' WHERE id=?",[s.orderId]);await db.query("UPDATE sales_order_lines SET cancelled_base_quantity=0,reserved_outstanding_base_quantity=? WHERE id=?",[baseQuantity,s.lineId]);
   const context=new RequestContextService({services:{require:()=>time}}),pool=mysql.createPool({...f.connectionOptions,database:f.name,multipleStatements:false,connectionLimit:2});
-  const database=new MySqlDatabaseService({pool,context,logger:{},config:{queryTimeoutMs:5000,transactionTimeoutMs:10000,acquireTimeoutMs:5000,abandonedConnectionAction:"destroy"}});f.cleanup.shutdown=()=>database.shutdown();
+  const database=new MySqlDatabaseService({pool,context,logger:{},config:f.providerConfig});f.cleanup.shutdown=()=>database.shutdown();
   const createService=options=>new SalesFulfillmentService({database,context,time,logger:{error(){}},...options});
   const service=createService(),permissions=["fulfillment.operation","fulfillment.reverse","fulfillment.view"],claims={sub:String(userId),roles:[label],permissions};
   const run=(auth,work,options={isolationLevel:"READ COMMITTED"})=>context.storage.run({databaseTransaction:null,signal:null,auth,startedAt:time.nowMs()},()=>database.withTransaction(work,options));

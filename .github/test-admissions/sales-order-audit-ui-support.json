@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "decision": "Sam actual reply in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, user message 01a1afd9-777e-71b2-82c8-97976e47e617, turn 01a1afd9-771e-7b32-89e3-91cd7497a97a, question call_aa4741197224453395ba5a63dcbc0098: 「批准精確准入、發布及一次 CI」. Approves this exact support blob on product candidate 3d4f783ce172c0ebde1ec90465bd866d965e36bf/base b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f, receipt-only follow-up, ordinary push/Draft PR and one existing eight-shard functional CI after trusted administrator registration/readback. No new cases/data/workers/jobs; no local R3/32-case/build rerun, manual dispatch or retry. Stop/report any baseline/product change or check failure. Merge requires separate decision.",
+  "purpose": "Admit the exact existing Sales Order Detail product component consumed by three unchanged client test files. Adds the source UI for on-demand audit viewing and safe route/permission reset. Prior R3 browser evidence belongs to product 2196b55e; it does not establish current-main integration. This is source-input admission, with no new test case.",
+  "data": "No changes to existing cases, fixtures, row counts, payload sizes, sample counts or seeds from base b28a7d8868f66ea37ed0e0c6a95f6dc64b6d7f8f. New business cases=0; new fixture/data rows=0. All test and fixture file blobs remain unchanged.",
+  "concurrency": "No increase. Existing 8 independent MySQL server coverage shards, serial test-file execution within each shard; existing client coverage and browser jobs unchanged. No new workers, runner slots, jobs or steps. Existing P1 and P2 real browser flows remain once each on shard 1, exactly 2 passed testcases per report.",
+  "repetitions": "No added repetitions or retries. Sam approved one existing PR-candidate functional CI batch, initiated only by the normal base admission controller. Do not rerun R3, the old local 32-case batch or local build. A later merge and its natural main CI require the separately applicable merge decision.",
+  "thresholds": "All current assertions and transaction/isolation/rollback checks unchanged. Server global lines/branches/functions remain 92/83/90 and all 39 original high-risk per-file floors remain. Client coverage retains its existing configuration (no new numeric floor is introduced). Existing mock-browser suites, P1 exact2/P2 exact2 and required aggregate checks remain. Routine capacity catalog exclusions and post-UAT capacity deferral remain.",
+  "trigger": "No trigger configuration changes. One approved ordinary main-target PR flow only after trusted administrator registration/readback; base controller verifies immutable PR merge SHA before its existing dispatch. Existing main-push/schedule definitions unchanged. No manual dispatch, retry, dormant suite or new workload is authorized.",
+  "cost": "No incremental cases/data/workers/jobs or configured concurrency. Candidate-specific duration and billed cost are unknown; no load or test was run to estimate them. Existing comparable runs had required-gate queue-free duration 11:01/11:56/19:05 and observed active runner time 69.43/70.50/79.22 minutes, which is not a billing measurement. Do not promise the 10-minute average or 15-minute maximum. Alternative: retain the local candidate. Recommendation: exact support receipt and one normal existing functional CI under Sam's actual decision; no policy bypass.",
+  "files": [
+    {
+      "path": "client/src/pages/sales/SalesOrderDetailPage.vue",
+      "mode": "100644",
+      "blob": "b23d48e9bfe3d471b7a0179eb3a62ae75687bf74",
+      "kind": "support"
+    }
+  ]
+}
