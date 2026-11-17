@@ -250,8 +250,8 @@ integrationTest("詳情：待審批回完整快照；allowedActions 跟操作者
   assert.equal(detail.status, 200, JSON.stringify(detail.body));
   const { approval, approvalHistory, statusHistory, allowedActions } = detail.body.data;
   assert.deepEqual(allowedActions, ["approve", "reject"]);
-  assert.deepEqual((await read(f.maker.token)).body.data.allowedActions, ["copy", "withdraw"], "提交人有 approval 都批唔到自己");
-  assert.deepEqual((await read(f.other.token)).body.data.allowedActions, ["copy"]);
+  assert.deepEqual((await read(f.maker.token)).body.data.allowedActions, ["copy", "cancel", "withdraw"], "提交人有 approval 都批唔到自己");
+  assert.deepEqual((await read(f.other.token)).body.data.allowedActions, ["copy", "cancel"]);
   assert.deepEqual((await read(f.viewer.token)).body.data.allowedActions, []);
   assert.deepEqual([approval.status, approval.purchaseOrderVersion, approval.requestNote, approval.decidedAt], ["PENDING", 2, "請批", null]);
   assert.deepEqual([approval.snapshot.number, approval.snapshot.supplier.name, approval.snapshot.totalAmount, approval.snapshot.lines.map((line) => [line.orderedQuantity, line.unitPrice, line.lineAmount])],
@@ -264,7 +264,7 @@ integrationTest("詳情：待審批回完整快照；allowedActions 跟操作者
   assert.equal(withdrawn.status, 200, JSON.stringify(withdrawn.body));
   const after = (await read(f.maker.token)).body.data;
   assert.equal(after.approval, null);
-  assert.deepEqual(after.allowedActions, ["edit", "submit", "copy"]);
+  assert.deepEqual(after.allowedActions, ["edit", "submit", "copy", "cancel"]);
   assert.deepEqual(after.approvalHistory.map((row) => [row.status, row.decisionReason]), [["WITHDRAWN", "要改交期先再提交"]]);
   assert.equal(typeof after.approvalHistory[0].decidedAt, "number");
   assert.deepEqual(after.statusHistory.at(-1).action, "WITHDRAW");
