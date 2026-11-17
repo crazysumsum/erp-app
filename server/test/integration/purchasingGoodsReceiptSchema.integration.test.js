@@ -1,7 +1,8 @@
 /**
  * TASK-027（設計 §4.10、§4.11、§4.16）：0120 goods_receipt_lines 同 0121 goods_receipt_details 對一個真、已 migrate 嘅 MySQL。
  * Sam 2026-11-12 按名批准 SCHEMA.md fcb8f876（call_cb2041d1）：8 個 case——FK 3、UNIQUE 2、確認後 trigger 3。
- * 每個 case 喺 transaction 入面做完即刻 ROLLBACK；每案最多 1 張 PO、2 條 PO line、1 張 GR、2 條 GR line、2 個 detail，主檔另計。
+ * 第 9 案（PM／CI 45d18fb1、96f3c124，待 Sam 批准）：Draft GR 嘅 detail 唔可以改掛去已確認嘅 GR（f26e2767 嘅 OLD 或 NEW guard）。
+ * 每個 case 喺 transaction 入面做完即刻 ROLLBACK；每案最多 1 張 PO、2 條 PO line、2 張 GR（只第 9 案）、2 條 GR line、2 個 detail，主檔另計。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -76,7 +77,7 @@ async function fixture(db) {
     warehouse_code_snapshot: "W1", bin_code_snapshot: "B1", tracking_policy_applied: "none", stock_status: "AVAILABLE", created_at: now, updated_at: now, ...fields });
   const confirm = () => db.query("UPDATE goods_receipts SET status = 'CONFIRMED', confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
     [now, user, randomUUID(), gr]);
-  return { now, po, lineA, lineB, skuA, skuB, gr, main, other, grLine, detail, confirm };
+  return { now, po, lineA, lineB, skuA, skuB, gr, main, other, grLine, detail, confirm, supplier, user, insert };
 }
 
 integrationTest("TASK-027 FK：GR line 嘅 PO 同 GR 嘅 PO 唔一致就拒絕（跨 PO）", async (t) => {
@@ -159,5 +160,26 @@ integrationTest("TASK-027 trigger：GR 確認後唔准再加 line 或者 detail"
     await f.confirm();
     await rejects(f.grLine({ purchase_order_line_id: f.lineB, sku_id: f.skuB.id, line_number: 2 }), "ER_SIGNAL_EXCEPTION", "cannot be added after confirmation");
     await rejects(f.detail(line), "ER_SIGNAL_EXCEPTION", "cannot be added after confirmation");
+  });
+});
+
+integrationTest("TASK-027 trigger：Draft GR 嘅 detail 唔可以改掛去已確認嘅 GR", async (t) => {
+  const db = await connect(t);
+  await inRollback(db, async () => {
+    const f = await fixture(db);
+    const lineA = await f.grLine(), detail = await f.detail(lineA);
+    const [[{ next }]] = await db.query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next FROM goods_receipts WHERE document_year_month = ?", [MONTH]);
+    const grB = await f.insert("goods_receipts", { gr_number: `GR-${MONTH}-${String(next).padStart(6, "0")}`, document_year_month: MONTH, sequence_no: Number(next),
+      purchase_order_id: f.po, supplier_id: f.supplier, supplier_code_snapshot: "S", supplier_name_snapshot: "GR Supplier", business_receipt_date: "2097-09-02",
+      created_at: f.now, updated_at: f.now, created_by: f.user, updated_by: f.user, created_by_label: "gr", updated_by_label: "gr" });
+    const lineB = await f.grLine({ goods_receipt_id: grB });                      // 同一條 PO line；uq_gr_lines_po_line 係按 GR
+    await db.query("UPDATE goods_receipts SET status = 'CONFIRMED', confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
+      [f.now, f.user, randomUUID(), grB]);
+    await rejects(db.query("UPDATE goods_receipt_details SET goods_receipt_id = ?, goods_receipt_line_id = ? WHERE id = ?", [grB, lineB, detail]),
+      "ER_SIGNAL_EXCEPTION", "immutable after confirmation");
+    const [[row]] = await db.query("SELECT goods_receipt_id, goods_receipt_line_id, received_base_quantity FROM goods_receipt_details WHERE id = ?", [detail]);
+    assert.deepEqual([Number(row.goods_receipt_id), Number(row.goods_receipt_line_id), String(row.received_base_quantity)], [f.gr, lineA, "2"]);
+    const [[{ onB }]] = await db.query("SELECT COUNT(*) AS onB FROM goods_receipt_details WHERE goods_receipt_id = ?", [grB]);
+    assert.equal(Number(onB), 0);
   });
 });

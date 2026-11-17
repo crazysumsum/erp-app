@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f (call_cb2041d1c4bd4425b8747c97b7046ed2, relayed by the PM in agentmsg 7f5cada8) approving by name SCHEMA.md sha256 fcb8f876 (TASK-027): the two tables goods_receipt_lines and goods_receipt_details with the listed FKs and unique keys, the freeze with the updated_at exception, and 8 SQL cases with at most 1 PO, 2 PO lines, 1 GR, 2 GR lines and 2 details per case. No DB, local test, CI, push, merge or formal migration is approved by it. The author does not approve this receipt; the trusted approval administrator must independently verify that answer and these blobs before registering the digest",
+  "decision": "DRAFT - NOT APPROVED. Proposed 9-case receipt for TASK-027 (source fix f26e2767 plus the 9th re-parenting case). Takes effect only through Sam's future explicit affirmative answer in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f naming this receipt's final digest, the test blob 8a91ef6c29c4da51736de3ac11adeef3c3a06137 and the 0120/0121 blobs below. The author does not approve it; the trusted approval administrator must independently verify that answer before registering the digest. Builds on Sam's by-name SCHEMA approval fcb8f876 (call_cb2041d1) for the first 8 cases",
   "purpose": "The GR line and detail schema enforces same-PO ownership, the PO line SKU, bin-in-warehouse and the duplicate dimension, and freezes lines and details once the parent GR has been confirmed, except a detail's reversed_base_quantity and updated_at",
-  "data": "Per case inside a rolled-back transaction: at most 1 PO with 2 lines, 1 GR, 2 GR lines and 2 details, plus masters (1 user, 1 supplier, 1 item, 1 UOM, 2 SKUs, 2 warehouses with 1 bin each)",
+  "data": "Per case inside a rolled-back transaction: at most 1 PO with 2 lines, 2 GRs (case 9 only; 1 otherwise), 2 GR lines and 2 details, plus 12 master rows (1 user, 1 supplier, 1 item, 1 UOM, 2 SKUs, 2 SKU-UOMs, 2 warehouses, 2 bins)",
   "concurrency": "1",
   "repetitions": "1",
-  "thresholds": "All 8 cases pass; coverage floors unchanged; no timing threshold",
+  "thresholds": "All 9 cases pass; coverage floors unchanged; no timing threshold",
   "trigger": "The existing ci.yml triggers: the existing MySQL integration shards on every admitted PR dispatch, every push to main and the weekly schedule; no new job",
   "cost": "Not measured; no capacity workload",
   "files": [
     {
       "path": "server/test/integration/purchasingGoodsReceiptSchema.integration.test.js",
       "mode": "100644",
-      "blob": "08eedc70000ccbf697fda990feabf559b725f936",
+      "blob": "8a91ef6c29c4da51736de3ac11adeef3c3a06137",
       "kind": "functional",
       "cases": [
         "TASK-027 FK：GR line 嘅 PO 同 GR 嘅 PO 唔一致就拒絕（跨 PO）",
@@ -22,7 +22,8 @@
         "TASK-027 UNIQUE：同一張 GR 唔可以有兩個相同 physical bucket 嘅 detail",
         "TASK-027 trigger：GR 確認後 line 同 detail 唔准改，只有 detail 嘅 reversed_base_quantity 同 updated_at 可以改",
         "TASK-027 trigger：GR 確認後唔准刪 line 或者 detail",
-        "TASK-027 trigger：GR 確認後唔准再加 line 或者 detail"
+        "TASK-027 trigger：GR 確認後唔准再加 line 或者 detail",
+        "TASK-027 trigger：Draft GR 嘅 detail 唔可以改掛去已確認嘅 GR"
       ]
     },
     {
