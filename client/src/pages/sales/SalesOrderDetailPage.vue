@@ -13,7 +13,7 @@ import sales from "@/services/sales.js";
 import { useSessionStore } from "@/stores/session.js";
 import { useSalesCommandEvent } from "@/composables/sales/useSalesCommandEvent.js";
 import BackorderAllocationDialog from "@/components/sales/BackorderAllocationDialog.vue";
-const route=useRoute(),session=useSessionStore(),document=ref(null),loading=ref(false),error=ref("");let controller,creditController;
+const route=useRoute(),session=useSessionStore(),document=ref(null),loading=ref(false),error=ref(""),showAudit=ref(false);let controller,creditController;
 const dialog=ref(false),credit=ref(null),creditLoading=ref(false),creditError=ref(""),notice=ref(""),failed=ref(false);
 const warningLabels={PARTIAL_BACKORDER:"部分數量轉為 Backorder。",CREDIT_LIMIT_ADVISORY:"信用額度只供參考。",MASTER_DATA_CHANGED:"主檔已變更，已保存確認時的最新快照。"};
 const command=useSalesCommandEvent({userId:()=>session.user?.id,onTerminal:async operation=>{
@@ -39,7 +39,7 @@ const canConfirm=computed(()=>session.permissions.includes("sales.mgmt")&&action
 const masterChanged=computed(()=>{const value=document.value;if(!value)return false;const current=value.currentMaster.customer;
  return !current||current.customerCode!==value.customerCode||current.customerName!==value.customerName||
   value.lines.some(line=>{const sku=value.currentMaster.skus.find(row=>row.skuId===line.skuId);return !sku||sku.skuName!==line.skuName||sku.skuCode!==line.skuCode;});});
-async function load(){command.stop();lifecycle.stop();controller?.abort();creditController?.abort();controller=new AbortController();const signal=controller.signal;loading.value=true;error.value="";document.value=null;dialog.value=false;lifecycleDialog.value=false;allocationDialog.value=false;
+async function load(){command.stop();lifecycle.stop();controller?.abort();creditController?.abort();controller=new AbortController();const signal=controller.signal;loading.value=true;error.value="";showAudit.value=false;document.value=null;dialog.value=false;lifecycleDialog.value=false;allocationDialog.value=false;
  try{const value=await sales.getOrder(Number(route.params.id),{signal});if(!signal.aborted){document.value=value;if(session.permissions.includes("sales.mgmt")){await command.resume(value.id);if(!signal.aborted)await lifecycle.resume(value.id);}}}
  catch(e){if(!signal.aborted)error.value=e.message||"載入銷售訂單失敗";}finally{if(!signal.aborted)loading.value=false;}}
 watch([()=>route.params.id,()=>session.user?.id,()=>session.permissions.join("|")],()=>{notice.value="";load();},{immediate:true});
@@ -54,6 +54,8 @@ watch(dialog,value=>{if(!value)creditController?.abort();});
 async function confirm(){if(!canConfirm.value||creditLoading.value||credit.value?.status==="on_hold")return;dialog.value=false;await command.start(document.value.id,document.value.version);}
 const columns=[{name:"lineNo",label:"行",field:"lineNo"},{name:"sku",label:"SKU",field:"skuName",align:"left"},{name:"quantity",label:"Ordered／UOM",field:"quantity",align:"right"},
  {name:"base",label:"數量（Base 單位）",field:"orderedBaseQuantity",align:"left"},{name:"unitSellingPrice",label:"售價",field:"unitSellingPrice",align:"right"},{name:"lineAmount",label:"明細總額",field:"lineAmount",align:"right"},{name:"lineNote",label:"備註",field:"lineNote",align:"left"}];
+const auditColumns=[{name:"occurredAt",field:"occurredAt",label:"時間",sortable:true},{name:"actorLabel",field:"actorLabel",label:"操作人",align:"left"},{name:"action",field:"action",label:"操作"},{name:"outcome",field:"outcome",label:"結果"},{name:"reason",field:"reason",label:"原因",align:"left"}];
+async function fetchAudit(params){return sales.listAudit({...params,targetType:"ORDER",targetId:document.value.id,signal:controller.signal});}
 function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia/Hong_Kong",dateStyle:"short",timeStyle:"short"}).format(new Date(value));}
 </script>
 <template><div><PageHeader :title="document?.number??'銷售訂單詳情'" subtitle="Active 訂單；歷史快照與目前主檔參考分開顯示。" /><main class="q-px-md q-pb-md">
@@ -79,6 +81,14 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
   </DataTable>
   <q-card flat bordered class="q-my-md"><q-card-section><h2 class="text-h6 q-ma-none q-mb-md">來源</h2><p>{{ sourceLabels[document.sourceType] }}</p><q-btn v-if="document.sourceQuotationId" flat label="返回來源報價" :to="`/sales/quotations/${document.sourceQuotationId}`" /><p v-if="document.externalOrderId" class="break-word">{{ document.channelCode }}／{{ document.externalOrderId }}</p></q-card-section></q-card>
   <h2 class="text-h6 q-ma-none q-mb-md">狀態歷史</h2><p v-if="document.historyTruncated" role="status">只顯示最近 100 項狀態歷史。</p><ol><li v-for="event in document.history" :key="event.id" class="q-mb-sm break-word">{{ timestamp(event.occurredAt) }} — {{ event.actorLabel }}：{{ event.fromStatus?`${statusLabels[event.fromStatus]} → `:'' }}{{ statusLabels[event.toStatus] }}；{{ event.action }}；版本 {{ event.version }}<span v-if="event.reason">；{{ event.reason }}</span></li></ol>
+  <section class="q-my-md" aria-labelledby="sales-audit-title"><h2 id="sales-audit-title" class="text-h6 q-ma-none q-mb-md">審計紀錄</h2><q-btn v-if="!showAudit" flat label="查看審計紀錄" @click="showAudit=true" />
+   <DataTable v-if="showAudit" :key="document.id" :fetch="fetchAudit" :columns="auditColumns" :initial-pagination="{page:1,rowsPerPage:appConfig.defaultPageSize,sortBy:'occurredAt',descending:true}">
+    <template #body-cell-occurredAt="{row}"><q-td>{{ timestamp(row.occurredAt) }}</q-td></template>
+    <template #body-cell-actorLabel="{row}"><EllipsisCell :text="row.actorLabel" /></template>
+    <template #body-cell-reason="{row}"><EllipsisCell :text="row.reason" /></template>
+    <template #no-data><p role="status">沒有此訂單的審計紀錄。</p></template>
+   </DataTable>
+  </section>
   <q-card flat bordered class="q-my-md"><q-card-section><h2 class="text-h6 q-ma-none q-mb-md">目前主檔參考</h2><p>目前值只供參考；不改寫上方已儲存的客戶及商品快照。</p><p v-if="document.currentMaster.customer" class="break-word">客戶：{{ document.currentMaster.customer.customerCode }} — {{ document.currentMaster.customer.customerName }}（{{ document.currentMaster.customer.status }}）</p><p v-else>目前客戶參考不可用。</p><ul><li v-for="sku in document.currentMaster.skus" :key="sku.skuId" class="break-word">{{ sku.skuCode }} — {{ sku.skuName }}／{{ sku.itemName }}（SKU {{ sku.skuStatus }}；Item {{ sku.itemStatus }}）</li></ul></q-card-section></q-card>
  </template>
  <q-dialog v-model="dialog" aria-labelledby="sales-confirm-title"><q-card class="confirmation-dialog"><q-card-section>

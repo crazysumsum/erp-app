@@ -34,7 +34,7 @@ test("TC-032 partial composition keeps missing owners UNKNOWN on the resolved da
     });
     assert.equal(resolves, 1);
     assert.equal(service.timeoutMs, options?.timeoutMs ?? 2_000);
-    assert.equal(service.providers.size, 1);
+    assert.equal(service.providers.size, 2);
     assert.ok(service.providers.get("fulfillment") instanceof FulfillmentCustomerReferenceProvider);
     assert.equal(service.providers.get("fulfillment").database, database);
     assert.deepEqual(await service.inspectReadiness(), {

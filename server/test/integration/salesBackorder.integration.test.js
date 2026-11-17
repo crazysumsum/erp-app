@@ -87,7 +87,7 @@ it("TC-021 an allocator holding its Order mapping locks never blocks another Ord
  const f=await setup(t);await stock(f,0);await confirm(f);const second=await anotherOrder(f);await topup(f,20);const a=await allocator(f),inventory=a.s.inventory;let other,blocked=false;
  // Inventory is the allocator's next lock rank: the other Order's confirmation takes the Warehouse lock, then inserts its own mapping.
  // A mapping gap lock held by the allocator makes that insert wait; the allocator's Warehouse request then closes a deadlock cycle.
- a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){other=confirm(f,second);const bound=Promise.withResolvers(),timer=setTimeout(()=>{blocked=true;bound.resolve();},5000);await Promise.race([other.catch(()=>{}),bound.promise]);clearTimeout(timer);return inventory.reserveAvailableForSalesBackorderInTransaction(...args);}};
+ a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){other=f.runAsFixtureRequest(f.claims,()=>confirm(f,second));const bound=Promise.withResolvers(),timer=setTimeout(()=>{blocked=true;bound.resolve();},5000);await Promise.race([other.catch(()=>{}),bound.promise]);clearTimeout(timer);return inventory.reserveAvailableForSalesBackorderInTransaction(...args);}};
  let result;try{result=await a.s.runBatch({scope:{warehouseId:f.warehouseId,skuId:f.skuId},maxEntries:1});}finally{await other?.catch(()=>{});}
  assert.ok(other,"the allocator never reached Inventory");assert.equal(blocked,false,"the other Order's confirmation waited on the allocator's Sales mapping locks");
  assert.equal((await other).operation.status,"CONFIRMED");assert.equal(result.allocatedEntries,1);assert.equal(result.deferred,0);
@@ -111,7 +111,7 @@ it("TC-021 a Quotation conversion in the allocator's Warehouse never deadlocks t
  f.beforeParents.push(async()=>{await f.db.execute("DELETE FROM sales_quotation_conversions WHERE quotation_id IN (SELECT id FROM sales_quotations WHERE customer_id=?)",[f.customerId]);await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM sales_quotations WHERE customer_id=?",[f.customerId]);});
  const quotation=(await quotations.create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,quotationDate:date,validUntil:date,lines:[line]}})).quotation;
  const issued=(await quotations.issue({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:1}})).quotation;
- const converted=await draftWriterAgainstAllocator(f,database=>new SalesQuotationService({...f,database}).convert({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:issued.version,order:{customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:date,lines:[line]}}}));
+ const converted=await draftWriterAgainstAllocator(f,database=>f.runAsFixtureRequest(f.claims,()=>new SalesQuotationService({...f,database}).convert({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:issued.version,order:{customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:date,lines:[line]}}})));
  assert.equal(converted.quotation.status,"CONVERTED");assert.equal((await readSalesOrderDetail(f.db,converted.salesOrder.id)).lines.length,1);
 });
 it("TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping",async t=>{

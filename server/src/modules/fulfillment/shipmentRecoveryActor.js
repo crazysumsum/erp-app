@@ -6,9 +6,17 @@ import { fulfillmentError } from "./fulfillmentErrors.js";
 
 // Directory failures and a missing original identity never attest revocation.
 export async function readShipmentRecoveryActor(database,tx,actorId){
+ return readRecoveryActor(database,tx,actorId,"fulfillment.operation");
+}
+
+export async function readShipmentReversalRecoveryActor(database,tx,actorId){
+ return readRecoveryActor(database,tx,actorId,"fulfillment.reverse");
+}
+
+async function readRecoveryActor(database,tx,actorId,permission){
  assertFulfillmentTransaction(database,tx);fulfillmentInteger(actorId);
  const [[user]]=await tx.query("SELECT id,username,status FROM users WHERE id=?",[actorId]);
  if(!user||String(user.id)!==actorId||typeof user.username!=="string"||!user.username||!["active","disabled"].includes(user.status))throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
  const roles=await loadRoleNamesForUser(tx,Number(actorId)),permissions=await loadPermissionNamesForUser(tx,Number(actorId));
- return freezeShipmentIntent({actor:{id:Number(actorId),username:user.username,roles,permissions},eligible:user.status==="active"&&["fulfillment.view","fulfillment.operation"].every(permission=>permissions.includes(permission))});
+ return freezeShipmentIntent({actor:{id:Number(actorId),username:user.username,roles,permissions},eligible:user.status==="active"&&["fulfillment.view",permission].every(required=>permissions.includes(required))});
 }
