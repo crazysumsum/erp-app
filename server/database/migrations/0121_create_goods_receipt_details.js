@@ -4,6 +4,8 @@
 //   只有 expiry_override_by 係 SET NULL（刪 user 唔觸發 trigger，同 0119 一樣）。stock_status 唔加 CHECK（設計冇列，由 service 保證）。
 // - §4.11／§4.16：parent GR 曾經確認（confirmed_at IS NOT NULL）之後，UPDATE 只准 reversed_base_quantity 同 updated_at 變
 //   （TL fe6897bd 裁定，同 0119 header 准 updated_* 一致），其餘任何一欄變就 SIGNAL；唔准 DELETE，亦唔准 INSERT（同 HD-014）。
+//   UPDATE 同時查 OLD 同 NEW 嘅 parent（PM／CI 45d18fb1）：否則 Draft GR 嘅 detail 可以改 goods_receipt_id／goods_receipt_line_id
+//   掛去另一張已確認 GR（同 PO、同 PO line、同 SKU 時複合 FK 同唯一鍵全部成立），0120 line trigger 唔會因為 child update 觸發。
 //   「只有 Reversal 可以改 reversed_base_quantity」係 service 規則，trigger 分唔到係邊個 transaction。
 // 純新增；IF NOT EXISTS 令重跑係 no-op。
 import { ensureTriggers } from "./0114_create_purchasing_operation_requests.js";
@@ -25,7 +27,7 @@ export const GR_DETAIL_TRIGGERS = Object.freeze({
     END IF;
   END`],
   trg_gr_details_update: ["UPDATE", `BEGIN
-    IF ${parentConfirmed("OLD")} AND NOT (${same(GR_DETAIL_FROZEN)}) THEN
+    IF (${parentConfirmed("OLD")} OR ${parentConfirmed("NEW")}) AND NOT (${same(GR_DETAIL_FROZEN)}) THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Goods receipt detail physical facts are immutable after confirmation';
     END IF;
   END`],

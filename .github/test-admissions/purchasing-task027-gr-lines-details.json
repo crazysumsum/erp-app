@@ -35,7 +35,7 @@
     {
       "path": "server/database/migrations/0121_create_goods_receipt_details.js",
       "mode": "100644",
-      "blob": "db526ec0a7f7cd8fe3c36b8cf53be410cbc07ecc",
+      "blob": "8b2ece3508d97c50e0e5d83dea4dfac9a311cdbf",
       "kind": "support",
       "cases": []
     }
