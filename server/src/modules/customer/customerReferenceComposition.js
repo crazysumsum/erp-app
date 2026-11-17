@@ -1,5 +1,6 @@
 import { CustomerReferenceService } from "../../services/customer/CustomerReferenceService.js";
 import { FulfillmentCustomerReferenceProvider } from "../fulfillment/FulfillmentCustomerReferenceProvider.js";
+import { SalesCustomerReferenceProvider } from "../sales/SalesCustomerReferenceProvider.js";
 
 const requiredProviders = [
   { id: "sales", contract: "sales-customer-references/v1" },
@@ -16,7 +17,7 @@ export async function createCustomerReferenceService({ services, options = {} })
     options: {
       timeoutMs: options.timeoutMs,
       requiredProviders,
-      providers: [new FulfillmentCustomerReferenceProvider({ database })]
+      providers: [new FulfillmentCustomerReferenceProvider({ database }), new SalesCustomerReferenceProvider({ database })]
     }
   });
 }
