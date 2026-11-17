@@ -9,7 +9,7 @@ Relationship authority: `08_traceability.json`; module/data/API boundary:
 
 | 項目 | 內容 |
 | --- | --- |
-| 版本／狀態 | 0.7 Draft；第一、第二個交付（DES-001～DES-023）已獲非作者評審在設計層面接受；第三個交付（DES-024～DES-028）**待非作者評審**；收貨發票未設計；整份設計未完成，不授權任何實作 |
+| 版本／狀態 | 0.12 Draft；四個交付（DES-001～DES-035）的Required已獲非作者評審在設計層面全部關閉；收貨發票未設計；整份設計未完成，不授權任何實作 |
 | 日期 | 2026-11-17 |
 | 需求基線 | `01_requirement_spec.md` 0.3 Draft（git blob `edd09c087f19b947361508a13d34125bda9ec185`，尚未commit） |
 | 程式基線 | `origin/main` `6a34b8c2`；下文引用的檔案及行號均以此為準 |
@@ -19,12 +19,13 @@ Relationship authority: `08_traceability.json`; module/data/API boundary:
 
 - **第一個交付（DES-001～DES-015，已獲非作者評審在設計層面接受）**：不依賴收貨（GR）的核心：模組邊界、金額表示、文件狀態、命令執行及重送授權、取鎖次序及關帳日、文件編號、餘額模型、發票／貸項／付款的命令、同步操作的界限、期初匯入的身分，以及與Purchasing、Supplier、Business Master的**待確認契約清單**。
 - **第二個交付（DES-016～DES-023，已獲非作者評審在設計層面接受）**：列表及詳情、現況及As-of的計算、Supplier Statement、列印頁、CSV匯出、權限及物件層授權、輸入輸出及上傳的安全處理、檔案保留及清理。
-- **第三個交付（DES-024～DES-028，未經評審）**：資料表欄位及索引、migration分片、API及權限、錯誤及結果不明的查回、Audit。均不含收貨發票。
+- **第三個交付（DES-024～DES-028，兩項Required已在設計層面關閉）**：資料表欄位及索引、migration分片、API及權限、錯誤及結果不明的查回、Audit。均不含收貨發票。
+- **第四個交付（DES-029～DES-035，一項Required已在設計層面關閉）**：路由、頁面及選單；列表及詳情的共同行為；命令的畫面流程；表單及核銷；帳戶、報表、列印、匯出及Audit的畫面；期初匯入的畫面；無障礙、回應式、文案及共用檔案的改動。均不含收貨發票。
 
 ### 尚未涵蓋（留待其後的交付）
 
-- 由收貨行建立發票、可開票數量、按PO單價計價及尾差、收貨沖銷時的AP檢查、發票與收貨之間的來源追溯（FR-004～FR-007、FR-009～FR-011、FR-020及FR-033的一部分），包括其欄位及介面：只在DES-014列出待確認事項。
-- 畫面及路由；請求及回應的欄位schema；報表的SQL及其索引；CSV及列印的欄位格式；對賬的排程及報告；部署及回滾。
+- 由收貨行建立發票、可開票數量、按PO單價計價及尾差、收貨沖銷時的AP檢查、發票與收貨之間的來源追溯（FR-004～FR-007、FR-009～FR-011、FR-020及FR-033的一部分），包括其欄位、介面及畫面：只在DES-014列出待確認事項。
+- 請求及回應的欄位schema；報表的SQL及其索引；CSV及列印的欄位格式；各頁面的欄位清單及版面稿；對賬的排程及報告；部署及回滾。
 
 ### 約束
 
@@ -148,7 +149,7 @@ FR-016、FR-019、FR-023、FR-025、FR-028、FR-032。單交易命令（DES-004�
 1. 開一個REPEATABLE READ交易（`MySqlDatabaseService.withTransaction`的預設）。
 2. 當時驗權：以`assertActorFresh`比對操作者聲稱與資料庫現時的角色及權限，並確認具備該命令所需的AP權限。不符即拒絕。
 3. Claim event：寫入`ap_operation_requests`，**唯一鍵只有`event_id`**。命令類型、目標、操作者及內容hash是該列保存的比較內容，不屬於唯一鍵。同一event的另一個請求在唯一鍵上等待前者commit或rollback。
-   - 該event已完成：比較命令類型、目標、操作者及內容hash。全部相同即返回當時保存的結果摘要；任何一項不同回`AP_EVENT_CONFLICT`。
+   - 該event已有終態（成功的結果，或下文拒絕收口留下的拒絕）：比較命令類型、目標、操作者及內容hash。全部相同即返回當時保存的結果摘要；任何一項不同回`AP_EVENT_CONFLICT`。
    - 目標以「目標類型＋目標ID」保存。建立類命令尚無目標ID，目標ID一律記為0，其身分由命令類型及內容hash區分；沒有可為空的目標欄位。
    - 內容hash涵蓋目標、金額、Effect Date、原因及預期版本。
    - 這比Purchasing的claim嚴格：Purchasing以來源文件＋event作查找鍵，AP在整個模組內以event作唯一身分。
@@ -164,9 +165,20 @@ FR-016、FR-019、FR-023、FR-025、FR-028、FR-032。單交易命令（DES-004�
 - 回應沒有保存下來時，框架回`IDEMPOTENCY_RESULT_UNAVAILABLE`（`:265–283`）。此時client以**新的**HTTP key、**原來的**event及內容重送，由步驟3取回原結果。
 - 發票作廢、貸項作廢、付款沖銷及關帳日變更的route使用現有的`jwt-password`認證；重送同樣須附密碼。
 
-**結果不明**：連線中斷或commit結果不明時，資料庫服務回`DATABASE_TRANSACTION_INDETERMINATE`，AP回`AP_OUTCOME_UNKNOWN`。Client以同一event及內容重送：若原交易已commit則取回結果，否則只執行一次。
+**結果不明**：連線中斷或commit結果不明時，資料庫服務回`DATABASE_TRANSACTION_INDETERMINATE`，AP回`AP_OUTCOME_UNKNOWN`。Client以同一event及內容重送：該event已有終態則取回該終態（成功的結果，或拒絕收口留下的拒絕）；沒有終態則這次執行，同一event最多只有一次生效。
 
-**被拒絕的命令**：交易rollback，不留operation列。拒絕結果在rollback之後另行寫入Audit（outcome `REJECTED`），沿用`PurchaseOrderService.js:142–144,478`的做法。
+**被拒絕的命令**：業務交易rollback，業務效果及該交易內的claim一併撤回。其後分兩種情況：
+
+- **claim之前的拒絕**（步驟2的驗權等）：不留operation列；拒絕結果在rollback之後另行寫入Audit（outcome `REJECTED`），沿用`PurchaseOrderService.js:142–144,478`的做法。這種拒絕只說明這一次請求。
+- **claim之後的業務拒絕**（步驟4的狀態、版本、期間、數額等檢查）：只rollback並不足夠，因為rollback之後沒有任何記錄可以阻止同一event其後再執行。所以在確定業務交易沒有提交之後，於同一請求內以一個附屬交易做**拒絕收口**，為該event留下拒絕的終態：
+  1. 重做步驟2的當時驗權；不通過即回該授權錯誤，不留終態。
+  2. 以同一`event_id`寫入operation列，結果為`REJECTED`及錯誤代碼；命令類型、目標、操作者及內容hash照常保存。拒絕的Audit在同一個附屬交易寫入。唯一鍵仍只有`event_id`，所以這個寫入與同一event的其他請求（包括遲到的原請求）在同一列上會合。
+  3. 寫入成功並**確定commit**：該event的終態就是這個拒絕，回應帶`eventOutcome: "REJECTED"`。其後任何帶同一event的請求在步驟3讀到它：身分及內容相同即回這個保存的拒絕（同樣帶`eventOutcome: "REJECTED"`），不執行步驟4；不同則回`AP_EVENT_CONFLICT`。
+  4. 唯一鍵上已有另一個請求留下的終態：比較身分及內容後，回**該終態**，不回這一次的結果，也不另寫拒絕的Audit或改動任何文件（包括期初的批次文件）。在唯一鍵上等待之後，須以鎖定讀取讀出該列的現況（下文「讀取規則」），不能沿用這個附屬交易驗權時建立的快照。已是成功即回原成功的結果；已是拒絕即回保存的拒絕，同樣帶`eventOutcome: "REJECTED"`。
+  5. 附屬交易沿用原請求的訊號及剩餘時限（DES-012），不另起完整的時限。時限不足、寫入失敗或其COMMIT結果不明時，回`AP_OUTCOME_UNKNOWN`，不回這一次的拒絕：業務交易確定沒有提交，但該event沒有確認的終態，client按結果未確定處理。因此凡是帶業務拒絕代碼的回應都帶`eventOutcome: "REJECTED"`。
+- 拒絕收口只取event列的鎖並寫入Audit，不取期間界線、帳戶列或文件列，不寫入任何財務效果。期初文件的確認另有批次文件的拒絕狀態要寫，兩者在同一個附屬交易內，event列在先（DES-013）。
+- 不做拒絕收口的情況：死鎖或鎖等待逾時（`CONCURRENT_OPERATION`）、時限不足、上游不可用及其他非業務的失敗。這些只說明這一次的交易，event仍可重送。
+- 拒絕的終態一經commit不可更改，同一event不能再執行。使用者修正後的再次操作是新的event。HTTP層不保存拒絕：失敗的請求會釋放HTTP key（`IdempotencyService.js:330–338`），重送到達步驟3時由operation列回覆。
 
 **讀取規則**：步驟2是普通讀取，會在REPEATABLE READ下固定交易的快照。其後凡是決定所依據的資料（關帳日、文件狀態及餘額、上游狀態）一律用鎖定讀取（`FOR UPDATE`或`FOR SHARE`），以讀到最新已提交的值。
 
@@ -186,8 +198,12 @@ FR-017、SEC-008、NFR-003、FR-043。評審要求：重送須先驗當時授權
 | 同一event E、同一命令及目標，內容不同 | `AP_EVENT_CONFLICT`。 |
 | 同一event E、命令、目標、操作者及內容全部相同 | 返回原結果。 |
 | 文件版本已變、關帳日已推進後重送已成功的event | 返回原結果。 |
-| 原交易已rollback後重送 | 重新執行，並以當時的資料驗證。 |
+| 原交易已rollback而該event沒有終態（例如死鎖、連線中斷，或拒絕收口未能確認）後重送 | 重新執行，並以當時的資料驗證。 |
+| 原交易被業務拒絕並已完成拒絕收口後重送 | 回保存的拒絕（帶`eventOutcome: "REJECTED"`），不重新執行，即使條件其後已改變。 |
 | HTTP回應未保存 | 以新HTTP key、原event及內容取回。 |
+| 遲到的原請求與拒絕收口：原請求A（event E）停在claim之前；重送B（同一E）先claim，被業務拒絕並rollback | B的拒絕收口先commit：A其後到達步驟3，讀到E的拒絕終態，回保存的拒絕，不執行；即使其間條件已改變（例如文件被重新開啟），A也不會執行。A在B的拒絕收口寫入之前claim而仍在進行：B的拒絕收口在event列上等待A；A commit成功則B按下一列回成功，A被拒絕則兩者之中先寫入的拒絕成為終態、另一方讀回它；B的時限先到則B回`AP_OUTCOME_UNKNOWN`。 |
+| 成功與這次的拒絕競爭：B的業務交易rollback之後、拒絕收口之前，A claim並成功commit | B的拒絕收口在唯一鍵上讀到A的成功，身分及內容相同，回A的成功結果，不回拒絕。該event的終態是成功。 |
+| 拒絕收口未能確認（時限不足、寫入失敗或COMMIT結果不明），或其回應遺失 | 回`AP_OUTCOME_UNKNOWN`（或沒有回應）。Client不把event當作已終結，保留intent並以E重送（DES-027）：收口其實已commit則讀回拒絕終態；未commit則重新執行業務交易，成功即成功，再被拒絕則再做收口。 |
 | 死鎖或鎖等待逾時 | 交易已確定rollback時回可重試的錯誤；不自動重試。 |
 
 ## DES-005 — 取鎖次序及期間界線
@@ -232,7 +248,9 @@ FR-017、SEC-008、NFR-003、FR-043。評審要求：重送須先驗當時授權
 | 推進關帳日、修改前綴 | ✓ | X | — | — | — | — | — | — |
 | 上傳及預檢期初批次 | ✓ | S | — | — | — | 新增批次及文件 | — | — |
 | 確認一筆期初文件 | ✓ | S | ✓（新交易用途） | ✓ | ✓ | 批次文件，新增財務文件 | 新增行 | ✓ |
-| 期初文件的附屬寫入：確定rollback後記錄拒絕原因；重試前重新開啟 | — | S | — | ✓ | — | 批次文件 | — | — |
+| 拒絕收口：claim之後的業務拒絕，確定rollback後寫入event的拒絕終態及Audit（DES-004） | ✓ | — | — | — | — | — | — | — |
+| 期初文件確認被業務拒絕後的附屬寫入：拒絕收口，並記錄批次文件的拒絕原因 | ✓ | S | — | ✓ | — | 批次文件 | — | — |
+| 期初文件的重新開啟（附屬寫入，不claim event） | — | S | — | ✓ | — | 批次文件 | — | — |
 | 取消期初批次 | ✓ | S | — | — | — | 批次及其`PENDING`文件 | — | — |
 
 **Supplier列（步3b）**：除設定及期初上傳外，每個AP命令都屬於一個Supplier，並在接觸任何AP文件列之前取得該Supplier列的鎖。原因有二：
@@ -437,7 +455,7 @@ FR-001、FR-003、SEC-005。所有AP寫命令（含Draft的建立及修改）都
 - 進入業務交易之前，service以原請求的剩餘時限決定交易的預算：剩餘時間不足以完成等待連線、交易及回應所需的最小預算（`minCommandBudgetMs`，數值待定）時，在任何寫入之前拒絕，回可重試的錯誤。足夠時，把原請求的訊號及不超過剩餘時限的預算傳給`withTransaction`；時限涵蓋到COMMIT為止。
 - 原請求的訊號全程沿用。請求被中止後不再開始新的業務工作，也不另起一個有完整時限的交易去繼續。
 - Client可能只收到HTTP 504或斷線，而不是`AP_OUTCOME_UNKNOWN`。這兩種情況一律當作結果不明：以原event及內容重送查回（DES-004），不得據此認定已rollback，也不得改用新的event。
-- 附屬寫入（被拒絕命令的Audit、期初文件的拒絕狀態）只在業務交易已確定rollback之後進行，不做任何業務工作，沿用原請求的訊號及剩餘時限。結果不明時不寫拒絕，也不以附屬寫入作為已rollback的證據。時限內寫不進去時記錄於應用日誌，命令沒有財務效果的結果不變。
+- 附屬寫入（拒絕收口、被拒絕命令的Audit、期初文件的拒絕狀態）只在業務交易已確定rollback之後進行，不做任何業務工作，沿用原請求的訊號及剩餘時限。結果不明時不寫拒絕，也不以附屬寫入作為已rollback的證據。時限內寫不進去時記錄於應用日誌；「沒有財務效果」只指這一次已rollback的業務交易，不指整個event：同一event仍可能由另一個請求成功，其結果以DES-004的拒絕收口及終態為準，不能據此把結果不明當作失敗，或把已成功的event回成拒絕。
 - 期初匯入的上傳分兩段：解析及驗證是唯讀的，受檔案大小及行數上限約束；通過解析後，才在一個有界的交易內保存批次及文件的記錄。這個保存不取號、不寫ledger、不建立任何應付。在保存之前超出時限即中止，不留下批次。
 - 匯出以資料流寫入私有檔案；列數超過上限時拒絕並要求縮窄條件，不產生部分檔案。
 
@@ -483,7 +501,7 @@ NFR-001、NFR-002、FR-042、FR-038、FR-032。AR評審的R6指出：有日期�
 | 批次A的來源X（USD 100，event EA）在途、回應中斷；批次B以同一來源X（另一Currency或金額，event EB）提交 | EB在來源列上等待EA。EA commit後，EB讀到已入帳而內容不同，被拒絕，B的文件為`REJECTED`。EA rollback後，EB讀到未入帳，按B的內容入帳。兩者的Currency不同也在同一來源列上會合。 |
 | 批次A的來源X已入帳；批次B重傳相同內容 | B的文件標為`RESOLVED_BY_EXISTING`，沒有新的財務效果；B不再有`PENDING`，摘要及關帳日檢查都視B為完成。 |
 | 來源Y因金額格式錯誤，預檢為`INVALID`；其後在新批次以同一識別、修正後的內容上傳 | 來源Y從未入帳，新批次的文件可確認並入帳；舊批次的`INVALID`文件保留。 |
-| 文件D第一次確認確定rollback，D為`REJECTED`（摘要：確定未入帳1，批次完成）。使用者重試：D先重新開啟為`PENDING`，然後第二次確認的回應中斷，結果不明 | 重新開啟後摘要為「尚未處理或待查明1」，批次未完成，關帳日檢查視為未完成；不顯示舊的`REJECTED`。Client以原event查回：第二次已commit則D為`SUCCEEDED`，摘要「確定成功1」；第二次已rollback則重新執行，成功為`SUCCEEDED`，被拒絕則在確定rollback後寫回`REJECTED`。 |
+| 文件D第一次確認確定rollback，D為`REJECTED`（摘要：確定未入帳1，批次完成）。使用者重試：D先重新開啟為`PENDING`，然後第二次確認的回應中斷，結果不明 | 重新開啟後摘要為「尚未處理或待查明1」，批次未完成，關帳日檢查視為未完成；不顯示舊的`REJECTED`。Client以原event查回：第二次已commit則D為`SUCCEEDED`，摘要「確定成功1」；第二次被業務拒絕並已完成拒絕收口則回該拒絕，D為`REJECTED`；第二次已rollback而沒有終態則重新執行，成功為`SUCCEEDED`，被拒絕則在確定rollback後寫回`REJECTED`。第二次確認用的是新的event，不是第一次被拒絕的那一個。 |
 | 一批兩筆：一筆`SUCCEEDED`，另一筆未處理時使用者取消批次 | 另一筆由`PENDING`改為`CANCELLED`。摘要：確定成功1、確定未入帳1（已取消1）、尚未處理0，合計2，等於上傳總數。 |
 - 期初發票以匯入的未清餘額作為總額；期初預付款及Credit Balance以匯入的可用額建立，各寫入一個ledger事件。期初文件不引用PO或收貨。
 
@@ -491,11 +509,11 @@ NFR-001、NFR-002、FR-042、FR-038、FR-032。AR評審的R6指出：有日期�
 FR-038～FR-040、D11。AR評審的R5指出：一個event不可對應會變動的文件集合。以「一個請求一個文件」作為起點，每個event只對應一個固定的文件，沒有集合的問題，也不需要背景工作。
 
 ### Failure behavior
-確認被拒絕時交易rollback，批次文件的狀態不變。拒絕原因在rollback之後以另一個附屬交易寫入：取得期間界線的共享鎖及來源列的排他鎖（DES-005的鎖表），只在該批次文件仍是`PENDING`或`REJECTED`時才把它寫成`REJECTED`及原因。這個條件更新是原子的，不會覆蓋`SUCCEEDED`、`RESOLVED_BY_EXISTING`或`CANCELLED`；它不寫入任何財務效果、ledger或號碼。
+確認被拒絕時交易rollback，批次文件的狀態不變。拒絕原因在rollback之後以另一個附屬交易寫入：取得期間界線的共享鎖及來源列的排他鎖（DES-005的鎖表），只在該批次文件仍是`PENDING`或`REJECTED`時才把它寫成`REJECTED`及原因。這個條件更新是原子的，不會覆蓋`SUCCEEDED`、`RESOLVED_BY_EXISTING`或`CANCELLED`；它不寫入任何財務效果、ledger或號碼。確認在claim之後被業務拒絕時，該event的拒絕終態（DES-004的拒絕收口）在這同一個附屬交易寫入，event列在先；拒絕收口讀到同一event已成功時回原成功，不寫`REJECTED`。被拒絕的event已是終態，重新開啟之後的確認須用新的event。
 
 附屬寫入（拒絕狀態、拒絕的Audit、重新開啟）的共同約束：拒絕類的寫入只在業務交易**已確定rollback**之後進行；結果不明時不寫拒絕，文件維持`PENDING`。附屬寫入沿用原請求的訊號及剩餘時限，不另起完整的時限；時限內寫不進去時文件維持原狀態，不影響財務結果。附屬寫入若因原交易rollback而找不到來源列，須先建立再鎖定；其取得方式及外鍵的鎖在欄位的交付交代。
 
-回應中斷後重送同一event：已commit則返回原結果，未commit則重新執行。批次中途停止時，未送出的文件保持`PENDING`，可在其後繼續，或由使用者取消批次。
+回應中斷後重送同一event：已commit則返回原結果；已留下拒絕終態則回該拒絕；沒有終態則重新執行。批次中途停止時，未送出的文件保持`PENDING`，可在其後繼續，或由使用者取消批次。
 
 ## DES-014 — 與Purchasing的契約（未確認）
 
@@ -637,7 +655,17 @@ FR-041、FR-044、SEC-007。Sam對AR的同類決定（由瀏覽器列印另存�
   | 被撤權後以原HTTP key重送建立請求 | 回放前的重驗拒絕，不回傳原記錄。 |
 
   下載以附件方式回傳，不可快取。匯出內容只含遮蔽後的銀行快照，所以不另外要求Supplier銀行資料的查看權。
-- **重送**：匯出不是財務命令，不取期間界線及帳戶列；重送以HTTP idempotency及匯出記錄上的請求鍵去重，做法與Customer匯出相同。同一請求鍵再次送出時：記錄為`COMPLETED`即回原記錄；為`FAILED`即回失敗；為`PROCESSING`即回「仍在處理或結果不明」，不重新產生。
+- **請求鍵及重送**：匯出不是財務命令，不取期間界線及帳戶列。建立請求在內容中帶`eventId`，它就是匯出記錄的`request_key`；它與HTTP的`Idempotency-Key`是兩個不同的鍵。這一點與Customer匯出不同：該模組把HTTP的key直接當作service的鍵（`customerExportHandlers.js:17–19`），換HTTP key就會變成另一筆匯出，AP不沿用這個綁定。
+  - 記錄以「建立者＋`request_key`」唯一。以相同的`eventId`及相同的內容再次`POST /ap-exports/create`時，service找到原記錄並比較內容hash：相同即回原記錄及其現時狀態（`PROCESSING`、`FAILED`或`COMPLETED`），不重新產生；內容不同回`AP_EVENT_CONFLICT`。
+  - 查回不需要知道匯出的ID：首次回應遺失時，client以原`eventId`及原內容重送建立請求；原HTTP key仍可用時沿用，框架回`IDEMPOTENCY_RESULT_UNAVAILABLE`或原key已不可用時改用新的HTTP key，`eventId`不變。取得記錄的ID之後，才以`GET /ap-exports/:id`查詢狀態。
+  - 每一次仍按「授權」一段重驗查看權、`ap.export`及建立者。以新的`eventId`建立的是另一筆匯出，不算查回成功。
+
+  | 步驟 | 結果 |
+  | --- | --- |
+  | Client以HTTP key H、`eventId` K建立匯出；伺服器已建立記錄E（甚至已完成），回應遺失，client不知道E的ID | — |
+  | Client以H重送，框架回`IDEMPOTENCY_RESULT_UNAVAILABLE`，請求沒有到達service | Client改用新的HTTP key H2，`eventId`仍是K、內容不變 |
+  | 請求以H2到達service | Service以建立者＋K找到E，內容hash相同，回E及其狀態；沒有新的匯出、沒有重新產生檔案 |
+  | Client其後以K但不同的篩選條件送出 | 內容hash不同，`AP_EVENT_CONFLICT` |
 - **時限及結果不明**：沿用原請求的訊號及剩餘時限，逾時後不另起完整的時限繼續。把記錄標為`COMPLETED`的交易若已送出COMMIT而回應未收到，結果是不明，不能當作未完成；client以同一請求鍵查回。只有在**確定**未完成時（檔案產生或保存失敗、或完成的交易確定rollback），請求才以帶狀態條件的更新把記錄由`PROCESSING`改為`FAILED`；更新成功後才刪除該記錄位置上的檔案。請求報錯本身不是刪除檔案的依據。
 
 ### Rationale
@@ -724,12 +752,12 @@ NFR-005、NFR-006、SEC-009。清理是本模組唯一需要排程的寫入，�
 | `ap_settings` | `id`（固定為1）、`invoice_prefix`、`credit_note_prefix`、`payment_prefix`、`close_date`（可空）、`version`、`updated_by`、`updated_at` | PK `id`；`CHECK(id = 1)`；三個前綴互不相同 |
 | `ap_prefix_history` | `prefix`、`document_type`、`first_used_at` | PK `prefix`：一個前綴只能屬於一類文件，用過即保留 |
 | `ap_document_sequences` | `document_type`、`business_year`、`next_value`、`updated_at` | PK（`document_type`,`business_year`） |
-| `ap_operation_requests` | `id`、`event_id`、`command_type`、`target_type`、`target_id`（建立類為0）、`request_hash`、`actor_user_id`、`actor_label`、`result_summary`、`completed_at`、`request_id`、`correlation_id`、`created_at` | `UNIQUE(event_id)`；`KEY(target_type,target_id,id)`；`event_id`及`request_hash`的格式`CHECK`與Purchasing相同 |
+| `ap_operation_requests` | `id`、`event_id`、`command_type`、`target_type`、`target_id`（建立類為0）、`request_hash`、`actor_user_id`、`actor_label`、`result_summary`（含終態：`SUCCEEDED`或`REJECTED`；拒絕時含錯誤代碼，DES-004）、`completed_at`、`request_id`、`correlation_id`、`created_at` | `UNIQUE(event_id)`；`KEY(target_type,target_id,id)`；`event_id`及`request_hash`的格式`CHECK`與Purchasing相同 |
 | `ap_supplier_currency_balances` | `supplier_id`、`currency_code`、`invoice_outstanding`、`credit_available`、`payment_available`、`version`、`updated_at` | PK（`supplier_id`,`currency_code`）；三個數額不為負 |
 | `ap_invoices` | `id`、`invoice_type`（`NON_PO`、`OPENING`；`RECEIPT`留待其後）、`status`、`supplier_id`、Supplier代碼及名稱快照、`currency_code`、Currency小數位快照、`supplier_invoice_number`、`supplier_invoice_number_key`（正規化）、`active_number_key`（衍生欄位，只在`DRAFT`及`CONFIRMED`時等於正規化號碼）、`internal_number`（可空）、`invoice_date`、`effect_date`、`due_date`（Draft可空）、付款條件快照、`entered_total_amount`、`total_amount`、`credit_reduction_amount`、`credit_applied_amount`、`payment_applied_amount`、`outstanding_amount`、`active_credit_count`、`non_po_reason`、`notes`、`follow_up_notes`、`opening_original_amount`及`opening_original_date`（可空，只作參考）、`void_reason`、`void_effect_date`、`version`、建立／確認／作廢的操作者及時間 | `UNIQUE(internal_number)`；`UNIQUE(supplier_id,active_number_key)`；`KEY(supplier_id,currency_code,status,invoice_date,id)`；`KEY(status,due_date,id)`；`KEY(supplier_invoice_number_key,id)`；各數額不為負，未付額不大於總額 |
 | `ap_invoice_lines` | `id`、`invoice_id`、`line_no`、`line_type`（`CHARGE`、`OPENING`；`RECEIPT`留待其後）、`description`、`line_amount`、`credited_amount` | `UNIQUE(invoice_id,line_no)`；`UNIQUE(invoice_id,id)`供複合外鍵；`line_amount`為正，`credited_amount`不大於`line_amount` |
 | `ap_credit_notes` | `id`、`credit_type`（`NORMAL`、`OPENING`）、`invoice_id`（`OPENING`為空）、`status`、`supplier_id`、`currency_code`及小數位快照、`internal_number`、`supplier_credit_number`、`credit_date`、`effect_date`、`reason`、`total_amount`、`origin_reduction_amount`、`balance_issued_amount`、`balance_applied_amount`、`balance_available_amount`、`void_reason`、`void_effect_date`、`version`、操作者及時間 | `UNIQUE(internal_number)`；`KEY(invoice_id,status,id)`；`KEY(supplier_id,currency_code,status,id)`；`credit_type`為`OPENING`時`invoice_id`必須為空，否則必須有值；`total_amount = origin_reduction_amount + balance_issued_amount` |
-| `ap_credit_note_lines` | `id`、`credit_note_id`、`line_no`、`invoice_id`、`invoice_line_id`、`credit_amount` | `UNIQUE(credit_note_id,line_no)`；複合外鍵（`invoice_line_id`,`invoice_id`）指向`ap_invoice_lines(id,invoice_id)` |
+| `ap_credit_note_lines` | `id`、`credit_note_id`、`line_no`、`invoice_id`、`invoice_line_id`、`credit_amount` | `UNIQUE(credit_note_id,line_no)`；複合外鍵（`invoice_id`,`invoice_line_id`）指向`ap_invoice_lines(invoice_id,id)`，欄位次序與父表的`UNIQUE(invoice_id,id)`相同。這個外鍵只保證該行屬於所指的發票；貸項與其原發票的其他一致性仍由service及物件層檢查 |
 | `ap_credit_applications` | `id`、`credit_note_id`、`target_invoice_id`、`amount`、`status`（`ACTIVE`、`UNAPPLIED`）、`effect_date`、`unapplied_effect_date`、建立及解除的操作者與時間 | `KEY(credit_note_id,status,id)`；`KEY(target_invoice_id,status,id)` |
 | `ap_payments` | `id`、`payment_type`（`NORMAL`、`OPENING`）、`status`、`supplier_id`、`currency_code`及小數位快照、`internal_number`、`payment_date`、`effect_date`、`amount`、`allocated_amount`、`available_amount`、`active_allocation_count`、`payment_method`、`transaction_reference`、`cheque_number`、`other_description`、`supplier_bank_account_id`及遮蔽快照（可空）、`notes`、`reversal_reason`、`reversal_effect_date`、`version`、操作者及時間 | `UNIQUE(internal_number)`；`KEY(supplier_id,currency_code,status,payment_date,id)`；`amount = allocated_amount + available_amount`（已沖銷時兩者為0） |
 | `ap_payment_allocations` | `id`、`payment_id`、`invoice_id`、`amount`、`status`（`ACTIVE`、`UNAPPLIED`、`REVERSED`）、`effect_date`、`ended_effect_date`、建立及結束的操作者與時間 | `KEY(payment_id,status,id)`；`KEY(invoice_id,status,id)` |
@@ -739,11 +767,13 @@ NFR-005、NFR-006、SEC-009。清理是本模組唯一需要排程的寫入，�
 | `ap_opening_import_batches` | `id`、原檔名、檔案hash及大小、行數、文件數、`cancelled_at`（可空）、`created_by`、`created_at`、`expires_at`、`files_purged_at` | `KEY(created_by,created_at,id)` |
 | `ap_opening_import_documents` | `id`、`batch_id`、`row_no`、`document_type`（`INVOICE`、`PREPAYMENT`、`CREDIT_BALANCE`）、`supplier_id`（預檢不通過時可空）、`legacy_source_id`、`content`、`content_hash`、`status`、`result_code`、`result_detail`、`opening_source_id`（可空）、`updated_at` | `UNIQUE(batch_id,row_no)`；`KEY(batch_id,status,id)` |
 | `ap_opening_sources` | `id`、`document_type`、`supplier_id`、`legacy_source_id`、`posted`、`content_hash`、結果文件的類型及ID、`posted_operation_request_id`、`posted_at` | `UNIQUE(document_type,supplier_id,legacy_source_id)` |
-| `ap_exports` | `id`、`request_key`、`export_type`、`filters`、`filters_hash`、`as_of_date`、`status`（`PROCESSING`、`COMPLETED`、`FAILED`）、`row_count`、`file_sha256`、`created_by`、`created_at`、`completed_at`、`expires_at`、`files_purged_at` | `UNIQUE(created_by,request_key)`；`KEY(created_by,created_at,id)`；`KEY(status,created_at,id)` |
+| `ap_exports` | `id`、`request_key`（即建立請求的`eventId`，不是HTTP的`Idempotency-Key`）、`request_hash`（匯出類型、篩選條件及As-of日期的內容hash）、`export_type`、`filters`、`filters_hash`、`as_of_date`、`status`（`PROCESSING`、`COMPLETED`、`FAILED`）、`row_count`、`file_sha256`、`created_by`、`created_at`、`completed_at`、`expires_at`、`files_purged_at` | `UNIQUE(created_by,request_key)`；`KEY(created_by,created_at,id)`；`KEY(status,created_at,id)` |
 
 補充：
 
 - **期初預付款及期初Credit Balance的形狀**：期初預付款是一筆`payment_type`為`OPENING`的已確認付款，可用額等於匯入額。期初Credit Balance是一張`credit_type`為`OPENING`的已確認貸項，沒有原發票，全部金額發行為Credit Balance。這是FR-021「一張貸項只屬於一張發票」的唯一例外，只由期初匯入產生。
+- 期初類型的界線：`OPENING`的付款及貸項只由期初文件的確認產生，建立時即為`CONFIRMED`；一般的建立及確認路徑不可選用這個類型，一般貸項仍須有`CONFIRMED`的原發票。`OPENING`貸項的原發票沖減額為0、發行額等於匯入額，不更新任何發票的有效貸項數目；其應用、解除及作廢沿用同Supplier同Currency、可用額及期間的規則，作廢只反向自己的可用額及狀態，不涉及原發票的鎖、沖減或數目。`OPENING`付款沿用核銷及整張沖銷的規則，不要求填寫付款方式的欄位。來源的已入帳身分在作廢或沖銷後仍然保留（DES-013）。
+- 與狀態有關的`CHECK`須按狀態表達：例如付款的`amount = allocated_amount + available_amount`只適用於`CONFIRMED`；已沖銷時保留原`amount`，其餘兩者為0。可空及必填的條件同樣按類型及狀態寫出，不為遷就一條無條件的`CHECK`而改寫正式金額。
 - 一個事件涉及多份文件時，每份受影響的文件一列ledger事件（例如付款沖銷按每張受影響的發票各一列）。
 - 一筆發票根列的`outstanding_amount`及三個扣減額、貸項及付款根列的可用額，是ledger的即時彙總，由同一交易更新（DES-007）。
 - 上表不含收貨發票所需的欄位、報表的SQL及為報表而加的索引；後者在量度之後才決定。
@@ -767,6 +797,9 @@ DES-001、DES-005～DES-013、DES-017、DES-020。型別及約束沿用Purchasin
 6. `ap_exports`。
 
 Migration的序號在實作時由當時最新的main取下一個可用號碼；本設計不指定序號。新增AP權限的資料寫入屬另一項工作（DES-026），不在這六片內。
+
+- 第2片的`ap_ledger_events`有貸項及付款的識別欄位，本設計沒有為它們宣告外鍵，所以第2片不依賴第3、4片。實作如要加上這些外鍵，須在父表建立之後才加，並相應調整分片次序。
+- trigger的重跑不由`CREATE TABLE IF NOT EXISTS`處理；沿用`0114_create_purchasing_operation_requests.js`核對並確保trigger定義的做法。
 
 ### Rationale
 分片對應建議的分期，前一片不依賴後一片。Purchasing的收貨行候選已佔用其後的序號，預先指定會衝突。
@@ -797,14 +830,15 @@ Migration的序號在實作時由當時最新的main取下一個可用號碼；�
 | `/ap-payment-allocations/:id/unapply` | `POST` | `ap.payment.mgmt` | |
 | `/ap-payments/:id/reverse` | `POST` | `ap.payment.mgmt` | 重新認證 |
 | `/ap-supplier-accounts/:supplierId` | `GET` | `ap.view` | 須指定Currency；可指定As-of |
-| `/ap-reports/outstanding`、`/aging`、`/due`、`/statement` | `GET` | `ap.view` | Statement沒有指定起日時的預設在畫面交付定義 |
+| `/ap-reports/outstanding`、`/aging`、`/due`、`/statement` | `GET` | `ap.view` | Statement的請求一律帶起日及截止日（As-of日期即截止日），伺服器不設預設日期；缺少其一或起日晚於截止日時回`AP_INPUT_INVALID`（DES-033） |
 | `/ap-opening-imports/template` | `GET` | `ap.opening.import` | |
 | `/ap-opening-imports/upload` | `POST` | `ap.opening.import` | 檔案上傳 |
 | `/ap-opening-imports`、`/ap-opening-imports/:id` | `GET` | `ap.opening.import` | 批次狀態及摘要 |
 | `/ap-opening-imports/:id/documents/:documentId/confirm`、`/reopen` | `POST` | `ap.opening.import` | 一個請求一個文件 |
 | `/ap-opening-imports/:id/cancel` | `POST` | `ap.opening.import` | |
 | `/ap-opening-imports/:id/source`、`/:id/result` | `GET` | `ap.opening.import`＋建立者 | 檔案下載，每次重驗 |
-| `/ap-exports/create` | `POST` | 該類型的查看權＋`ap.export` | 以請求鍵去重 |
+| `/ap-exports/create` | `POST` | 該類型的查看權＋`ap.export` | 內容帶`eventId`作為請求鍵；相同鍵及內容回原記錄，也是不知道ID時的查回路徑（DES-020） |
+| `/ap-exports` | `GET` | `ap.view`＋`ap.export` | 只回操作者自己建立的匯出，由伺服器以建立者作查詢條件，不接受以建立者作篩選參數；分頁及每頁上限同DES-016，按建立時間倒序（DES-024的`KEY(created_by,created_at,id)`）；只含狀態資料，不含檔案。不是查回的途徑 |
 | `/ap-exports/:id` | `GET` | 查看權＋`ap.export`＋建立者 | **狀態資料**：可回`PROCESSING`、`FAILED`或`COMPLETED`，不含檔案 |
 | `/ap-exports/:id/result` | `GET` | 同上，並須`COMPLETED`且未到期 | **完成的結果**：檔案下載 |
 | `/ap-audit-logs` | `GET` | `ap.view` | |
@@ -824,7 +858,7 @@ FR-001～FR-045的介面（收貨發票除外）、SEC-001、SEC-002。路徑及
 ### Decision
 AP的錯誤以模組的錯誤表定義（做法同`purchasingErrors.js`：代碼對應HTTP狀態及固定的中文訊息），對外訊息不含SQL、路徑、完整銀行帳號或未授權的ID。
 
-| 代碼 | HTTP | 意義 | Client的處理 |
+| 代碼 | HTTP | 意義 | Client的處理（首次送出時；重送見下文的分類） |
 | --- | --- | --- | --- |
 | `AP_INPUT_INVALID` | 400 | 輸入不合規，附欄位 | 修正後以新的event重送 |
 | `AP_NOT_FOUND` | 404 | 不存在或無權查看 | 不重試 |
@@ -837,23 +871,38 @@ AP的錯誤以模組的錯誤表定義（做法同`purchasingErrors.js`：代碼
 | `AP_DUPLICATE_SUPPLIER_INVOICE_NUMBER` | 409 | 同一Supplier已有相同的供應商發票號 | 顯示既有發票 |
 | `AP_RELATIONS_BLOCK_VOID` | 409 | 仍有有效的貸項、應用或核銷 | 先解除所列項目 |
 | `AP_OPENING_SOURCE_CONFLICT` | 409 | 期初來源已入帳而內容不同 | 顯示既有記錄 |
-| `AP_LIMIT_EXCEEDED` | 422 | 超過DES-012的某個上限，指出是哪一個 | 縮窄範圍或拆分 |
+| `AP_LIMIT_EXCEEDED` | 422 | 超過DES-012的某個上限，指出是哪一個 | 縮窄範圍，或把可分開的請求拆分；整張付款沖銷不可拆分（DES-010） |
 | `AP_FILE_EXPIRED` | 410 | 檔案已到期 | 重新建立 |
-| `AP_DEADLINE_INSUFFICIENT` | 503 | 剩餘時限不足，未開始任何寫入 | 可重試，沿用原event |
-| `CONCURRENT_OPERATION` | 409 | 死鎖或鎖等待逾時，交易已確定rollback | 可有限次重試，沿用原event |
+| `AP_DEADLINE_INSUFFICIENT` | 503 | 剩餘時限不足，未開始任何寫入 | 可重試；是否沿用原event按下文的結果分類 |
+| `CONCURRENT_OPERATION` | 409 | 死鎖或鎖等待逾時，這次的交易已確定rollback | 可有限次重試；是否沿用原event按下文的結果分類 |
 | `AP_DEPENDENCY_UNAVAILABLE` | 503 | 上游介面不可用或版本不符 | 稍後重試 |
-| `AP_OUTCOME_UNKNOWN` | 500 | commit的結果不明 | 按下文查回，不可更換event |
+| `AP_OUTCOME_UNKNOWN` | 500 | 尚未確認該event的終態：commit的結果不明，或拒絕收口因時限不足、寫入失敗或其commit不明而未能確認（DES-004） | 按下文查回，不可更換event |
 
 框架本身回傳的idempotency錯誤照常傳回：`IDEMPOTENCY_IN_PROGRESS`（稍後以同一key重試）、`IDEMPOTENCY_CONFLICT`、`IDEMPOTENCY_RESULT_UNAVAILABLE`。權限過期沿用現有的`PERMISSION_STALE`。
 
 **結果不明的查回契約**：
 
-- 以下情況一律視為結果不明：`AP_OUTCOME_UNKNOWN`、HTTP 504、連線中斷、`IDEMPOTENCY_RESULT_UNAVAILABLE`。
+- 以下情況視為結果未確定：`AP_OUTCOME_UNKNOWN`、HTTP 504及其他沒有AP代碼的5xx、逾時、連線中斷、`IDEMPOTENCY_IN_PROGRESS`、`IDEMPOTENCY_RESULT_UNAVAILABLE`。重送時另有一批回應同樣是未確定；完整的分類見下文「重送時的結果分類」。
 - 財務命令：以**原來的**`eventId`及**原來的**內容重送。原HTTP key仍可用時沿用；框架回`IDEMPOTENCY_RESULT_UNAVAILABLE`或原key已不可用時，改用新的HTTP key，event不變。
-- 重送的結果只有三種：取回原結果；原交易其實未提交，這次執行並回新結果；或這次被明確拒絕。在取得其中一種明確結果之前，client不得產生新的event，也不得把該操作當作失敗。
-- 匯出：以原來的請求鍵查回`/ap-exports/:id`的狀態資料（DES-020）。
+- 重送的結果有四種：取回原結果；原交易其實未提交，這次執行並回新結果；該event留下拒絕的終態（回應帶`eventOutcome: "REJECTED"`，DES-004），即原命令確定沒有生效，其後也不會生效；或仍然未確定（下表第三至第五列）。在取得前三種明確結果之一之前，client不得產生新的event，也不得把該操作當作失敗。
+- 匯出：尚未取得匯出ID時，以原來的`eventId`及原來的內容重送`POST /ap-exports/create`，必要時換HTTP key；已取得ID之後，以`GET /ap-exports/:id`查詢狀態資料（DES-020）。
 - 期初文件：以原event重送確認；文件在此之前維持`PENDING`（DES-013）。
 - 沒有另設查詢操作結果的介面；查回就是重送。
+
+**重送時的結果分類**（client據此決定是否移除保存的intent，DES-031）。同一個回應在首次送出與重送時的意義不同：首次送出時，任何明確的拒絕都來自這一次請求，而該event沒有其他請求，所以確定沒有寫入；重送時，只有該event已commit的終態（成功，或DES-004的拒絕收口）才能說明原請求的結果。移除intent的依據是終態，不是錯誤代碼出現在哪一步。
+
+| 回應 | 首次送出（這個intent從未有過未確定的嘗試） | 重送（曾有未確定的嘗試，包括由`sessionStorage`恢復的intent） |
+| --- | --- | --- |
+| 2xx | 明確成功，移除intent | 明確成功：原結果，或原交易未提交而這次執行的結果；移除intent |
+| 帶`eventOutcome: "REJECTED"`的拒絕（任何業務拒絕代碼；拒絕收口已確定commit，包括其後讀回的保存的拒絕） | 明確拒絕，移除intent | 明確拒絕：這是該event的終態，原請求及任何遲到的請求都不會再執行；移除intent |
+| 不帶`eventOutcome`的明確拒絕：claim之前的拒絕（`AP_INPUT_INVALID`、`AP_NOT_FOUND`、`IDEMPOTENCY_CONFLICT`、401、403、`PERMISSION_STALE`、429等）、只說明這次交易的拒絕（`CONCURRENT_OPERATION`、`AP_DEADLINE_INSUFFICIENT`、`AP_DEPENDENCY_UNAVAILABLE`） | 明確拒絕：這次請求確定沒有寫入，移除intent；再次提交是新的event | **未確定**，保留intent：這個回應只說明這一次請求或這一次的交易，該event沒有終態；原請求可能已提交，也可能其後才執行 |
+| `AP_EVENT_CONFLICT` | 明確拒絕 | 異常，保留intent，不產生新的event（DES-031） |
+| `AP_OUTCOME_UNKNOWN`、HTTP 504、其他沒有上列代碼的5xx（包括框架的`IDEMPOTENCY_STORE_FAILED`及`IDEMPOTENCY_CAPACITY_EXCEEDED`）、逾時、連線中斷、`IDEMPOTENCY_IN_PROGRESS`、`IDEMPOTENCY_RESULT_UNAVAILABLE` | 未確定，保留intent | 未確定，保留intent |
+
+- 只憑錯誤代碼不足以在重送時移除intent。`AP_VERSION_CONFLICT`等業務拒絕即使必定在claim之後產生，業務交易rollback之後event列已不存在；沒有拒絕收口的終態，一個仍停在claim之前的原請求其後仍可執行。所以重送時必須見到`eventOutcome: "REJECTED"`或成功的結果。拒絕收口未能確認時伺服器回`AP_OUTCOME_UNKNOWN`（DES-004），屬上表最後一列。
+- 不經DES-004的claim的寫入，其終態另有來源：建立匯出的終態是匯出記錄，重送得到記錄（任何狀態）即為明確結果；重送得到不帶記錄的明確拒絕時同樣移除intent，因為匯出不是財務命令，遲到的原請求最多多出一筆列在自己記錄頁的匯出。期初檔案的上傳及期初文件的重新開啟不保存intent（DES-034）。
+- 未確定時以保存的`eventId`及內容重送。HTTP 5xx按代碼而不是按狀態碼分類：帶有`AP_DEADLINE_INSUFFICIENT`或`AP_DEPENDENCY_UNAVAILABLE`的503在首次送出時是明確的未寫入，沒有AP代碼的5xx一律未確定。
+- 重送被歸入「未確定」而且持續不變的情況（例如操作者已被撤權），intent留在該分頁，該操作者拿不到原結果；這是DES-004的授權次序的結果，不是把原命令當作失敗。
 
 ### Rationale
 FR-017、NFR-003、DES-004、DES-012、DES-020。代碼表集中列出，使畫面及測試有固定的對照。`AP_OUTCOME_UNKNOWN`的HTTP狀態與Purchasing的`TRANSACTION_OUTCOME_UNKNOWN`相同（500）。
@@ -879,9 +928,191 @@ FR-043、SEC-006、SEC-004。欄位與Purchasing一致，使兩個模組的Audit
 ### Failure behavior
 業務交易內的Audit寫入失敗時整個交易rollback，命令不算成功。附屬的Audit寫入（拒絕、列印、下載）失敗時記錄於應用日誌，不改變已確定的業務結果。
 
+## DES-029 — 路由、頁面及選單（不含收貨發票）
+
+### Decision
+頁面放在`client/src/pages/ap/`，每個`.vue`以`export const page = { name, path, title, requires, menu }`宣告，由現有的頁面自動發現及驗證處理（`client/src/framework/discovery/`），不另寫路由表。路徑寫法與Purchasing相同：列表、`/new`、`/:id`、`/:id/edit`、`/:id/print`。
+
+| 頁面 | 路徑 | 進入所需權限 | 選單 |
+| --- | --- | --- | --- |
+| 供應商發票列表 | `/ap/invoices` | `ap.view` | ✓ |
+| 新增無PO發票 | `/ap/invoices/new` | `ap.view`＋`ap.invoice.mgmt` | |
+| 發票詳情 | `/ap/invoices/:id` | `ap.view` | |
+| 編輯發票Draft | `/ap/invoices/:id/edit` | `ap.view`＋`ap.invoice.mgmt` | |
+| 貸項列表 | `/ap/credit-notes` | `ap.view` | ✓ |
+| 由發票新增貸項 | `/ap/invoices/:invoiceId/credit-notes/new` | `ap.view`＋`ap.credit.mgmt` | |
+| 貸項詳情 | `/ap/credit-notes/:id` | `ap.view` | |
+| 編輯貸項Draft | `/ap/credit-notes/:id/edit` | `ap.view`＋`ap.credit.mgmt` | |
+| 付款列表 | `/ap/payments` | `ap.view` | ✓ |
+| 新增付款 | `/ap/payments/new` | `ap.view`＋`ap.payment.mgmt` | |
+| 付款詳情（含核銷） | `/ap/payments/:id` | `ap.view` | |
+| 編輯付款Draft | `/ap/payments/:id/edit` | `ap.view`＋`ap.payment.mgmt` | |
+| 付款明細列印 | `/ap/payments/:id/print` | `ap.view` | |
+| 供應商帳戶 | `/ap/supplier-accounts`、`/ap/supplier-accounts/:supplierId` | `ap.view` | ✓ |
+| 未付及Aging | `/ap/aging` | `ap.view` | ✓ |
+| 到期應付 | `/ap/due` | `ap.view` | ✓ |
+| Supplier Statement | `/ap/statements` | `ap.view` | ✓ |
+| Statement列印 | `/ap/statements/print` | `ap.view` | |
+| 期初匯入列表、批次詳情 | `/ap/opening-imports`、`/ap/opening-imports/:id` | `ap.view`＋`ap.opening.import` | ✓ |
+| 匯出記錄 | `/ap/exports` | `ap.view`＋`ap.export` | ✓ |
+| Audit | `/ap/audit-logs` | `ap.view` | ✓ |
+| 應付設定 | `/ap/settings` | `ap.view`＋`ap.settings` | ✓ |
+
+- 選單需要一個新的群組（例如`accountsPayable`），在`client/config/menu.js`定義；頁面驗證會拒絕未定義的群組。這個檔案是共用檔案，修改須按模組邊界取得批准。
+- 頁面的`requires`只決定入口是否顯示及可否進入，不是授權；每個API在後端重驗（DES-004、DES-021）。
+- 待開票收貨清單及由收貨建立發票的頁面不在此表，待DES-014確認。
+- URL及查詢參數不放事件識別、銀行資料或其他敏感內容。
+
+### Rationale
+FR-001～FR-045的畫面入口（收貨發票除外）、SEC-001、SEC-002。沿用`PurchaseOrdersPage.vue`等頁面的宣告方式，使AP不需要改動路由或頁面發現的框架。
+
+### Failure behavior
+無權限的使用者看不到選單項，直接輸入路徑時由現有的路由守衛擋下。頁面宣告不合規時，現有的頁面驗證在啟動時報錯。
+
+## DES-030 — 列表及詳情頁的共同行為
+
+### Decision
+- **列表**使用`DataTable`並加`sticky-actions`；篩選、頁碼及排序保存在URL的查詢參數，重新整理或分享連結後得到同一結果（做法同`PurchaseOrdersPage.vue`）。自由文字或可能過長的欄位使用`EllipsisCell`。
+- **金額**靠右顯示並帶Currency；不同Currency不相加，不顯示跨幣別合計。
+- **狀態**以文字徽章顯示（文件狀態與結算狀態分開），不只靠顏色。
+- **空白與錯誤分開**：沒有資料時顯示空白狀態；載入失敗時顯示錯誤及重試，不顯示空清單。
+- **詳情**顯示文件內容及行、三個扣減額及未付額（或可用額）、相關的貸項、應用及核銷、狀態歷史，並連到該文件的Audit。供應商發票及付款的銀行資料只顯示遮蔽值。
+- **動作按鈕**取伺服器回傳的`allowedActions`與操作者權限的交集；兩者都只是顯示用，命令在後端重驗。
+- 離開頁面時中止未完成的請求（`useRequestAbort`）。
+
+### Rationale
+FR-033、FR-034、FR-044、SEC-004。`docs/frontend-design.md`§2、§3及§6的現有規範。
+
+### Failure behavior
+列表或詳情載入失敗不影響其他頁面。詳情所依賴的文件已不存在或無權查看時，顯示找不到。
+
+## DES-031 — 命令的畫面流程
+
+### Decision
+- **一次操作一個event，送出前先保存**：使用者發起一個寫入命令（包括建立匯出及期初文件的確認；例外是期初檔案的上傳及期初文件的重新開啟，見DES-034）時，前端產生`eventId`及HTTP key，並在**第一次送出之前**把這次操作的intent寫入`sessionStorage`。寫入成功才送出。在取得明確結果之前，重試一律送出保存的內容及`eventId`；取得明確結果後才移除（明確結果的定義見DES-027「重送時的結果分類」）。
+- **intent的內容**：格式版本、操作者的使用者ID、所屬位置、命令及其目標（類型及ID；建立類沒有ID）、`eventId`、HTTP key、送出的request body（含`expectedVersion`）及保存時間。body是DES-004內容hash所涵蓋的全部欄位，所以重送的內容與原來的逐字相同。
+  - 不保存密碼、token及完整銀行帳號。密碼不屬於內容hash，也不屬於HTTP idempotency的指紋：它由`jwt-password`在認證階段從body的`password`欄位讀取（`passwordReauth.js:12,30`），AP的`idempotencyPreparation`所提供的input不含它（`IdempotencyService.js:172`）。付款選用的供應商銀行帳戶在body內只是該帳戶的ID；AP的表單沒有輸入完整帳號的欄位（DES-032）。
+- **保存的位置及鍵**：`sessionStorage`，鍵為`ap.intent:<操作者ID>:<位置>`。同一位置在取得明確結果之前只有一個intent。
+  - 在既有文件上的命令：位置是進行操作的詳情頁的文件（發票、貸項、付款、設定、期初批次）。例如解除核銷的API目標是核銷記錄，位置仍是該付款。
+  - 建立類命令沒有文件ID：位置是命令本身，即「建立發票」「建立付款」「建立匯出」；由發票建立貸項的位置另帶原發票的ID。
+  - 做法參照現有的`useSalesCommandEvent.js:8,68`及Fulfillment的面板（`FulfillmentCancelPanel.vue:10,20`），兩者都以操作者及文件作鍵。不同之處：Sales以操作查詢介面取回結果；AP沒有這個介面（T-15），恢復的方法是以原event重送。
+- **保存失敗即不送出**：`sessionStorage`不可用、已滿或寫入拋錯時，命令不送出，畫面顯示「無法保存這次操作，請允許此分頁儲存後再試」，表單內容保留。不會出現「已送出但沒有保存」的命令。現有的Sales及Fulfillment採用同一做法。
+- **進入頁面時先查intent**：每一個會發出寫入命令的頁面（詳情頁、建立頁、Draft的編輯頁、設定頁、期初批次頁及提供匯出按鈕的頁面）在顯示動作按鈕或可提交的表單之前，先讀取當前操作者在該位置的intent；操作者改變時重新讀取。同一文件的詳情頁及編輯頁是同一個位置。有intent時：
+  - 顯示「上一次操作的結果未能確認」，並以唯讀方式列出保存的命令及內容（命令、目標、金額、Effect Date、原因）。
+  - 只提供「重試查回」；該位置的其他動作按鈕停用，建立頁不提供空白表單，不產生新的event。
+  - **重送由使用者按下才發出，不在恢復時自動送出**：沒有查詢介面，重送在原交易未提交時會執行該命令，而且可能距離第一次送出已有一段時間；所以先讓使用者看見將要送出的內容。
+  - 文件本身照常以伺服器的現況顯示；現況不用來判定原命令的結果。
+- **重送的請求**：保存的`eventId`及body不變。HTTP key先用保存的那一個：原請求若仍在執行，框架回`IDEMPOTENCY_IN_PROGRESS`（`IdempotencyService.js:256`），稍後以同一key再試；框架回`IDEMPOTENCY_RESULT_UNAVAILABLE`時改用新的HTTP key並寫回intent，event不變。寫回失敗不阻止這次重送：HTTP key只影響框架層的回放，命令的去重由event負責。重送之前先中止本頁仍在途的同一請求。
+- **須重新認證的命令的重送**：原因及Effect Date取自保存的body並以唯讀顯示，`PasswordReasonDialog`只重新收集密碼。密碼錯誤、登入過期或權限被撤（401、403、`PERMISSION_STALE`）都發生在event claim之前（DES-004），不代表原交易沒有成功，intent保留。
+- **操作者隔離**：鍵及intent內都有操作者ID，讀取時兩者都要等於當前登入者。另一名使用者在同一分頁登入時，前一人的intent不被讀取、不顯示，也不被刪除；原操作者在同一分頁再次登入後可繼續查回。登出不清除intent。
+- **未確認的操作的提示**：AP各頁的頁首在當前操作者於本分頁有任何intent時，顯示提示及返回該位置的連結，使離開原頁面的使用者仍能找到它。
+- **離頁**：離開頁面會中止在途的請求（DES-030），但中止不代表伺服器的交易已rollback；intent留在`sessionStorage`，回到該位置時按上文恢復。一般導覽、重新整理及未儲存變更的提示（DES-032）都不清除intent。
+- **intent沒有年期**：保存時間只供顯示，不用來使intent失效。重送依靠`ap_operation_requests`內原event的記錄；這張表沒有清理功能（DES-023只清理私有檔案），所以原event的記錄不會在intent存在期間被移除。日後若為這張表加入清理，須同時為intent訂出不長於其保留期的年期。
+- **讀不出的intent**：內容不是合法的JSON、格式版本不符、操作者或位置與鍵不符、`eventId`格式不合時，不送出任何請求，也不產生新的event；畫面提示先在文件詳情及Audit核對先前的操作，該位置在本分頁內維持停用。本設計不提供清除intent的按鈕。
+- **保證的範圍**：涵蓋重新整理、同一分頁內的離頁及返回、同一分頁內重新登入。**不涵蓋**關閉分頁或瀏覽器、另一個分頁或裝置、清除瀏覽器資料；這些情況下原event無法取回，使用者只能從文件詳情、其應用及核銷的記錄及Audit（按操作者及時間）核對先前的命令是否已生效。此時沒有任何機制能找回原event。一次性的狀態轉換（確認、取消、作廢、沖銷、期初文件的確認）受鎖下的狀態檢查限制（DES-004、DES-013），不會生效兩次。核銷、重新核銷、Credit Balance的應用及建立類命令不是一次性的轉換：重新載入後以新的event再做一次，是另一筆合法的效果，可能與使用者的原意重複，伺服器不會把它識別為同一操作；新的版本或餘額也不能證明原命令有沒有生效。供應商發票另受發票號唯一鍵限制（T-06）。瀏覽器「複製分頁」會把intent一併複製，兩個分頁以同一event重送，得到同一結果。
+- **確認類動作**（確認發票、貸項、付款；核銷；應用）先以`confirm`對話框說明影響。
+- **須重新認證的動作**（作廢發票、作廢貸項、付款沖銷、推進關帳日、修改設定）第一次送出時使用`PasswordReasonDialog`收集原因、密碼及Effect Date。
+- **版本衝突**（`AP_VERSION_CONFLICT`）提示重新載入，不自動覆蓋。
+- **錯誤訊息**經`client/src/framework/http/errorMessages.js`的對照表顯示中文；DES-027的AP代碼須加入該表。這是共用檔案，修改須按模組邊界取得批准。
+- 成功後重新載入詳情，不以前端計算的數額代替伺服器的結果。
+
+紙上走查（恢復的身分、可用的按鈕、下一個請求）：
+
+| 情況 | 恢復的原身分 | 可用的按鈕 | 下一個請求及結果 |
+| --- | --- | --- | --- |
+| 建立付款Draft，回應遺失後重新整理 | 位置「建立付款」的intent：event E、HTTP key H、原body | 只有「重試查回」；不提供空白表單 | `POST /ap-payments/create`帶E、H及原body。原交易已commit：取回原Draft（經HTTP回放或DES-004步驟3），轉到該付款的詳情；未commit：這次才建立，只有一張Draft。 |
+| 核銷的結果不明，其後重新整理，或轉到另一文件再返回 | 位置是該付款的intent：E、H、原核銷內容及當時的`expectedVersion` | 只有「重試查回」；該付款的其他動作停用 | `POST /ap-payments/:id/allocate`帶E、H及原body，不使用重新載入後的版本。原交易已commit：步驟3回原結果，與現時的版本及餘額無關；未commit而文件其後已改變：`AP_VERSION_CONFLICT`並完成拒絕收口，回應帶`eventOutcome: "REJECTED"`，該event已終結，移除intent，使用者按現況以新的event另行操作。拒絕收口未能確認時伺服器回`AP_OUTCOME_UNKNOWN`，仍未確定，intent保留，可再按「重試查回」。 |
+| 期初文件D的確認結果不明，離頁後返回 | 位置是該批次的intent：E、H及文件D | 只有文件D的「重試查回」；「繼續」及「取消批次」在本分頁停用 | 以E重送D的確認。已commit回原結果；已留下拒絕終態回該拒絕；沒有終態則這次執行。取得明確結果後才送出下一筆。 |
+| 以原HTTP key重送，框架回`IDEMPOTENCY_RESULT_UNAVAILABLE` | 同一intent；HTTP key換成H2並寫回，E及body不變 | 同上 | 帶E、H2及原body重送，由步驟3取回原結果。 |
+| 作廢發票的結果不明；重送時須重新認證，其間操作者可能已被撤權 | 位置是該發票的intent：E、H、原因、Effect Date及`expectedVersion`；沒有密碼 | 「重試查回」，按下後只要求輸入密碼 | `POST /ap-invoices/:id/void`帶E、H、原body及新輸入的密碼。密碼錯誤或登入過期：未確定，intent保留，可再試。已被撤權：403或`PERMISSION_STALE`，拿不到原結果（DES-004），intent保留，不當作原命令沒有成功。 |
+| 另一名使用者在同一分頁登入 | 沒有：前一人的intent不被讀取 | 該使用者的正常按鈕 | 該使用者的操作是新的event，與前一人的intent無關。 |
+
+### Rationale
+FR-017、FR-019、FR-025、FR-032、SEC-005、DES-027。評審指出（AP-D8-R1）：文件的現況不是某一個命令的結果，event只放在記憶體時，重新整理後無法以原event查回，建立、核銷及期初確認尤其如此。intent在送出前保存，使「結果不明時不產生新event」在重新整理及離頁後仍然成立；採用`sessionStorage`是因為現有的Sales及Fulfillment已是這個做法，而且它以分頁為範圍，不需要處理多個分頁之間的協調。不新增背景工作、佇列或查詢介面。
+
+### Failure behavior
+- 明確被拒絕時顯示原因並移除intent；使用者修正後重新發起即為新的操作及新的event。
+- 結果未確定時不移除intent，也不允許在該位置以新的event重做。
+- 保存intent失敗時不送出命令（見上）。
+- 取得明確結果後移除intent失敗：照常顯示結果，並提示未能清除本分頁的操作記錄。該記錄其後若被恢復及重送，結果由伺服器上該event的終態決定，不取決於這個記錄有沒有被清除：已成功的回原結果；已有拒絕終態的回同一個拒絕，不會執行。只有首次送出時不帶`eventOutcome`的拒絕沒有終態（claim之前的拒絕，或`CONCURRENT_OPERATION`等只說明該次交易的拒絕）；其後的重送等同以保存的內容再提交一次，畫面在重送前已列出這些內容，並說明重送可能執行該命令。
+- 重送原event而伺服器回`AP_EVENT_CONFLICT`：保存的內容與伺服器記錄的不一致，屬異常。不移除intent、不產生新的event，提示在文件詳情及Audit核對。
+- 遲到的原請求：重送被業務拒絕時，伺服器以拒絕收口為該event留下終態（DES-004），其後才到達的原請求只會讀回這個拒絕。拒絕收口未能確認時回`AP_OUTCOME_UNKNOWN`，client保留intent。因此不會出現「intent已移除而原event仍可執行」的情況。中止在途的請求及`IDEMPOTENCY_IN_PROGRESS`只減少無謂的並行，不是這個保證的依據。
+
+## DES-032 — 發票、貸項及付款的表單與核銷
+
+### Decision
+- 表單使用`FormPanel`：提交失敗時顯示錯誤總覽並把焦點移到總覽，欄位錯誤連到對應欄位。
+- **無PO發票**：Supplier（只可選Active）、Currency、供應商發票號、發票日期、Effect Date、到期日、原因、費用行（描述、金額）。畫面同時顯示行金額合計與使用者輸入的發票總額及兩者差額；差額不為零時不可確認（FR-013）。儲存Draft與確認是兩個分開的動作。
+- **貸項**：由發票詳情進入，只列出該發票的行；逐行輸入沖減金額，畫面顯示該行尚可沖減的金額、預計的原發票沖減額及可能發行的Credit Balance。這些數字只供參考，以伺服器確認時的結果為準。
+- **付款**：Supplier、Currency、付款日期、Effect Date、金額、付款方式；按方式顯示必要欄位（交易參考、支票號或說明）。操作者具`supplier.bank.view`時可選用該Supplier的有效銀行帳戶，清單只顯示遮蔽值；沒有該權限時不顯示這個欄位。
+- **核銷**在付款詳情進行：列出同一Supplier及Currency、仍有未付額的發票，按到期日排列，可按到期日建議分配，但不自動儲存；始終顯示付款的已核銷額及可用額。重新核銷以一次提交完整的移除及新增。一次提交的項目數量受上限限制（DES-012），超出時在提交前提示。
+- **Credit Balance的應用**在貸項詳情進行，方式同核銷。
+- **Effect Date早於今日時**顯示提示：補記可能因歷史餘額不成立而被拒絕（`AP_HISTORY_BALANCE_VIOLATION`）。
+- **未儲存的變更**：離開表單前提示。除了離開路由之外，同一頁面只換路徑參數（例如由一張Draft直接跳到另一張）時同樣要提示，並處理`beforeunload`。這個提示只涉及尚未送出的表單內容：使用者選擇離開時放棄的是這些內容；已送出而未確認結果的intent不受影響，也不因離開而被清除（DES-031）。
+- 金額以字串輸入及送出，前端只做格式及小數位的初步檢查；計算及上限以伺服器為準。
+
+### Rationale
+FR-008、FR-012～FR-015、FR-021～FR-024、FR-026、FR-027、FR-029～FR-031。未儲存變更的提示須涵蓋路徑參數改變，因為只處理離開路由的守衛在這種情況下不會觸發。
+
+### Failure behavior
+伺服器的驗證錯誤按欄位顯示；上限或數額衝突（`AP_AMOUNT_EXCEEDED`）時重新載入最新數額並保留使用者的輸入供修正。
+
+## DES-033 — 帳戶、報表、列印、匯出及Audit的畫面
+
+### Decision
+- **供應商帳戶、Aging、到期應付、Statement**：As-of日期或期間顯著顯示；每個Currency各自一個分頁或區塊，不顯示跨幣別合計；每一列可連到對應的文件。超出上限（`AP_LIMIT_EXCEEDED`）時提示以Supplier、Currency或期間縮窄。
+- **列印**：付款明細及Statement各有列印頁，做法同`PurchaseOrderPrintPage.vue`：沒有選單項、A4樣式、由瀏覽器列印另存PDF。已作廢或已沖銷的文件有明顯標示。
+- **Statement的日期**：畫面有起日及截止日兩個欄位，As-of日期就是截止日。起日預填為本月第一日、截止日預填為今日，兩者都可修改，並顯示在結果的標題；使用者按下查詢才送出，請求一律帶這兩個明確的日期。預填只是畫面的初始值，不是伺服器的預設；列印及匯出使用同一組日期。輸出不因日期的給法而減少：期初（起日前一日）、期內交易、期末及截止日的Aging摘要全部按DES-018提供。DES-018所說的「單一As-of日期」在畫面上即只修改截止日，起日沿用欄位當時的值。
+- **匯出**：在報表及列表頁提供匯出按鈕，建立匯出後轉到匯出記錄頁。匯出記錄頁以`GET /ap-exports`取得自己建立的匯出（DES-026），顯示狀態（處理中、已完成、失敗）、列數及到期時間；只有已完成而未到期的可下載。「只列出自己的」由伺服器的查詢條件決定，不是前端從全部記錄中過濾。
+- **匯出建立的回應不明**：建立匯出同樣按DES-031在送出前保存intent（位置「建立匯出」）。回應不明時，以原`eventId`及原內容重送建立請求取回該記錄，不另建一筆匯出（DES-020、DES-027）。匯出記錄頁的列表只供查看，不取代以原請求鍵查回：列表上出現一筆相似的匯出，不代表它就是這次請求的結果。
+- **Audit**：按時間、Supplier、操作者、動作及結果篩選的列表；`detail`以純文字顯示。
+
+### Rationale
+FR-034～FR-037、FR-041～FR-043。畫面、列印及匯出使用伺服器的同一個計算結果（DES-017、DES-018），前端不另行計算。
+
+### Failure behavior
+報表載入失敗時顯示錯誤，不顯示零或空白的結果。下載已到期或已失敗的匯出時顯示對應訊息。
+
+## DES-034 — 期初匯入的畫面
+
+### Decision
+- **上傳**：選擇CSV檔，提交後顯示預檢結果：每筆記錄的類型、Supplier、來源識別、金額及預檢錯誤（行號及欄位）。檔案不合規時整個被拒絕並顯示原因。
+- **確認**：前端逐筆送出，一次只送一個請求（DES-013的一個請求一個文件）；畫面顯示進度及伺服器回傳的摘要（確定成功、確定未入帳、尚未處理或待查明，三類分列，DES-013）。使用者可暫停，其後繼續。只有`PENDING`的文件會被送出。
+- **每一筆的intent**：送出一個文件的確認之前，先按DES-031保存intent，位置是該批次；因為一次只送一個請求，一個批次在一個分頁內最多只有一個未確認的intent。保存失敗即不送出，並停止逐筆送出。
+- **結果不明**：停止逐筆送出，對該筆以原event重試查回；取得明確結果後才繼續下一筆。
+- **回到頁面時**：先讀取該批次的intent。有intent時，畫面指出是哪一個文件的結果未能確認，只提供該文件的「重試查回」；「繼續」及「取消批次」在本分頁停用，直至取得明確結果。`PENDING`同時包含從未送出及已送出而待查明的文件（DES-013），所以不能只憑`PENDING`就為該文件產生新的event。
+- **沒有intent的`PENDING`文件**（例如原分頁已關閉）：可以新的event確認。這依靠伺服器的檢查而不是畫面的判斷：確認在批次文件的鎖下驗證仍是`PENDING`，來源列在財務效果之前仲裁（DES-013）；先前的確認若已commit，新的event得到`AP_STATE_CONFLICT`，重新載入後顯示`SUCCEEDED`，不會有第二筆財務效果。這是期初文件的確認這一個命令的特定保護（同一份不可變的文件內容），不是找回了原event，也不適用於付款的建立或核銷。沒有intent不是修改內容、重新開啟已取消的文件或把來源當作未入帳的理由；原結果已成功或來源已有相同內容時，畫面顯示伺服器的文件及來源結果。
+- **被拒絕的記錄**：顯示原因。只有`REJECTED`的文件可以「重新處理」（先重新開啟為`PENDING`，再確認；這是兩個請求：重新開啟不claim event，其後的確認使用新的event，原先被拒絕的event已是終態，不能重用）。`INVALID`的文件不能確認，也不能重新開啟，只能在新批次以修正後的內容上傳。
+- **重新開啟不保存intent**：重新開啟是對批次文件狀態的條件更新（只把`REJECTED`改為`PENDING`），不claim event，也沒有財務效果。結果不明時重新載入該文件：已是`PENDING`即已生效，仍是`REJECTED`可再按一次。遲到的原請求最多把一個`REJECTED`的文件改為`PENDING`，不影響已成功或已取消的文件。
+- **取消批次**：只把`PENDING`的文件標為已取消；已成功、已由先前批次入帳、被拒絕及預檢不通過的文件不受影響。
+- **上傳的結果不明**：上傳的內容是檔案，不保存intent。回應遺失時，先在批次列表核對是否已出現該批次，再決定是否重新上傳；列表只供核對，一個相似的批次不代表就是原上傳的結果。重複上傳只會多出一個仍在預檢狀態的批次（其文件可以是`PENDING`、`INVALID`或已由先前批次入帳），沒有財務效果，同一來源也不會入帳兩次（DES-013）；多出的批次須取消，否則會阻擋推進關帳日。
+- **下載**來源檔及結果檔：只對批次的建立者顯示。
+- 批次列表顯示每個批次的摘要及是否完成；未完成指仍有`PENDING`的文件，不是指有文件沒有成功。未完成的批次會阻擋推進關帳日，設定頁在被阻擋時列出這些批次。
+
+### Rationale
+FR-038～FR-040、DES-013。逐筆送出並由伺服器回傳摘要，使畫面顯示的數字與伺服器一致，不由前端累計。
+
+### Failure behavior
+離開頁面即停止送出：從未送出的文件維持`PENDING`，回到頁面可繼續；離開時正在送出的那一筆結果未確定，其intent保留，回到頁面須先以原event查回，才可繼續其他文件。任何一筆被明確拒絕不影響其他記錄。
+
+## DES-035 — 無障礙、回應式、文案及共用檔案的改動
+
+### Decision
+- 遵循`docs/frontend-design.md`：頁面結構（§2.2）、`DataTable`／`EllipsisCell`／`FormPanel`／`PageHeader`／`PasswordReasonDialog`／`notify`（§3）、無障礙（§6）、回應式（§7）、繁體中文及錯誤訊息對照（§9）、新頁面檢查清單（§10）。不新增第二套表格、對話框或HTTP client。
+- 回應式以375、768、1024及1440像素檢查；窄畫面時表格可橫向捲動並固定操作欄，但金額、Currency、狀態及到期日不可被隱藏。
+- 供應商名稱、發票號、描述、原因及備註一律以文字插值顯示，不使用未消毒的HTML（DES-022）。
+- AP需要改動的共用檔案只有三處，均須按模組邊界取得批准：`client/config/menu.js`（新增選單群組）、`client/src/framework/http/errorMessages.js`（新增AP錯誤代碼的中文訊息）、伺服器的權限目錄（DES-026）。
+- 畫面的實際驗證（Playwright）屬實作及測試階段；把任何測試加入例行CI須按AGENTS.md事先取得Sam批准，不在本設計內。
+
+### Rationale
+SEC-004、SEC-007、NFR-002。沿用現有的元件及規範，是為了不增加另一套要維護的介面寫法。
+
+### Failure behavior
+N/A：本項是規範及改動清單；不合規的頁面在檢查清單及評審中處理。
+
 ## Detailed cross-cutting design
 
-DES-001～DES-028只涵蓋下列部分；其餘在其後的交付補上。
+DES-001～DES-035只涵蓋下列部分；其餘在其後的交付補上。
 
 | 範疇 | 本交付的內容 |
 | --- | --- |
@@ -898,7 +1129,8 @@ DES-001～DES-028只涵蓋下列部分；其餘在其後的交付補上。
 | 資料及migration | 表的欄位、鍵及約束（DES-024）；六個分片，序號在實作時決定（DES-025）。 |
 | API及錯誤 | 路徑、動作及權限（DES-026）；錯誤代碼及結果不明的查回（DES-027）。請求及回應的欄位schema留待其後。 |
 | Audit | 欄位、寫入時點、動作及內容白名單（DES-028）。 |
-| 畫面、部署、回滾、可觀察性、收貨發票 | 尚未涵蓋。 |
+| 畫面 | 路由及選單、列表及詳情、命令流程、表單及核銷、報表及檔案、期初匯入、無障礙及回應式（DES-029～DES-035）。各頁面的欄位清單及版面稿留待其後。 |
+| 部署、回滾、可觀察性、收貨發票 | 尚未涵蓋。 |
 
 ## Assumptions, open issues and human decisions
 
@@ -921,6 +1153,12 @@ DES-001～DES-028只涵蓋下列部分；其餘在其後的交付補上。
 | T-13 | 期初預付款是`OPENING`類型的付款，期初Credit Balance是沒有原發票的`OPENING`類型貸項（DES-024）。 | 另設期初餘額的表；會令核銷及應用多一種來源。 |
 | T-14 | 匯出的狀態資料與完成結果分為兩個路徑（DES-026）。 | 單一路徑；查回處理中或失敗的狀態時會被「須已完成」的條件擋住。 |
 | T-15 | 不另設查詢操作結果的介面，結果不明時以原event重送（DES-027）。 | 另設查詢介面；多一個要授權及維護的入口。 |
+| T-16 | 前端在第一次送出之前把命令的intent（原event、HTTP key、原內容及版本）保存到`sessionStorage`，按操作者隔離、以分頁為範圍；保存失敗即不送出；重新整理或離頁後由使用者以原event重送（DES-031）。不保存密碼、token及完整銀行帳號。 | 只放在記憶體：評審指出文件的現況不能代替遺失的event（AP-D8-R1）。`localStorage`：可跨分頁及關閉分頁後保留，但須處理多分頁協調及登出後殘留在共用電腦的內容。伺服器的操作查詢介面：T-15已排除。 |
+| T-17 | AP在自己的目錄備有自己的composable（DES-031）。它與Purchasing的`useCommandEvent`不同：保存intent，並採用DES-027的結果分類；保存及按操作者作鍵的做法參照`useSalesCommandEvent.js`及Fulfillment的面板，不修改這些檔案。 | 把現有的composable移到共用位置並擴充；要改其他模組的檔案。 |
+| T-18 | 期初匯入由前端逐筆送出、一次一個請求，摘要以伺服器回傳為準（DES-034）。 | 前端並行送出或自行累計；與DES-013的一個請求一個文件及摘要口徑不符。 |
+| T-19 | Statement的請求一律帶起日及截止日，As-of日期即截止日；伺服器不設預設，畫面預填本月第一日至今日，使用者可改；輸出維持DES-018的完整內容（DES-026、DES-033）。 | 伺服器在沒有起日時自行推定期間：會加入一條需求沒有訂明的規則。只給As-of時減少輸出：會刪減FR-036的輸出，不採用。 |
+| T-21 | claim之後的業務拒絕，在業務交易rollback後以附屬交易為該event寫入拒絕的終態（DES-004的拒絕收口）；client重送時只憑終態移除intent（DES-027）。 | 拒絕不留記錄：遲到的原請求仍可執行，client只能一直保留intent，使用者無法修正後繼續。在同一交易內撤回業務變更而保留claim：須逐個命令證明沒有殘留的財務效果。 |
+| T-20 | 匯出記錄的列表由伺服器按建立者查詢（DES-026）。 | 前端取回後過濾；會把別人的記錄送到瀏覽器。 |
 
 ### 評審記錄
 
@@ -964,7 +1202,45 @@ DES-001～DES-028只涵蓋下列部分；其餘在其後的交付補上。
 
 上述修訂（blob `5144afcb…`）的收口：`AP-design-d6-source-closeout.md`，sha256 `a54c39ea94f90c68d0e7384a613c9721ee02c6dd6609133f5ed84dcc0cbc8b59`。R3關閉；DES-016～DES-023的三項Required在設計層面全部關閉。收口報告要求保留的解讀已寫入DES-020及DES-023：更新成功指交易已確定commit；放棄的仲裁以記錄為對象、不取決於是否已有檔案；先刪暫存檔不是晚到寫入已停止的證明。私有儲存的現成介面（特別是列出目錄）未核對，留待實作時核對，本設計不聲稱已有AP的儲存接線。
 
-`maxBackdatedCheckEvents`的數值及其對可接受補記的影響仍待owner提出、有業務影響的交Sam確認。這些接受只綁定被覆核的內容，不是實作或任何測試的接受。DES-024起的項目是其後的交付，未經評審。
+`maxBackdatedCheckEvents`的數值及其對可接受補記的影響仍待owner提出、有業務影響的交Sam確認。這些接受只綁定被覆核的內容，不是實作或任何測試的接受。
+
+第三個交付（DES-024～DES-028，blob `8ef94e64…`，commit `1474fa0d`）的非作者評審：`AP-design-d7-source-review.md`，sha256 `ac199deb06856aba4fa42b8969987676bfa17877998afd6707c57c2da92f074a`。兩項Required；T-13的期初資料形狀獲接受，視為已批准需求的技術實現。本版的修訂：
+
+| Required | 內容 | 修訂位置 |
+| --- | --- | --- |
+| AP-D7-R1（MEDIUM） | 貸項行的複合外鍵與父表唯一鍵的欄位次序不一致 | DES-024：外鍵改為（`invoice_id`,`invoice_line_id`）指向`ap_invoice_lines(invoice_id,id)` |
+| AP-D7-R2（MEDIUM） | 未取得匯出ID時，原請求鍵沒有可達的查回路徑 | DES-020「請求鍵及重送」及四步走查；DES-024的`request_key`及`request_hash`；DES-026；DES-027；DES-033 |
+
+另按報告的非Required意見寫入：期初類型的界線及按狀態表達的`CHECK`（DES-024）；ledger的外鍵與分片次序、trigger的重跑（DES-025）；整張付款沖銷不可拆分（DES-027）。上述兩項修訂（blob `30eb30f1…`）的窄覆核見下一份報告的附錄：AP-D7-R1、AP-D7-R2在設計層面關閉。
+
+第四個交付（DES-029～DES-035，blob `6b0ae9ec…`）的非作者評審：`AP-design-d8-source-review.md`，sha256 `6e47ca951dd31bb7c42df7260e2e59e888748e999f06fa9b465c0f5b52d5d055`（含上述窄覆核的附錄）。一項Required；路由及選單、權限矩陣、未儲存變更、期初的狀態及摘要、報表及列印、共用檔案的改動等方向獲接受。本版的修訂：
+
+| Required | 內容 | 修訂位置 |
+| --- | --- | --- |
+| AP-D8-R1（HIGH） | event只在記憶體，重新整理或離頁後遺失；文件的現況不能識別原命令的結果，建立、核銷及期初確認尤其如此 | DES-031：送出前保存intent、保存失敗不送出、恢復後由使用者以原event重送、操作者隔離、不保存密碼／token／完整銀行帳號、保證的範圍及六個走查；DES-027「重送時的結果分類」；DES-032；DES-034；T-16、T-17 |
+
+另按報告的小幅對齊：匯出記錄的列表介面，由伺服器按建立者查詢，不取代以請求鍵查回（DES-026、DES-033、T-20）；Statement的日期預設（DES-026、DES-033、T-19）；期初畫面的按鈕與狀態對齊，只有`REJECTED`可重新開啟、取消只改`PENDING`、未完成指仍有`PENDING`（DES-034）。
+
+本版沒有新增背景工作、佇列或查詢介面，也沒有放寬當時驗權。DES-027已獲接受的文字有以下改動，都是為了與首次送出及重送的區分一致：表頭註明「Client的處理」一欄是首次送出時的處理；`AP_DEADLINE_INSUFFICIENT`及`CONCURRENT_OPERATION`兩格的「沿用原event」改為按結果分類決定；`CONCURRENT_OPERATION`的意義一格加上「這次的」三字；「一律視為結果不明」的清單補上沒有AP代碼的5xx、逾時及`IDEMPOTENCY_IN_PROGRESS`；「重送的結果只有三種」改為四種，加入「仍然未確定」。錯誤代碼及HTTP狀態沒有改變。上述修訂（blob `ac673d66…`）的窄覆核：`AP-design-d10-source-review.md`，sha256 `d828ae883331603fb9c55942d87cb6ed099a5ca035d61b42aa525685d1b0a40a`。送出前保存、保存失敗不送出、同操作者及位置恢復、人工重送、操作者隔離、不保存敏感資料、同分頁的保證範圍、匯出列表及Statement的可修改預填獲接受。AP-D8-R1仍未關閉，另有一項Statement的更正。本版的修訂：
+
+| 項目 | 內容 | 修訂位置 |
+| --- | --- | --- |
+| AP-D8-R1（HIGH，餘下部分） | claim之後被拒絕並rollback不留event，遲到的原請求仍可執行；不能憑錯誤代碼移除intent | DES-004：拒絕收口（為event留下拒絕的終態）及三個交錯；DES-024的`result_summary`；DES-027：移除intent以終態為依據，回應的`eventOutcome`；DES-031：走查、移除失敗及遲到原請求的處理；DES-013；T-21 |
+| 失去event後的保證範圍 | 核銷、應用及建立不是一次性的轉換，不能說靠狀態及版本便不會重複 | DES-031「保證的範圍」 |
+| 期初及上傳的文字 | 沒有intent時以新event確認是該命令的特定保護；重複上傳的批次是「仍在預檢狀態」 | DES-034 |
+| Statement | 只給As-of時刪去期初及期內交易不是既定需求的解讀 | DES-026、DES-033、T-19：請求一律帶起日及截止日，輸出維持DES-018的完整內容 |
+
+DES-004已獲接受的「被拒絕的命令不留operation列」因此有一個例外：claim之後的業務拒絕留下拒絕的終態。成功的重送、當時驗權、身分及內容的比較、原請求的時限都沒有改變；沒有新增背景工作、佇列或查詢介面。
+
+上述修訂（blob `0ce03ad8…`）的收口：`AP-design-d11-source-closeout.md`，sha256 `b96be665dd318938fb0321ab59555461b355d6ad8d5659661dc302ede19d7018`。AP-D8-R1及Statement的對齊在設計契約層面關閉，沒有新增Required；DES-029～DES-035的Required全部關閉。收口報告列出三處例行的文字對齊，本版已寫入，語義不變：
+
+- DES-012：「沒有財務效果」只指這一次已rollback的業務交易，不指整個event。
+- DES-027：`AP_OUTCOME_UNKNOWN`的意義是尚未確認該event的終態，包括拒絕收口未能確認；HTTP狀態不變。
+- DES-034：重新開啟不claim event；「重新處理」是兩個請求，只有其後的確認使用新的event。
+
+另按報告要求保留的解讀，在DES-004拒絕收口的第4步寫明：回既有終態時不另寫Audit或改動文件，並在唯一鍵等待之後以鎖定讀取讀出現況。
+
+這個接受只綁定被覆核的內容：是設計的窄審，不是畫面的驗收；瀏覽器的保存及恢復、真實資料庫的鎖競爭都沒有實測。整份AP設計仍未完成，不授權實作、新的CI案例或非功能驗證。
 
 ### 未定數值
 
@@ -982,5 +1258,9 @@ DES-001～DES-028只涵蓋下列部分；其餘在其後的交付補上。
 - route授權是否讀取資料庫現況沒有核實；DES-004因此不依賴它。
 - `FOR SHARE`鎖定讀取在REPEATABLE READ下讀到最新已提交資料，是MySQL的既定行為，沒有在本專案內實測。
 - DES-007的走查是紙上算術，不是測試結果。
+- DES-031的保存及恢復是紙上設計：`sessionStorage`在各瀏覽器的配額、私密模式及複製分頁的行為沒有實測；現有Sales及Fulfillment的同類做法只閱讀了來源，沒有執行。
+- 密碼不計入HTTP idempotency指紋，是按`IdempotencyService.js:157–176,202–216`及`passwordReauth.js`的來源閱讀得出的，以AP的`idempotencyPreparation`不把密碼放入input為前提；沒有執行。
+- 失敗的請求會釋放HTTP key、讓重試重新執行（`IdempotencyService.js:330–338`），所以HTTP層不保存拒絕；拒絕的終態由DES-004的拒絕收口保存。其三個交錯是紙上推演，沒有執行。
+- 拒絕收口及回應的`eventOutcome`欄位是對實作的要求，尚無程式可核對。
 - DES-020不以時間推定原請求、其交易或其檔案寫入已經結束；`exportAbandonAfterMs`只挑選候選，數值待定。完成與清理的三個交錯是紙上推演，沒有執行。
 - DES-020及DES-023假設私有儲存支援「不存在才建立」的開啟、改名及刪除，並可列出目錄內的檔案；前三項是Customer匯出現用的操作（`CustomerImportStorage.js:80–92,127–163`），列出目錄是否已有現成的做法沒有核對。

@@ -726,6 +726,79 @@
         "SEC-004",
         "SEC-006"
       ]
+    },
+    {
+      "id": "DES-029",
+      "requirement_ids": [
+        "SEC-001",
+        "SEC-002"
+      ]
+    },
+    {
+      "id": "DES-030",
+      "requirement_ids": [
+        "FR-033",
+        "FR-034",
+        "FR-044",
+        "SEC-004"
+      ]
+    },
+    {
+      "id": "DES-031",
+      "requirement_ids": [
+        "FR-017",
+        "FR-019",
+        "FR-025",
+        "FR-032",
+        "SEC-005"
+      ]
+    },
+    {
+      "id": "DES-032",
+      "requirement_ids": [
+        "FR-008",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015",
+        "FR-021",
+        "FR-022",
+        "FR-023",
+        "FR-024",
+        "FR-026",
+        "FR-027",
+        "FR-029",
+        "FR-030",
+        "FR-031"
+      ]
+    },
+    {
+      "id": "DES-033",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-041",
+        "FR-042",
+        "FR-043"
+      ]
+    },
+    {
+      "id": "DES-034",
+      "requirement_ids": [
+        "FR-038",
+        "FR-039",
+        "FR-040"
+      ]
+    },
+    {
+      "id": "DES-035",
+      "requirement_ids": [
+        "NFR-002",
+        "SEC-004",
+        "SEC-007"
+      ]
     }
   ],
   "phases": [],
