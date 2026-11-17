@@ -3,7 +3,7 @@ import {
   EMPTY, PURCHASE_ORDER_WRITE_POLICY, PURCHASING_LOOKUP_RESPONSE, PURCHASING_SUPPLIER_ID_PARAMS, purchasingLookupQuery, purchasingLookupService
 } from "../purchasing/purchasingSchemas.js";
 
-// 七條路由嘅授權同流程一樣，只係讀唔同嘅選項（同 salesLookupHandlers 一樣）。Query 喺 handler 驗，錯誤先係 §5.7 嘅 PURCHASING_INPUT_INVALID。
+// 八條路由嘅授權同流程一樣，只係讀唔同嘅選項（同 salesLookupHandlers 一樣）。Query 喺 handler 驗，錯誤先係 §5.7 嘅 PURCHASING_INPUT_INVALID。
 function lookupHandler(name, path, kind, read, params = EMPTY) {
   return class extends BaseRequestHandler {
     static handlerName = name;
@@ -27,3 +27,4 @@ export const PurchasingCurrencyLookupHandler = lookupHandler("purchasingCurrency
 export const PurchasingPaymentTermLookupHandler = lookupHandler("purchasingPaymentTermLookup", "payment-terms", "paymentTerms", (lookup, input) => lookup.paymentTerms(input));
 export const PurchasingWarehouseLookupHandler = lookupHandler("purchasingWarehouseLookup", "warehouses", "warehouses", (lookup, input) => lookup.warehouses(input));
 export const PurchasingBuyerLookupHandler = lookupHandler("purchasingBuyerLookup", "buyers", "buyers", (lookup, input) => lookup.buyers(input));
+export const PurchasingApproverLookupHandler = lookupHandler("purchasingApproverLookup", "approvers", "approvers", (lookup, input) => lookup.approvers(input));

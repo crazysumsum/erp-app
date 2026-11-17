@@ -1,0 +1,57 @@
+diff --git a/server/src/modules/purchasing/PurchasingInquiryService.js b/server/src/modules/purchasing/PurchasingInquiryService.js
+index ab1b02f2..efd40cc4 100644
+--- a/server/src/modules/purchasing/PurchasingInquiryService.js
++++ b/server/src/modules/purchasing/PurchasingInquiryService.js
+@@ -129,11 +129,18 @@ const toMyApproval = (row) => ({ approvalId: Number(row.id), purchaseOrderId: Nu
+   supplierCode: row.supplier_code_snapshot, supplierName: row.supplier_name_snapshot, currencyCode: row.currency_code,
+   totalAmount: storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot)), requestedByLabel: row.requested_by_label, requestNote: row.request_note, requestedAt: Number(row.requested_at) });
+ 
++/** §2.8（HD-009）：API 一律回 Currency 小數位。儲存嘅快照同 hash 唔郁，只喺回傳時格式化。 */
++function toApprovalSnapshot(snapshot) {
++  const places = snapshot.currency.decimalPlaces;
++  return { ...snapshot, subtotalAmount: storedAmount(snapshot.subtotalAmount, places), totalAmount: storedAmount(snapshot.totalAmount, places),
++    lines: snapshot.lines.map((line) => ({ ...line, lineAmount: storedAmount(line.lineAmount, places) })) };
++}
++
+ function toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot, history, actorId }) {
+   const header = toHeader(row, permissions);
+   return {
+     ...header, allowedActions: [...header.allowedActions, ...decisionActions(pending, actorId, permissions)],
+-    approval: pending && { ...toApprovalSummary(pending), snapshot }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
++    approval: pending && { ...toApprovalSummary(pending), snapshot: toApprovalSnapshot(snapshot) }, approvalHistory: approvals.map(toApprovalSummary), statusHistory: history.map(toStatusHistory),
+     orderingAddressId: nullableId(row.ordering_address_id), orderingAddress: row.ordering_address_snapshot,
+     currencyName: row.currency_name_snapshot, currencyDecimalPlaces: Number(row.currency_decimal_places_snapshot),
+     paymentTermId: nullableId(row.payment_term_id), paymentTerm: row.payment_term_snapshot,
+diff --git a/server/test/integration/purchasingApprovalCommands.integration.test.js b/server/test/integration/purchasingApprovalCommands.integration.test.js
+index 78824b1c..3d9a1025 100644
+--- a/server/test/integration/purchasingApprovalCommands.integration.test.js
++++ b/server/test/integration/purchasingApprovalCommands.integration.test.js
+@@ -254,8 +254,8 @@ integrationTest("詳情：待審批回完整快照；allowedActions 跟操作者
+   assert.deepEqual((await read(f.other.token)).body.data.allowedActions, ["copy"]);
+   assert.deepEqual((await read(f.viewer.token)).body.data.allowedActions, []);
+   assert.deepEqual([approval.status, approval.purchaseOrderVersion, approval.requestNote, approval.decidedAt], ["PENDING", 2, "請批", null]);
+-  assert.deepEqual([approval.snapshot.number, approval.snapshot.supplier.name, approval.snapshot.totalAmount, approval.snapshot.lines.map((line) => [line.orderedQuantity, line.unitPrice])],
+-    [po.number, "Approval Supplier", "2.50", [["2.000000", "1.2500"]]]);
++  assert.deepEqual([approval.snapshot.number, approval.snapshot.supplier.name, approval.snapshot.totalAmount, approval.snapshot.lines.map((line) => [line.orderedQuantity, line.unitPrice, line.lineAmount])],
++    [po.number, "Approval Supplier", "2.50", [["2.000000", "1.2500", "2.50"]]]);
+   assert.deepEqual(approvalHistory.map((row) => [row.id, row.status]), [[approval.id, "PENDING"]]);
+   assert.equal(Object.hasOwn(approvalHistory[0], "snapshot"), false);
+   assert.deepEqual(statusHistory.map((row) => [row.sequenceNo, row.fromStatus, row.toStatus, row.action, row.version]), [[1, "", "DRAFT", "CREATE", 1], [2, "DRAFT", "PENDING_APPROVAL", "SUBMIT", 2]]);
+diff --git a/server/test/integration/purchasingInquiry.integration.test.js b/server/test/integration/purchasingInquiry.integration.test.js
+index f9f26842..7e117ccf 100644
+--- a/server/test/integration/purchasingInquiry.integration.test.js
++++ b/server/test/integration/purchasingInquiry.integration.test.js
+@@ -256,10 +256,10 @@ integrationTest("詳情回交易快照同逐行進度，目前主資料另外放
+ 
+     const clean = await inquiry.get({ claims: f.manager.claims, id: po.id });
+     assert.deepEqual(clean.currentMasterDifferences, { supplier: null, lines: [] }, "冇變就冇差異");
+-    assert.deepEqual(Object.keys(clean).sort(), ["allowedActions", "buyerId", "buyerLabel", "cancelledAt", "closedAt", "confirmedAt", "createdAt", "createdByLabel", "currencyCode",
++    assert.deepEqual(Object.keys(clean).sort(), ["allowedActions", "approval", "approvalHistory", "buyerId", "buyerLabel", "cancelledAt", "closedAt", "confirmedAt", "createdAt", "createdByLabel", "currencyCode",
+       "currencyDecimalPlaces", "currencyName", "currentMasterDifferences", "defaultReceivingWarehouseId", "defaultWarehouseCode", "expectedDeliveryDate", "hasConfirmedReceipt",
+-      "hasOutstanding", "id", "lines", "notes", "number", "orderDate", "orderingAddress", "orderingAddressId", "paymentTerm", "paymentTermId", "status", "subtotalAmount", "supplierCode",
+-      "supplierId", "supplierName", "supplierReference", "totalAmount", "updatedAt", "updatedByLabel", "version"], "冇銀行、冇 DB 欄位名，亦冇未有表嘅 approval／GR／history（HD-017 3A）");
++      "hasOutstanding", "id", "lines", "notes", "number", "orderDate", "orderingAddress", "orderingAddressId", "paymentTerm", "paymentTermId", "status", "statusHistory", "subtotalAmount", "supplierCode",
++      "supplierId", "supplierName", "supplierReference", "totalAmount", "updatedAt", "updatedByLabel", "version"], "冇銀行、冇 DB 欄位名，亦冇未有表嘅 GR（HD-017 3A）");
+     assert.deepEqual(clean.orderingAddress, address);
+     assert.deepEqual(clean.paymentTerm, term);
+     assert.deepEqual({ a: clean.confirmedAt, b: clean.cancelledAt, c: clean.hasConfirmedReceipt, d: clean.hasOutstanding, e: clean.allowedActions, f: clean.createdByLabel },

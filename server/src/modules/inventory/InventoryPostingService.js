@@ -4,7 +4,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
-import { InventoryOperationService } from "./InventoryOperationService.js";
+import { InventoryOperationService, inventoryEventAdmissionOptions } from "./InventoryOperationService.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
 import { InventoryPurchaseService } from "./InventoryPurchaseService.js";
 import { inventoryError } from "./inventoryErrors.js";
@@ -287,7 +287,7 @@ export class InventoryPostingService {
     this.authorize = authorize;
     this.itemLookup = itemLookup ?? new ItemLookupService({ database, logger, time });
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
-    this.operations = operations ?? new InventoryOperationService();
+    this.operations = operations ?? new InventoryOperationService({ database });
     this.locks = locks ?? new InventoryLockService();
     this.createMovementGroupId = createMovementGroupId;
     this.fulfillment = fulfillment ?? new InventoryFulfillmentService({database,logger,time,itemLookup:this.itemLookup,audit:this.audit,operations:this.operations,locks:this.locks});
@@ -309,11 +309,11 @@ export class InventoryPostingService {
   verifyFulfillmentBatchReceiptInTransaction(tx,input) { return this.fulfillment.verifyFulfillmentBatchReceiptInTransaction(tx,input); }
 
   postReceipt(command) {
-    return this.database.withTransaction((transaction) => this.postReceiptInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.postReceiptInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   postAdjustment(command, context) {
-    return this.database.withTransaction(tx => this.postAdjustmentInTransaction(tx, command, context));
+    return this.database.withTransaction(tx => this.postAdjustmentInTransaction(tx, command, context), inventoryEventAdmissionOptions(command?.source));
   }
 
   postAdjustmentInTransaction(tx, command, context) {
@@ -321,7 +321,7 @@ export class InventoryPostingService {
   }
 
   postStatusTransfer(command, context) {
-    return this.database.withTransaction(tx => this.postStatusTransferInTransaction(tx, command, context));
+    return this.database.withTransaction(tx => this.postStatusTransferInTransaction(tx, command, context), inventoryEventAdmissionOptions(command?.source));
   }
 
   postStatusTransferInTransaction(tx, command, context) {
@@ -329,11 +329,11 @@ export class InventoryPostingService {
   }
 
   postBinMove(command) {
-    return this.database.withTransaction((transaction) => this.postBinMoveInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.postBinMoveInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   reverseMovement(command, context) {
-    return this.database.withTransaction(tx => this.reverseMovementInTransaction(tx, command, context));
+    return this.database.withTransaction(tx => this.reverseMovementInTransaction(tx, command, context), inventoryEventAdmissionOptions(command?.source));
   }
 
   reverseMovementInTransaction(tx, command, context) {
@@ -365,7 +365,7 @@ export class InventoryPostingService {
   }
 
   postIssue(command) {
-    return this.database.withTransaction((transaction) => this.postIssueInTransaction(transaction, command));
+    return this.database.withTransaction((transaction) => this.postIssueInTransaction(transaction, command), inventoryEventAdmissionOptions(command?.source));
   }
 
   postIssueInTransaction(transaction, command) {

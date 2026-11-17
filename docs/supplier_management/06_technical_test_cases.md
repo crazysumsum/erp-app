@@ -15,6 +15,7 @@
 | 目標環境 | 待執行前確認；Migration、constraint、transaction、concurrency、worker、效能及復原案例必須使用隔離的真實 MySQL 測試環境 |
 | 修訂（HD-157，2026-10-30） | SKU-008（TC-085）的for-SKU p95上限改為3秒（NFR-005）。OPS-001（TC-128）、OPS-003（TC-130）、OPS-005（TC-132）、OPS-006（TC-133）、OPS-007（TC-134）、OPS-008（TC-135）及MIG-006（TC-006）中需要正式部署環境的部分不再另測：production-like效能、部署拓撲中的網絡故障、alert送達on-call、正式備份排程下量度RTO／RPO、正式部署時間線及按§14逐步部署、正式環境回滾。各案例在隔離真實MySQL環境的本機結果即為驗收證據。OPS-009（TC-136）、UAT及簽核不變。 |
 | 修訂（HD-158，2026-10-30） | IMP-016（TC-101）匯入期間線上一般操作的p95上限改為5秒（NFR-004）；NFR-001在正常混合負載下的2秒（OPS-001）及NFR-005的3秒（SKU-008）不變。 |
+| 修訂（HD-163，2026-11-06） | 新增SKU-009（TC-137）：Purchasing PO Line的Supplier－SKU提示讀取。 |
 | Build / Commit | 待執行前記錄 |
 
 > 本文件只定義測試案例，不代表功能已通過驗證。本輪不執行任何測試。涉及永久刪除、封鎖、銀行明文、金鑰輪替、Migration、故障注入及復原的案例，只可在隔離測試環境使用虛構資料執行。
@@ -98,7 +99,7 @@
 | RQ-05 Address、Contact、Identifier資料完整性 | P1 | PARTY-001～PARTY-009 | NOT RUN | — | CRUD、primary slot、ownership、unique及history |
 | RQ-06 Approval、Supplier Settings及Business Master read contract | P0 | APR-001～APR-013 | NOT RUN | — | policy snapshot、SoD、stale、重派、並發及typed settings |
 | RQ-07 Bank敏感資料及高風險操作 | P0 | BANK-001～BANK-016 | NOT RUN | — | permission、crypto、mask、audit、rotation及restore |
-| RQ-08 Supplier–SKU與Purchasing lookup | P0 | SKU-001～SKU-008 | NOT RUN | — | soft relation、狀態重驗、UOM FK、排序及容量 |
+| RQ-08 Supplier–SKU與Purchasing lookup | P0 | SKU-001～SKU-009 | NOT RUN | — | soft relation、狀態重驗、UOM FK、排序及容量 |
 | RQ-09 CSV Import／Export | P0 | IMP-001～IMP-017 | NOT RUN | — | RFC4180、預檢、原子性、idempotency、recovery及retention |
 | RQ-10 Audit、敏感資料與可追溯性 | P0 | AUD-001～AUD-008、AUTH-008 | NOT RUN | — | transactional audit、allowlist、查詢、不可修改及保留 |
 | RQ-11 認證、授權、IDOR及輸入防護 | P0 | AUTH-001～AUTH-010 | NOT RUN | — | 六權限、authType、fresh actor、schema、injection |
@@ -118,6 +119,7 @@
 | TC-049, TC-050, TC-051, TC-052, TC-053, TC-054, TC-055, TC-056, TC-057, TC-058, TC-059, TC-060, TC-061 | APR-001～APR-013 | PHASE-002；TASK-025～TASK-031 |
 | TC-062, TC-063, TC-064, TC-065, TC-066, TC-067, TC-068, TC-069, TC-070, TC-071, TC-072, TC-073, TC-074, TC-075, TC-076, TC-077 | BANK-001～BANK-016 | PHASE-003；TASK-032～TASK-037 |
 | TC-078, TC-079, TC-080, TC-081, TC-082, TC-083, TC-084, TC-085 | SKU-001～SKU-008 | PHASE-004；TASK-038～TASK-040 |
+| TC-137 | SKU-009 | PHASE-004；TASK-052 |
 | TC-086, TC-087, TC-088, TC-089, TC-090, TC-091, TC-092, TC-093, TC-094, TC-095, TC-096, TC-097, TC-098, TC-099, TC-100, TC-101, TC-102 | IMP-001～IMP-017 | PHASE-004；TASK-041～TASK-049 |
 | TC-103, TC-104, TC-105, TC-106, TC-107, TC-108, TC-109, TC-110 | AUD-001～AUD-008 | PHASE-001～PHASE-004；TASK-009, TASK-026, TASK-033, TASK-045 |
 | TC-111, TC-112, TC-113, TC-114, TC-115, TC-116, TC-117, TC-118, TC-119, TC-120 | AUTH-001～AUTH-010 | PHASE-001～PHASE-004；TASK-002, TASK-024, TASK-031, TASK-037 |
@@ -258,6 +260,7 @@
 | SKU-006 | P1 | FR-SKU-004、AC-031；Purchasing回寫冪等 | Integration/DB | 已完成一筆向無relation Active Supplier的purchase | 重複callback/command | 回寫一次、重送、更新last supplied | 建立或更新一條relation；不改Supplier/SKU狀態；重送不duplicate | requests、relation/Supplier/SKU/audit SQL | — | NOT RUN |
 | SKU-007 | P0 | FR-SKU-006；不得保存價格 | Security/Data | 建立／更新relation及Purchasing回寫 | price/quote/contractPrice unknown fields | 經API、UI及整合入口提交 | 欄位拒絕或忽略依schema但永不持久化；table/API/audit沒有價格資料 | responses、schema/DB/audit scan | — | NOT RUN |
 | SKU-008 | P1 | NFR-005；100k lookup SLA | Performance | PERF dataset；50 users | exact、preferred、no relation及page workload | warm-up後穩定負載 | p95<3秒（HD-157；原為2秒）；error rate在批准門檻內；count不膨脹；使用預期indexes | workload、p50/p95/p99、error rate、EXPLAIN/resources | — | NOT RUN |
+| SKU-009 | P1 | FR-SKU-003、Purchasing HD-015 2C；PO Line提示讀取 | Unit/Integration | 真MySQL；1 connection、1 transaction；2 Suppliers、3 SKUs | 重複skuIds、stopped relation、別的Supplier的relation、同transaction未commit的relation、無relation的SKU、空陣列、101個ID | 於呼叫方transaction呼叫`findSkuRefsInTransaction` | 只回該Supplier的row；stopped照回；無relation不在Map內；見到同transaction未commit的row；key及relationId為number；空陣列不查DB；參數錯誤拋TypeError；不加鎖 | test result | — | NOT RUN |
 
 ### 6.9 CSV Import與Export
 
@@ -412,7 +415,7 @@
 
 ## 10. 已知未測範圍與殘留風險
 
-- 本次只建立案例，136個案例全部NOT RUN；目前沒有任何PASS、缺陷或release-ready證據。
+- 本次只建立案例，137個案例全部NOT RUN；目前沒有任何PASS、缺陷或release-ready證據。
 - Bank功能即使通過功能性安全案例，也不能取代專門的密碼學review、secret-store權限review或滲透測試。
 - 下游交易模組未完成前，Supplier狀態即時重驗、交易snapshot及Supplier–SKU回寫只能取得contract或受控整合證據。
 - MySQL DDL會implicit commit；半套用復原只能以逐支真實故障演練證明，不能由migration code review推定。
@@ -423,7 +426,7 @@
 
 # Appendix A — Harness 2.0 Formal Technical Test Definitions
 
-下列formal definitions與§6中的136個詳細row一對一；row仍是步驟、資料及期望的完整來源。
+下列formal definitions與§6中的137個詳細row一對一；row仍是步驟、資料及期望的完整來源。
 
 ## TC-001 — MIG-001
 
@@ -3408,6 +3411,28 @@ Required Evidence完整、低敏且綁定同一candidate／environment；mandato
 ### Expected result
 
 以`OPS-009`列的Expected Result為唯一判定標準；不得以部分成功或無錯誤訊息代替。
+
+### Acceptance criteria
+
+Required Evidence完整、低敏且綁定同一candidate／environment；mandatory assertion全部PASS、沒有未解釋skip。
+
+### Cleanup
+
+依案例清理虛構資料、session、檔案、worker／runtime資源；保留redacted evidence，不刪除失敗或audit證據。
+
+## TC-137 — SKU-009
+
+### Preconditions and data
+
+使用§6詳細案例`SKU-009`的Preconditions及Test Data；只在其要求的隔離環境、角色與依賴READY後執行。
+
+### Steps
+
+完整執行`SKU-009`列的Steps/Input，不省略負面、重送、並發或恢復步驟。
+
+### Expected result
+
+以`SKU-009`列的Expected Result為唯一判定標準；不得以部分成功或無錯誤訊息代替。
 
 ### Acceptance criteria
 

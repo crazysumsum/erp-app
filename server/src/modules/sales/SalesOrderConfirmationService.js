@@ -47,7 +47,7 @@ function masterProjection(order) {
 export class SalesOrderConfirmationService {
   constructor({ database, time, logger, config = defaults, audit, customerProvider, itemProvider, businessMaster, inventory, authorizeSalesIntake } = {}) {
     this.database = database; this.time = time; this.config = config;
-    this.operations = new SalesOperationService(); this.audit = audit ?? new SalesAuditService();
+    this.operations = new SalesOperationService({database}); this.audit = audit ?? new SalesAuditService();
     this.logger = logger;
     this.customers = customerProvider; this.items = itemProvider; this.businessMaster = businessMaster;
     // Phase A needs no master or Inventory service; resolve them when executing Phase B.
@@ -279,7 +279,7 @@ export class SalesOrderConfirmationService {
       await this.audit.record(tx, { ...trace, actor, action: "sales_order.confirm_started", targetId: id, targetNumber: order.sales_order_number,
         eventId: input.eventId, nowMs, details: { fromStatus: "DRAFT", toStatus: "CONFIRMING", version } });
       return intent;
-    }); } catch (error) {
+    },{eventAdmissionId:input.eventId}); } catch (error) {
       // The ID was observed from INSERT/replay; commit uncertainty is not a durable success claim.
       if (error.code === "TRANSACTION_OUTCOME_UNKNOWN" && stagedIntent) return { ...stagedIntent,outcomeUnknown: true };
       throw error;

@@ -42,7 +42,8 @@
       "client/src/services/supplier*.js",
       "server/test/**",
       "client/test/**",
-      "client/e2e/**"
+      "client/e2e/**",
+      ".github/test-admissions/supplier-task052-sku-refs.json"
     ],
     "approval_required_paths": [
       ".gitignore",
@@ -84,7 +85,7 @@
         "id": "supplier-public-provider-contracts",
         "version": "design-1.0",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "e49ac37d04859e67fdce171a7844c4658330f9bc553d0350541bcbaca5ba37b0",
+        "sha256": "655b3f05faeb771a68589224d6808e743b937f189f934c17a96b2b6d52122a56",
         "consumers": [
           "purchasing-receiving",
           "item-management",
@@ -109,7 +110,7 @@
         "id": "supplier-consumer-contract",
         "version": "design-spec",
         "source": "docs/purchasing_receiving_management/03_design_spec.md",
-        "sha256": "366abb1fed7ced7fbae79b6d1dfe42836f007f68e643a7839070a193812e45cf",
+        "sha256": "927ddc66d17bf26babb3375b756bfbdc01802a838392d2e90d58a23a3829a62a",
         "regression_suites": [
           "supplier-server-integration"
         ]

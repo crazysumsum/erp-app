@@ -185,6 +185,36 @@ export class SupplierLookupService {
   }
 
   /**
+   * PO Line 嘅 Supplier－SKU 對照（Purchasing HD-015 2C）：只係預設／提示，唔係採購資格，所以唔驗 Supplier 或 SKU 狀態，
+   * stopped 照回，冇 relation 就冇嗰個 key。用普通讀取：對未存在嘅行唔攞 gap lock（REV-085 H2）；relation 唔會被刪，
+   * supplier_id、sku_id 亦唔會變，所以讀到嘅 relationId 一直有效。代價係可能睇唔到啱啱 commit 嘅 relation。
+   */
+  async findSkuRefsInTransaction(connection, supplierId, skuIds) {
+    requireConnection(connection);
+    const id = requireSupplierId(supplierId);
+    if (!Array.isArray(skuIds)) throw new TypeError("SKU IDs must be an array");
+    if (skuIds.length > MAX_BATCH_SIZE) throw new TypeError(`Supplier SKU refs lookup accepts at most ${MAX_BATCH_SIZE} IDs`);
+    const ids = [...new Set(skuIds.map((value) => {
+      const skuId = Number(value);
+      if (!Number.isSafeInteger(skuId) || skuId <= 0) throw new TypeError("SKU ID must be a positive safe integer");
+      return skuId;
+    }))];
+    if (ids.length === 0) return new Map();
+    const [rows] = await connection.query(
+      `SELECT id, sku_id, relationship_status, supplier_item_code, last_supplied_at
+         FROM supplier_sku_refs
+        WHERE supplier_id = ? AND sku_id IN (${ids.map(() => "?").join(",")})`,
+      [id, ...ids]
+    );
+    return new Map(rows.map((row) => [Number(row.sku_id), {
+      relationId: Number(row.id),
+      relationshipStatus: row.relationship_status,
+      supplierItemCode: row.supplier_item_code,
+      lastSuppliedAt: row.last_supplied_at === null ? null : Number(row.last_supplied_at)
+    }]));
+  }
+
+  /**
    * 採購揀 Supplier 用：全部 Active Supplier（冇 relation 都照出），relation 只影響排序同 `rankReason`。
    * SKU 唔可以採購就 fail closed（HD-094 3A）。呢度唔授權，呼叫方要先授權；提交時仍要
    * `assertUsableInTransaction()` 重驗（BR-032）。

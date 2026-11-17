@@ -56,7 +56,7 @@ export class SalesOrderService {
     this.customers=customerProvider ?? new CustomerLookupService({ database });
     this.items=itemProvider ?? new ItemLookupService({ database,time,logger });
     this.businessMaster=businessMaster ?? new BusinessMasterProvider({ database,repository:new BusinessMasterRepository() });
-    this.sequence=new SalesSequenceService({ time });this.operations=new SalesOperationService();this.audit=audit ?? new SalesAuditService();
+    this.sequence=new SalesSequenceService({ time });this.operations=new SalesOperationService({database});this.audit=audit ?? new SalesAuditService();
   }
   authorizeWrite(claims) { return this.database.withTransaction(tx=>requireSalesWriteActor(tx,claims)).then(()=>true); }
   create(request) { return this.#save(request,false); }
@@ -71,7 +71,7 @@ export class SalesOrderService {
       const result=await this.#writeDraft(tx,{document,warnings,id,input,actor,eventId,nowMs,update,trace});
       await this.operations.succeed(tx,{operationId:claim.operationId,result:result.operation,nowMs});
       return result;
-    });
+    },{eventAdmissionId:input?.eventId});
   }
   createIntakeDraftInTransaction(tx,{document,actor,eventId,nowMs,number,source}) {
     if(!tx||typeof tx.query!=="function"||typeof tx.execute!=="function"||!source||Object.keys(source).sort().join(",")!=="channelCode,externalOrderId,externalOrderKeyId,intakeOrderId,type"||

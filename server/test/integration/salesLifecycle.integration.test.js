@@ -80,7 +80,7 @@ for(const [topup,label] of [[10,"mapping"],[0,"Backorder entry"]])it(`TC-030 can
 it("TC-030 HD013 lifecycle RC cancels the current saved Draft rather than the earlier actor-read snapshot",async t=>{
  const f=await setup(t);const s=lifecycle(f),operations=s.order.operations,claim=operations.claim.bind(operations);
  // HD013 explicitly uses RC for lifecycle: a save committed before the Order lock must be visible as current data.
- operations.claim=async(...args)=>{const r=await claim(...args);await new SalesOrderService(f).update({claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:1,customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:f.time.fileDate(),lines:[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"7.000000",unitSellingPrice:"1.0000"}]}});return r;};
+ operations.claim=async(...args)=>{const r=await claim(...args);await f.runAsFixtureRequest(f.claims,()=>new SalesOrderService(f).update({claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:1,customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:f.time.fileDate(),lines:[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"7.000000",unitSellingPrice:"1.0000"}]}}));return r;};
  const req=command(f);req.input.version=2;const result=await s.cancel(req);assert.equal(result.salesOrder.status,"CANCELLED");
  const order=await readSalesOrderDetail(f.db,f.request.id);assert.deepEqual([order.status,order.version,order.lines.map(l=>[l.orderedBaseQuantity,l.cancelledBaseQuantity])],["CANCELLED",3,[["7","7"]]]);
 });

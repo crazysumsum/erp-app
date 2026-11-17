@@ -593,7 +593,7 @@ Phase 4 Reversal, Reporting & Release Evidence
 
 **驗證：** lifecycle service／state machine tests及approve-vs-withdraw、close-vs-confirm concurrency tests。
 
-**依賴：** P2-T01、P2-T02。
+**依賴：** P2-T01、P2-T02、P2-T06（TASK-045；只需早期完整 header 及同 transaction ever-confirmed reader）。
 
 **預計檔案：** `PurchaseOrderLifecycleService.js`、`purchaseOrderStateMachine.js`、`purchaseOrderLifecycleHandlers.js`及最多2個tests。
 
@@ -620,6 +620,26 @@ Phase 4 Reversal, Reporting & Release Evidence
 **規格追溯：** Design §7.4、§12.2；FR-LIFE、FR-AUDIT、AC-018～020、AC-050、AC-053。
 
 **規模：** M。
+
+### Task P2-T06：建立 TASK-027 早期完整 goods_receipts header
+
+**描述：** 按 Design §4.9 交付完整 `goods_receipts` header（全部欄位、owner FK、UNIQUE／index、原 enum／flag／version／number／守恆 CHECK 及確認一致性 CHECK）及 §4.16 header 不可變保護，並在同一 transaction、PO root lock 之下提供 ever-confirmed reader 接入 `PurchaseOrderLifecycleService`。`goods_receipt_lines`／`goods_receipt_details` 及其餘 GR 工作仍屬 P3-T01（TASK-027）。
+
+**驗收條件：**
+
+- [ ] Header 與 §4.9 完全一致；不建臨時縮水表，不加新 state 或 actor 不可空規則。
+- [ ] 曾 Confirmed（CONFIRMED／PARTIALLY_REVERSED／REVERSED）之後 confirmation 歷史、PO／Supplier、日期、單據號、備註及結果不可改或刪除；user SET NULL 不當缺證。
+- [ ] Reader 只在明確從未 Confirmed 時回 false；矛盾、未知、讀取錯誤或缺 reader 一律拒絕。
+
+**驗證：** 真 MySQL header migration／constraint／trigger／reader focused cases（G1～G6）及 reader 矛盾 fake-row unit cases。
+
+**依賴：** P1-T03、P2-T01。
+
+**預計檔案：** 1支動態編號 migration、reader 接線、1個integration test及1個unit test。
+
+**規格追溯：** Design §4.9、§4.16、§8.4；FR-LIFE-005。
+
+**規模：** S。
 
 ### Checkpoint P2：Approval 與 Lifecycle Ready
 
@@ -649,7 +669,7 @@ Phase 4 Reversal, Reporting & Release Evidence
 
 **驗證：** 真MySQL purchasing migration／constraint integration focused cases。
 
-**依賴：** Checkpoint P2、Checkpoint P0 Inventory／Item contracts。
+**依賴：** Checkpoint P2、Checkpoint P0 Inventory／Item contracts、P2-T06（TASK-045 已交付 `goods_receipts` header；本 Task 交付 lines／details 及其餘）。
 
 **預計檔案：** 3支動態編號migration、1個integration test及必要fixture。
 
@@ -1061,7 +1081,7 @@ Phase 0開始前，Engineering／Product／DBA／QA／Frontend應確認Design §
 
 ## 10. Harness 2.0 正式計劃定義
 
-本節把 §2～§6 的 5 個 Phase 及 44 個 Task 整理成穩定的 `PHASE`／`TASK` 實體，作為 `08_traceability.json` 的計劃節點。敘述內容、驗收條件、驗證命令及檔案清單仍以上文為準；本節不重複列出，只提供身分、依賴、需求／設計／技術測試連結及 Gate 條件。
+本節把 §2～§6 的 5 個 Phase 及 45 個 Task 整理成穩定的 `PHASE`／`TASK` 實體，作為 `08_traceability.json` 的計劃節點。敘述內容、驗收條件、驗證命令及檔案清單仍以上文為準；本節不重複列出，只提供身分、依賴、需求／設計／技術測試連結及 Gate 條件。
 
 
 ### 10.1 Phase 與 Task ID 對照
@@ -1117,6 +1137,7 @@ Phase 0開始前，Engineering／Product／DBA／QA／Frontend應確認Design §
 | TASK-042 | P4-T08 | 完成真並發及失敗注入硬化 |
 | TASK-043 | P4-T09 | 完成容量及查詢效能驗證 |
 | TASK-044 | P4-T10 | 完成備份還原、對賬及UAT release evidence |
+| TASK-045 | P2-T06 | 建立 TASK-027 早期完整 goods_receipts header |
 
 ## Formal definitions
 
@@ -1179,7 +1200,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 前一 Phase PHASE-002 的 Checkpoint 及 PR Gate 已通過並合併。 在獨立 worktree 以最新 `origin/main` 建立分支，並確認當時下一個可用的 migration 連續序號。
 
 ### Acceptance criteria
-本 Phase 的 5 個 Task（TASK-022～TASK-026）全部完成，其 requirement_ids 所列需求可被對應 mandatory 技術測試驗證，且沒有未解決 blocker、TODO stub 或 migration failure。
+本 Phase 的 6 個 Task（TASK-022～TASK-026 及 TASK-045）全部完成，其 requirement_ids 所列需求可被對應 mandatory 技術測試驗證，且沒有未解決 blocker、TODO stub 或 migration failure。
 
 ### Integration and regression
 在該 Phase worktree 執行 `npm run lint`、server／client tests、`npm run test:coverage`、`npm run build --workspace client` 及 `npm run security:audit`；需要資料庫的 Phase 另在專用測試 MySQL 8.0 執行 migrations 及指定 integration tests。回歸範圍至少包含既有 framework（authorization、idempotency、item）測試。
@@ -1645,7 +1666,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 - Status history及Audit與狀態變更同transaction；Closed日後不因reversal自動重開。
 
 ### Definition of Done
-該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-022, TASK-023。對應 mandatory 技術測試：TC-004。
+該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-022, TASK-023, TASK-045。對應 mandatory 技術測試：TC-004。
 
 ## TASK-026 — 補齊 lifecycle UI、progress及Audit history
 
@@ -1677,7 +1698,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 - 乾淨／forward migration、FK、unique、decimal精度及index integration通過。
 
 ### Definition of Done
-該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：無。對應 mandatory 技術測試：TC-005, TC-009。
+該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-045。對應 mandatory 技術測試：TC-005, TC-009。
 
 ## TASK-028 — 實作 Receiving validation及policy
 
@@ -1950,3 +1971,19 @@ Confirmed GR commit後冪等更新Supplier最近供貨日期／soft SKU relation
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-041, TASK-043。對應 mandatory 技術測試：TC-012, TC-009。
+
+## TASK-045 — 建立 TASK-027 早期完整 goods_receipts header
+
+### Goal
+按 Design §4.9 交付完整 `goods_receipts` header 及 §4.16 header 不可變保護，並以同一 transaction、PO root lock 下的 ever-confirmed reader 接入 PO lifecycle；lines／details 仍屬 TASK-027。 (Legacy identity: `P2-T06`; phase: `PHASE-003`; size: `S`.)
+
+### Approach
+預計檔案：1支動態編號 migration、reader 接線、1個integration test及1個unit test。 驗證：真MySQL header migration／constraint／trigger／reader focused cases及reader矛盾fake-row unit cases。 規格追溯：Design §4.9、§4.16、§8.4；FR-LIFE-005。
+
+### Acceptance criteria
+- Header 與 §4.9 完全一致；不建臨時縮水表，不加新 state 或 actor 不可空規則。
+- 曾 Confirmed 後 confirmation 歷史及 §4.16 列明欄位不可改或刪除；user SET NULL 不當缺證。
+- Reader 只在明確從未 Confirmed 時回 false；矛盾、未知、讀取錯誤或缺 reader 一律拒絕。
+
+### Definition of Done
+該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；migration 經 Sam 明確批准後才撰寫及執行。 依賴：TASK-011, TASK-022。對應 mandatory 技術測試：TC-004, TC-009。
