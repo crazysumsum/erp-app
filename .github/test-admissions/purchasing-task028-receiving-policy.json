@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "decision": "DRAFT - NOT APPROVED BY THIS FILE. Proposed receipt for TASK-028 under Sam's whole-package approval in PM chat call_fd84d2fbfb764df2afe39020b6513b2b (execution proposal r5 d7710f61, design r5 d2ba3fdc, CI review 6fd29458; source locked by PM d318a8ce: service blob dc0fbcc9, test blob 37cf2046). The author does not approve it; the trusted approval administrator must independently verify Sam's decision and these exact pins against the committed candidate before registering the digest",
+  "purpose": "ReceivingPolicyService pure receiving policy: base quantity, supplier exception, SKU commitment drift, tracking and lot dates, minimum receipt life with the Confirm and business-date checks, over-receipt and duplicate dimensions; case 31 checks agreement of the two Inventory-bound reasons with Inventory's real normalizePurchaseReceipt (normalization only)",
+  "data": "Pure in-memory inputs only: 31 registrations, 135 calls (113 policy, 22 Inventory normalizer: 8 positive, 14 negative); at most 4 details per call, longest string 504 bytes; no DB, network, fixture file or timer",
+  "concurrency": "1",
+  "repetitions": "1",
+  "thresholds": "All 31 pass with 0 fail and 0 skip by the runner's own counts; existing coverage floors unchanged (global 92/83/90 and existing per-file floors); no timing threshold",
+  "trigger": "Existing ci.yml server coverage shards (8) on an admitted PR dispatch, push to main and the weekly schedule; no new job",
+  "cost": "Not measured; no capacity workload",
+  "files": [
+    {
+      "path": "server/test/purchasing/receivingPolicy.test.js",
+      "mode": "100644",
+      "blob": "37cf20462979e9eef191b4155aba776cbfba7eab",
+      "kind": "functional",
+      "cases": [
+        "TASK-028 P028-01 calculateBaseQuantity 精確換算正整數 Base 並正規化數量",
+        "TASK-028 P028-02 calculateBaseQuantity 拒絕 0、負數、指數、超過 6 位小數、空字串同非字串",
+        "TASK-028 P028-03 calculateBaseQuantity 非整數 Base 或非法 factor 係 UOM_CONVERSION_INVALID",
+        "TASK-028 P028-04 calculateBaseQuantity 遵守系統 Base 上限",
+        "TASK-028 P028-05 Active Supplier 唔使原因，送咗都唔保存",
+        "TASK-028 P028-06 Suspended／Archived Supplier 要原因（BR-038）",
+        "TASK-028 P028-07 Blocked Supplier 要原因而且每個 detail 都要 QUARANTINED",
+        "TASK-028 P028-08 已確認 PO 嘅 Supplier 唔可能係 draft、pending_approval 或未知狀態，fail closed",
+        "TASK-028 P028-09 一般原因：空白要求原因，少於 5 或多過 500 code point 拒絕，前後空白會 trim",
+        "TASK-028 P028-10 SKU 冇變就冇 warning，原因唔保存",
+        "TASK-028 P028-11 Item provider 嘅 warning 原文傳出，要原因（BR-039）",
+        "TASK-028 P028-12 Purchasing 自己偵測 Tracking、Base UOM 同 Purchase UOM 改變，並同 provider warning 合併排序",
+        "TASK-028 P028-13 SKU projection 冇咗或者 skuId 唔對，fail closed",
+        "TASK-028 P028-14 Tracking none：空值當冇，有 Lot／Expiry／Manufacture 就拒絕",
+        "TASK-028 P028-15 Tracking batch：要 Lot，trim 後保留大細楷，Expiry 選填",
+        "TASK-028 P028-16 Tracking batch_expiry：Lot 同 Expiry 一齊要求",
+        "TASK-028 P028-17 非法日期、生產日期遲過到期日、超長或含 control character 嘅 Lot 都拒絕",
+        "TASK-028 P028-18 serial 或未知 Tracking fail closed，唔降級（AC-028）",
+        "TASK-028 P028-19 Minimum Receipt Life 門檻取 PO 快照同目前值較嚴格嘅非空值",
+        "TASK-028 P028-20 剩餘效期等於門檻就合格；少一日而冇權限冇原因就 MINIMUM_RECEIPT_LIFE_FAILED",
+        "TASK-028 P028-21 有 override 權限加原因就產生同 Inventory 一致嘅 evidence；原因空白仍然拒絕",
+        "TASK-028 P028-22 冇 override 權限但送原因就 EXPIRY_OVERRIDE_DENIED",
+        "TASK-028 P028-23 已過期任何權限都唔可以 override；當日到期唔算過期但仍要過門檻",
+        "TASK-028 P028-24 冇 Expiry 就唔計 Minimum Receipt Life（同 Inventory 現況一致）",
+        "TASK-028 P028-25 少收唔會有超收，亦唔要求原因（FR-VAL-015）",
+        "TASK-028 P028-26 超收按提交前 Outstanding 計並要求原因（AC-034）",
+        "TASK-028 P028-27 Outstanding 已係 0 都可以超收但要原因；數量唔係 safe integer 就係程式錯誤",
+        "TASK-028 P028-28 同一 PO line 可以拆 Lot／位置／Status；Lot 大細楷唔同就係唔同 bucket（AC-023）",
+        "TASK-028 P028-29 同一 physical bucket 唔可以重複，唔理輸入 UOM，Lot 前後空白唔算唔同",
+        "TASK-028 P028-30 Expiry 唔可以早過業務收貨日期，即使 Confirm 日仲未到期（FR-VAL-007、TL Q1）",
+        "TASK-028 P028-31 傳去 Inventory 嘅兩個原因按 trim 後 5～500 UTF-8 byte 單行，同 Inventory normalizePurchaseReceipt 判斷一致"
+      ]
+    },
+    {
+      "path": "server/src/modules/purchasing/ReceivingPolicyService.js",
+      "mode": "100644",
+      "blob": "dc0fbcc98279c5f44eb8b17d17b3e8608341e25c",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/config/database.js",
+      "mode": "100644",
+      "blob": "48a4eedceb3df0ce54091579d058e6aeefacadb0",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/framework/configuration/SecretValue.js",
+      "mode": "100644",
+      "blob": "4525cf40401c518a2f27ae6e084844449ee77701",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/framework/errors/ApplicationError.js",
+      "mode": "100644",
+      "blob": "f57b1e1bb21954a7d9da14540465868d106f27f3",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/FulfillmentTransactionService.js",
+      "mode": "100644",
+      "blob": "858d707b6be0e644c4a4c31945581e0d552e463b",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/fulfillmentConstants.js",
+      "mode": "100644",
+      "blob": "975a043a0b72484ac10f056849c2d47e044e63f1",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/fulfillmentErrors.js",
+      "mode": "100644",
+      "blob": "9b484bf898a15f0cd30052b1c17d0487d037f9e2",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/fulfillmentOperationHash.js",
+      "mode": "100644",
+      "blob": "882f682a3144e4fc92000b451df4693da132c13e",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/shipmentEventAdmission.js",
+      "mode": "100644",
+      "blob": "c1e9cd06714990a04c758d697e2b2983593bc40a",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/InventoryOperationService.js",
+      "mode": "100644",
+      "blob": "03324a554b603e57c4d79cfd5586f596374a4dce",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryConstants.js",
+      "mode": "100644",
+      "blob": "0f1803f9ff87d3ec74881123ac3c43efd598926d",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryErrors.js",
+      "mode": "100644",
+      "blob": "15cd88cea13df1de6da7bf1bbe9cf4943eb444f4",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryFulfillmentConstants.js",
+      "mode": "100644",
+      "blob": "7cacdcddc73306f3e2fb75b1d617e3f638411194",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryPurchaseValidation.js",
+      "mode": "100644",
+      "blob": "08db10a1f4b6f689213606c07f257d49a09daf0c",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventorySafeJson.js",
+      "mode": "100644",
+      "blob": "1b8838d0ee721e04da6b52a1c0f3fbfbde0c4575",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryValidation.js",
+      "mode": "100644",
+      "blob": "c45a7c2632eb11cc58ab4b02b6ea0d89cff0f559",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/purchasingConstants.js",
+      "mode": "100644",
+      "blob": "a15e905c857e8c25aa50d9e08a6b753752c8c601",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/purchasingErrors.js",
+      "mode": "100644",
+      "blob": "7b2e1489619e9fbd1fcd21da52160076e79f1f02",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/purchasingValidation.js",
+      "mode": "100644",
+      "blob": "7eaf01c16ce93c547bde9b2b8aac3290a742c518",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/quantityMath.js",
+      "mode": "100644",
+      "blob": "1b047ec0c0b45693e2b1cfd711cc96771ecc01eb",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "mode": "100644",
+      "blob": "64df24baa57adcfc6354467e9baae441ff5758cf",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/services/mysqldatabase/connection.js",
+      "mode": "100644",
+      "blob": "22d340cf1b6ece3735f4284d3088b6184d49b637",
+      "kind": "support",
+      "cases": []
+    }
+  ]
+}
