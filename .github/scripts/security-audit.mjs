@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+// shortcut: Accept this advisory on this lock only; remove when official fixed dependencies are adopted.
 const advisoryUrl = "https://github.com/advisories/GHSA-fc5q-39xc-vjpf";
 const lockHash = "740e639b58b82ed6fe324f0f8c3303075805a93eacba4baa892a46b5221343e7";
 const copies = {
