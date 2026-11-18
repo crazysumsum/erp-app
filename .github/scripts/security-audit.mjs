@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
+import console from "node:console";
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import process from "node:process";
+import { fileURLToPath, URL } from "node:url";
 
 // shortcut: Accept this advisory on this lock only; remove when official fixed dependencies are adopted.
 const advisoryUrl = "https://github.com/advisories/GHSA-fc5q-39xc-vjpf";
@@ -74,26 +76,41 @@ export function evaluateAudit(stdout, nativeExit, lockBytes) {
   requireValue(Object.entries(counts).every(([level, count]) => report.metadata.vulnerabilities[level] === count),
     "Inconsistent npm vulnerability counters");
   requireValue(nativeExit === (counts.high + counts.critical > 0 ? 1 : 0), "Audit status disagrees with high threshold");
-  const memo = new Map();
-  function onlyAcceptedAdvisory(name, visiting = new Set()) {
-    requireValue(!visiting.has(name), "Cyclic vulnerability provenance");
-    if (memo.has(name)) return memo.get(name);
-    const value = vulnerabilities[name], next = new Set([...visiting, name]);
-    const provenance = value.via.map((via) => typeof via === "string" ? onlyAcceptedAdvisory(via, next)
-      : name === "picomatch" && via.name === "picomatch" && via.dependency === "picomatch"
-        && via.url === advisoryUrl && via.severity === "high");
-    const accepted = value.severity === "high" && provenance.every(Boolean);
-    if (accepted && name === "picomatch") {
-      requireValue(JSON.stringify([...value.nodes].sort()) === JSON.stringify(Object.keys(copies).sort()),
-        "Accepted advisory must cover exactly the six locked copies");
+  const roots = new Map(Object.entries(vulnerabilities).map(([name, value]) => [name,
+    new Set(value.via.filter((via) => typeof via !== "string").map((via) => ({ owner: name, advisory: via })))
+  ]));
+  // Union direct advisory roots until stable; real npm peer cycles are valid, rootless graphs are not.
+  let changed;
+  do {
+    changed = false;
+    for (const [name, value] of Object.entries(vulnerabilities)) {
+      for (const via of value.via.filter((item) => typeof item === "string")) {
+        for (const root of roots.get(via)) {
+          if (!roots.get(name).has(root)) {
+            roots.get(name).add(root);
+            changed = true;
+          }
+        }
+      }
     }
-    memo.set(name, accepted);
-    return accepted;
-  }
-  // Visit every entry, including lower severities, so malformed/cyclic provenance cannot be silently ignored.
-  for (const name of Object.keys(vulnerabilities)) onlyAcceptedAdvisory(name);
+  } while (changed);
+  requireValue([...roots.values()].every((value) => value.size > 0), "Vulnerability provenance has no advisory root");
+  const isAcceptedRoot = ({ owner, advisory }) => owner === "picomatch" && advisory.name === "picomatch"
+    && advisory.dependency === "picomatch" && advisory.url === advisoryUrl && advisory.severity === "high";
   const gated = Object.keys(vulnerabilities).filter((name) => ["high", "critical"].includes(vulnerabilities[name].severity));
-  return { nativeExit, accepted: gated.filter((name) => memo.get(name)), blocking: gated.filter((name) => !memo.get(name)), counts };
+  const accepted = gated.filter((name) => {
+    const highRoots = [...roots.get(name)].filter(({ advisory }) => ["high", "critical"].includes(advisory.severity));
+    return vulnerabilities[name].severity === "high" && highRoots.length > 0 && highRoots.every(isAcceptedRoot);
+  });
+  if (accepted.length) {
+    requireValue(vulnerabilities.picomatch?.severity === "high"
+      && JSON.stringify([...vulnerabilities.picomatch.nodes].sort()) === JSON.stringify(Object.keys(copies).sort()),
+    "Accepted advisory must cover exactly the six locked copies");
+  }
+  const otherDirectHigh = Object.entries(vulnerabilities).filter(([owner, value]) => value.via.some((via) =>
+    typeof via !== "string" && ["high", "critical"].includes(via.severity) && !isAcceptedRoot({ owner, advisory: via })
+  )).map(([name]) => name);
+  return { nativeExit, accepted, blocking: [...new Set([...gated.filter((name) => !accepted.includes(name)), ...otherDirectHigh])], counts };
 }
 
 function main() {
