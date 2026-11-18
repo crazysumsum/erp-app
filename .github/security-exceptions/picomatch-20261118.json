@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "status": "temporary-accepted-exception",
+  "advisory": "GHSA-fc5q-39xc-vjpf",
+  "url": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+  "accepted_on": "2026-11-18",
+  "decision": {
+    "actor": "Sam",
+    "source_thread": "01a0e71b-fccb-7c81-b9fe-ed817cc58e1f",
+    "source_turn": "01a1ed41-6fda-7721-ba67-fc40169b101d",
+    "source_user_message": "01a1ed41-7062-78d0-9fea-c2e6be68fce2",
+    "original_text": "現在什麼情況，不要因為一個依賴有問題就停止工作，暫時強制降級、忽略漏洞或降低門檻以恢復工作，記錄這個漏洞，每日檢查一次是否有官方版本可更新\n"
+  },
+  "scope": "Only this advisory and high meta-vulnerabilities whose complete via graph resolves exclusively to it; all critical and other high findings block.",
+  "package_lock_sha256": "740e639b58b82ed6fe324f0f8c3303075805a93eacba4baa892a46b5221343e7",
+  "affected_copies": {
+    "node_modules/tinyglobby/node_modules/picomatch": "4.0.5",
+    "node_modules/unplugin-utils/node_modules/picomatch": "4.0.5",
+    "node_modules/unplugin/node_modules/picomatch": "4.0.5",
+    "node_modules/vite/node_modules/picomatch": "4.0.5",
+    "node_modules/vitest/node_modules/picomatch": "4.0.7",
+    "node_modules/vue-router/node_modules/picomatch": "4.0.5"
+  },
+  "residual_risk": "ReDoS risk is accepted temporarily, not fixed or fully excluded. Static toolchain-oriented evidence does not prove all runtime or attacker-controlled-pattern paths unreachable.",
+  "owners": {
+    "governance": "codex-erp-app-pm-01",
+    "technical": "codex-erp-app-ci-01"
+  },
+  "daily_check": {
+    "automation": "erp-picomatch",
+    "status": "ACTIVE reported by PM",
+    "time": "09:00",
+    "timezone": "Asia/Hong_Kong",
+    "sources": [
+      "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+      "https://github.com/micromatch/picomatch/releases"
+    ]
+  },
+  "remove_when": "An official applicable fix is available: review and update affected dependencies normally, remove this exception/helper routing, restore ordinary npm audit high behavior and pass the normal checks. Do not silently renew or widen the accepted advisory/lock scope.",
+  "revoke_now": "Revert the security:audit script routing and remove the helper/exception record through the normal reviewed change and admission process.",
+  "unchanged": "Dependency versions/lock, business cases/data, eight shards, global/per-file coverage floors, P1/P2 and other safety gates."
+}
