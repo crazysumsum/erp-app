@@ -4,7 +4,7 @@ import { inventoryNativeFixture } from "../fulfillment/inventoryNativeFixture.js
 import { assertOwnedOperationWait } from "../fulfillment/inventoryConcurrency.js";
 import { claimFulfillmentInventoryBatch,completeFulfillmentInventoryBatch,readFulfillmentInventoryBatch } from "../../src/modules/inventory/inventoryFulfillmentReceipts.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
-const EVENT="00000000-0000-4000-8000-000000000002";
+const EVENT="legacy-receipt-current-read-2";
 
 nativeTest("P0 receipt delayed commit duplicate replays current immutable Movements despite an older RR read view",async t=>{
   const f=await inventoryNativeFixture(t),reservationId=await f.reservation("4");

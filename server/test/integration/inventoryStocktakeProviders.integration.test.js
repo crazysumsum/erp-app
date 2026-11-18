@@ -73,7 +73,7 @@ before(async () => {
     "0012_create_item_brands", "0013_create_item_uoms", "0014_create_items", "0015_create_item_skus", "0016_create_item_sku_uoms",
     "0055_seed_inventory_permissions", "0056_create_inventory_operations", "0057_create_inventory_audit", "0058_create_inventory_master",
     "0059_create_inventory_stock", "0060_create_inventory_movements", "0063_create_inventory_reservations", "0065_create_inventory_stocktakes",
-    "0067_seed_sales_permissions", "0091_seed_fulfillment_permissions", "0100_seed_purchasing_permissions", "0101_create_inventory_purchase_reversal_links"]) {
+    "0067_seed_sales_permissions", "0091_seed_fulfillment_permissions", "0092_create_fulfillment_operations_and_sequences", "0100_seed_purchasing_permissions", "0101_create_inventory_purchase_reversal_links"]) {
     await (await import(`../../database/migrations/${migration}.js`)).up({
       query: (sql, args = []) => observer.query({ sql, timeout: 10000 }, args),
       execute: (sql, args = []) => observer.execute({ sql, timeout: 10000 }, args)
@@ -598,7 +598,7 @@ async function fulfillment(action, input, db = database()) {
     const provider = new InventoryFulfillmentService(serviceOptions(db));
     const proof = await provider.claimFulfillmentBatchInTransaction(tx, { action, command: input });
     return provider[action === "ALLOCATE" ? "allocateForFulfillmentBatchInTransaction" : "postFulfillmentIssueBatchInTransaction"](tx, input, proof);
-  }, db, { isolationLevel: "READ COMMITTED" });
+  }, db, { isolationLevel: "READ COMMITTED",...(action==="ISSUE"?{eventAdmissionId:input.source.eventId}:{}) });
 }
 
 native("JP11 actual merged Fulfillment Issue cannot bypass a real started-bin lock", async () => {

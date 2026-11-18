@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
+import { assertShipmentEventAdmissionInTransaction } from "../fulfillment/shipmentEventAdmission.js";
 
 import { INVENTORY_COMMAND_TYPES } from "./inventoryConstants.js";
 import { FULFILLMENT_INVENTORY_SUMMARY_FIELDS } from "./inventoryFulfillmentConstants.js";
@@ -111,7 +112,24 @@ function completion({ operationId, resultType, resultId, resultSummary = null, c
   };
 }
 
+export function inventoryEventAdmissionOptions(source) {
+  const unpad=value=>typeof value==="string"?value.replace(/ +$/u,""):value;
+  const module=unpad(source?.module),documentType=unpad(source?.documentType),eventId=unpad(source?.eventId);
+  if (module !== "FULFILLMENT" || !["SHIPMENT", "SHIPMENT_LEG"].includes(documentType) ||
+      typeof eventId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/iu.test(eventId)) return {};
+  // PAD SPACE journal comparisons must not bypass the gate; never rewrite stored source/hash inputs.
+  if(module!==source.module||documentType!==source.documentType||eventId!==source.eventId)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+  return { eventAdmissionId: source.eventId };
+}
+
 export class InventoryOperationService {
+  #database;
+  #eventAdmissionVerifier;
+  constructor({ database, eventAdmissionVerifier } = {}) {
+    if (eventAdmissionVerifier !== undefined && typeof eventAdmissionVerifier !== "function") throw new TypeError("Trusted event admission verifier required");
+    this.#database = database;
+    this.#eventAdmissionVerifier = eventAdmissionVerifier;
+  }
   async claim(connection, input) {
     assertExecutor(connection);
     const type = commandType(input.commandType);
@@ -122,6 +140,20 @@ export class InventoryOperationService {
     const requestId = boundedString(input.requestId ?? "", "request id", 64, { empty: true, ascii: true });
     const correlationId = boundedString(input.correlationId ?? "", "correlation id", 64, { empty: true, ascii: true });
     const createdAt = timestamp(input.createdAt, "created at");
+
+    if (inventoryEventAdmissionOptions(source).eventAdmissionId !== undefined) {
+      if (!this.#database) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      const admission = { eventId: source.eventId, shipmentId: source.documentId,
+        action: ["FULFILLMENT_BATCH_REVERSE", "FULFILLMENT_REVERSE_ISSUE"].includes(type) ? "REVERSE" : undefined };
+      const owner = this.#eventAdmissionVerifier
+        ? await this.#eventAdmissionVerifier(connection, admission)
+        : await assertShipmentEventAdmissionInTransaction(this.#database, connection, admission);
+      if (owner?.state === "MANAGED") {
+        if (owner.eventId !== source.eventId || owner.shipmentId !== source.documentId || String(actorUserId) !== owner.actorId ||
+            !["FULFILLMENT_BATCH_REVERSE", "FULFILLMENT_REVERSE_ISSUE", "FULFILLMENT_BATCH_LEG"].includes(type) ||
+            (source.documentType === "SHIPMENT_LEG") !== (type === "FULFILLMENT_BATCH_LEG")) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+      } else if (owner?.state !== "UNMANAGED") throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    }
 
     try {
       const [result] = await connection.execute(

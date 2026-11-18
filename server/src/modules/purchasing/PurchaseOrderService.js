@@ -3,6 +3,7 @@ import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { documentTotal, lineAmount } from "./moneyMath.js";
+import { GoodsReceiptFacts } from "./GoodsReceiptFacts.js";
 import { PurchaseApprovalService } from "./PurchaseApprovalService.js";
 import { LIFECYCLE_KINDS, PurchaseOrderLifecycleService } from "./PurchaseOrderLifecycleService.js";
 import { appendStatusHistory } from "./purchaseOrderStatusHistory.js";
@@ -56,12 +57,12 @@ function addressSnapshot(address) {
  * 冇業務寫入嘅 4xx 拒絕另開短 transaction 寫 REJECTED audit（§4.15）。
  */
 export class PurchaseOrderService {
-  constructor({ database, logger, time, suppliers, businessMaster, sequences, operations, audit, config, approvals = new PurchaseApprovalService() }) {
+  constructor({ database, logger, time, suppliers, businessMaster, sequences, operations, audit, config, approvals = new PurchaseApprovalService(), receiptFacts = new GoodsReceiptFacts() }) {
     if (!database || !logger || !time || !suppliers || !businessMaster || !sequences || !operations || !audit || !config) {
       throw new TypeError("PurchaseOrderService requires all of its dependencies");
     }
     Object.assign(this, { database, logger, time, suppliers, businessMaster, sequences, operations, audit, config, approvals });
-    this.lifecycle = new PurchaseOrderLifecycleService({ approvals });
+    this.lifecycle = new PurchaseOrderLifecycleService({ approvals, receiptFacts });
   }
 
   /** `claims` 係 JWT claims（sub、roles、permissions）；`context` 係 requestId、correlationId、ip。 */

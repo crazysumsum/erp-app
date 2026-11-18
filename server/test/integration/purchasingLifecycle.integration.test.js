@@ -1,7 +1,8 @@
 /**
  * TASK-025／TC-004：PO lifecycle 經真 HTTP、真 JWT 同真 MySQL（§3.2、§5.2、§8.4）。Sam 2026-11-09 批准 C4：I1～I4 嘅「而家」版本，
  * 全檔 6 張 PO、9 行、12 個 lifecycle POST 加 3 個 GET；fixture 唔經 HTTP。
- * GR 表未落地，撤回同取消喺 production 一律 fail closed（503，乜都唔寫）；成功路徑等 TASK-045 同 reader 接好先驗。
+ * TASK-045（Sam 2026-11-12 call_cb2041d1，提案 3e97d261）：reader 接好之後，撤回同取消由 goods_receipts 嘅權威事實決定；
+ * I1、I2 由 503 改寫成成功路徑，另加 G6 同兩個 GR 案。GR 用 SQL 直接寫（0119 冇 INSERT trigger）；每案最多 6 張 PO、5 列 GR。
  * 呢度唔驗並發。
  * Fixture（全檔共用一次）：
  * - 2 名用戶：maker（view＋mgmt）、viewer（view＋approval，兼做 pending 嘅指定審批人）。
@@ -15,6 +16,7 @@ import test, { after } from "node:test";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { GoodsReceiptFacts } from "../../src/modules/purchasing/GoodsReceiptFacts.js";
 import { PurchaseApprovalService } from "../../src/modules/purchasing/PurchaseApprovalService.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -97,7 +99,18 @@ async function setup() {
     const historyCount = async (id) => Number((await db.query("SELECT COUNT(*) AS total FROM purchase_order_status_history WHERE purchase_order_id = ?", [id]))[0][0].total);
     const succeeded = async (id, action) => Number((await db.query("SELECT COUNT(*) AS total FROM purchasing_audit_logs WHERE purchase_order_id = ? AND action = ? AND outcome = 'SUCCEEDED'",
       [id, action]))[0][0].total);
-    return { db, cleanups, command, read, order, pendingOrder, historyCount, succeeded, maker, viewer };
+    /** 0119 header 一列：DRAFT／CANCELLED 冇確認證據，其餘一定有 confirmed_at 同 confirm_event_id（chk_gr_confirmation）。 */
+    const receipt = async (poId, status, extra = {}) => {
+      const [[{ next }]] = await db.query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next FROM goods_receipts WHERE document_year_month = ?", [MONTH]);
+      const confirmed = !["DRAFT", "CANCELLED"].includes(status);
+      return insert("goods_receipts", { gr_number: `GR-${MONTH}-${String(next).padStart(6, "0")}`, document_year_month: MONTH, sequence_no: Number(next),
+        purchase_order_id: poId, supplier_id: supplier, supplier_code_snapshot: `PLC-${tag}`, supplier_name_snapshot: "Lifecycle Supplier",
+        business_receipt_date: "2098-10-02", status, total_received_base_quantity: confirmed ? 2 : 0, total_reversed_base_quantity: status === "REVERSED" ? 2 : 0,
+        created_at: now, updated_at: now, created_by: maker.id, updated_by: maker.id, created_by_label: "maker", updated_by_label: "maker",
+        ...(confirmed ? { confirmed_at: now, confirmed_by: maker.id, confirm_event_id: randomUUID() } : {}),
+        ...(status === "CANCELLED" ? { cancelled_at: now, cancelled_by: maker.id } : {}), ...extra });
+    };
+    return { db, cleanups, command, read, order, pendingOrder, receipt, historyCount, succeeded, maker, viewer, insert, now };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Lifecycle fixture setup failed and its cleanup also failed") : error;
@@ -114,28 +127,31 @@ after(async () => {
 });
 const failure = (result) => [result.status, result.body.error?.code];
 
-integrationTest("TASK-025 I1 撤回確認：未有權威 GR 事實就 503，乜都唔寫，亦唔宣告呢個動作", async () => {
+integrationTest("TASK-025 I1 撤回確認：從未有 GR 就成功，PO 回 DRAFT，寫一行 history 同 Audit", async () => {
   const f = await fixture();
   const po = await f.order("CONFIRMED", [0]);
   const before = await f.historyCount(po.id);
-  assert.deepEqual(failure(await f.command(po.id, "confirmation/withdraw", f.maker.token, { version: 1, reason: REASON })), [503, "PURCHASING_DEPENDENCY_UNAVAILABLE"]);
+  assert.deepEqual((await f.read(po.id)).allowedActions, ["copy", "cancel", "withdrawConfirmation"]);
+  const withdrawn = await f.command(po.id, "confirmation/withdraw", f.maker.token, { version: 1, reason: REASON });
+  assert.deepEqual([withdrawn.status, withdrawn.body.data.status, withdrawn.body.data.version], [200, "DRAFT", 2]);
   const detail = await f.read(po.id);
-  assert.deepEqual([detail.status, detail.version, detail.allowedActions], ["CONFIRMED", 1, ["copy"]]);
-  assert.equal(await f.historyCount(po.id), before);
-  assert.equal(await f.succeeded(po.id, "purchase_order.confirmation_withdrawn"), 0);
+  assert.deepEqual([detail.status, detail.version, detail.confirmedAt], ["DRAFT", 2, null]);
+  assert.equal(await f.historyCount(po.id), before + 1);
+  assert.equal(await f.succeeded(po.id, "purchase_order.confirmation_withdrawn"), 1);
 });
 
-integrationTest("TASK-025 I2 取消 DRAFT／PENDING／CONFIRMED：一律 503，待審批申請仍然 PENDING", async () => {
+integrationTest("TASK-025 I2 取消 DRAFT／PENDING／CONFIRMED：從未有 GR 就成功，待審批申請作廢", async () => {
   const f = await fixture();
   const draftPo = await f.order("DRAFT", [0]), pendingPo = await f.pendingOrder(), confirmedPo = await f.order("CONFIRMED", [0]);
-  for (const po of [draftPo, pendingPo, confirmedPo]) {
-    assert.deepEqual(failure(await f.command(po.id, "cancel", f.maker.token, { version: 1, reason: REASON })), [503, "PURCHASING_DEPENDENCY_UNAVAILABLE"]);
-  }
   const pending = await f.read(pendingPo.id);
-  assert.deepEqual([pending.status, pending.approval?.status, pending.allowedActions.includes("cancel")], ["PENDING_APPROVAL", "PENDING", false]);
+  assert.deepEqual([pending.status, pending.approval?.status, pending.allowedActions.includes("cancel")], ["PENDING_APPROVAL", "PENDING", true]);
+  for (const po of [draftPo, pendingPo, confirmedPo]) {
+    const cancelled = await f.command(po.id, "cancel", f.maker.token, { version: 1, reason: REASON });
+    assert.deepEqual([cancelled.status, cancelled.body.data.status, cancelled.body.data.version], [200, "CANCELLED", 2]);
+  }
   const [[approval]] = await f.db.query("SELECT status FROM purchase_order_approvals WHERE purchase_order_id = ?", [pendingPo.id]);
-  assert.equal(approval.status, "PENDING");
-  for (const po of [draftPo, pendingPo, confirmedPo]) assert.equal(await f.succeeded(po.id, "purchase_order.cancelled"), 0);
+  assert.equal(approval.status, "INVALIDATED");
+  for (const po of [draftPo, pendingPo, confirmedPo]) assert.equal(await f.succeeded(po.id, "purchase_order.cancelled"), 1);
 });
 
 integrationTest("TASK-025 I3 Close Remaining：揀行同全部、錯誤、權限、原因；冇 Inventory 效果，只有轉 CLOSED 先寫 history", async () => {
@@ -175,4 +191,52 @@ integrationTest("TASK-025 I4 Close Remaining 同一 key 同內容再送：回原
   assert.equal(second.status, 200);
   assert.deepEqual(second.body.data, first.body.data);
   assert.equal(await f.succeeded(id, "purchase_order.remaining_closed"), 1);
+});
+
+integrationTest("TASK-045 G6 六張 PO 喺 PO lock 之下逐個問 reader：false、false、false、true、true、true", async () => {
+  const f = await fixture();
+  const reader = new GoodsReceiptFacts();
+  const pos = [];
+  for (let i = 0; i < 6; i += 1) pos.push((await f.order("CONFIRMED", [0])).id);
+  const [, p1, p2, p3, p4, p5] = pos;
+  const gone = await f.insert("users", { username: `po_life_gone_${randomUUID().slice(0, 8)}`, password_hash: "synthetic", display_name: "GR deleted",
+    created_at: f.now, updated_at: f.now });
+  await f.receipt(p1, "DRAFT");
+  await f.receipt(p2, "CANCELLED");
+  await f.receipt(p3, "CONFIRMED");
+  await f.receipt(p4, "REVERSED");
+  await f.receipt(p5, "CONFIRMED", { confirmed_by: gone });
+  assert.equal((await f.db.query("DELETE FROM users WHERE id = ?", [gone]))[0].affectedRows, 1);   // FK SET NULL，唔觸發 trigger
+  const [[p5row]] = await f.db.query("SELECT confirmed_by FROM goods_receipts WHERE purchase_order_id = ?", [p5]);
+  assert.equal(p5row.confirmed_by, null);
+  const answers = [];
+  for (const id of pos) {
+    answers.push(await f.db.withTransaction(async (tx) => {
+      const [locked] = await tx.query("SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE", [id]);
+      assert.equal(locked.length, 1);
+      return reader.everConfirmed(tx, id);
+    }));
+  }
+  assert.deepEqual(answers, [false, false, false, true, true, true]);
+});
+
+integrationTest("TASK-045 有 CONFIRMED GR 嘅 PO 撤回確認：PO_STATE_CONFLICT，PO 唔變", async () => {
+  const f = await fixture();
+  const po = await f.order("CONFIRMED", [0]);
+  await f.receipt(po.id, "CONFIRMED");
+  const before = await f.historyCount(po.id);
+  assert.deepEqual(failure(await f.command(po.id, "confirmation/withdraw", f.maker.token, { version: 1, reason: REASON })), [409, "PO_STATE_CONFLICT"]);
+  const detail = await f.read(po.id);
+  assert.deepEqual([detail.status, detail.version], ["CONFIRMED", 1]);
+  assert.equal(await f.historyCount(po.id), before);
+  assert.equal(await f.succeeded(po.id, "purchase_order.confirmation_withdrawn"), 0);
+});
+
+integrationTest("TASK-045 CONFIRMED PO 只有 DRAFT GR：撤回確認成功", async () => {
+  const f = await fixture();
+  const po = await f.order("CONFIRMED", [0]);
+  await f.receipt(po.id, "DRAFT");
+  const withdrawn = await f.command(po.id, "confirmation/withdraw", f.maker.token, { version: 1, reason: REASON });
+  assert.deepEqual([withdrawn.status, withdrawn.body.data.status, withdrawn.body.data.version], [200, "DRAFT", 2]);
+  assert.equal(await f.succeeded(po.id, "purchase_order.confirmation_withdrawn"), 1);
 });
