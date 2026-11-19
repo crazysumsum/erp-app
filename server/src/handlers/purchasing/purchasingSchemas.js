@@ -125,7 +125,7 @@ const validateCloseRemaining = validator.compile({ body: PURCHASE_ORDER_CLOSE_RE
 const validateSettings = validator.compile({ body: PURCHASING_SETTINGS_UPDATE_INPUT }, "Purchasing settings update body");
 
 /** 錯誤只帶欄位路徑（例如 `lines.0.unitPrice`），唔帶值。 */
-function validated(validate, request, fallback) {
+export function validated(validate, request, fallback) {
   try { validate(request); }
   catch (error) {
     if (error.code !== "REQUEST_VALIDATION_FAILED") throw error;
