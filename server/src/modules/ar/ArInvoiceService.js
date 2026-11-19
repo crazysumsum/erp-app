@@ -24,11 +24,14 @@ export const INVOICE_AMOUNT_POLICY = Object.freeze({
  * 一個出貨行的發票金額（Sam 已批准的剩餘池規則，按出貨確認次序）：同一訂單行的各次出貨依次從剩餘金額及剩餘數量
  * 按比例 half-up 到 `step` 取額，用盡數量的一批取餘數。輸入全部是不會再變的事實（訂單行的訂購數量及金額、
  * 較早出貨的數量），所以結果與開票的先後及是否同時開票無關。金額以萬分之一為單位的 BigInt 計算。
+ * 較早的出貨可以是 0 件（該訂單行在那次出貨整行短揀；Fulfillment 的 reader 照樣回傳）：它不佔數量也不佔金額，略過。
+ * 本次出貨的數量必須大於 0（0 件的行不開票，由呼叫方先行略過）。
  */
 export function shipmentLineAmount({ lineAmount, orderedBaseQuantity, priorShippedBaseQuantities, shippedBaseQuantity, step = 1n }) {
   let remainingAmount = lineAmount, remainingQuantity = orderedBaseQuantity, amount = 0n;
-  for (const quantity of [...priorShippedBaseQuantities, shippedBaseQuantity]) {
-    if (quantity <= 0n || quantity > remainingQuantity) throw new RangeError("Shipped quantity exceeds the order line");
+  if (shippedBaseQuantity <= 0n) throw new RangeError("Invoiced quantity must be positive");
+  for (const quantity of [...priorShippedBaseQuantities.filter((prior) => prior !== 0n), shippedBaseQuantity]) {
+    if (quantity < 0n || quantity > remainingQuantity) throw new RangeError("Shipped quantity exceeds the order line");
     // 分子分母同乘 2 再加半個分母，即 half-up；先除以 step 再乘回，即取到 step 的倍數。
     amount = quantity === remainingQuantity ? remainingAmount
       : (remainingAmount * quantity * 2n + remainingQuantity * step) / (remainingQuantity * step * 2n) * step;

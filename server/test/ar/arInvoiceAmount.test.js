@@ -39,7 +39,11 @@ test("the result depends only on the order line and the quantities shipped befor
   assert.equal(INVOICE_AMOUNT_POLICY.lineStep(2), 1n);
   assert.deepEqual([[10001n, 2], [10049n, 2], [10050n, 2], [333333n, 2], [15000n, 0], [14999n, 0], [12345n, 4]].map(([sum, places]) => INVOICE_AMOUNT_POLICY.total(sum, places)),
     [10000n, 10000n, 10100n, 333300n, 20000n, 10000n, 12345n]);
+  // 較早一次出貨是 0 件（整行短揀）：不佔數量也不佔金額，結果與沒有那次出貨一樣（#375 評審 R1：原先會拋 RangeError）。
+  assert.deepEqual([amount(100000, 3, [0], 1), amount(100000, 3, [0, 1, 0], 1), amount(100000, 3, [1, 0, 1], 1)], [33333n, 33334n, 33333n]);
   assert.throws(() => amount(100000, 3, [2], 2), RangeError);
+  assert.throws(() => amount(100000, 3, [0, 3], 1), RangeError);
+  assert.throws(() => amount(100000, 3, [-1], 1), RangeError);
   assert.throws(() => amount(100000, 3, [], 0), RangeError);
   assert.throws(() => new ArInvoiceService({ commands: {}, readInvoiceSources: () => [], customers: {}, businessMaster: {}, time: {} }), TypeError);
 });

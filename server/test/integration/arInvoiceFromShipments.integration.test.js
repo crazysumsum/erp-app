@@ -186,6 +186,17 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
   assert.deepEqual([detail.dueDate, detail.dueDateOverridden, detail.dueDateReason], ["2023-12-31", true, "客戶要求月底結算"]);
   await a.act("cancel", changed.id, { version: 1 });
 
+  // 同一訂單行較早一次出貨是 0 件（整行短揀）時，reader 仍把它列在 priorShipments；開票照常，金額與沒有那次出貨一樣。
+  // 這個 fixture 造不出 0 件的出貨行，所以在真 reader 的結果上補一項，其餘（鎖、交易、寫入）全部照真。
+  const zeroPrior = new ArInvoiceService({ ...a.invoices, readInvoiceSources: async (tx, input) => {
+    const shipments = await readInvoiceSourcesInTransaction(tx, input);
+    shipments[0].lines[0].priorShipments.unshift({ shipmentId: "1", shipmentLineId: "1", confirmationEventId: randomUUID(), confirmationSequence: 1, shippedBaseQuantity: "0" });
+    return shipments;
+  } });
+  const short = await f.execute(() => zeroPrior.create({ claims: a.claims, input: { eventId: randomUUID(), shipmentIds: [Number(a.first)] } }));
+  assert.equal(short.totalAmount, "3.0000");
+  await a.act("cancel", short.id, { version: 1 });
+
   // 兩個同時送出的請求開同一張出貨：出貨列的鎖及唯一鍵令只有一個成功。
   const results = await Promise.allSettled([bare({}), bare({})]);
   assert.deepEqual(results.map((result) => result.status).sort(), ["fulfilled", "rejected"]);
