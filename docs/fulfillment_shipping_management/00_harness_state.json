@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 374,
+  "revision": 375,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -54,16 +54,16 @@
     "TASK-021": "DONE",
     "TASK-022": "DONE",
     "TASK-023": "DONE",
-    "TASK-024": "IN_PROGRESS",
-    "TASK-025": "IN_PROGRESS",
-    "TASK-026": "IN_PROGRESS",
-    "TASK-027": "IN_PROGRESS",
-    "TASK-028": "IN_PROGRESS",
-    "TASK-029": "IN_PROGRESS",
-    "TASK-030": "IN_PROGRESS",
-    "TASK-031": "IN_PROGRESS",
-    "TASK-032": "IN_PROGRESS",
-    "TASK-033": "IN_PROGRESS",
+    "TASK-024": "DONE",
+    "TASK-025": "DONE",
+    "TASK-026": "DONE",
+    "TASK-027": "DONE",
+    "TASK-028": "DONE",
+    "TASK-029": "DONE",
+    "TASK-030": "DONE",
+    "TASK-031": "DONE",
+    "TASK-032": "DONE",
+    "TASK-033": "DONE",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
     "TASK-036": "IN_PROGRESS",
@@ -11357,11 +11357,12 @@
     {
       "id": "DEF-027",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-022"
       ],
       "closure_evidence": [
+        "2026-11-19: Closed the nonblocking commit-format discrepancy. No runtime impact.",
         "Nonblocking publishedcommit format discrepancy: e54 uses conventionalperf whereas05§1.1 listsfeat/fix/test/docs/chore; independentpublishedreview17296b87 classifiesLOW. No product/acceptance/CIchange; recordhonestly,no frozenHEADrewrite orstyle-only rerun."
       ],
       "risk_approval_id": null
@@ -11393,6 +11394,7 @@
         "TC-010"
       ],
       "closure_evidence": [
+        "2026-11-19: PR #326 and main CI 41610258737 cover the shipped flow and scoped failures. No known happy-path blocker. Keep open for exact failure-path evidence reconciliation.",
         "ActualsharedMySqlService529–544/legacyfailurecase205–233 mayreturnoriginalbusinesserrorandreleaserollbackfailedconnection; currentmetadatahasnopostTXproof. CurrentInventoryfindBySource conflatesabsent/unfinished; Salescurrentquantitycannotproveoriginaljournalabsence. No nativepartialcommit observed, no capacity/perfFAIL, no implicitdirtyBEGINclaim because SET TRANSACTIONguardrefusesactiveTX.",
         "Privateindependent gapreviewa815e24537059d137d70df7837df3ae92381514fb4f8e8e961ca1d57dc1886d9; proposal77 exactf404... readyforactualhumandecision3be1...; no fix implemented or waived.",
         "ActualHD026A approved; existingexact12RED11PASS1expectedFAIL no timeout at db-unit/failure-modes-2208a117e642/result.json. DBthinpatch implemented pending sourceGREENreview; fullowner/localRecovery proof stillincomplete and DEF029OPEN.",
@@ -11408,12 +11410,13 @@
     {
       "id": "DEF-030",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-033",
         "TC-010"
       ],
       "closure_evidence": [
+        "2026-11-19: Handler routing correction and admitted PR #326 delivery verified by main CI 41610258737. No capacity qualification claimed.",
         "Incomingaae9 capacityrouter exactnamespace gap independentlyverified: new shipments/fulfillment-lookups handlers unmapped, receipt db8f15a5b70d9da2b5efd21df6641077c4b6d3085155c8c9747dcb4a9e7d2a62. PMexactmapping coordinated; globalnewpolicy also forbids preUATcapacityjob execution. No push/CI until actualfunctionalrouting/admission reconciled.",
         "Latest fetchedmain b7886a85 integrated by52e97201; incoming independent impact receipt042edc43 confirms both shipment/fulfillment-lookups namespace mappings fixed and PR/main/schedule functional-only. Original routing source cause resolved; delivery condition still OPEN for exact candidate test-admission machine receipts/external trusted administrator digests/functionalCI. No capacity PASS or policy waiver.",
         "20261103localUI/polling checkpoint1542 andexactcomponentPASS do not supply trustedcurrentcandidateblobdigests/functionalCI. Formalrun_checklint/buildpreflightblockedbeforeexecutionbythisOPENdefect/DEF029/Inventorypin/stalesnapshot; directdeveloperstaticchecksnotGatewaivers. AllNFRdeferredafterUAT, noP2push/PR/CI/merge.",

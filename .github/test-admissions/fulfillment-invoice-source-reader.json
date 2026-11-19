@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-19 temporary functional CI decision, confirmed by PM agentmsg 4d4c5286 and CI administrator 003c2d3b, applies through 2026-11-26 Taipei day end. Independent Codex TL source review ACCEPT at turn 01a1f18e-2bc2-7172-aabf-cae19451997e binds product/test candidate b4d683cda8c3174fcfa72f2409dc116e9d337acc. The CI administrator independently validates and registers the exact digest.",
+  "purpose": "Exercise AR's transaction-local reader against real split Shipment confirmation, durable ordering and incomplete-source rejection.",
+  "data": "One disposable MySQL schema, one SO/SKU/line (five units), two shipments of two and three units. One synthetic perturbation removes the prior Sales confirmation history row to check rejection.",
+  "concurrency": "One case, sequential calls. Existing server functional test shards and concurrency unchanged.",
+  "repetitions": "One registration in ordinary functional discovery per approved PR run. No capacity or performance cases.",
+  "thresholds": "Exact original confirmation order and Sales quantity/decimal fields, reject Draft or duplicate or non-RC, and reject missing history without returning a partial source. Existing coverage and transaction limits unchanged.",
+  "trigger": "Ordinary PR and existing applicable functional workflow triggers. No workflow, policy, schedule or worker change.",
+  "cost": "Local native case took 1.48 seconds on the last run. CI incremental time and critical-path effect have not been measured.",
+  "files": [
+    {
+      "path": "server/test/integration/shipmentInvoiceSources.integration.test.js",
+      "mode": "100644",
+      "blob": "33f07a32f27e9a543dead94c0f34335c947fc741",
+      "kind": "functional",
+      "cases": [
+        "invoice sources keep exact Sales facts and use original confirmation order within a split shipment"
+      ]
+    }
+  ]
+}

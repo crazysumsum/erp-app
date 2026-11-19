@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "decision": "Sam 2026-11-19: 暫停 7 天, functional-test case-by-case admission paused through 2026-11-26 Taipei end of day. PM assignment bc340c26, CI process c8e3b773. Independent review: codex-erp-app-tl-01 ACCEPT of product 72f7d74fcabbc71d86565f982cdd7d47d960bfc8, turn 01a1f18c-51dd-7753-baff-4c3a911176ed, final msg_0dbf0ee249f10fec016afe59515a1087d198808414f1e977ca (11/19).",
+  "purpose": "Prevent lost inquiry filters and misleading outstanding totals. Verify fresh reader authorization, exact quantities for uniform units and omission for mixed base units, and list navigation.",
+  "data": "Isolated synthetic fixtures. Unit case uses constant query inputs. Two native cases use two test orders each, with up to two lines per order and one mixed-unit order. Browser uses one confirmed order and two synthetic actors. Reused fixture blobs 6f97cb44ff4e1d586c5c146bbb39f61789e1f10c and b18562d275504202b7a21525d773fe9c870091ca are already pinned by fulfillment-task036-event-recovery-functional.json.",
+  "concurrency": "Existing server shards and workers unchanged. Local Playwright config uses one worker.",
+  "repetitions": "One routine execution of each new server case per candidate. Browser configuration is for one separate local functional flow.",
+  "thresholds": "Case assertions cover fresh authorization, Draft exclusion, exact uniform quantities, no mixed-unit aggregate, persisted pageSize and read-only detail navigation. Existing coverage floors and capacity exclusions unchanged.",
+  "trigger": "Ordinary PR via the existing controller. Unit and native cases use existing server discovery. Browser runs separately with an isolated local MySQL socket. No workflow or job changes.",
+  "cost": "Observed local 1 unit plus 2 native cases took under 2 seconds after migration. Browser took about 4.4 seconds total after migration. CI wall time and runner cost are unmeasured. No new job.",
+  "files": [
+    {
+      "path": "client/e2e/sales-order-management/playwright.active-inquiry.config.js",
+      "mode": "100644",
+      "blob": "a0d309c89740ec231c9c6de4ec338014b148db49",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Active query reaches Outstanding detail with committed quantities and read-only access"
+      ]
+    },
+    {
+      "path": "client/e2e/sales-order-management/sales-active-inquiry.spec.js",
+      "mode": "100644",
+      "blob": "559206fbe123024f90f3f4721b0b9564375805a2",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Active query reaches Outstanding detail with committed quantities and read-only access"
+      ]
+    },
+    {
+      "path": "client/src/pages/sales/OutstandingSalesOrdersPage.vue",
+      "mode": "100644",
+      "blob": "75ea728d145a52a4217baee27159474fd846fabd",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/sales/SalesOrdersPage.vue",
+      "mode": "100644",
+      "blob": "2c450af5c247566991bf433ea6aad0d8fbc7d8dc",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/services/sales.js",
+      "mode": "100644",
+      "blob": "7177de6f3d55259e3f40652bd150b8c8f43f0fcf",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/handlers/outstanding-sales-orders/listOutstandingSalesOrdersHandler.js",
+      "mode": "100644",
+      "blob": "770101c8b3d363549711c8ec1944f8aac4477a54",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/handlers/sales/salesSchemas.js",
+      "mode": "100644",
+      "blob": "c5fb17c52f70b9d16f8080486d9d16381b0b25ac",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/modules/sales/SalesInquiryService.js",
+      "mode": "100644",
+      "blob": "5b8e05ad04bf68672230b4a03fc71b7267c62f4c",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/integration/salesActiveInquiry.integration.test.js",
+      "mode": "100644",
+      "blob": "25156571f80fa5ae77800d54c29a0d70fb5060bc",
+      "kind": "functional",
+      "cases": [
+        "TC-044 Outstanding real HTTP excludes Draft and returns committed remaining quantity without row multiplication",
+        "TC-044 common views filter current actor and finalized states with fresh authorization"
+      ]
+    },
+    {
+      "path": "server/test/sales/phase4/SalesActiveInquiry.test.js",
+      "mode": "100644",
+      "blob": "dfb7084ed2be785acc4616f8573e79fb5dc6d60b",
+      "kind": "functional",
+      "cases": [
+        "TC-044 common order views have an explicit allowlist"
+      ]
+    }
+  ]
+}
