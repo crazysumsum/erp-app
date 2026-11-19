@@ -78,25 +78,28 @@ async function secondShipment({ f }) {
 }
 
 nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號", async (t) => {
-  const a = await arFixture(t, { lineAmount: "1.0001", unitPrice: "0.2000" }), { f } = a;
+  const a = await arFixture(t, { lineAmount: "0.1000", unitPrice: "0.0143" }), { f } = a;
   // 未出貨的草稿不可開票。
   await assert.rejects(a.create([a.first]), code("SHIPMENT_STATE_CONFLICT"));
   const second = await secondShipment(a);
   await a.ship(second); // 2 件的一張先確認出貨。
-  await a.ship(a.first); // 3 件的一張後確認，所以它取餘數。
+  await a.ship(a.first); // 3 件的一張後確認。
   assert.equal(await a.count("ar_invoices"), 0);
+  // 把訂單行改為訂 7 件（仍有 2 件未出），令「較早出貨的數量」在數字上分辨得出：
+  // 先出的 2 件取 0.1000 × 2/7 = 0.0286；後出的 3 件從剩餘的 0.0714 及 5 件取 3/5 = 0.0428。若不計較早的出貨，會是 0.1000 × 3/7 = 0.0429。
+  await f.db.query("UPDATE sales_order_lines SET ordered_quantity = 7, ordered_base_quantity = 7 WHERE id = ?", [f.s.lineId]);
 
-  // 只開後出貨的一張：金額取決於較早出貨的 2 件（0.4000），所以是餘數 0.6001；總額按幣別 2 位小數為 0.60。
+  // 只開後出貨的一張：行金額 0.0428，總額按幣別 2 位小數為 0.04。
   const alone = await a.create([a.first], { notes: "第一張" });
-  assert.deepEqual([alone.number, alone.status, alone.version, alone.totalAmount, alone.replayed], [null, "DRAFT", 1, "0.6000", false]);
+  assert.deepEqual([alone.number, alone.status, alone.version, alone.totalAmount, alone.replayed], [null, "DRAFT", 1, "0.0400", false]);
   const detail = await a.inquiry.getInvoice({ claims: a.claims, id: alone.id });
   assert.deepEqual([detail.customerId, detail.currencyDecimalPlaces, detail.invoiceDate, detail.dueDate, detail.dueDateOverridden, detail.paymentTermCode, detail.notes],
     [f.s.customerId, 2, TODAY, "2023-12-14", false, "", "第一張"]);
-  assert.deepEqual([detail.totalAmount, detail.allocatedAmount, detail.outstandingAmount, detail.allowedActions], ["0.6000", "0.0000", "0.6000", ["confirm", "cancel"]]);
+  assert.deepEqual([detail.totalAmount, detail.allocatedAmount, detail.outstandingAmount, detail.allowedActions], ["0.0400", "0.0000", "0.0400", ["confirm", "cancel"]]);
   assert.equal(detail.lines.length, 1);
   const [line] = detail.lines;
   assert.deepEqual([line.lineNo, line.shipmentId, line.salesOrderId, line.salesOrderLineId, line.quantity, line.unitPrice, line.lineAmount],
-    [1, Number(a.first), f.s.orderId, f.s.lineId, "3", "0.2000", "0.6001"]);
+    [1, Number(a.first), f.s.orderId, f.s.lineId, "3", "0.0143", "0.0428"]);
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: `${a.first},${second}` })).items,
     [{ shipmentId: Number(a.first), invoiceId: alone.id, invoiceNumber: null, invoiceStatus: "DRAFT" }]);
 
@@ -110,9 +113,9 @@ nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計�
   assert.deepEqual([cancelled.status, cancelled.version], ["CANCELLED", 2]);
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: String(a.first) })).items, []);
   const both = await a.create([second, a.first]);
-  assert.equal(both.totalAmount, "1.0000"); // 0.6001 + 0.4000 = 1.0001，按幣別小數位 half-up。
+  assert.equal(both.totalAmount, "0.0700"); // 0.0428 + 0.0286 = 0.0714，按幣別小數位 half-up。
   const lines = (await a.inquiry.getInvoice({ claims: a.claims, id: both.id })).lines;
-  assert.deepEqual(lines.map((row) => [row.lineNo, row.shipmentId, row.quantity, row.lineAmount]), [[1, Number(a.first), "3", "0.6001"], [2, Number(second), "2", "0.4000"]]);
+  assert.deepEqual(lines.map((row) => [row.lineNo, row.shipmentId, row.quantity, row.lineAmount]), [[1, Number(a.first), "3", "0.0428"], [2, Number(second), "2", "0.0286"]]);
 
   // 同一 eventId 重送：回原結果，沒有第二張發票。
   const eventId = randomUUID(), input = { eventId, version: 1 };
@@ -132,7 +135,7 @@ nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計�
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: `${a.first},${second}` })).items, []);
   const again = await a.create([a.first, second]);
   const reissued = await a.act("confirm", again.id, { version: 1 });
-  assert.deepEqual([reissued.number, again.totalAmount], ["INV-2023-000002", "1.0000"]);
+  assert.deepEqual([reissued.number, again.totalAmount], ["INV-2023-000002", "0.0700"]);
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: `${second},${a.first}` })).items.map((row) => [row.shipmentId, row.invoiceId, row.invoiceStatus]),
     [[Number(a.first), again.id, "CONFIRMED"], [Number(second), again.id, "CONFIRMED"]]);
 
