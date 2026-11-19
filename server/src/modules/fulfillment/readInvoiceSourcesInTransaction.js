@@ -5,6 +5,8 @@ import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySq
 
 const maxShipments = 20;
 const maxLinesPerShipment = 100;
+const maxHistoryMembers = 4000;
+const maxPriorReferences = 2000;
 const placeholders = values => values.map(() => "?").join(",");
 const stringId = value => String(value);
 const conflict = () => fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");
@@ -42,23 +44,37 @@ async function readOrderLines(tx, salesLineIds) {
   return new Map(rows.map(row => [stringId(row.id), row]));
 }
 
-async function readShipmentSequence(tx, salesLineIds) {
+async function readShipmentSequence(tx, shipmentIds) {
   // Sales appends FULFILLMENT_CONFIRM under its SO root lock in the same commit
   // that publishes SHIPPED. Neither a Draft ID nor a wall clock orders shipments.
   const [rows] = await tx.query(
-    `SELECT l.id, l.shipment_id, l.sales_order_line_id, s.sales_order_id, s.customer_id,
+    `WITH cutoffs AS (
+       SELECT selected.sales_order_line_id, MAX(confirmed.sequence_no) AS sequence_no
+       FROM shipment_lines selected
+       JOIN shipments target ON target.id = selected.shipment_id
+       LEFT JOIN sales_order_status_history confirmed ON confirmed.sales_order_id = target.sales_order_id
+         AND confirmed.event_id = target.confirmation_event_id AND confirmed.action = 'FULFILLMENT_CONFIRM'
+       WHERE selected.shipment_id IN (${placeholders(shipmentIds)})
+       GROUP BY selected.sales_order_line_id
+     )
+     SELECT l.id, l.shipment_id, l.sales_order_line_id, s.sales_order_id, s.customer_id,
       s.status, s.confirmation_event_id, h.sequence_no,
       CAST(l.shipped_base_quantity AS CHAR) AS shipped_base_quantity,
       CAST(l.reversed_base_quantity AS CHAR) AS reversed_base_quantity
-     FROM shipment_lines l
+     FROM cutoffs cutoff
+     JOIN shipment_lines l ON l.sales_order_line_id = cutoff.sales_order_line_id
      JOIN shipments s ON s.id = l.shipment_id
      LEFT JOIN sales_order_status_history h ON h.sales_order_id = s.sales_order_id
        AND h.event_id = s.confirmation_event_id AND h.action = 'FULFILLMENT_CONFIRM'
-     WHERE l.sales_order_line_id IN (${placeholders(salesLineIds)})
-       AND s.status IN ('SHIPPED', 'REVERSING', 'REVERSED')
-     ORDER BY l.sales_order_line_id, h.sequence_no, l.id`,
-    salesLineIds
+     WHERE s.status IN ('SHIPPED', 'REVERSING', 'REVERSED')
+       AND (h.sequence_no <= cutoff.sequence_no OR h.sequence_no IS NULL)
+     LIMIT ?`,
+    [...shipmentIds, maxHistoryMembers + 1]
   );
+  // An incomplete history cannot reproduce the remaining-pool calculation.
+  if (rows.length > maxHistoryMembers) throw unavailable();
+  for (const row of rows) sequenceNumber(row);
+  rows.sort((a, b) => Number(a.sequence_no) - Number(b.sequence_no));
   return groupBy(rows, "sales_order_line_id");
 }
 
@@ -68,7 +84,7 @@ function sequenceNumber(row) {
   return number;
 }
 
-function projectLine(line, shipment, orderLine, history) {
+function projectLine(line, shipment, orderLine, history, takePriorReference) {
   if (stringId(orderLine.sales_order_id) !== stringId(shipment.sales_order_id) ||
       stringId(orderLine.customer_id) !== stringId(shipment.customer_id) ||
       stringId(orderLine.sku_id) !== stringId(line.sku_id) ||
@@ -99,6 +115,7 @@ function projectLine(line, shipment, orderLine, history) {
     }
     if (row.status !== "SHIPPED" || row.reversed_base_quantity !== "0") throw unavailable();
     total += fulfillmentInteger(row.shipped_base_quantity, { positive: false });
+    takePriorReference();
     priorShipments.push({
       shipmentId: stringId(row.shipment_id),
       shipmentLineId: stringId(row.id),
@@ -155,7 +172,11 @@ export async function readInvoiceSourcesInTransaction(tx, input) {
   const linesByShipment = groupBy(lines, "shipment_id");
   const salesLineIds = sortedFulfillmentIds(lines.map(row => stringId(row.sales_order_line_id)));
   const orderLines = await readOrderLines(tx, salesLineIds);
-  const shipmentSequence = await readShipmentSequence(tx, salesLineIds);
+  const shipmentSequence = await readShipmentSequence(tx, ids);
+  let priorReferences = 0;
+  const takePriorReference = () => {
+    if (++priorReferences > maxPriorReferences) throw unavailable();
+  };
 
   const result = shipments.map(shipment => {
     const shipmentId = stringId(shipment.id);
@@ -164,7 +185,7 @@ export async function readInvoiceSourcesInTransaction(tx, input) {
     const order = orderLines.get(stringId(members[0].sales_order_line_id));
     const projected = members.map(line => {
       const sourceId = stringId(line.sales_order_line_id);
-      return projectLine(line, shipment, orderLines.get(sourceId), shipmentSequence.get(sourceId) ?? []);
+      return projectLine(line, shipment, orderLines.get(sourceId), shipmentSequence.get(sourceId) ?? [], takePriorReference);
     }).sort((a, b) => a.lineNo - b.lineNo);
     if (projected.some(line => line.confirmationSequence !== projected[0].confirmationSequence) ||
         !projected.some(line => line.shippedBaseQuantity !== "0")) throw unavailable();

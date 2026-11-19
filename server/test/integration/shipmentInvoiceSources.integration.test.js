@@ -86,6 +86,7 @@ nativeTest("invoice sources keep exact Sales facts and use original confirmation
   assert.equal(source.reversedBaseQuantity, "0");
   assert.equal(earlier.confirmationEventId, earlierEvent);
   assert.deepEqual(earlier.lines[0].priorShipments, []);
+  assert.deepEqual(await read([secondId]), [earlier]);
   assert.ok(source.confirmationSequence > earlier.lines[0].confirmationSequence);
   assert.deepEqual(source.priorShipments, [{
     shipmentId: secondId,
@@ -94,4 +95,9 @@ nativeTest("invoice sources keep exact Sales facts and use original confirmation
     confirmationSequence: earlier.lines[0].confirmationSequence,
     shippedBaseQuantity: "2"
   }]);
+
+  // Incomplete history must not be passed off as a first or partial shipment.
+  await f.db.execute("DELETE FROM sales_order_status_history WHERE sales_order_id=? AND event_id=? AND action='FULFILLMENT_CONFIRM'",
+    [f.s.orderId, earlierEvent]);
+  await assert.rejects(() => read([firstId]), { code: "FULFILLMENT_DEPENDENCY_UNAVAILABLE" });
 });
