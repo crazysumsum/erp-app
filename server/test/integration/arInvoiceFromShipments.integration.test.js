@@ -149,8 +149,9 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
 
   // 訂單沒有付款條款：必須輸入到期日，而且不可早於發票日期。
   await assert.rejects(bare({}), code("AR_DUE_DATE_REQUIRED"));
-  await assert.rejects(bare({ invoiceDate: "2023-11-20", dueDate: "2023-11-19" }), code("AR_INPUT_INVALID"));
+  await assert.rejects(bare({ invoiceDate: "2023-11-10", dueDate: "2023-11-09" }), code("AR_INPUT_INVALID"));
   await assert.rejects(bare({ dueDate: "2023-02-30" }), code("AR_INPUT_INVALID"));
+  await assert.rejects(bare({ invoiceDate: "2023-11-15", dueDate: "2023-12-14" }), code("AR_DATE_IN_FUTURE")); // 今日是 2023-11-14：發票日期不可在未來。
   await assert.rejects(a.run("create", { shipmentIds: [] }), code("AR_INPUT_INVALID"));
   await assert.rejects(a.run("create", { shipmentIds: [1, 1] }), code("AR_INPUT_INVALID"));
   await assert.rejects(a.run("create", { shipmentIds: Array.from({ length: 21 }, (_, index) => index + 1) }), code("AR_INPUT_INVALID"));

@@ -33,6 +33,7 @@ integrationTest("收款草稿：建立後可讀，金額只收幣別小數位，
   assert.deepEqual(failure(await f.post("", { ...base, amount: 10 })), [400, "AR_INPUT_INVALID", "amount"]);
   assert.deepEqual(failure(await f.post("", { ...base, paymentMethod: "CARD" })), [400, "AR_INPUT_INVALID", "paymentMethod"]);
   assert.deepEqual(failure(await f.post("", { ...base, receiptDate: "2026-02-30" })), [400, "AR_INPUT_INVALID", "receiptDate"]);
+  assert.deepEqual(failure(await f.post("", { ...base, receiptDate: f.day(1) })), [409, "AR_DATE_IN_FUTURE", "receiptDate"]); // 收款日期不可在未來。
   assert.deepEqual(failure(await f.post("", { ...base, status: "CONFIRMED" })), [400, "AR_INPUT_INVALID", "body"]);
   assert.deepEqual(failure(await f.post("", { ...base, customerId: 2 ** 40 })).slice(0, 2), [409, "AR_CUSTOMER_NOT_FOUND"]);
   assert.deepEqual(failure(await f.post("", { ...base, currencyCode: "ZZZ" })).slice(0, 2), [409, "CURRENCY_NOT_ACTIVE"]);
@@ -57,6 +58,14 @@ integrationTest("確認取年度流水號；版本不符及狀態不符分別回
   assert.deepEqual(failure(await f.post(`/${first.id}/confirm`, { version: 2 })).slice(0, 2), [409, "AR_STATE_CONFLICT"]);
   assert.deepEqual(failure(await f.post(`/${first.id}/cancel`, { version: 2 })).slice(0, 2), [409, "AR_STATE_CONFLICT"]);
   assert.deepEqual(failure(await f.post("/999999999999/confirm", { version: 1 })).slice(0, 2), [404, "AR_RECEIPT_NOT_FOUND"]);
+
+  // 收款日期在未來的草稿不可確認，而且不取號（AC-046）；日期回到今日即可確認，號碼緊接上一個。
+  const postdated = await f.draft(party, "30.00");
+  await f.db.query("UPDATE ar_receipts SET receipt_date = ? WHERE id = ?", [f.day(1), postdated.id]);
+  assert.deepEqual(failure(await f.post(`/${postdated.id}/confirm`, { version: 1 })), [409, "AR_DATE_IN_FUTURE", "receiptDate"]);
+  assert.deepEqual([(await f.read(postdated.id)).number, (await f.read(postdated.id)).status, (await f.read(postdated.id)).version], [null, "DRAFT", 1]);
+  await f.db.query("UPDATE ar_receipts SET receipt_date = ? WHERE id = ?", [f.today, postdated.id]);
+  assert.equal(Number(f.ok(await f.post(`/${postdated.id}/confirm`, { version: 1 })).number.slice(-6)), Number(second.number.slice(-6)) + 1);
 
   const created = await f.draft(party, "50.00");
   const cancelled = f.ok(await f.post(`/${created.id}/cancel`, { version: 1 }));

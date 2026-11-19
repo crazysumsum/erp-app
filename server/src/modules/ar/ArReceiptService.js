@@ -30,6 +30,7 @@ export class ArReceiptService {
     };
     return this.commands.run({ claims, permission: PERMISSION, commandType: "CREATE_RECEIPT", targetType: "RECEIPT", eventId: eventId(body.eventId), payload: request, context },
       async (tx, { actor, nowMs }) => {
+        this.#notInFuture(request.receiptDate, nowMs);
         // 收款可以來自已停用的客戶或幣別（舊發票仍要收），所以只要求存在。
         const customer = await this.customers(tx).findById(request.customerId, { purpose: "ar_existing_document" });
         if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
@@ -48,9 +49,10 @@ export class ArReceiptService {
       });
   }
 
-  /** 確認：取號，其後可核銷。 */
+  /** 確認：取號，其後可核銷。收款日期在未來的草稿不可確認，亦不取號（BR-011、AC-046）。 */
   confirm(command) {
     return this.#transition(command, { commandType: "CONFIRM_RECEIPT", from: "DRAFT", action: "receipt.confirmed" }, async (tx, receipt, { actor, nowMs }) => {
+      this.#notInFuture(receipt.receipt_date, nowMs);
       const number = await nextDocumentNumber(tx, { documentType: "RECEIPT", time: this.time, nowMs });
       return { number, changes: { status: "CONFIRMED", receipt_number: number, confirmed_by: actor.id, confirmed_by_label: actor.username, confirmed_at: nowMs } };
     });
@@ -138,10 +140,15 @@ export class ArReceiptService {
       });
   }
 
+  /** 業務日期不可晚於應用時區的今日（與帳齡表及編號同一個時鐘）。 */
+  #notInFuture(receiptDate, nowMs) {
+    if (receiptDate > this.time.fileDate(this.time.at(nowMs))) throw arError("AR_DATE_IN_FUTURE", { field: "receiptDate" });
+  }
+
   /** 鎖收款並驗版本及狀態。 */
   async #lock(tx, id, version, status) {
-    const [[receipt]] = await tx.query(`SELECT id, receipt_number, status, version, customer_id, currency_code, currency_decimal_places, allocated_amount, available_amount
-      FROM ar_receipts WHERE id = ? FOR UPDATE`, [id]);
+    const [[receipt]] = await tx.query(`SELECT id, receipt_number, status, version, customer_id, currency_code, currency_decimal_places, allocated_amount, available_amount,
+      DATE_FORMAT(receipt_date, '%Y-%m-%d') AS receipt_date FROM ar_receipts WHERE id = ? FOR UPDATE`, [id]);
     if (!receipt) throw arError("AR_RECEIPT_NOT_FOUND");
     if (Number(receipt.version) !== version) throw arError("VERSION_CONFLICT", { currentVersion: Number(receipt.version) });
     if (receipt.status !== status) throw arError("AR_STATE_CONFLICT");

@@ -68,7 +68,9 @@ export class ArInvoiceService {
         const customer = await this.customers(tx).findById(Number(customerId), { purpose: "invoice_existing_shipment" });
         if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
         const currency = await this.businessMaster.assertCurrencyUsableInTransaction(tx, { code: currencyCode, purpose: "history" });
-        const invoiceDate = request.invoiceDate ?? this.time.fileDate(this.time.at(nowMs));
+        // 發票日期預設當日，不可在未來（FR-INV-008、BR-011）。「不早於最晚來源出貨日」要 reader 提供出貨日期，待 PM 協調。
+        const today = this.time.fileDate(this.time.at(nowMs)), invoiceDate = request.invoiceDate ?? today;
+        if (invoiceDate > today) throw arError("AR_DATE_IN_FUTURE", { field: "invoiceDate" });
         const due = await this.#dueDate(tx, shipments, invoiceDate, request);
 
         const lines = [];
