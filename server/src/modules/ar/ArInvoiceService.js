@@ -10,7 +10,7 @@ const roundHalfUp = (units, step) => (units + step / 2n) / step * step;
 const currencyStep = (decimalPlaces) => 10n ** BigInt(4 - decimalPlaces);
 
 /**
- * 發票金額的兩個取法，只在這裡定義。Sam 2026-11-19 決定「採用 A」（PM 轉述）：
+ * 發票金額的兩個取法，只在這裡定義。Sam 2026-11-19 決定，原話「採用 A」；正本在 TL 的 SCOPE.md 第 3 節（sha256 932cc24b…a5df）：
  * - `lineStep`：剩餘池分攤維持 4 位小數（BR-050，與 Sales 訂單行金額相同）。
  * - `total`：每張發票總額是各行之和 half-up 到幣別小數位（BR-014 按此修訂），令只收幣別小數位的收款收得齊。
  * 已告知的後果：單價多於幣別小數位或數量有小數的訂單分批出貨、分開開票時，各發票總額之和可與訂單相差一個最小貨幣單位。
