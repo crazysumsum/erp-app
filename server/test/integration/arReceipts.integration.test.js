@@ -1,113 +1,19 @@
 /**
  * 開票與應收首期：收款、核銷、解除、作廢收款及帳齡表，經真 HTTP、真 JWT 及真 MySQL（SCOPE §1、§3、§4）。
  *
- * Fixture（全檔共用一次）：3 名用戶（clerk：ar.view＋ar.receipt.mgmt；viewer：ar.view；outsider：ar.invoice.mgmt）、
- * 2 個客戶、1 個測試幣別（另用已有的 HKD）。發票以 SQL 直接寫成 CONFIRMED（開票 API 在另一個 PR），全檔約 25 張；
- * 收款全部經 API 建立，約 15 筆。每案 1 次；只有一案用 2 個並發請求驗同一收款不會被超額核銷。沒有容量或效能斷言。
- * 完結時刪走用戶及角色、關 application；客戶、幣別及 AR 單據留在私人 DB（Audit 不可刪）。
+ * Fixture 見 ../ar/arHttpFixture.js（全檔共用一次）。發票以 SQL 直接寫成 CONFIRMED（開票另有測試檔），全檔約 40 張；
+ * 收款全部經 API 建立，約 20 筆。每案 1 次；只有一案用 2 個並發請求驗同一收款不會被超額核銷。沒有容量或效能斷言。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import test, { after } from "node:test";
+import test from "node:test";
 
-import { createApplication } from "../../src/framework/application/createApplication.js";
-import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { arReceiptService } from "../../src/handlers/ar/arSchemas.js";
+import { arHttpFixture as fixture, failure } from "../ar/arHttpFixture.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const REASON = "收款作廢測試原因";
-let shared = null;
 
-async function runCleanups(cleanups) {
-  const errors = [];
-  for (const cleanup of [...cleanups].reverse()) {
-    try { await cleanup(); } catch (error) { errors.push(error); }
-  }
-  return errors;
-}
-
-async function setup() {
-  const cleanups = [];
-  const source = defaultConfigurationSource();
-  // 這個檔案的請求數超過預設的每 IP 流量上限；同 supplierHttpHarness 一樣只放寬這一項。
-  const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 },
-    requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100_000 } } });
-  cleanups.push(() => application.shutdown("ar_receipts_integration_complete"));
-  try {
-    const db = application.services.require("mysqldatabase"), jwt = application.services.require("jwt"), time = application.services.require("time");
-    const tag = randomUUID().replaceAll("-", "").slice(0, 12), now = Date.now();
-    const insert = async (table, row) => Number((await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId);
-    const person = async (suffix, permissions) => {
-      const name = `ar_rcpt_${suffix}_${tag}`, role = await insert("roles", { name, created_at: now });
-      cleanups.push(() => db.query("DELETE FROM roles WHERE id = ?", [role]), () => db.query("DELETE FROM role_permissions WHERE role_id = ?", [role]));
-      for (const permission of permissions) await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = ?", [role, permission]);
-      const id = await insert("users", { username: name, password_hash: "synthetic", display_name: `User ${suffix}`, created_at: now, updated_at: now });
-      cleanups.push(() => db.query("DELETE FROM users WHERE id = ?", [id]), () => db.query("DELETE FROM fr_token_versions WHERE subject = ?", [String(id)]),
-        () => db.query("DELETE FROM user_roles WHERE user_id = ?", [id]));
-      await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [id, role]);
-      const version = await application.services.require("tokenRevocation").currentVersion(String(id));
-      const claims = { sub: String(id), roles: [name], permissions };
-      return { id, username: name, claims, token: await jwt.issue({ roles: [name], permissions }, { subject: String(id), version, authTime: Math.floor(now / 1000) }) };
-    };
-    const clerk = await person("clerk", ["ar.view", "ar.receipt.mgmt"]), viewer = await person("viewer", ["ar.view"]), outsider = await person("outsider", ["ar.invoice.mgmt"]);
-
-    // 第二個幣別：一個未被使用的代碼，小數位 2。
-    let other;
-    do {
-      other = `X${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
-    } while ((await db.query("SELECT code FROM currencies WHERE code = ?", [other]))[0].length);
-    await insert("currencies", { code: other, name: "AR Probe", decimal_places: 2, status: "ACTIVE", version: 1, created_at: now, updated_at: now });
-
-    let customers = 0;
-    const customer = async () => {
-      const code = `AR-${tag}-${++customers}`;
-      return { id: await insert("customers", { customer_code: code, customer_code_key: code.toLowerCase(), legal_name: `AR Customer ${code}`, legal_name_key: code.toLowerCase(),
-        default_currency_code: "HKD", status: "active", version: 1, created_at: now, updated_at: now }), code, name: `AR Customer ${code}` };
-    };
-    const today = time.fileDate(time.at(time.nowMs()));
-    const day = (offset) => new Date(Date.parse(`${today}T00:00:00.000Z`) + offset * 86400000).toISOString().slice(0, 10);
-    let invoices = 0;
-    /** SQL fixture：一張已確認發票；dueOffset 是到期日相對今日的日數（負數即已逾期）。 */
-    const invoice = async (party, total, { currency = "HKD", status = "CONFIRMED", dueOffset = 30, allocated = "0.0000" } = {}) => {
-      const due = day(dueOffset), issued = day(Math.min(dueOffset, 0) - 1);
-      return insert("ar_invoices", { invoice_number: status === "DRAFT" ? null : `T${tag}${String(++invoices).padStart(4, "0")}`, status, customer_id: party.id,
-        customer_code_snapshot: party.code, customer_name_snapshot: party.name, currency_code: currency, currency_decimal_places: 2, invoice_date: issued, due_date: due,
-        total_amount: total, allocated_amount: allocated, outstanding_amount: (Number(total) - Number(allocated)).toFixed(4), created_by_label: "fixture",
-        created_at: now, updated_at: now });
-    };
-
-    const { url } = await application.start();
-    const send = async (path, { token, body, method = body ? "POST" : "GET", key = body?.eventId } = {}) => {
-      const response = await fetch(`${url}${path}`, { method, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(key ? { "Idempotency-Key": key } : {}),
-        ...(body ? { "Content-Type": "application/json" } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
-      return { status: response.status, body: await response.json() };
-    };
-    const post = (path, fields, token = clerk.token, eventId = randomUUID()) => send(`/api/v1/ar-receipts${path}`, { token, body: { eventId, ...fields } });
-    const ok = (result) => { assert.equal(result.status, 200, JSON.stringify(result.body)); return result.body.data; };
-    const draft = async (party, amount, fields = {}) => ok(await post("", { customerId: party.id, currencyCode: "HKD", receiptDate: today, amount, paymentMethod: "BANK_TRANSFER", ...fields }));
-    /** 一筆已確認的收款（version 2）。 */
-    const receipt = async (party, amount, fields) => {
-      const created = await draft(party, amount, fields);
-      return ok(await post(`/${created.id}/confirm`, { version: 1 }));
-    };
-    const read = async (id, token = clerk.token) => ok(await send(`/api/v1/ar-receipts/${id}`, { token }));
-    const invoiceRow = async (id) => (await db.query("SELECT status, total_amount, allocated_amount, outstanding_amount, version FROM ar_invoices WHERE id = ?", [id]))[0][0];
-    const count = async (sql, values) => Number((await db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total);
-    return { application, db, cleanups, send, post, ok, draft, receipt, read, invoice, invoiceRow, customer, count, clerk, viewer, outsider, other, today, day };
-  } catch (error) {
-    const cleanupErrors = await runCleanups(cleanups);
-    throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "AR receipt fixture setup failed and its cleanup also failed") : error;
-  }
-}
-const fixture = () => (shared ??= setup());
-after(async () => {
-  if (!shared) return;
-  let state;
-  try { state = await shared; } catch { return; }
-  const errors = await runCleanups(state.cleanups);
-  if (errors.length) throw new AggregateError(errors, "AR receipt fixture cleanup failed");
-});
-const failure = (result) => [result.status, result.body.error?.code, result.body.error?.details?.field];
 
 integrationTest("收款草稿：建立後可讀，金額只收幣別小數位，未知客戶、欄位、方式及不符的 Idempotency-Key 都被拒絕而且不留資料", async () => {
   const f = await fixture(), party = await f.customer();

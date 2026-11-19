@@ -12,8 +12,9 @@ const placeholders = (values) => values.map(() => "?").join(",");
  * 取鎖次序固定：操作列 → 發票（ID 升序）→ 收款 → 核銷 → 編號。未核銷的餘額留在收款的 available_amount 上。
  */
 export class ArReceiptService {
+  /** `customers(executor)` 回一個在該 executor 上讀取的客戶查詢：交易內的讀取必須留在同一條連線，不另佔連線池。 */
   constructor({ commands, customers, businessMaster, time }) {
-    if (!commands || !customers || !businessMaster || !time) throw new TypeError("ArReceiptService requires all of its dependencies");
+    if (!commands || typeof customers !== "function" || !businessMaster || !time) throw new TypeError("ArReceiptService requires all of its dependencies");
     Object.assign(this, { commands, customers, businessMaster, time });
   }
 
@@ -30,7 +31,7 @@ export class ArReceiptService {
     return this.commands.run({ claims, permission: PERMISSION, commandType: "CREATE_RECEIPT", targetType: "RECEIPT", eventId: eventId(body.eventId), payload: request, context },
       async (tx, { actor, nowMs }) => {
         // 收款可以來自已停用的客戶或幣別（舊發票仍要收），所以只要求存在。
-        const customer = await this.customers.findById(request.customerId, { purpose: "ar_existing_document" });
+        const customer = await this.customers(tx).findById(request.customerId, { purpose: "ar_existing_document" });
         if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
         const currency = await this.businessMaster.assertCurrencyUsableInTransaction(tx, { code: request.currencyCode, purpose: "history" });
         const amount = amountUnits(request.amount, "amount", currency.decimalPlaces);

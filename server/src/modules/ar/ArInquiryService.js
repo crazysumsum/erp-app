@@ -9,6 +9,23 @@ const BUCKETS = ["notDue", "days1To30", "days31To60", "days61To90", "over90"];
 const BUCKET_SQL = ["d <= 0", "d BETWEEN 1 AND 30", "d BETWEEN 31 AND 60", "d BETWEEN 61 AND 90", "d > 90"]
   .map((condition, index) => `SUM(CASE WHEN ${condition} THEN outstanding_amount ELSE 0 END) AS ${BUCKETS[index]}`).join(", ");
 
+const INVOICE = `id, invoice_number, status, version, customer_id, customer_code_snapshot, customer_name_snapshot, currency_code, currency_decimal_places,
+  ${date("invoice_date")}, ${date("due_date")}, total_amount, allocated_amount, outstanding_amount, created_at, updated_at`;
+
+function invoiceActions(row, permissions) {
+  if (!permissions.includes("ar.invoice.mgmt")) return [];
+  if (row.status === "DRAFT") return ["confirm", "cancel"];
+  return row.status === "CONFIRMED" && storedUnits(row.allocated_amount) === 0n ? ["void"] : [];
+}
+
+const invoiceSummary = (row, permissions) => ({
+  id: Number(row.id), number: row.invoice_number, status: row.status, version: Number(row.version), customerId: Number(row.customer_id),
+  customerCode: row.customer_code_snapshot, customerName: row.customer_name_snapshot, currencyCode: row.currency_code,
+  currencyDecimalPlaces: Number(row.currency_decimal_places), invoiceDate: row.invoice_date, dueDate: row.due_date, totalAmount: row.total_amount,
+  allocatedAmount: row.allocated_amount, outstandingAmount: row.outstanding_amount, createdAt: Number(row.created_at), updatedAt: Number(row.updated_at),
+  allowedActions: invoiceActions(row, permissions)
+});
+
 /** allowedActions 只是介面提示；命令在交易內會再驗。 */
 function receiptActions(row, permissions) {
   if (!permissions.includes("ar.receipt.mgmt")) return [];
@@ -28,11 +45,61 @@ const receiptSummary = (row, permissions) => ({
 /** LIKE 前綴：! 作 escape。 */
 const prefix = (value) => `${value.replaceAll("!", "!!").replaceAll("%", "!%").replaceAll("_", "!_")}%`;
 
-/** 收款查詢及帳齡表（唯讀；權限由 route 的 ar.view 把關）。 */
+/** 發票及收款查詢、帳齡表（唯讀；權限由 route 的 ar.view 把關）。 */
 export class ArInquiryService {
   constructor({ database, time }) {
     if (!database || !time) throw new TypeError("ArInquiryService requires database and time");
     Object.assign(this, { database, time });
+  }
+
+  /** 發票列表：新到舊。`outstandingOnly` 只列已確認而仍有未收額的發票（核銷時選取用）；`q` 以前綴找發票編號、客戶代碼或名稱。 */
+  async listInvoices({ claims, query = {} }) {
+    const { page = 1, pageSize = 20 } = query, where = [], values = [];
+    for (const [field, column] of [["status", "status"], ["customerId", "customer_id"], ["currencyCode", "currency_code"]]) {
+      if (query[field] !== undefined) { where.push(`${column} = ?`); values.push(query[field]); }
+    }
+    for (const [field, operator] of [["invoiceDateFrom", ">="], ["invoiceDateTo", "<="]]) {
+      if (query[field] !== undefined) { where.push(`invoice_date ${operator} ?`); values.push(localDate(query[field], field)); }
+    }
+    if (query.outstandingOnly) where.push("status = 'CONFIRMED' AND outstanding_amount > 0");
+    if (query.q) {
+      where.push(`(${["invoice_number", "customer_code_snapshot", "customer_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
+      values.push(...Array(3).fill(prefix(query.q)));
+    }
+    const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ar_invoices ${filter}`, values);
+    const [rows] = await this.database.query(`SELECT ${INVOICE} FROM ar_invoices ${filter} ORDER BY id DESC LIMIT ? OFFSET ?`, [...values, pageSize, (page - 1) * pageSize]);
+    return { items: rows.map((row) => invoiceSummary(row, claims?.permissions ?? [])), total: Number(total), page, pageSize };
+  }
+
+  /** 發票詳情連同發票行及其核銷記錄。 */
+  async getInvoice({ claims, id }) {
+    const [[row]] = await this.database.query(`SELECT ${INVOICE}, payment_term_code_snapshot, payment_term_name_snapshot, due_date_overridden, due_date_reason, notes,
+      void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at FROM ar_invoices WHERE id = ?`, [id]);
+    if (!row) throw arError("AR_INVOICE_NOT_FOUND");
+    const [lines] = await this.database.query(`SELECT id, line_no, shipment_id, shipment_line_id, sales_order_id, sales_order_line_id, sku_code_snapshot, sku_name_snapshot,
+      base_uom_code_snapshot, quantity, unit_price_snapshot, line_amount FROM ar_invoice_lines WHERE invoice_id = ? ORDER BY line_no`, [id]);
+    const [allocations] = await this.database.query(`SELECT a.id, a.receipt_id, a.amount, a.status, a.created_at, r.receipt_number, ${date("r.receipt_date", "receipt_date")}
+      FROM ar_receipt_allocations a JOIN ar_receipts r ON r.id = a.receipt_id WHERE a.invoice_id = ? ORDER BY a.id`, [id]);
+    const time = (value) => value === null ? null : Number(value);
+    return {
+      ...invoiceSummary(row, claims?.permissions ?? []), paymentTermCode: row.payment_term_code_snapshot, paymentTermName: row.payment_term_name_snapshot,
+      dueDateOverridden: Boolean(row.due_date_overridden), dueDateReason: row.due_date_reason, notes: row.notes, voidReason: row.void_reason,
+      createdByLabel: row.created_by_label, confirmedByLabel: row.confirmed_by_label, confirmedAt: time(row.confirmed_at), voidedByLabel: row.voided_by_label, voidedAt: time(row.voided_at),
+      lines: lines.map((line) => ({ id: Number(line.id), lineNo: Number(line.line_no), shipmentId: Number(line.shipment_id), shipmentLineId: Number(line.shipment_line_id),
+        salesOrderId: Number(line.sales_order_id), salesOrderLineId: Number(line.sales_order_line_id), skuCode: line.sku_code_snapshot, skuName: line.sku_name_snapshot,
+        baseUomCode: line.base_uom_code_snapshot, quantity: String(line.quantity), unitPrice: line.unit_price_snapshot, lineAmount: line.line_amount })),
+      allocations: allocations.map((item) => ({ id: Number(item.id), receiptId: Number(item.receipt_id), receiptNumber: item.receipt_number, receiptDate: item.receipt_date,
+        amount: item.amount, status: item.status, createdAt: Number(item.created_at) }))
+    };
+  }
+
+  /** 所問的出貨之中，哪些已在一張未作廢、未取消的發票上（「由出貨建立發票」頁用來排除已開票的出貨）。只讀 AR 自己的表。 */
+  async invoicedShipments({ shipmentIds }) {
+    const ids = [...new Set(shipmentIds.split(",").map(Number))];
+    const [rows] = await this.database.query(`SELECT DISTINCT l.shipment_id, i.id, i.invoice_number, i.status FROM ar_invoice_lines l JOIN ar_invoices i ON i.id = l.invoice_id
+      WHERE l.shipment_id IN (${ids.map(() => "?").join(",")}) AND l.active_shipment_line_id IS NOT NULL ORDER BY l.shipment_id`, ids);
+    return { items: rows.map((row) => ({ shipmentId: Number(row.shipment_id), invoiceId: Number(row.id), invoiceNumber: row.invoice_number, invoiceStatus: row.status })) };
   }
 
   /** 收款列表：新到舊。`q` 以前綴找收款編號、參考號、客戶代碼或名稱。 */
