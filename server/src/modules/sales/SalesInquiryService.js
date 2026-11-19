@@ -8,9 +8,10 @@ import { salesError } from "./salesErrors.js";
 const statuses=["DRAFT","CONFIRMING","CONFIRMED","PARTIALLY_FULFILLED","COMPLETED","CANCELLED","CLOSED"],sources=["MANUAL","QUOTATION","CSV","CHANNEL"];
 const sort={number:"sales_order_number",customerCode:"customer_code_snapshot",customerName:"customer_name_snapshot",orderDate:"order_date",updatedAt:"updated_at",status:"status",sourceType:"source_type",totalAmount:"total_amount"};
 export function validateSalesOrderQuery(input={}){
- const fields=["page","pageSize","q","number","status","sourceType","channelCode","externalOrderId","customerId","warehouseId","hasBackorder","orderDateFrom","orderDateTo","updatedFrom","updatedTo","sortBy","descending"];
+ const fields=["page","pageSize","q","number","status","sourceType","channelCode","externalOrderId","customerId","warehouseId","hasBackorder","orderDateFrom","orderDateTo","updatedFrom","updatedTo","sortBy","descending","view"];
  if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).some(key=>!fields.includes(key)))throw salesError("SALES_INPUT_INVALID");
  const query={...input,page:input.page??1,pageSize:input.pageSize??20,sortBy:input.sortBy??"orderDate",descending:input.descending??true};
+ if(query.view!==undefined&&!["all","mine","outstanding","backorder","finalized"].includes(query.view))throw salesError("SALES_INPUT_INVALID",{field:"view"});
  if(!Number.isSafeInteger(query.page)||query.page<1||!Number.isSafeInteger(query.pageSize)||query.pageSize<1||query.pageSize>100||!Number.isSafeInteger((query.page-1)*query.pageSize)||!Object.hasOwn(sort,query.sortBy)||typeof query.descending!=="boolean")throw salesError("SALES_INPUT_INVALID");
  for(const field of ["customerId","warehouseId"])if(query[field]!==undefined&&(!Number.isSafeInteger(query[field])||query[field]<1))throw salesError("SALES_INPUT_INVALID",{field});
  for(const field of ["q","number","channelCode","externalOrderId"])if(query[field]!==undefined&&(typeof query[field]!=="string"||query[field].length>(field==="channelCode"?50:190)))throw salesError("SALES_INPUT_INVALID",{field});
@@ -46,13 +47,32 @@ export function toSalesOrderSummary(row){return {id:Number(row.id),number:row.sa
  orderDate:row.order_date,lineCount:Number(row.line_count),totalAmount:String(row.total_amount),hasBackorder:Boolean(row.has_backorder),backorderLineCount:Number(row.backorder_line_count),createdAt:Number(row.created_at),updatedAt:Number(row.updated_at)};}
 export class SalesInquiryService{
  constructor({database,time,logger}={}){this.database=database;this.time=time;this.logger=logger;}
- async list({claims,input={}}){const query=validateSalesOrderQuery(input),{where,values}=salesOrderWhere(query);
-  return this.database.withTransaction(async tx=>{await requireSalesActor(tx,claims,"sales.view");const [[count]]=await tx.query(`SELECT COUNT(*) AS total FROM sales_orders${where}`,values);
+ async list({claims,input={},outstanding=false}){const query=validateSalesOrderQuery(input),includeQuantities=outstanding,{where:filterWhere,values}=salesOrderWhere(query);let where=filterWhere;outstanding=outstanding||query.view==="outstanding";
+  return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),constraints=[];
+   if(query.view==="mine"){constraints.push("created_by=?");values.push(actor.id);}
+   if(query.view==="backorder")constraints.push("has_backorder=1");
+   if(query.view==="finalized")constraints.push("status IN ('COMPLETED','CLOSED','CANCELLED')");
+   if(outstanding)constraints.push("status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND (SELECT 1 FROM sales_order_lines l WHERE l.sales_order_id=sales_orders.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity LIMIT 1)=1");
+   if(constraints.length)where+=(where?" AND ":" WHERE ")+constraints.join(" AND ");
+   const [[count]]=await tx.query(`SELECT COUNT(*) AS total FROM sales_orders${where}`,values);
    const [page]=await tx.query(`SELECT id FROM sales_orders${where} ORDER BY ${sort[query.sortBy]} ${query.descending?"DESC":"ASC"},id ${query.descending?"DESC":"ASC"} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
    const [rows]=page.length?await tx.query(`SELECT ${summarySelect} FROM sales_orders WHERE id IN (${page.map(()=>"?").join(",")})`,page.map(row=>row.id)):[[]];
    const byId=new Map(rows.map(row=>[String(row.id),row]));
-   return {items:page.map(row=>toSalesOrderSummary(byId.get(String(row.id)))),total:Number(count.total),page:query.page,pageSize:query.pageSize};});
+   // An order-wide total is meaningful only when all lines share a verified base unit.
+   const [totals]=includeQuantities&&page.length?await tx.query(`SELECT l.sales_order_id,MIN(u.code) AS base_uom_code,
+    SUM(l.ordered_base_quantity) AS ordered,SUM(l.reserved_outstanding_base_quantity) AS reserved,
+    SUM(l.backordered_base_quantity) AS backordered,SUM(l.fulfilled_base_quantity) AS fulfilled,
+    SUM(l.cancelled_base_quantity) AS cancelled,SUM(l.ordered_base_quantity-l.fulfilled_base_quantity-l.cancelled_base_quantity) AS outstanding
+    FROM sales_order_lines l
+    LEFT JOIN item_sku_uoms b ON b.sku_id=l.sku_id AND b.base_slot=1
+    LEFT JOIN item_uoms u ON u.id=b.uom_id
+    WHERE l.sales_order_id IN (${page.map(()=>"?").join(",")}) GROUP BY l.sales_order_id
+    HAVING COUNT(u.id)=COUNT(*) AND COUNT(DISTINCT u.id)=1`,page.map(row=>row.id)):[[]];
+   const quantities=new Map(totals.map(row=>[String(row.sales_order_id),{baseUomCode:row.base_uom_code,...Object.fromEntries(
+    ["ordered","reserved","backordered","fulfilled","cancelled","outstanding"].map(key=>[key+"BaseQuantity",String(row[key])]))}]));
+   return {items:page.map(row=>({...toSalesOrderSummary(byId.get(String(row.id))),...(includeQuantities?{quantities:quantities.get(String(row.id))??null}:{})})),total:Number(count.total),page:query.page,pageSize:query.pageSize};});
  }
+ listOutstanding(request){return this.list({...request,outstanding:true});}
  async listAudit({claims,input={}}) {
   const query=validateSalesAuditQuery(input),clauses=[],values=[];
   for(const [key,column] of [["targetType","target_type"],["targetId","target_id"],["actorId","actor_user_id"],["action","action"]])if(query[key]!==undefined){clauses.push(`${column}=?`);values.push(query[key]);}
