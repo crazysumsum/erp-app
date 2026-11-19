@@ -31,7 +31,8 @@ export async function applyInventoryOpeningRows(tx, rows, { jobId, claim, actor,
       profiles.set(row.skuId, await lookup.getInventoryProfileInTransaction(tx, row.skuId));
     }
     const profile = profiles.get(row.skuId);
-    if (!profile?.usable || !profile.inventoryTracked || profile.trackingPolicy !== row.trackingPolicy ||
+    if (!profile?.usable || !profile.inventoryTracked || profile.skuCode !== row.skuCode ||
+        profile.trackingPolicy !== row.trackingPolicy ||
         profile.baseUom.uomId !== row.baseUomId) {
       throw inventoryError("OPENING_PRECHECK_STALE", { row: row.row });
     }

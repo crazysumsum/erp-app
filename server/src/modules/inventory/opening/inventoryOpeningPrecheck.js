@@ -104,6 +104,10 @@ export async function precheckInventoryOpeningCsv(bytes, { reader, itemLookup })
       lotInput = validateInventoryLotInput({
         trackingPolicy: sku.trackingPolicy, lotNumber: row.lotNumber, expiryDate: row.expiryDate
       });
+      // InventoryLockService bounds the normalized Lot lock key in UTF-8 bytes.
+      if (lotInput.normalizedLotNumber !== null && Buffer.byteLength(lotInput.normalizedLotNumber, "utf8") > 100) {
+        throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lotNumber" });
+      }
     } catch (error) {
       errors.push(lotIssue(error, row));
       continue;
@@ -114,7 +118,7 @@ export async function precheckInventoryOpeningCsv(bytes, { reader, itemLookup })
     const existingLot = lotInput.normalizedLotNumber === null ? null :
       await cached(lots, lotKey, () => findLot(reader, sku.skuId, lotInput.normalizedLotNumber));
     const resolved = {
-      ...row, ...lotInput, skuId: sku.skuId, baseUomId: baseUom.uomId,
+      ...row, ...lotInput, skuCode: sku.skuCode, skuId: sku.skuId, baseUomId: baseUom.uomId,
       warehouseId: Number(location.warehouse_id), warehouseVersion: Number(location.warehouse_version),
       binId: Number(location.bin_id), binVersion: Number(location.bin_version),
       lotId: existingLot ? Number(existingLot.id) : null

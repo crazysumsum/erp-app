@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { generateKeyPairSync, randomBytes, randomUUID, sign } from "node:crypto";
 import path from "node:path";
 import test, { after, before } from "node:test";
-import { createApplication } from "../../src/framework/application/createApplication.js";
-import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
-import { hashPassword } from "../../src/modules/user/passwordHash.js";
-import { up as openingMigration } from "../../database/migrations/0066_create_inventory_opening.js";
+import { createApplication } from "../src/framework/application/createApplication.js";
+import { defaultConfigurationSource } from "../src/framework/configuration/applicationConfiguration.js";
+import { hashPassword } from "../src/modules/user/passwordHash.js";
+import { up as openingMigration } from "../database/migrations/0066_create_inventory_opening.js";
 
 const enabled = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_OPENING_TESTS === "1";
 const native = (name, work) => test(name, { skip: !enabled, timeout: 30_000 }, work);
@@ -54,7 +54,7 @@ before(async () => {
   app = await createApplication({ configurationSource: {
     ...config, logging, application: { ...config.application, host: "127.0.0.1", port: 0 },
     jwt: { ...config.jwt, secret: randomBytes(32).toString("hex") }
-  }, handlerRegistryOptions: { moduleUrls: [new URL("../../src/handlers/inventory/openingHandlers.js", import.meta.url).href] } });
+  }, handlerRegistryOptions: { moduleUrls: [new URL("../src/handlers/inventory/openingHandlers.js", import.meta.url).href] } });
   db = app.services.require("mysqldatabase");
   const [[server]] = await db.query("SELECT VERSION() version, @@skip_networking isolated, DATABASE() db");
   assert.deepEqual([server.version, Number(server.isolated), server.db], ["26.7.0", 1, process.env.DB_NAME]);
@@ -260,4 +260,41 @@ native("Opening confirmation rejects an active persistent Stocktake Bin lock wit
   } finally {
     await db.execute("UPDATE inventory_bin_locks SET released_at=2 WHERE id=?", [lock.insertId]);
   }
+});
+
+native("Opening rejects the complete snapshot if an Item SKU was renamed after precheck", async () => {
+  const response = await request("/upload", manager, [
+    "W1,B1,SKU2,SKU-STALE,2027-01-01,AVAILABLE,2",
+    "W1,B2,SKU2,SKU-STALE,2027-01-01,AVAILABLE,3"
+  ]);
+  assert.equal(response.status, 201, JSON.stringify(response.json));
+  const job = response.json.data;
+  assert.equal(job.status, "READY");
+  const before = await domainCounts();
+  await db.execute("UPDATE item_skus SET sku_code='SKU2-RENAMED', version=version+1 WHERE sku_code='SKU2'");
+  try {
+    const result = await confirm(job, confirmation(job));
+    assert.equal(result.status, 409, JSON.stringify(result.json));
+    assert.equal(result.json.error.code, "OPENING_PRECHECK_STALE");
+    assert.equal(result.json.error.details.row, 2);
+    assert.deepEqual(await domainCounts(), before);
+    assert.deepEqual((await request("/jobs/" + job.id, manager)).json.data, job);
+  } finally {
+    await db.execute("UPDATE item_skus SET sku_code='SKU2', version=version+1 WHERE sku_code='SKU2-RENAMED'");
+  }
+});
+
+native("Opening precheck enforces the normalized UTF-8 Lot lock key boundary", async () => {
+  const lot = "批".repeat(33) + "A";
+  const invalid = await request("/upload", manager, [`W1,B1,SKU2,${lot}A,2027-01-01,AVAILABLE,3`]);
+  assert.equal(invalid.status, 201, JSON.stringify(invalid.json));
+  assert.deepEqual([invalid.json.data.status, invalid.json.data.errors], ["INVALID", [
+    { row: 2, field: "lotNumber", code: "INVENTORY_INPUT_INVALID" }
+  ]]);
+  const valid = await request("/upload", manager, [`W1,B1,SKU2,${lot},2027-01-01,AVAILABLE,3`]);
+  assert.equal(valid.status, 201, JSON.stringify(valid.json));
+  assert.equal(valid.json.data.status, "READY");
+  const posted = await confirm(valid.json.data, confirmation(valid.json.data));
+  assert.equal(posted.status, 200, JSON.stringify(posted.json));
+  assert.equal(posted.json.data.status, "COMPLETED");
 });

@@ -166,7 +166,7 @@ onUnmounted(() => controller.abort());
 
       <InventoryHighRiskDialog v-model="dialogOpen" title="確認期初庫存整批入帳"
         :busy="busy" :disabled="!canConfirm || reason.trim().length < 5" :execute="confirm">
-        <p>匯入 #{{ job?.id }} 的 {{ job?.readyRows }} 筆資料將一起入帳。任一列失敗時整批回滾。</p>
+        <p>匯入 #{{ job?.id }}（預檢版本 {{ job?.version }}）的 {{ job?.readyRows }} 筆資料將一起入帳。任一列失敗時整批回滾。</p>
         <p>原因：{{ reason.trim() }}</p>
       </InventoryHighRiskDialog>
     </div>

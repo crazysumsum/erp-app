@@ -20,7 +20,7 @@ function fixture({ occupied = new Set(), lots = new Map() } = {}) {
       assert.deepEqual(options, { purpose: "inventory" });
       skuCalls.push(code);
       const item = sku[code.toUpperCase()];
-      return item ? { ...item, usable: true, inventoryTracked: true, uoms: [{ uomId: 1, isBase: true, toBaseFactor: 1 }] } : null;
+      return item ? { ...item, skuCode: code.toUpperCase(), usable: true, inventoryTracked: true, uoms: [{ uomId: 1, isBase: true, toBaseFactor: 1 }] } : null;
     }
   };
   const reader = {
@@ -56,9 +56,9 @@ test("Opening precheck resolves SKU and location and permits distinct bins for t
   assert.deepEqual(result.errors, []);
   assert.deepEqual(result.skippedRows, [4]);
   assert.deepEqual(result.rows.map(row => [row.row, row.warehouseId, row.binId, row.skuId,
-    row.normalizedLotNumber, row.lotId, row.baseQuantity]), [
-    [2, 1, 11, 32, "L1", null, 3],
-    [3, 1, 12, 32, "L1", null, 2]
+    row.skuCode, row.normalizedLotNumber, row.lotId, row.baseQuantity]), [
+    [2, 1, 11, 32, "SKU2", "L1", null, 3],
+    [3, 1, 12, 32, "SKU2", "L1", null, 2]
   ]);
   assert.deepEqual(deps.skuCalls, ["SKU2"]);
 });
