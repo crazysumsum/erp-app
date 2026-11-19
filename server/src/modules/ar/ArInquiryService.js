@@ -78,7 +78,8 @@ export class ArInquiryService {
       void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at FROM ar_invoices WHERE id = ?`, [id]);
     if (!row) throw arError("AR_INVOICE_NOT_FOUND");
     const [lines] = await this.database.query(`SELECT id, line_no, shipment_id, shipment_line_id, sales_order_id, sales_order_line_id, sku_code_snapshot, sku_name_snapshot,
-      base_uom_code_snapshot, quantity, unit_price_snapshot, line_amount FROM ar_invoice_lines WHERE invoice_id = ? ORDER BY line_no`, [id]);
+      base_uom_code_snapshot, sales_uom_code_snapshot, to_base_factor_snapshot, quantity, unit_price_snapshot, line_amount
+      FROM ar_invoice_lines WHERE invoice_id = ? ORDER BY line_no`, [id]);
     const [allocations] = await this.database.query(`SELECT a.id, a.receipt_id, a.amount, a.status, a.created_at, r.receipt_number, ${date("r.receipt_date", "receipt_date")}
       FROM ar_receipt_allocations a JOIN ar_receipts r ON r.id = a.receipt_id WHERE a.invoice_id = ? ORDER BY a.id`, [id]);
     const time = (value) => value === null ? null : Number(value);
@@ -88,7 +89,8 @@ export class ArInquiryService {
       createdByLabel: row.created_by_label, confirmedByLabel: row.confirmed_by_label, confirmedAt: time(row.confirmed_at), voidedByLabel: row.voided_by_label, voidedAt: time(row.voided_at),
       lines: lines.map((line) => ({ id: Number(line.id), lineNo: Number(line.line_no), shipmentId: Number(line.shipment_id), shipmentLineId: Number(line.shipment_line_id),
         salesOrderId: Number(line.sales_order_id), salesOrderLineId: Number(line.sales_order_line_id), skuCode: line.sku_code_snapshot, skuName: line.sku_name_snapshot,
-        baseUomCode: line.base_uom_code_snapshot, quantity: String(line.quantity), unitPrice: line.unit_price_snapshot, lineAmount: line.line_amount })),
+        baseUomCode: line.base_uom_code_snapshot, salesUomCode: line.sales_uom_code_snapshot, toBaseFactor: Number(line.to_base_factor_snapshot),
+        quantity: String(line.quantity), unitPrice: line.unit_price_snapshot, lineAmount: line.line_amount })),
       allocations: allocations.map((item) => ({ id: Number(item.id), receiptId: Number(item.receipt_id), receiptNumber: item.receipt_number, receiptDate: item.receipt_date,
         amount: item.amount, status: item.status, createdAt: Number(item.created_at) }))
     };

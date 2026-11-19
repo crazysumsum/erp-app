@@ -64,7 +64,7 @@ export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
   ...INVOICE_SUMMARY, paymentTermCode: TEXT, paymentTermName: TEXT, dueDateOverridden: { type: "boolean" }, dueDateReason: TEXT, notes: TEXT, voidReason: TEXT,
   createdByLabel: TEXT, confirmedByLabel: TEXT, confirmedAt: NULLABLE_TIME, voidedByLabel: TEXT, voidedAt: NULLABLE_TIME,
   lines: { type: "array", items: object({ id: ID, lineNo: ID, shipmentId: ID, shipmentLineId: ID, salesOrderId: ID, salesOrderLineId: ID, skuCode: TEXT, skuName: TEXT,
-    baseUomCode: TEXT, quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT }) },
+    baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID, quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT }) },
   allocations: { type: "array", items: object({ id: ID, receiptId: ID, receiptNumber: NULLABLE_TEXT, receiptDate: TEXT, amount: AMOUNT,
     status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) }
 }));

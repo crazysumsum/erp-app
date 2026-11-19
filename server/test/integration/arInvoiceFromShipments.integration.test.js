@@ -14,6 +14,7 @@ import test from "node:test";
 import { up as issueSchema } from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
 import { up as seedArPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
 import { up as createArTables } from "../../database/migrations/0123_create_ar_tables.js";
+import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { ArCommandRunner } from "../../src/modules/ar/arCommand.js";
 import { ArInquiryService } from "../../src/modules/ar/ArInquiryService.js";
 import { ArInvoiceService } from "../../src/modules/ar/ArInvoiceService.js";
@@ -35,6 +36,7 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   await issueSchema(f.db);
   await seedArPermissions(f.db);
   await createArTables(f.db);
+  await addInvoiceLineSalesUom(f.db);
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。
   const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.receipt.mgmt", "ar.view"];
   const userId = await f.s.insert("users", { username: label, password_hash: "synthetic-only", display_name: "AR synthetic", created_at: f.s.now, updated_at: f.s.now });
@@ -98,8 +100,8 @@ nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計�
   assert.deepEqual([detail.totalAmount, detail.allocatedAmount, detail.outstandingAmount, detail.allowedActions], ["0.0400", "0.0000", "0.0400", ["confirm", "cancel"]]);
   assert.equal(detail.lines.length, 1);
   const [line] = detail.lines;
-  assert.deepEqual([line.lineNo, line.shipmentId, line.salesOrderId, line.salesOrderLineId, line.quantity, line.unitPrice, line.lineAmount],
-    [1, Number(a.first), f.s.orderId, f.s.lineId, "3", "0.0143", "0.0428"]);
+  assert.deepEqual([line.lineNo, line.shipmentId, line.salesOrderId, line.salesOrderLineId, line.quantity, line.unitPrice, line.lineAmount, line.salesUomCode, line.toBaseFactor],
+    [1, Number(a.first), f.s.orderId, f.s.lineId, "3", "0.0143", "0.0428", "EA", 1]);
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: `${a.first},${second}` })).items,
     [{ shipmentId: Number(a.first), invoiceId: alone.id, invoiceNumber: null, invoiceStatus: "DRAFT" }]);
 
@@ -149,6 +151,16 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
   const a = await arFixture(t, { lineAmount: "5.0000", unitPrice: "1.0000" }), { f } = a;
   await a.ship(a.first);
   const bare = (fields) => a.run("create", { shipmentIds: [Number(a.first)], ...fields });
+
+  // 按箱賣、按件出（TABLES-ADDENDUM-1）：訂單行的銷售單位是 BOX、一箱 6 件；發票行保存並回傳銷售單位及換算率，
+  // quantity 仍是基本單位（3 件），單價仍是每箱的價格，行金額不受影響。
+  await f.db.query("UPDATE sales_order_lines SET uom_code_snapshot = 'BOX', to_base_factor_snapshot = 6 WHERE id = ?", [f.s.lineId]);
+  const boxed = await a.create([a.first]);
+  const [boxLine] = (await a.inquiry.getInvoice({ claims: a.claims, id: boxed.id })).lines;
+  const [[shipped]] = await f.db.query("SELECT base_uom_code_snapshot AS base FROM shipment_lines WHERE shipment_id = ?", [a.first]);
+  assert.deepEqual([boxLine.salesUomCode, boxLine.toBaseFactor, boxLine.baseUomCode, boxLine.quantity, boxLine.unitPrice, boxLine.lineAmount], ["BOX", 6, shipped.base, "3", "1.0000", "3.0000"]);
+  assert.notEqual(shipped.base, "BOX");
+  await a.act("cancel", boxed.id, { version: 1 });
 
   // 訂單沒有付款條款：必須輸入到期日，而且不可早於發票日期。
   await assert.rejects(bare({}), code("AR_DUE_DATE_REQUIRED"));

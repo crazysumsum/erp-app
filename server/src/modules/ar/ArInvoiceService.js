@@ -87,8 +87,9 @@ export class ArInvoiceService {
               priorShippedBaseQuantities: line.priorShipments.map((prior) => BigInt(prior.shippedBaseQuantity)), shippedBaseQuantity: quantity,
               step: INVOICE_AMOUNT_POLICY.lineStep(currency.decimalPlaces) });
             sum += amount;
+            // quantity 是基本單位，單價是每銷售單位：連同銷售單位及換算率一併保存，前端才顯示得出「多少銷售單位 × 單價」。
             lines.push([lines.length + 1, shipment.id, line.id, shipment.salesOrderId, line.salesOrderLineId, line.id, line.skuCodeSnapshot, line.skuNameSnapshot,
-              line.baseUomCodeSnapshot, line.shippedBaseQuantity, line.unitSellingPrice, formatUnits(amount)]);
+              line.baseUomCodeSnapshot, line.salesUomCodeSnapshot, line.toBaseFactor, line.shippedBaseQuantity, line.unitSellingPrice, formatUnits(amount)]);
           }
         }
         const total = formatUnits(INVOICE_AMOUNT_POLICY.total(sum, currency.decimalPlaces));
@@ -100,7 +101,7 @@ export class ArInvoiceService {
         const id = Number(result.insertId);
         try {
           await tx.query(`INSERT INTO ar_invoice_lines (invoice_id, line_no, shipment_id, shipment_line_id, sales_order_id, sales_order_line_id, active_shipment_line_id,
-            sku_code_snapshot, sku_name_snapshot, base_uom_code_snapshot, quantity, unit_price_snapshot, line_amount) VALUES ?`, [lines.map((line) => [id, ...line])]);
+            sku_code_snapshot, sku_name_snapshot, base_uom_code_snapshot, sales_uom_code_snapshot, to_base_factor_snapshot, quantity, unit_price_snapshot, line_amount) VALUES ?`, [lines.map((line) => [id, ...line])]);
         } catch (error) {
           // 唯一鍵：該出貨行已在另一張未作廢、未取消的發票上。
           if ((error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY") throw arError("AR_SHIPMENT_ALREADY_INVOICED");
