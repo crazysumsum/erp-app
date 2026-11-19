@@ -5,9 +5,21 @@ import { readFile,readdir } from "node:fs/promises";
 import { fileURLToPath,pathToFileURL } from "node:url";
 import path from "node:path";
 import { createTestCurrency } from "../phase1/fixtures.js";
+import { PERMISSION_CATALOGUE } from "../../../src/modules/authorization/permissionCatalogue.js";
 import { SalesFulfillmentService } from "../../../src/modules/sales/SalesFulfillmentService.js";
 import { MySqlDatabaseService } from "../../../src/services/mysqldatabase/MySqlDatabaseService.js";
 import { RequestContextService } from "../../../src/services/context/RequestContextService.js";
+
+// Partial-migration fixtures still run the real application startup check.
+export async function seedMissingCataloguePermissions(db) {
+  const [rows] = await db.query("SELECT name FROM permissions");
+  const stored = new Set(rows.map(row => row.name));
+  const createdAt = Date.now();
+  for (const { name, description } of PERMISSION_CATALOGUE) {
+    if (stored.has(name)) continue;
+    await db.execute("INSERT INTO permissions (name, description, created_at) VALUES (?, ?, ?)", [name, description, createdAt]);
+  }
+}
 
 export async function task036ApplicationSource(connectionOptions,name){
   const {defaultConfigurationSource}=await import("../../../src/framework/configuration/applicationConfiguration.js"),source=defaultConfigurationSource();
@@ -37,7 +49,7 @@ async function createSalesProviderDatabase(t,{preflightConfiguration=false}={}){
   });
   await admin.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);created=true;db=await mysql.createConnection({...connectionOptions,database:name});
   await initializeSalesBaseline(db,name,connectionOptions);
-  if(preflightConfiguration)await (await import("../../../database/migrations/0100_seed_purchasing_permissions.js")).up(db);
+  if(preflightConfiguration)await seedMissingCataloguePermissions(db);
   return {db,name,connectionOptions,cleanup,providerConfig,applicationSource};
 }
 
