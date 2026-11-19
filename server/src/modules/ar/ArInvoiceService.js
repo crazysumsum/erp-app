@@ -30,7 +30,8 @@ export const INVOICE_AMOUNT_POLICY = Object.freeze({
 export function shipmentLineAmount({ lineAmount, orderedBaseQuantity, priorShippedBaseQuantities, shippedBaseQuantity, step = 1n }) {
   let remainingAmount = lineAmount, remainingQuantity = orderedBaseQuantity, amount = 0n;
   if (shippedBaseQuantity <= 0n) throw new RangeError("Invoiced quantity must be positive");
-  for (const quantity of [...priorShippedBaseQuantities.filter((prior) => prior !== 0n), shippedBaseQuantity]) {
+  for (const quantity of [...priorShippedBaseQuantities, shippedBaseQuantity]) {
+    // 0 件的較早出貨通過這個檢查，下面按比例取到 0，剩餘金額及數量不變。
     if (quantity < 0n || quantity > remainingQuantity) throw new RangeError("Shipped quantity exceeds the order line");
     // 分子分母同乘 2 再加半個分母，即 half-up；先除以 step 再乘回，即取到 step 的倍數。
     amount = quantity === remainingQuantity ? remainingAmount
