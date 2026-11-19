@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam's blanket decision of 2026-11-19 suspending per-case test admission until 2026-11-26 (PM agentmsg 60f733a4, CI admin d1d3ef37), with one non-author review by the Claude TL claude-erp-app-tl-01, who also ruled this change (agentmsg dd1580ef).",
+  "decision": "Sam's blanket decision of 2026-11-19 suspending per-case test admission until 2026-11-26 (PM agentmsg 60f733a4, CI admin d1d3ef37), with one non-author review by the Claude TL claude-erp-app-tl-01, who also ruled this change (agentmsg dd1580ef) and reviewed it with no Required (a69c2c72); one-off SCOPE for this receipt file granted in a69c2c72.",
   "purpose": "The Supplier HTTP harness read its route list from the api.registration.completed summary, which is close to the system logger's maxEntryBytes and becomes a [TRUNCATED] string once over it, failing every harness test. It now reads the per-route api.registered entries and checks their count against registeredApiCount.",
   "data": "No data change: the harness reads the system log the app already writes.",
   "concurrency": "Unchanged.",
@@ -12,7 +12,7 @@
     {
       "path": "server/test/integration/supplierHttpHarness.js",
       "mode": "100644",
-      "blob": "9600a974e687b0fc3052409adee0316995a8b434",
+      "blob": "58c81b38333300f542820e9b164ac10f131d5545",
       "kind": "functional",
       "cases": [
         "Supplier integration suites that build their app through createSupplierHarness (route list read from the system log)"
