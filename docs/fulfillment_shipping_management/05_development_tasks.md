@@ -2230,8 +2230,6 @@ Commit：`feat: add auditable fulfillment pick list`。
 
 ## TASK-024 — 交付Shipment Draft create／update／cancel
 
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
-
 ### Goal
 交付Shipment list／detail基礎及DRAFT create／update／cancel命令；create鎖Fulfillment並使用active pointer保證最多一張非CANCELLED Shipment，Draft只允許修改地址／Contact及物流欄位。 （Legacy identity：`P2-T01`；規模估算：M。）
 
@@ -2255,8 +2253,6 @@ Commit：`feat: add versioned shipment draft lifecycle`。
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
 
 ## TASK-025 — 交付Customer地址／聯絡人lookup及transaction重驗
-
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
 
 ### Goal
 交付Fulfillment專用Shipping Address／Contact lookup handlers及Shipment Draft選擇行為，並建立Confirm提交時使用同transaction executor的ownership、purpose、status、version assertions。 （Legacy identity：`P2-T02`；規模估算：M。）
@@ -2291,8 +2287,6 @@ Commit：`feat: add shipment address and contact validation`。
 
 ## TASK-026 — 實作Shipment Confirm Phase A durable intent
 
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
-
 ### Goal
 實作`startConfirmation()`，在短transaction內以event/hash claim operation、保存immutable target/payload摘要、取得lease並把Shipment轉SHIPPING；回202 status URL，不執行Inventory或Sales效果。 （Legacy identity：`P2-T03`；規模估算：M。）
 
@@ -2317,8 +2311,6 @@ Commit：`feat: persist durable shipment confirmation intent`。
 
 ## TASK-027 — 實作Phase B固定鎖序及跨模組原子交易
 
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
-
 ### Goal
 實作`completeConfirmation(eventId)`，鎖operation後依Sales → Fulfillment → Inventory固定順序重驗全部資料，以exact Issue batch呼叫Inventory，再套用Sales結果及保存snapshot／history／audit／operation success。 （Legacy identity：`P2-T04`；規模估算：M。）
 
@@ -2342,8 +2334,6 @@ Commit：`feat: atomically confirm shipment across sales and inventory`。
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
 
 ## TASK-028 — 交付Confirm API、domain idempotency及operation lookup
-
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
 
 ### Goal
 完成Confirm handler的同步成功／202不明結果envelope及`GET /api/v1/fulfillment-operations/by-event/:eventId`，安全回傳SUCCEEDED／FAILED／IN_PROGRESS結果並套用target owner visibility。 （Legacy identity：`P2-T05`；規模估算：M。）
@@ -2378,8 +2368,6 @@ Commit：`feat: expose recoverable shipment confirmation outcomes`。
 
 ## TASK-029 — 交付Confirm Recovery Job及commit-unknown收斂
 
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
-
 ### Goal
 建立cluster-leased Confirmation Recovery Job，掃描過期SHIPPING operations，以原event/hash/actor/target CAS接管並續跑Phase B；unknown commit先按source outcome查證，絕不產生新event。 （Legacy identity：`P2-T06`；規模估算：M。）
 
@@ -2403,8 +2391,6 @@ Commit：`feat: recover indeterminate shipment confirmations`。
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
 
 ## TASK-030 — 交付Shipment查詢及Delivery Note／Packing List投影
-
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
 
 ### Goal
 完成Shipment active list／detail及server-side Delivery Note／Packing List projection，detail分批載入lines、issues及history，文件使用確認時snapshot並明確反映current status。 （Legacy identity：`P2-T07`；規模估算：M。）
@@ -2439,8 +2425,6 @@ Commit：`feat: add shipment inquiry and delivery document projection`。
 
 ## TASK-031 — 建立Shipment client service及polling控制
 
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
-
 ### Goal
 建立Shipment CRUD／Confirm／lookup／document client service，以及只poll原status URL的bounded controller；頁面離開或terminal outcome時停止polling。 （Legacy identity：`P2-T08`；規模估算：M。）
 
@@ -2465,8 +2449,6 @@ Commit：`feat: add shipment client and outcome polling`。
 
 ## TASK-032 — 交付Shipment列表、建立、詳情及取消介面
 
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
-
 ### Goal
 依前端規範交付Shipment list、create/edit form及detail頁，預選有效default Address／Contact，呈現物流欄位、quantity／issue/history及server allowed actions。 （Legacy identity：`P2-T09`；規模估算：M。）
 
@@ -2490,8 +2472,6 @@ Commit：`feat: add shipment management pages`。
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
 
 ## TASK-033 — 交付Confirm摘要、恢復及A4文件列印頁
-
-功能已隨 PR #326 合併。主幹功能 CI 41610258737 通過。
 
 ### Goal
 交付Confirm summary、二次確認、SHIPPING progress/recovery及Delivery Note／Packing List print page；顯示Address snapshot、完整quantity摘要及不可重複操作提示。 （Legacy identity：`P2-T10`；規模估算：M。）
