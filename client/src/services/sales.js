@@ -25,6 +25,10 @@ export default {
     const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize,q:filter??query.q}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
     return httpClient.get("/api/v1/sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
   },
+  listOutstanding({rowsPerPage,filter,signal,...query}={}) {
+    const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize,q:filter??query.q}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
+    return httpClient.get("/api/v1/outstanding-sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
+  },
   listAudit({rowsPerPage,filter:_filter,signal,...query}={}) {
     const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
     return httpClient.get("/api/v1/sales-audit-logs",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));

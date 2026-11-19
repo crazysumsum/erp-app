@@ -1,0 +1,80 @@
+import process from "node:process";
+import { test,expect } from "@playwright/test";
+import { createServer } from "vite";
+import { randomUUID,randomInt } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { migrationFixture,enterSalesFixtureRequests } from "../../../server/test/sales/phase1/fixtures.js";
+import { createApplication } from "../../../server/src/framework/application/createApplication.js";
+import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
+import { SalesOrderConfirmationService } from "../../../server/src/modules/sales/SalesOrderConfirmationService.js";
+import { SalesOrderService } from "../../../server/src/modules/sales/SalesOrderService.js";
+import { formatDateForFile } from "../../../server/src/services/time/timeFormat.js";
+let app,vite,f,origin,viewerToken,operatorClaims;
+const callbacks=[];
+let outstanding;
+test.beforeAll(async()=>{
+ if(process.env.DB_INTEGRATION_TESTS!=="1"||!/^erp_sales_inquiry_[a-z0-9]+$/u.test(process.env.DB_NAME??"")||!/^\/private\/tmp\/sales-inquiry\.[A-Za-z0-9]+\/mysql\.sock$/u.test(process.env.DB_SOCKET_PATH??""))throw new Error("Sales inquiry browser validation requires an isolated synthetic database and socket");
+ f=await migrationFixture({after(fn){callbacks.push(fn);}},[]);
+ const source=defaultConfigurationSource(),port=randomInt(32000,59000);origin=`http://127.0.0.1:${port}`;
+ app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},sales:{...source.sales,manualConfirmationWaitMs:2500},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.confirmationRecovery":{enabled:false},"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:false}}},security:{...source.security,cors:{...source.security.cors,allowedOrigins:origin}}}});
+ async function actor(permissions){const role=`sales-e2e-${randomUUID().slice(0,8)}`,roleId=await f.insert("roles",{name:role,created_at:f.now}),userId=await f.insert("users",{username:role,password_hash:"synthetic-only",display_name:"Synthetic Sales browser",created_at:f.now,updated_at:f.now});
+  await f.db.execute("INSERT INTO user_roles (user_id,role_id) VALUES (?,?)",[userId,roleId]);for(const permission of permissions)await f.db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name=?",[roleId,permission]);
+  f.beforeParents.push(async()=>{await f.db.execute("DELETE FROM sales_audit_logs WHERE actor_user_id=?",[userId]);await f.db.execute("DELETE FROM sales_operation_requests WHERE actor_user_id=?",[userId]);await f.db.execute("DELETE FROM fr_token_versions WHERE subject=?",[String(userId)]);await f.db.execute("DELETE FROM user_roles WHERE user_id=?",[userId]);await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[roleId]);});
+  if(permissions.includes("sales.mgmt")){operatorClaims={actorId:userId,claimedRoles:[role],claimedPermissions:permissions};}
+  return app.services.require("jwt").issue({roles:[role],permissions},{subject:String(userId),version:await app.services.require("tokenRevocation").currentVersion(String(userId)),authTime:Math.floor(f.now/1000)});
+ }
+ await actor(["sales.view","sales.mgmt"]);viewerToken=await actor(["sales.view"]);
+ f.beforeParents.push(async()=>{await f.db.execute("DELETE FROM sales_quotation_conversions WHERE quotation_id IN (SELECT id FROM sales_quotations WHERE customer_id=?)",[f.customerId]);await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM sales_quotations WHERE customer_id=?",[f.customerId]);});
+ await f.db.execute("UPDATE currencies SET status='ACTIVE' WHERE code=?",[f.currency]);await f.db.execute("UPDATE item_skus SET sellable=1,suggested_price_amount='3.3333' WHERE id=?",[f.skuId]);
+ await f.db.execute("UPDATE item_skus SET inventory_tracked=1 WHERE id=?",[f.skuId]);
+ const bin=await f.insert("inventory_bins",{warehouse_id:f.warehouseId,bin_code:"browser",normalized_code:"browser",created_at:f.now,updated_at:f.now});
+ await f.db.execute("INSERT INTO inventory_stock_balances (warehouse_id,bin_id,sku_id,stock_status,on_hand_quantity,created_at,updated_at) VALUES (?,?,?,'AVAILABLE',100,?,?)",[f.warehouseId,bin,f.skuId,f.now,f.now]);
+ f.beforeParents.push(async()=>{await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM inventory_reservations WHERE warehouse_id=?",[f.warehouseId]);await f.db.execute("DELETE FROM inventory_stock_balances WHERE warehouse_id=?",[f.warehouseId]);await f.db.execute("DELETE FROM inventory_stock_controls WHERE warehouse_id=?",[f.warehouseId]);});
+ const database=app.services.require("mysqldatabase"),time=app.services.require("time"),logger=app.services.require("logging").logger;
+ const restore=enterSalesFixtureRequests(database);callbacks.push(restore);
+ const orders=new SalesOrderService({database,time,logger}),confirmation=new SalesOrderConfirmationService({database,time,logger});
+ const input=()=>({eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:formatDateForFile(new Date(f.now),"Asia/Hong_Kong"),lines:[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"10.000000",unitSellingPrice:"1.0000"}]});
+ const created=await orders.create({claims:operatorClaims,input:input()});
+ outstanding=created.salesOrder;
+ const confirmed=await confirmation.confirm({claims:operatorClaims,id:outstanding.id,input:{eventId:randomUUID(),version:1}});
+ if(confirmed.statusCode!==200)throw new Error("Expected a confirmed synthetic order");
+ const {url}=await app.start();process.env.VITE_API_BASE_URL=url;
+ vite=await createServer({root:fileURLToPath(new URL("../..",import.meta.url)),configFile:fileURLToPath(new URL("../../vite.config.js",import.meta.url)),server:{host:"127.0.0.1",port,strictPort:true}});await vite.listen();
+});
+test.afterAll(async()=>{try{if(vite)await vite.close();if(app)await app.shutdown("sales_inquiry_browser_complete");}finally{for(const callback of callbacks.reverse())await callback();}});
+function monitor(page,expected=[]){const errors=[],network=[];let offline=false;
+ page.on("pageerror",error=>errors.push(error.message));page.on("console",message=>{if(message.text().startsWith("[Vue warn]")||(message.type()==="error"&&!message.text().includes("Failed to load resource")&&!message.text().includes("net::ERR_INTERNET_DISCONNECTED")))errors.push(message.text());});
+ page.on("requestfailed",request=>{const error=request.failure()?.errorText;if(!offline&&error!=="net::ERR_ABORTED")network.push(error);});
+ page.on("response",response=>{if(response.status()>=400&&!expected.some(([status,path])=>response.status()===status&&new URL(response.url()).pathname.startsWith(path)))network.push(response.status());});
+ return {offline(value){offline=value;},verify(){expect(errors).toEqual([]);expect(network).toEqual([]);}};
+}
+async function authenticate(page,token=viewerToken){await page.goto(origin+"/login");await page.evaluate(async value=>{const {setToken}=await import("/src/framework/auth/tokenStorage.js");setToken(value,900,3600);},token);}
+
+test("TC-044 Active query reaches Outstanding detail with committed quantities and read-only access", async ({page}) => {
+ const check=monitor(page);
+ await authenticate(page);
+ await page.goto(origin+"/sales/orders");
+ await expect(page.getByRole("heading",{name:"銷售訂單",exact:true})).toBeVisible();
+ await page.getByRole("link",{name:"未完成訂單",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"未完成銷售訂單",exact:true})).toBeVisible();
+ const number=page.getByLabel("訂單編號（精確）",{exact:true});
+ await number.fill("SO-190001-999999");
+ await page.getByRole("button",{name:"搜尋",exact:true}).click();
+ await expect(page.getByRole("status").filter({hasText:"沒有符合條件的未完成銷售訂單"})).toBeVisible();
+ await number.fill(outstanding.number);
+ await page.getByRole("button",{name:"搜尋",exact:true}).click();
+ const order=page.getByRole("link",{name:`查看 ${outstanding.number}`,exact:true});
+ await expect(order).toBeVisible();
+ await expect(page).toHaveURL(new RegExp(`number=${outstanding.number}`));
+ await page.reload();
+ const row=page.getByRole("row").filter({has:order});
+ await expect(row).toBeVisible();
+ expect((await row.getByRole("cell").allTextContents()).slice(-7,-1)).toEqual(["10","10","0","0","0","10"]);
+ await expect(page.getByRole("link",{name:"新增銷售訂單",exact:true})).toHaveCount(0);
+ await page.setViewportSize({width:375,height:800});
+ await order.focus();
+ await page.keyboard.press("Enter");
+ await expect(page.getByRole("heading",{name:outstanding.number,exact:true})).toBeVisible();
+ await expect(page.getByRole("button",{name:"查看審計紀錄",exact:true})).toBeVisible();
+ check.verify();
+});
