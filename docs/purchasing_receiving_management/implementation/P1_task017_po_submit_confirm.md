@@ -2,7 +2,7 @@
 
 Built on 2026-11-04 from main `ae54601f`. No schema change, manifest edit or new dependency; baselines unchanged (design `bedf5d1b`, plan `7cca891a`). Design §2.5, §2.6, §3.2, §3.3, §4.16, §5.2, §8.3; FR-SET-004, FR-APPROVAL-001, FR-APPROVAL-008, FR-LIFE-001, FR-PO-018, AC-011; `TC-004`.
 
-`POST /api/v1/purchase-orders/:id/submit` (`SubmitPurchaseOrderHandler`, `submitPurchaseOrder`): jwt, `purchasing.mgmt`, idempotency enabled, body is `{eventId, version}` only, 200. A complete Draft returns `{id, number, status: "CONFIRMED", outcome: "CONFIRMED", version, warnings: [], replayed}`.
+`POST /api/v1/purchase-orders/:id/submit` (`SubmitPurchaseOrderHandler`, `submitPurchaseOrder`): jwt, `purchasing.mgmt`, idempotency enabled, body is `{eventId, version}` only, 200. A complete Draft returns `{id, number, status: "CONFIRMED", outcome: "CONFIRMED", version, warnings: [], replayed}`. HTTP 重放回應的 body 為首次儲存的 body（replayed:false 原樣），重放標記在 Idempotency-Replayed header（IdempotencyService.sendReplay）；spec 斷言 header 加 body 與首次一致。
 
 The design places this in `PurchaseApprovalService` and a Lifecycle `confirmValidatedDraftInTransaction()` (§8.3), while the task names `PurchaseOrderService.js` and `purchaseOrderStateMachine.js`. This follows the task, because neither of the other services exists yet. TASK-022 and TASK-025 can move the code when they add them.
 
