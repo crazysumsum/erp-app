@@ -80,6 +80,8 @@ export class ArInquiryService {
    * 帳齡表：只做今日的現況。只讀已確認而且仍有未收額的發票（Draft 及作廢的發票也有未收額數字，所以必須篩狀態），
    * 按客戶及幣別分桶；不同幣別不相加，`totals` 亦是每個幣別一列。「今日」取應用時區的日期，不用資料庫的 CURDATE()。
    * ponytail: 不分頁，一次回全部有未收額的客戶；客戶數過千時再加分頁。客戶名稱取該客戶發票快照中的最大值。
+   * ponytail: 沒有可用的選擇性索引（幾乎所有發票都是 CONFIRMED），會掃整張 ar_invoices；發票累積到數十萬張後會變慢，
+   * 到時要加索引（屬結構改動，須先交 Sam 批准）。
    */
   async aging({ query = {} }) {
     const asOfDate = this.time.fileDate(this.time.at(this.time.nowMs())), where = ["status = 'CONFIRMED'", "outstanding_amount > 0"], values = [asOfDate];

@@ -12,7 +12,7 @@
     {
       "path": "server/test/integration/arReceipts.integration.test.js",
       "mode": "100644",
-      "blob": "d3eca1e56d1324184d39ef2a6361b657f1d478b4",
+      "blob": "efcecb5e41f3fd949c667b174c39151df0cb8521",
       "kind": "functional",
       "cases": [
         "收款草稿：建立後可讀，金額只收幣別小數位，未知客戶、欄位、方式及不符的 Idempotency-Key 都被拒絕而且不留資料",
