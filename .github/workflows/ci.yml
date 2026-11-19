@@ -278,7 +278,7 @@ jobs:
         if: matrix.shard == 1
         run: npx playwright install --with-deps chromium
 
-      - name: Run real Fulfillment P1 and P2 browser flows on owned UUID databases
+      - name: Run real Fulfillment P1 and P2 browser flows on owned UUID databases and the Purchasing approval flow on erp_dev
         if: matrix.shard == 1
         env:
           DB_SOCKET_PATH: /tmp/erp-ci-mysql-socket/mysqld.sock
@@ -287,6 +287,8 @@ jobs:
           FULFILLMENT_LIFECYCLE_ENABLED: "true"
           FULFILLMENT_TEST_API_PORT: "53001"
           FULFILLMENT_TEST_CLIENT_PORT: "53002"
+          PURCHASING_TEST_API_PORT: "53003"
+          PURCHASING_TEST_CLIENT_PORT: "53004"
           HARNESS_RUN_DIR: ${{ runner.temp }}/fulfillment-p1-browser
         run: |
           npx playwright test --config client/e2e/fulfillment-shipping-management/p1.playwright.config.js
@@ -305,6 +307,14 @@ jobs:
           assert len(list(root.iter('testcase')))==2, 'Both real P2 flows must execute'
           assert not any(list(root.iter(tag)) for tag in ['failure','error','skipped']), 'P2 failures/skips block CI'
           PY2
+          npx playwright test --config client/e2e/purchasing-receiving-management/playwright.config.js
+          python3 - <<'PY3'
+          import os, pathlib, xml.etree.ElementTree as ET
+          report=pathlib.Path(os.environ['HARNESS_RUN_DIR'])/'purchasing-approval-browser.xml'
+          root=ET.parse(report).getroot()
+          assert len(list(root.iter('testcase')))==1, 'The Purchasing approval flow must execute'
+          assert not any(list(root.iter(tag)) for tag in ['failure','error','skipped']), 'Purchasing approval failures/skips block CI'
+          PY3
 
       - name: Retain synthetic Fulfillment P1 and P2 browser reports
         if: always() && matrix.shard == 1
@@ -314,6 +324,7 @@ jobs:
           path: |
             ${{ runner.temp }}/fulfillment-p1-browser/fulfillment-p1-browser.xml
             ${{ runner.temp }}/fulfillment-p1-browser/fulfillment-p2-browser.xml
+            ${{ runner.temp }}/fulfillment-p1-browser/purchasing-approval-browser.xml
           if-no-files-found: error
 
       - name: Finalize Inventory native coverage ownership proof
