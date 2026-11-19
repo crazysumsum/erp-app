@@ -152,16 +152,6 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
   await a.ship(a.first);
   const bare = (fields) => a.run("create", { shipmentIds: [Number(a.first)], ...fields });
 
-  // 按箱賣、按件出（TABLES-ADDENDUM-1）：訂單行的銷售單位是 BOX、一箱 6 件；發票行保存並回傳銷售單位及換算率，
-  // quantity 仍是基本單位（3 件），單價仍是每箱的價格，行金額不受影響。
-  await f.db.query("UPDATE sales_order_lines SET uom_code_snapshot = 'BOX', to_base_factor_snapshot = 6 WHERE id = ?", [f.s.lineId]);
-  const boxed = await a.create([a.first]);
-  const [boxLine] = (await a.inquiry.getInvoice({ claims: a.claims, id: boxed.id })).lines;
-  const [[shipped]] = await f.db.query("SELECT base_uom_code_snapshot AS base FROM shipment_lines WHERE shipment_id = ?", [a.first]);
-  assert.deepEqual([boxLine.salesUomCode, boxLine.toBaseFactor, boxLine.baseUomCode, boxLine.quantity, boxLine.unitPrice, boxLine.lineAmount], ["BOX", 6, shipped.base, "3", "1.0000", "3.0000"]);
-  assert.notEqual(shipped.base, "BOX");
-  await a.act("cancel", boxed.id, { version: 1 });
-
   // 訂單沒有付款條款：必須輸入到期日，而且不可早於發票日期。
   await assert.rejects(bare({}), code("AR_DUE_DATE_REQUIRED"));
   await assert.rejects(bare({ invoiceDate: "2023-11-10", dueDate: "2023-11-09" }), code("AR_INPUT_INVALID"));
@@ -172,6 +162,16 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
   await assert.rejects(a.run("create", { shipmentIds: Array.from({ length: 21 }, (_, index) => index + 1) }), code("AR_INPUT_INVALID"));
   await assert.rejects(a.run("create", { shipmentIds: [Number(a.first)], totalAmount: "1.00" }), code("AR_INPUT_INVALID"));
   assert.equal(await a.count("ar_invoices"), 0);
+
+  // 按箱賣、按件出（TABLES-ADDENDUM-1）：訂單行的銷售單位是 BOX、一箱 6 件；發票行保存並回傳銷售單位及換算率，
+  // quantity 仍是基本單位（3 件），單價仍是每箱的價格，行金額不受影響。
+  await f.db.query("UPDATE sales_order_lines SET uom_code_snapshot = 'BOX', to_base_factor_snapshot = 6 WHERE id = ?", [f.s.lineId]);
+  const boxed = await a.create([a.first]);
+  const [boxLine] = (await a.inquiry.getInvoice({ claims: a.claims, id: boxed.id })).lines;
+  const [[shipped]] = await f.db.query("SELECT base_uom_code_snapshot AS base FROM shipment_lines WHERE shipment_id = ?", [a.first]);
+  assert.deepEqual([boxLine.salesUomCode, boxLine.toBaseFactor, boxLine.baseUomCode, boxLine.quantity, boxLine.unitPrice, boxLine.lineAmount], ["BOX", 6, shipped.base, "3", "1.0000", "3.0000"]);
+  assert.notEqual(shipped.base, "BOX");
+  await a.act("cancel", boxed.id, { version: 1 });
 
   // 權限在交易內重驗：沒有 ar.invoice.mgmt 的操作者（這裡是 Fulfillment 的用戶），或 claims 與資料庫不符，都是 PERMISSION_STALE。
   const input = () => ({ eventId: randomUUID(), shipmentIds: [Number(a.first)], dueDate: "2023-12-14" });
