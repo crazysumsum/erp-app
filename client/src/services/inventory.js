@@ -24,6 +24,15 @@ function stocktakeList(path, { page, rowsPerPage, signal, ...filters } = {}) {
 }
 
 export default {
+  uploadOpening(file, { signal } = {}) {
+    const body = new FormData();
+    body.set("file", new File([file], file.name, { type: "text/csv" }));
+    return httpClient.post("/api/v1/inventory/opening/upload", { body, signal });
+  },
+  getOpening(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/opening/jobs/${id}`, { signal }); },
+  confirmOpening(id, body, { signal } = {}) {
+    return httpClient.post(`/api/v1/inventory/opening/jobs/${id}/confirm`, { body, signed: true, signal });
+  },
   listStocktakes(options) { return stocktakeList("/api/v1/inventory/stocktakes", options); },
   getStocktake(id, { signal, scopePage, scopePageSize } = {}) {
     return httpClient.get(`/api/v1/inventory/stocktakes/${id}`, { params: { scopePage, scopePageSize }, signal });
