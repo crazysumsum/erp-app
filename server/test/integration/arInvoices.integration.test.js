@@ -22,7 +22,7 @@ integrationTest("發票確認取年度流水號；取消只限草稿；作廢須
 
   const confirmed = f.ok(await f.invoicePost(`/${first}/confirm`, { version: 1 })), next = f.ok(await f.invoicePost(`/${second}/confirm`, { version: 1 }));
   assert.match(confirmed.number, new RegExp(`^INV-${f.today.slice(0, 4)}-\\d{6}$`, "u"));
-  assert.equal(Number(next.number.slice(-6)), Number(confirmed.number.slice(-6)) + 1);
+  assert.ok(Number(next.number.slice(-6)) > Number(confirmed.number.slice(-6))); // 流水號全庫共用，只斷言嚴格遞增。
   assert.deepEqual([confirmed.status, confirmed.version, confirmed.replayed], ["CONFIRMED", 2, false]);
   let detail = await read(first);
   assert.deepEqual([detail.number, detail.status, detail.confirmedByLabel, detail.totalAmount, detail.outstandingAmount, detail.allowedActions, detail.lines, detail.allocations],
@@ -107,7 +107,8 @@ integrationTest("發票列表：新到舊、分頁、狀態、客戶、幣別、
   }
 
   // 建立草稿：輸入不合規在讀取出貨前被拒絕；不存在的出貨由 Fulfillment 的 reader 整個拒絕，不留下發票或操作記錄。
-  const before = await f.count("ar_invoices");
+  const written = () => f.count("ar_invoices WHERE created_by = ?", [f.biller.id]); // SQL fixture 的發票沒有 created_by。
+  assert.equal(await written(), 0);
   const create = (fields, eventId = randomUUID()) => f.invoicePost("", fields, f.biller.token, eventId);
   assert.deepEqual(failure(await create({ shipmentIds: [] })), [400, "AR_INPUT_INVALID", "shipmentIds"]);
   assert.deepEqual(failure(await create({ shipmentIds: [1, 1] })), [400, "AR_INPUT_INVALID", "shipmentIds"]);
@@ -119,7 +120,7 @@ integrationTest("發票列表：新到舊、分頁、狀態、客戶、幣別、
   assert.deepEqual(failure(await f.send("/api/v1/ar-invoices", { token: f.biller.token, body: { eventId: randomUUID(), shipmentIds: [1] }, key: randomUUID() })), [400, "AR_INPUT_INVALID", "eventId"]);
   const missing = randomUUID(), unknown = await create({ shipmentIds: [999999999991], dueDate: f.day(30) }, missing);
   assert.equal(unknown.status, 409, JSON.stringify(unknown.body));
-  assert.equal(await f.count("ar_invoices"), before);
+  assert.equal(await written(), 0);
   assert.equal(await f.count("ar_operation_requests WHERE event_id = ?", [missing]), 0);
 });
 
