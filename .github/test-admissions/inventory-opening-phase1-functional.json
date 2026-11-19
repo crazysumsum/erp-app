@@ -1,0 +1,253 @@
+{
+  "version": 1,
+  "decision": "Sam’s 2026-11-19 to 2026-11-26 Taipei temporary functional CI policy, plus Sam’s Opening release instruction: complete non-author review, fix necessary findings, PR and merge after green functional CI. Codex TL accepted Opening source 657d160b4b99056ceda8aabe45d7c10f5ae203d9 at base df0274bfd78640a0cdaac5746d82553f6db17c37 in review turn 01a1f275-1285-7ae1-bc60-8ef335f2206b. Retain all TASK-028 case and pin classifications from purchasing-task028-receiving-policy.json; update only the shared inventoryErrors.js blob for OPENING_POSITION_OCCUPIED. Administration must independently register this exact digest.",
+  "purpose": "ReceivingPolicyService pure receiving policy: base quantity, supplier exception, SKU commitment drift, tracking and lot dates, minimum receipt life with the Confirm and business-date checks, over-receipt and duplicate dimensions; case 31 checks agreement of the two Inventory-bound reasons with Inventory's real normalizePurchaseReceipt (normalization only); Opening parser and precheck prevent invalid/double posting. Explicit local HTTP/MySQL checks exercise durable result, protected full-file posting, stale SKU, normalized Lot key, idempotency and rollback.",
+  "data": "Pure in-memory inputs only: 31 registrations, 135 calls (113 policy, 22 Inventory normalizer: 8 positive, 14 negative); at most 4 details per call, longest string 504 bytes; no DB, network, fixture file or timer; Opening routine adds 7 in-memory cases, ≤5,001 generated small CSV lines only in one parser count check, other cases at most 6 lines, no DB, network, load or timers. Explicit local suite only: 9 cases, fresh isolated MySQL26.7 schema, 1 warehouse, 2 bins and 2 SKUs, at most 2 positive rows per file, 2 actors and 1 controlled second-link failure.",
+  "concurrency": "Existing scheduling unchanged. Opening routines use one test process per file with serial cases. Explicit local suite uses one process, one isolated MySQL, one HTTP app; no load.",
+  "repetitions": "One invocation per suite per applicable run.",
+  "thresholds": "All 31 pass with 0 fail and 0 skip by the runner's own counts; existing coverage floors unchanged (global 92/83/90 and existing per-file floors); no timing threshold; Opening routine 7/7 PASS and explicit local 9/9 PASS, both zero skips, no new performance threshold.",
+  "trigger": "Existing ci.yml server coverage shards (8) on an admitted PR dispatch, push to main and the weekly schedule; no new job; Opening unit files use existing discovery. Opening integration requires explicit local server/scripts/inventoryOpening.integration.js execution and two existing test flags. No CI discovery, job, flag or capacity change.",
+  "cost": "No new CI job, DB fixture, browser job or capacity. Opening routine runs 7 small unit cases. No isolated CI overhead measurement. Explicit local 9-case runner took about 1.3 s after fresh schema migration.",
+  "files": [
+    {
+      "path": "server/test/purchasing/receivingPolicy.test.js",
+      "mode": "100644",
+      "blob": "37cf20462979e9eef191b4155aba776cbfba7eab",
+      "kind": "functional",
+      "cases": [
+        "TASK-028 P028-01 calculateBaseQuantity 精確換算正整數 Base 並正規化數量",
+        "TASK-028 P028-02 calculateBaseQuantity 拒絕 0、負數、指數、超過 6 位小數、空字串同非字串",
+        "TASK-028 P028-03 calculateBaseQuantity 非整數 Base 或非法 factor 係 UOM_CONVERSION_INVALID",
+        "TASK-028 P028-04 calculateBaseQuantity 遵守系統 Base 上限",
+        "TASK-028 P028-05 Active Supplier 唔使原因，送咗都唔保存",
+        "TASK-028 P028-06 Suspended／Archived Supplier 要原因（BR-038）",
+        "TASK-028 P028-07 Blocked Supplier 要原因而且每個 detail 都要 QUARANTINED",
+        "TASK-028 P028-08 已確認 PO 嘅 Supplier 唔可能係 draft、pending_approval 或未知狀態，fail closed",
+        "TASK-028 P028-09 一般原因：空白要求原因，少於 5 或多過 500 code point 拒絕，前後空白會 trim",
+        "TASK-028 P028-10 SKU 冇變就冇 warning，原因唔保存",
+        "TASK-028 P028-11 Item provider 嘅 warning 原文傳出，要原因（BR-039）",
+        "TASK-028 P028-12 Purchasing 自己偵測 Tracking、Base UOM 同 Purchase UOM 改變，並同 provider warning 合併排序",
+        "TASK-028 P028-13 SKU projection 冇咗或者 skuId 唔對，fail closed",
+        "TASK-028 P028-14 Tracking none：空值當冇，有 Lot／Expiry／Manufacture 就拒絕",
+        "TASK-028 P028-15 Tracking batch：要 Lot，trim 後保留大細楷，Expiry 選填",
+        "TASK-028 P028-16 Tracking batch_expiry：Lot 同 Expiry 一齊要求",
+        "TASK-028 P028-17 非法日期、生產日期遲過到期日、超長或含 control character 嘅 Lot 都拒絕",
+        "TASK-028 P028-18 serial 或未知 Tracking fail closed，唔降級（AC-028）",
+        "TASK-028 P028-19 Minimum Receipt Life 門檻取 PO 快照同目前值較嚴格嘅非空值",
+        "TASK-028 P028-20 剩餘效期等於門檻就合格；少一日而冇權限冇原因就 MINIMUM_RECEIPT_LIFE_FAILED",
+        "TASK-028 P028-21 有 override 權限加原因就產生同 Inventory 一致嘅 evidence；原因空白仍然拒絕",
+        "TASK-028 P028-22 冇 override 權限但送原因就 EXPIRY_OVERRIDE_DENIED",
+        "TASK-028 P028-23 已過期任何權限都唔可以 override；當日到期唔算過期但仍要過門檻",
+        "TASK-028 P028-24 冇 Expiry 就唔計 Minimum Receipt Life（同 Inventory 現況一致）",
+        "TASK-028 P028-25 少收唔會有超收，亦唔要求原因（FR-VAL-015）",
+        "TASK-028 P028-26 超收按提交前 Outstanding 計並要求原因（AC-034）",
+        "TASK-028 P028-27 Outstanding 已係 0 都可以超收但要原因；數量唔係 safe integer 就係程式錯誤",
+        "TASK-028 P028-28 同一 PO line 可以拆 Lot／位置／Status；Lot 大細楷唔同就係唔同 bucket（AC-023）",
+        "TASK-028 P028-29 同一 physical bucket 唔可以重複，唔理輸入 UOM，Lot 前後空白唔算唔同",
+        "TASK-028 P028-30 Expiry 唔可以早過業務收貨日期，即使 Confirm 日仲未到期（FR-VAL-007、TL Q1）",
+        "TASK-028 P028-31 傳去 Inventory 嘅兩個原因按 trim 後 5～500 UTF-8 byte 單行，同 Inventory normalizePurchaseReceipt 判斷一致"
+      ]
+    },
+    {
+      "path": "server/src/modules/purchasing/ReceivingPolicyService.js",
+      "mode": "100644",
+      "blob": "dc0fbcc98279c5f44eb8b17d17b3e8608341e25c",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/config/database.js",
+      "mode": "100644",
+      "blob": "48a4eedceb3df0ce54091579d058e6aeefacadb0",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/framework/configuration/SecretValue.js",
+      "mode": "100644",
+      "blob": "4525cf40401c518a2f27ae6e084844449ee77701",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/framework/errors/ApplicationError.js",
+      "mode": "100644",
+      "blob": "f57b1e1bb21954a7d9da14540465868d106f27f3",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/FulfillmentTransactionService.js",
+      "mode": "100644",
+      "blob": "858d707b6be0e644c4a4c31945581e0d552e463b",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/fulfillmentConstants.js",
+      "mode": "100644",
+      "blob": "975a043a0b72484ac10f056849c2d47e044e63f1",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/fulfillmentErrors.js",
+      "mode": "100644",
+      "blob": "9b484bf898a15f0cd30052b1c17d0487d037f9e2",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/fulfillmentOperationHash.js",
+      "mode": "100644",
+      "blob": "882f682a3144e4fc92000b451df4693da132c13e",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/fulfillment/shipmentEventAdmission.js",
+      "mode": "100644",
+      "blob": "c1e9cd06714990a04c758d697e2b2983593bc40a",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/InventoryOperationService.js",
+      "mode": "100644",
+      "blob": "03324a554b603e57c4d79cfd5586f596374a4dce",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryConstants.js",
+      "mode": "100644",
+      "blob": "0f1803f9ff87d3ec74881123ac3c43efd598926d",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryErrors.js",
+      "mode": "100644",
+      "blob": "2d4af96b21d18b3a084c639693f8d4a3471d3e67",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryFulfillmentConstants.js",
+      "mode": "100644",
+      "blob": "7cacdcddc73306f3e2fb75b1d617e3f638411194",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryPurchaseValidation.js",
+      "mode": "100644",
+      "blob": "08db10a1f4b6f689213606c07f257d49a09daf0c",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventorySafeJson.js",
+      "mode": "100644",
+      "blob": "1b8838d0ee721e04da6b52a1c0f3fbfbde0c4575",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryValidation.js",
+      "mode": "100644",
+      "blob": "c45a7c2632eb11cc58ab4b02b6ea0d89cff0f559",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/purchasingConstants.js",
+      "mode": "100644",
+      "blob": "a15e905c857e8c25aa50d9e08a6b753752c8c601",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/purchasingErrors.js",
+      "mode": "100644",
+      "blob": "7b2e1489619e9fbd1fcd21da52160076e79f1f02",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/purchasingValidation.js",
+      "mode": "100644",
+      "blob": "7eaf01c16ce93c547bde9b2b8aac3290a742c518",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/quantityMath.js",
+      "mode": "100644",
+      "blob": "1b047ec0c0b45693e2b1cfd711cc96771ecc01eb",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "mode": "100644",
+      "blob": "64df24baa57adcfc6354467e9baae441ff5758cf",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/services/mysqldatabase/connection.js",
+      "mode": "100644",
+      "blob": "22d340cf1b6ece3735f4284d3088b6184d49b637",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/test/inventoryOpeningCsv.test.js",
+      "kind": "functional",
+      "cases": [
+        "Opening CSV preserves batch fields and reports zero rows separately",
+        "Opening CSV reports safe row and field errors and withholds all posting rows",
+        "Opening CSV rejects missing or changed headers, invalid UTF-8 and malformed quoting",
+        "Opening CSV counts zero rows towards the 5000 data row limit"
+      ],
+      "mode": "100644",
+      "blob": "3dbb31935b9f96358f83aae657593436144e5262"
+    },
+    {
+      "path": "server/test/inventoryOpeningPrecheck.test.js",
+      "kind": "functional",
+      "cases": [
+        "Opening precheck resolves SKU and location and permits distinct bins for the same new lot",
+        "Opening precheck rejects the whole file and lists duplicate buckets and checks occupied positions across statuses",
+        "Opening precheck requires Item batch fields and rejects contradictory expiry for a lot"
+      ],
+      "mode": "100644",
+      "blob": "3c2ecdb882297395f81200e0b255c85b9cb2ebda"
+    },
+    {
+      "path": "server/scripts/inventoryOpening.integration.js",
+      "kind": "functional",
+      "cases": [
+        "Opening migration reruns without resetting its singleton version",
+        "Opening upload saves normalized ready rows and detail returns the same result",
+        "Opening invalid preview persists safe row errors and no normalized or stock rows",
+        "Opening authorization protects upload and detail and LIVE blocks new uploads",
+        "Opening confirmation rolls back both rows when the second movement link fails",
+        "Opening confirmation posts both rows once and rejects another file for the same position",
+        "Opening confirmation rejects an active persistent Stocktake Bin lock without effects",
+        "Opening rejects the complete snapshot if an Item SKU was renamed after precheck",
+        "Opening precheck enforces the normalized UTF-8 Lot lock key boundary"
+      ],
+      "mode": "100644",
+      "blob": "f5bacdf38c25c5d9675f017edbc376accc38398e"
+    },
+    {
+      "path": "server/database/migrations/0066_create_inventory_opening.js",
+      "kind": "support",
+      "cases": [],
+      "mode": "100644",
+      "blob": "cc40b672ee2d199b0ed692a1abbe2f7cfe0de2df"
+    }
+  ]
+}
