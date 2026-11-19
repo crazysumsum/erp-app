@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "decision": "Sam, PM session on 2026-11-19: answered 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」, then 「開 PR」 and 「綠了就合併」 for putting his AGENTS.md instructions on main. The 2026-11-04 section is Sam's own uncommitted text from the root checkout, copied unchanged.",
+  "purpose": "Governance text only: publish Sam's 2026-11-04 operating scale and decision authority instruction and his 2026-11-19 seven-day suspension of per-case admission for functional tests, so sessions working from a worktree can read them.",
+  "data": "No test, fixture, dataset or application file. AGENTS.md gains 36 lines.",
+  "concurrency": "None; no workload is added or changed.",
+  "repetitions": "None.",
+  "thresholds": "Unchanged. Capacity and performance approval, the no-capacity-in-routine-CI rule and all coverage floors are restated as unchanged in the new text.",
+  "trigger": "No trigger change. This receipt does not alter the admission gate, its policy hashes or Actions variables.",
+  "cost": "Zero added routine test time; one ordinary functional CI run for the PR.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "blob": "31e591aaf8f6a6a057d02da0d8eaf3de80059b76",
+      "kind": "support"
+    }
+  ]
+}
