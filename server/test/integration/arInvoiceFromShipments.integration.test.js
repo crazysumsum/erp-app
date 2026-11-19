@@ -3,7 +3,7 @@
  *
  * 每案用 Fulfillment 既有的 shipmentDraftFixture 在自己的隔離資料庫建立 1 張訂單（1 行，訂 5 件）及最多 2 張出貨
  * （3 件及 2 件），再在該資料庫跑 AR 的 0122、0123。全檔 2 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
- * 只會上一張發票。服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
+ * 只會上一張發票，另一次 2 個並發的收款建立驗交易內不另佔連線。服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
  * 沒有容量或效能斷言。資料庫隨 fixture 丟棄。
  */
 import assert from "node:assert/strict";
@@ -17,6 +17,7 @@ import { up as createArTables } from "../../database/migrations/0123_create_ar_t
 import { ArCommandRunner } from "../../src/modules/ar/arCommand.js";
 import { ArInquiryService } from "../../src/modules/ar/ArInquiryService.js";
 import { ArInvoiceService } from "../../src/modules/ar/ArInvoiceService.js";
+import { ArReceiptService } from "../../src/modules/ar/ArReceiptService.js";
 import { BusinessMasterProvider } from "../../src/modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
@@ -35,7 +36,7 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   await seedArPermissions(f.db);
   await createArTables(f.db);
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。
-  const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.view"];
+  const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.receipt.mgmt", "ar.view"];
   const userId = await f.s.insert("users", { username: label, password_hash: "synthetic-only", display_name: "AR synthetic", created_at: f.s.now, updated_at: f.s.now });
   const roleId = await f.s.insert("roles", { name: label, created_at: f.s.now });
   await f.db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
@@ -43,8 +44,9 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   await f.db.query("UPDATE sales_order_lines SET unit_selling_price = ?, line_amount = ? WHERE id = ?", [unitPrice, lineAmount, f.s.lineId]);
   const claims = { sub: String(userId), roles: [label], permissions };
   const time = { nowMs: () => f.s.now + 1, at: (ms) => new Date(ms), fileDate: () => TODAY };
-  const invoices = new ArInvoiceService({ commands: new ArCommandRunner({ database: f.database, time }), time, readInvoiceSources: readInvoiceSourcesInTransaction,
-    customers: (executor) => new CustomerLookupService({ database: executor }), businessMaster: new BusinessMasterProvider({ database: f.database, repository: new BusinessMasterRepository() }) });
+  const shared = { commands: new ArCommandRunner({ database: f.database, time }), time, customers: (executor) => new CustomerLookupService({ database: executor }),
+    businessMaster: new BusinessMasterProvider({ database: f.database, repository: new BusinessMasterRepository() }) };
+  const invoices = new ArInvoiceService({ ...shared, readInvoiceSources: readInvoiceSourcesInTransaction }), receipts = new ArReceiptService(shared);
   const inquiry = new ArInquiryService({ database: f.database, time });
   const confirmation = new ShipmentConfirmationService(f.options);
   /** 把一張出貨草稿確認為 SHIPPED。 */
@@ -57,7 +59,7 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   const create = (shipmentIds, fields = {}) => run("create", { shipmentIds: shipmentIds.map(Number), dueDate: "2023-12-14", ...fields });
   const act = (method, invoiceId, fields) => run(method, fields, { invoiceId });
   const first = (await f.create(f.body())).outcome.id;
-  return { f, claims, label, invoices, inquiry, ship, run, create, act, first, count: async (sql, values) => Number((await f.db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total) };
+  return { f, claims, label, invoices, receipts, inquiry, ship, run, create, act, first, count: async (sql, values) => Number((await f.db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total) };
 }
 
 /** 同一訂單行餘下的 2 件：另一張履約、揀貨及出貨草稿（與 Fulfillment reader 的測試同一做法）。 */
@@ -186,4 +188,10 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
   assert.equal(results.find((result) => result.status === "rejected").reason.code, "AR_SHIPMENT_ALREADY_INVOICED");
   assert.equal(await a.count("ar_invoices WHERE status = 'DRAFT'"), 1);
   assert.equal(await a.count("ar_invoice_lines WHERE active_shipment_line_id IS NOT NULL"), 1);
+
+  // 這個 fixture 的連線池只有 2 條連線：兩個同時進行的命令各自只用自己交易的一條，所以都完成（交易內不另佔連線）。
+  const [[order]] = await f.db.query("SELECT currency_code FROM sales_orders WHERE id = ?", [f.s.orderId]);
+  const receipt = () => f.execute(() => a.receipts.create({ claims: a.claims, input: { eventId: randomUUID(), customerId: f.s.customerId, currencyCode: order.currency_code,
+    receiptDate: TODAY, amount: "3.00", paymentMethod: "CASH" } }));
+  assert.deepEqual((await Promise.all([receipt(), receipt()])).map((row) => row.status), ["DRAFT", "DRAFT"]);
 });
