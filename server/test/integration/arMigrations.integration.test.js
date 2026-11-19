@@ -1,6 +1,6 @@
 /**
- * 開票與應收首期：migration 0122（三個權限）及 0123（七張表）對一個真、已 migrate 的 MySQL 驗收。
- * 表結構正本是 TL 的 TABLES.md（sha256 2ffa6b0b…8aca，Sam 2026-11-19 批准）；這裡把欄位、鍵、外鍵及 CHECK 的名單釘住，
+ * 開票與應收首期：migration 0122（三個權限）、0123（七張表）及 0124（發票行兩欄）對一個真、已 migrate 的 MySQL 驗收。
+ * 表結構正本是 TL 的 TABLES.md（sha256 2ffa6b0b…8aca）及 TABLES-ADDENDUM-1.md（45f24a54…bcd9），均經 Sam 2026-11-19 批准；這裡把欄位、鍵、外鍵及 CHECK 的名單釘住，
  * 任何增減都會紅。
  *
  * 資料：每個約束案例在自己的 transaction 內寫最多 3 列，完結即 ROLLBACK；該連線關掉外鍵檢查，所以不需要客戶、
@@ -14,6 +14,7 @@ import mysql from "mysql2/promise";
 
 import { up as seedPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
 import { up as createTables } from "../../database/migrations/0123_create_ar_tables.js";
+import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { ArBusinessMasterImpactChecker } from "../../src/modules/ar/ArBusinessMasterImpactChecker.js";
 import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
 
@@ -30,7 +31,9 @@ const COLUMNS = {
     "created_by", "created_by_label", "confirmed_by", "confirmed_by_label", "confirmed_at", "voided_by", "voided_by_label", "voided_at",
     "created_at", "updated_at"],
   ar_invoice_lines: ["id", "invoice_id", "line_no", "shipment_id", "shipment_line_id", "sales_order_id", "sales_order_line_id",
-    "active_shipment_line_id", "sku_code_snapshot", "sku_name_snapshot", "base_uom_code_snapshot", "quantity", "unit_price_snapshot", "line_amount"],
+    "active_shipment_line_id", "sku_code_snapshot", "sku_name_snapshot", "base_uom_code_snapshot",
+    "sales_uom_code_snapshot", "to_base_factor_snapshot", // 這兩欄由 0124 加上（TABLES-ADDENDUM-1，Sam 2026-11-19「批准加兩欄」）。
+    "quantity", "unit_price_snapshot", "line_amount"],
   ar_receipts: ["id", "receipt_number", "status", ...PARTY, "receipt_date", "amount", "allocated_amount", "available_amount", "payment_method",
     "reference", "notes", "void_reason", "voided_by", "voided_by_label", "voided_at", "version", "created_by", "created_by_label",
     "confirmed_by", "confirmed_by_label", "confirmed_at", "created_at", "updated_at"],
@@ -125,10 +128,11 @@ test("0122 lists exactly the three AR permissions with the catalogue description
   assert.doesNotMatch(source, /role_permissions/iu);
 });
 
-integrationTest("0122 and 0123 rerun without changing anything: each permission exists once and the seven tables keep the approved columns", async (t) => {
+integrationTest("0122, 0123 and 0124 rerun without changing anything: each permission exists once and the seven tables keep the approved columns", async (t) => {
   const db = await connect(t);
   await seedPermissions(db);
   await createTables(db);
+  await addInvoiceLineSalesUom(db);
 
   const [permissions] = await db.query("SELECT name, description FROM permissions WHERE name LIKE 'ar.%' ORDER BY id");
   assert.deepEqual(permissions.map((row) => row.name), PERMISSIONS);
@@ -200,6 +204,17 @@ integrationTest("invoice lines: a shipment line sits on one active invoice at a 
   await rejects(insert("ar_invoice_lines", line({ invoice_id: 2, shipment_line_id: 8, active_shipment_line_id: 8 })), DUPLICATE); // (invoice_id, line_no)
   await rejects(insert("ar_invoice_lines", line({ invoice_id: 4, shipment_line_id: 9, active_shipment_line_id: 9, quantity: 0 })), CHECK, "chk_ar_invoice_line_values");
   await rejects(insert("ar_invoice_lines", line({ invoice_id: 4, shipment_line_id: 9, active_shipment_line_id: 9, line_amount: "-0.0001" })), CHECK, "chk_ar_invoice_line_values");
+
+  // 0124 的兩欄：型別及預設值與 sales_order_lines 相同；不帶值的行得到空代碼及換算率 1。
+  const [added] = await db.query(`SELECT column_name AS name, column_type AS type, is_nullable AS nullable, column_default AS fallback FROM information_schema.columns
+    WHERE table_schema = DATABASE() AND table_name = 'ar_invoice_lines' AND column_name IN ('sales_uom_code_snapshot', 'to_base_factor_snapshot') ORDER BY ordinal_position`);
+  assert.deepEqual(added.map((row) => [row.name, row.type, row.nullable, row.fallback]),
+    [["sales_uom_code_snapshot", "varchar(100)", "NO", ""], ["to_base_factor_snapshot", "int unsigned", "NO", "1"]]);
+  const [[plain]] = await db.query("SELECT sales_uom_code_snapshot AS code, to_base_factor_snapshot AS factor FROM ar_invoice_lines WHERE id = ?", [first]);
+  assert.deepEqual([plain.code, Number(plain.factor)], ["", 1]);
+  const boxed = await insert("ar_invoice_lines", line({ invoice_id: 5, shipment_line_id: 10, active_shipment_line_id: 10, sales_uom_code_snapshot: "BOX", to_base_factor_snapshot: 24 }));
+  const [[stored]] = await db.query("SELECT sales_uom_code_snapshot AS code, to_base_factor_snapshot AS factor FROM ar_invoice_lines WHERE id = ?", [boxed]);
+  assert.deepEqual([stored.code, Number(stored.factor)], ["BOX", 24]);
 }));
 
 integrationTest("receipts: amount relation holds by status, a void receipt keeps its amount with nothing allocated or available", (t) => probe(t, async (db, insert) => {
