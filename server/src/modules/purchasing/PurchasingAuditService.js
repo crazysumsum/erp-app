@@ -14,7 +14,10 @@ const ACTIONS = Object.freeze({
   "purchase_order.confirmation_withdrawn": { target: "PO", fields: ["version"] },
   "purchase_order.cancelled": { target: "PO", fields: ["version"] },
   "purchase_order.remaining_closed": { target: "PO", fields: ["version", "lineCount"] },
-  "purchasing.setting.updated": { target: "SETTING", fields: ["requirePoApproval", "version"] }
+  "purchasing.setting.updated": { target: "SETTING", fields: ["requirePoApproval", "version"] },
+  "goods_receipt.created": { target: "GR", fields: ["version"] },
+  "goods_receipt.updated": { target: "GR", fields: ["version"] },
+  "goods_receipt.cancelled": { target: "GR", fields: ["version"] }
 });
 // 冇業務寫入嘅拒絕結果（§4.15）：同名 action 加 outcome REJECTED；同 event 唔同內容另用 operation_conflict（§12.2）。
 const REJECTABLE = new Set([...Object.keys(ACTIONS), "purchasing.operation_conflict"]);
@@ -56,9 +59,9 @@ export class PurchasingAuditService {
     if (Buffer.byteLength(json, "utf8") > this.auditDetailMaxBytes) throw new TypeError("Purchasing audit detail too large");
     if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError("Invalid Purchasing audit timestamp");
     await connection.execute(`INSERT INTO purchasing_audit_logs
-      (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, purchase_order_id, target_label, reason, detail,
-        request_id, correlation_id, ip) VALUES (?, ?, ?, ?, 'SUCCEEDED', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [nowMs, positive(actor?.id), bounded(actor.username, 190), action, target, positive(targetId), target === "PO" ? targetId : null,
+      (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, purchase_order_id, goods_receipt_id, target_label, reason, detail,
+        request_id, correlation_id, ip) VALUES (?, ?, ?, ?, 'SUCCEEDED', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [nowMs, positive(actor?.id), bounded(actor.username, 190), action, target, positive(targetId), target === "PO" ? targetId : null, target === "GR" ? targetId : null,
       bounded(targetLabel, 190, { ascii: true }), reason === "" ? "" : validReason(reason), json,
       bounded(requestId, 64, { ascii: true, empty: true }), bounded(correlationId, 64, { ascii: true, empty: true }), bounded(ip, 45, { ascii: true, empty: true })]);
   }
@@ -72,9 +75,9 @@ export class PurchasingAuditService {
     if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError("Invalid Purchasing audit timestamp");
     const target = targetId === null ? null : positive(targetId), targetType = ACTIONS[action]?.target ?? "PO";
     const [row] = await connection.execute(`INSERT INTO purchasing_audit_logs
-      (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, purchase_order_id, detail, request_id, correlation_id, ip)
-      SELECT ?, id, username, ?, 'REJECTED', ?, ?, ?, ?, ?, ?, ? FROM users WHERE id = ?`,
-    [nowMs, action, targetType, target, targetType === "PO" ? target : null, JSON.stringify({ code }), bounded(requestId, 64, { ascii: true, empty: true }),
+      (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, purchase_order_id, goods_receipt_id, detail, request_id, correlation_id, ip)
+      SELECT ?, id, username, ?, 'REJECTED', ?, ?, ?, ?, ?, ?, ?, ? FROM users WHERE id = ?`,
+    [nowMs, action, targetType, target, targetType === "PO" ? target : null, targetType === "GR" ? target : null, JSON.stringify({ code }), bounded(requestId, 64, { ascii: true, empty: true }),
       bounded(correlationId, 64, { ascii: true, empty: true }), bounded(ip, 45, { ascii: true, empty: true }), positive(actorId)]);
     if (Number(row.affectedRows) !== 1) throw new TypeError("Purchasing rejected audit actor not found");
   }

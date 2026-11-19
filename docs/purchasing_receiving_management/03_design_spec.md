@@ -894,7 +894,7 @@ Trigger不是授權機制；正常寫入仍只能經service。Migration account�
 - List response為`{items,total,page,pageSize}`；client service轉成`{rows,rowsNumber}`。
 - Timestamp response為epoch ms；日期為`YYYY-MM-DD`；money及非整數quantity為decimal string。
 - 所有POST commands要求`eventId`、`Idempotency-Key:eventId`；mutable resource另帶`version`。
-- Schema一律`additionalProperties:false`。IDs為positive safe integer；reason trim後5～500字；notes最大2000；references最大190。
+- Schema一律`additionalProperties:false`。IDs為positive safe integer；reason trim後5～500字（例外：傳去Inventory的`skuExceptionReason`及`expiryOverrideReason`為trim後5～500 UTF-8 byte、單行、不含code point ≤31及127、須well-formed；TL RULING eb0f0f32 Q3＝B，Sam 2026-11-18 call_fd84d2fb）；notes最大2000；references最大190。
 - 409 version conflict只回`currentVersion`及安全摘要，不自動覆蓋或洩漏無權detail。
 - CSV response使用`Content-Disposition`、`Cache-Control:no-store, private`及`X-Content-Type-Options:nosniff`，公式字首`= + - @ tab CR`必須neutralize。
 - Child查詢同時帶owner ID；owner不符與不存在回相同404。
@@ -1350,14 +1350,16 @@ Submit前顯示Supplier、Line數、總額、Currency、交期、零價及缺Pay
 主要方法：
 
 ```js
-calculateBaseQuantity({ quantity, factor })
+calculateBaseQuantity({ quantity, factor, maxBaseQuantity })
 evaluateSupplierException({ currentStatus, details, reason })
 evaluateSkuCommitment({ poSnapshot, currentSku, reason })
 validateTracking({ policy, lotNumber, expiryDate, manufactureDate })
-evaluateMinimumLife({ receiptDate, expiryDate, snapshotDays, currentDays, canOverride, reason })
+evaluateMinimumLife({ businessReceiptDate, confirmDate, expiryDate, snapshotDays, currentDays, canOverride, reason })
 calculateOverReceipt({ outstandingBefore, receivedBaseQuantity, reason })
 assertUniqueDimensions(details)
 ```
+
+過期及剩餘效期以`confirmDate`（Confirm當地日期，與Inventory同一`time.fileDate()`）判斷，另外Expiry不得早於`businessReceiptDate`（FR-VAL-007；TL RULING eb0f0f32 Q1，Sam 2026-11-18 call_fd84d2fb）。
 
 Issues使用`{path,code,messageKey,meta}`，不含SQL或敏感值。Service一次回所有可修正field issues；permission／owner／狀態等安全錯誤可立即fail。
 
