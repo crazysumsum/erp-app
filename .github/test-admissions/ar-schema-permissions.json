@@ -1,18 +1,18 @@
 {
   "version": 1,
   "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope and schema: Sam approved the AR first phase and its seven new tables on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM); the table source is the TL's TABLES.md sha256 2ffa6b0b53c6d84c9133f0cea5fa5f860c91038850c363571d1d612c67718aca. The author (claude-erp-app-ar-01) does not approve this receipt.",
-  "purpose": "AR first phase, PR 1 of 3: migrations 0122 (three ar.* permissions, no role grant) and 0123 (seven new tables). One new MySQL test file pins the approved columns, keys, foreign keys, CHECK constraints and audit triggers and probes each constraint. Four existing integration files and the catalogue conventions file change only so that the admin claim set and the seed list account for the three new permissions; no existing case, assertion or data changes.",
-  "data": "New file: 8 cases; each constraint case writes at most 3 rows inside a transaction that is rolled back, with foreign key checks off on that connection only; no customer, shipment or order fixture. Existing files: one extra prefix in a permission filter and one extra file name in a list.",
+  "purpose": "AR first phase, PR 1 of 3: migrations 0122 (three ar.* permissions, no role grant) and 0123 (seven new tables), plus the AR Business Master impact checker that must arrive with the tables: once ar_invoices exists, Business Master's reserved checker stops answering NOT_INSTALLED and, without a real one, every currency and payment term change fails closed. One MySQL test file pins the approved columns, keys, foreign keys, CHECK constraints and audit triggers, probes each constraint and runs the checker's SQL; one unit file covers the checker's classification and fail-closed paths. Four existing integration files and the catalogue conventions file change only so that the admin claim set and the seed list account for the three new permissions; the Business Master HTTP case now expects the AR checker READY instead of NOT_INSTALLED. No other existing case, assertion or data changes.",
+  "data": "arMigrations: 9 cases; each constraint or checker case writes at most 10 rows inside a transaction that is rolled back, with foreign key checks off on that connection only; no customer, shipment or order fixture. arBusinessMasterImpactChecker: 4 unit cases on a fake connection. Existing files: one extra prefix in a permission filter, one extra file name in a list, one expected status.",
   "concurrency": "1 connection per case, serial; no concurrent trial.",
   "repetitions": "1",
   "thresholds": "All cases pass; exact equality on the schema lists; coverage floors unchanged; no timing threshold.",
   "trigger": "Existing ci.yml triggers and discovery only: the existing server MySQL integration shards and server test job. No new job, schedule or dispatch. No capacity or performance workload.",
-  "cost": "Estimated under 1 second for the new file (local run: 0.12 s for 8 cases); not measured in CI. No new job.",
+  "cost": "Estimated under 1 second for the new files (local run: 0.13 s for 9 MySQL cases, under 0.1 s for 4 unit cases); not measured in CI. No new job.",
   "files": [
     {
       "path": "server/test/integration/arMigrations.integration.test.js",
       "mode": "100644",
-      "blob": "20a81751ff6594eb05789f62e71b5c30b6732495",
+      "blob": "974192eed394e7939411d701afac46e37dbbe5bc",
       "kind": "functional",
       "cases": [
         "0122 lists exactly the three AR permissions with the catalogue descriptions and grants no role",
@@ -22,7 +22,29 @@
         "invoices: statuses, non-negative amounts, outstanding = total − allocated, due date not before invoice date, unique numbers",
         "invoice lines: a shipment line sits on one active invoice at a time and is free again once released",
         "receipts: amount relation holds by status, a void receipt keeps its amount with nothing allocated or available",
-        "allocations and audit: positive amounts, known statuses, bounded detail, and audit rows cannot be changed or removed"
+        "allocations and audit: positive amounts, known statuses, bounded detail, and audit rows cannot be changed or removed",
+        "Business Master impact: with the AR tables present the AR checker is ready and counts open and settled documents by currency"
+      ]
+    },
+    {
+      "path": "server/test/ar/arBusinessMasterImpactChecker.test.js",
+      "mode": "100644",
+      "blob": "0c19c3c374f995dca95618a3addcd854f233bcef",
+      "kind": "functional",
+      "cases": [
+        "drafts and unsettled confirmed documents are open; settled, void and cancelled ones are historical",
+        "no AR tables means not installed; no reference, and any payment term, is ready with zero counts",
+        "the watermark changes when a referencing document changes and only then",
+        "anything it cannot classify or trust fails closed instead of reporting no use"
+      ]
+    },
+    {
+      "path": "server/test/business-master/http.integration.test.js",
+      "mode": "100644",
+      "blob": "a96d7f9173440b69e72d6cbf859959817d549673",
+      "kind": "functional",
+      "cases": [
+        "TC-012 real HTTP authentication and authorized admin flow"
       ]
     },
     {

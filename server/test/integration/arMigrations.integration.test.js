@@ -14,6 +14,7 @@ import mysql from "mysql2/promise";
 
 import { up as seedPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
 import { up as createTables } from "../../database/migrations/0123_create_ar_tables.js";
+import { ArBusinessMasterImpactChecker } from "../../src/modules/ar/ArBusinessMasterImpactChecker.js";
 import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -231,4 +232,31 @@ integrationTest("allocations and audit: positive amounts, known statuses, bounde
   await rejects(insert("ar_audit_logs", audit({ outcome: "OK" })), CHECK, "chk_ar_audit_outcome");
   await rejects(insert("ar_audit_logs", audit({ target_type: "CREDIT_NOTE" })), CHECK, "chk_ar_audit_target");
   await rejects(insert("ar_audit_logs", audit({ detail: JSON.stringify({ text: "x".repeat(8192) }) })), CHECK, "chk_ar_audit_detail");
+}));
+
+integrationTest("Business Master impact: with the AR tables present the AR checker is ready and counts open and settled documents by currency", (t) => probe(t, async (db, insert) => {
+  // ar_invoices 一存在，Business Master 預留的 checker 就不再回 NOT_INSTALLED；沒有真 checker 的話所有貨幣及付款條款的異動都會被擋。
+  const checker = new ArBusinessMasterImpactChecker({ database: db }), counts = async (entityType, entityKey) => {
+    const { status, openUseCount, historicalCount } = await checker.check({ entityType, entityKey });
+    return [status, openUseCount, historicalCount];
+  };
+  const code = "QZX"; // 這個交易內才有的幣別代碼（外鍵檢查已關），完結即 ROLLBACK。
+  assert.deepEqual(await counts("CURRENCY", code), ["READY", 0, 0]);
+  const before = (await checker.check({ entityType: "CURRENCY", entityKey: code })).watermark;
+
+  await insert("ar_invoices", invoice({ currency_code: code })); // 草稿：進行中
+  await insert("ar_invoices", invoice({ currency_code: code, status: "CONFIRMED", invoice_number: "INV-2099-900001" })); // 未收：進行中
+  await insert("ar_invoices", invoice({ currency_code: code, status: "CONFIRMED", invoice_number: "INV-2099-900002", allocated_amount: "100.0000", outstanding_amount: "0.0000" }));
+  await insert("ar_invoices", invoice({ currency_code: code, status: "VOID", invoice_number: "INV-2099-900003" }));
+  await insert("ar_invoices", invoice({ currency_code: code, status: "CANCELLED" }));
+  await insert("ar_receipts", receipt({ currency_code: code })); // 草稿：進行中
+  await insert("ar_receipts", receipt({ currency_code: code, status: "CONFIRMED", receipt_number: "RCT-2099-900001" })); // 仍可核銷：進行中
+  await insert("ar_receipts", receipt({ currency_code: code, status: "CONFIRMED", receipt_number: "RCT-2099-900002", allocated_amount: "100.0000", available_amount: "0.0000" }));
+  await insert("ar_receipts", receipt({ currency_code: code, status: "VOID", receipt_number: "RCT-2099-900003", available_amount: "0.0000" }));
+  await insert("ar_invoices", invoice({ currency_code: "QZY" })); // 另一個幣別不計。
+
+  assert.deepEqual(await counts("CURRENCY", code), ["READY", 4, 5]);
+  assert.notEqual((await checker.check({ entityType: "CURRENCY", entityKey: code })).watermark, before);
+  assert.deepEqual(await counts("CURRENCY", "QZY"), ["READY", 1, 0]);
+  assert.deepEqual(await counts("PAYMENT_TERM", 1), ["READY", 0, 0]);
 }));
