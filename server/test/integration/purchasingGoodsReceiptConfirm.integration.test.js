@@ -263,6 +263,7 @@ integrationTest("TASK-032 C6 Blocked Supplier：冇原因拒絕；有原因但�
 integrationTest("TASK-032 C7 Draft 准留空嘅批號喺 Confirm 必填；冇 receiving.operation 403；舊 version 409；已確認 GR 唔可以再確認", async () => {
   const f = await fixture();
   const poRow = await f.order(), id = await f.draft(poRow.id), before = await snapshot(f, poRow);
+  assert.deepEqual(failure(await f.confirm(id, 1, [])), [400, "PURCHASING_INPUT_INVALID", "lines"]);
   assert.deepEqual(failure(await f.confirm(id, 1, twoLines(f, poRow, { lotNumber: "" }))), [409, "LOT_REQUIRED", "lines.1.details.0.lotNumber"]);
   assert.equal((await f.confirm(id, 1, twoLines(f, poRow), { token: f.viewer.token })).status, 403);
   assert.deepEqual(failure(await f.confirm(id, 2, twoLines(f, poRow))).slice(0, 2), [409, "VERSION_CONFLICT"]);

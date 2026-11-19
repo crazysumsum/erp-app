@@ -191,6 +191,8 @@ export class GoodsReceiptService {
     if (replay) return { ...replay, warnings: [], replayed: true };
 
     const { po, poLines, gr } = await this.#lockForReplace(tx, id, request.version, "FOR UPDATE");
+    // 冇任何 detail 嘅 Confirm 喺任何寫入之前擋（TL 25041383 R1）；Draft 仍然准空。
+    if (!request.lines.length) throw invalid("lines");
     const rows = await this.#prepare(tx, request, poLines, null);
     const confirm = await this.posting.evaluate(tx, { gr, rows, request, permissions, nowMs });
     const version = request.version + 1;

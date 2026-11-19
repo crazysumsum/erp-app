@@ -480,7 +480,7 @@
     {
       "path": "server/src/modules/purchasing/GoodsReceiptService.js",
       "mode": "100644",
-      "blob": "18cd90fed03bb3e4c957298615ee248500b43b75",
+      "blob": "e627a4e53bd64c875fb3599284c325009497b474",
       "kind": "support",
       "cases": []
     },
@@ -536,7 +536,7 @@
     {
       "path": "server/test/integration/purchasingGoodsReceiptConfirm.integration.test.js",
       "mode": "100644",
-      "blob": "fa865c1ede2002ef7e40ff61166a515af1c18ca3",
+      "blob": "cb46e24005c724729f9cdd93c3acfa5da0913e23",
       "kind": "functional",
       "cases": [
         "TASK-032 C1 確認兩行：一次 Inventory 過帳、GR CONFIRMED、PO progress 及狀態、history、Audit；收齊後 FULLY_RECEIVED（AC-036、AC-040）",

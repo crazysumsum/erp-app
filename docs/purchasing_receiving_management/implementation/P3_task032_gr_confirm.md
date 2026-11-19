@@ -43,6 +43,8 @@ The minimal confirm handler ships here, because Inventory's one-time context can
 
 ## Known limits (accepted at 20 users)
 
+- Inventory issues one context per request (`issuedRequests`). Never add an automatic retry around confirm inside `operations.run`; a second attempt would fail with `PERMISSION_STALE`. A Confirm with no lines is refused with `PURCHASING_INPUT_INVALID` (field `lines`) before any write.
+
 - Confirm locks the Supplier row `FOR UPDATE` (via `assertUsableInTransaction`). A concurrent Supplier status change can deadlock with it; the operation runner maps that to 409 `CONCURRENT_OPERATION`, and the user retries.
 - From the TASK-029 review (TL `f66e75a3`, non-Required): two new Drafts doing their first update at the same time can deadlock on a gap lock in `goods_receipt_lines` and `goods_receipt_details`. InnoDB rolls one back and it becomes 409 `CONCURRENT_OPERATION`, with no bad data. If this becomes common, these commands could move to READ COMMITTED. This is inferred from InnoDB behaviour; it was not tested with two connections.
 
