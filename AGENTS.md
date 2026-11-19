@@ -1,5 +1,41 @@
 # Project agent rules
 
+## Operating scale and decision authority — Sam's instruction, 2026-11-04
+
+Design for a mid-sized e-commerce company processing 500–1,000 orders per day
+with at most 20 users. Use these figures for all architecture and implementation
+decisions. Prefer the simplest design that meets the business requirement. Add
+complexity only when a concrete requirement or observed bottleneck justifies it.
+
+Sam has delegated architecture and technical decisions to the project technical
+lead and system architect. Route cross-module technical questions to the lead.
+If you cannot resolve a technical issue, Sam authorizes you to message the
+`Tech Lead & architect` chat (`01a1a418-5ea4-7ea0-86f1-f678f614682c`) directly
+for a decision. Include the blocker, what you tried and the decision you need.
+Bring decisions with a material business impact to Sam before proceeding, with
+the options, impact and recommendation. Examples include changing how orders are
+fulfilled, when stock is committed, or what costs the business must take on.
+Follow the explicit approval requirements below for CI and capacity testing.
+
+## Temporary suspension of per-case test admission — Sam's decision, 2026-11-19
+
+In force from 2026-11-19 until the end of 2026-11-26, then the section below
+applies again in full unless Sam decides otherwise. The PM asked: 「是否暫停
+逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 Sam answered:
+「暫停 7 天」.
+
+During this period, adding or changing functional tests (unit, integration,
+browser, regression) needs no per-case proposal to Sam and no per-case approval
+record. Merge on an ordinary PR, green functional CI and one review by someone
+other than the author.
+
+Unchanged: performance and capacity tests still need Sam's prior approval of
+content and scale before execution or inclusion; routine CI contains no capacity
+workload; do not delete or skip tests, reduce workload, or relax thresholds or
+coverage floors. Only the CI administrator changes the admission gate, its
+policy hashes or Actions variables. If the gate blocks a PR, contact the CI
+administrator; do not work around it.
+
 ## CI test admission — Sam's instruction, 2026-10-30
 
 Before adding ANY test case to routine CI, explain the proposal to Sam and obtain
