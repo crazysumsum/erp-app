@@ -10,10 +10,10 @@ const roundHalfUp = (units, step) => (units + step / 2n) / step * step;
 const currencyStep = (decimalPlaces) => 10n ** BigInt(4 - decimalPlaces);
 
 /**
- * 發票金額的兩個取法，只在這裡定義（TL 2026-11-19 已把這兩項交 Sam 決定，答覆後只改這個物件）：
- * - `lineStep`：剩餘池分攤的精度。現值是 4 位小數（與 Sales 訂單行金額相同）；另一做法是直接按幣別小數位分攤。
- * - `total`：發票總額的取法。現值是各行之和 half-up 到幣別小數位，令收款（只收幣別小數位）收得齊；
- *   代價是分批出貨分開開票時，各張發票總額之和可與訂單行金額相差不足一個最小貨幣單位。
+ * 發票金額的兩個取法，只在這裡定義。Sam 2026-11-19 決定「採用 A」（PM 轉述）：
+ * - `lineStep`：剩餘池分攤維持 4 位小數（BR-050，與 Sales 訂單行金額相同）。
+ * - `total`：每張發票總額是各行之和 half-up 到幣別小數位（BR-014 按此修訂），令只收幣別小數位的收款收得齊。
+ * 已告知的後果：單價多於幣別小數位或數量有小數的訂單分批出貨、分開開票時，各發票總額之和可與訂單相差一個最小貨幣單位。
  */
 export const INVOICE_AMOUNT_POLICY = Object.freeze({
   lineStep: () => 1n,
