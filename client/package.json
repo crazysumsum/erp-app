@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "sh -c 'for argument in \"$@\"; do case \"$argument\" in -*) echo \"client test accepts only file paths; options and interactive modes are not supported by this functional entrypoint\" >&2; exit 2;; esac; done; functional_pattern=$(NODE_V8_COVERAGE= node ../.github/scripts/capacity-runner.mjs client-pattern) && [ -n \"$functional_pattern\" ] && exec vitest run --testNamePattern=\"$functional_pattern\" \"$@\"' --",
+    "test": "sh -c 'for argument in \"$@\"; do case \"$argument\" in --reporter=junit|--outputFile=*) ;; -*) echo \"client test accepts only file paths plus --reporter=junit and --outputFile=<path>; other options and interactive modes are not supported by this functional entrypoint\" >&2; exit 2;; esac; done; functional_pattern=$(NODE_V8_COVERAGE= node ../.github/scripts/capacity-runner.mjs client-pattern) && [ -n \"$functional_pattern\" ] && exec vitest run --testNamePattern=\"$functional_pattern\" \"$@\"' --",
     "test:watch": "sh -c 'echo \"test:watch is disabled because interactive filters can include capacity cases; use npm test --workspace client -- <file paths>\" >&2; exit 2' --",
     "test:coverage": "sh -c 'functional_pattern=$(NODE_V8_COVERAGE= node ../.github/scripts/capacity-runner.mjs client-pattern) && [ -n \"$functional_pattern\" ] && { if [ \"$#\" -eq 1 ] && [ \"$1\" = \"--testNamePattern=$functional_pattern\" ]; then shift; fi; [ \"$#\" -eq 0 ] || { echo \"client test:coverage accepts no arguments except the exact existing CI catalog pattern\" >&2; exit 2; }; exec vitest run --coverage --testNamePattern=\"$functional_pattern\"; }' --"
   },
