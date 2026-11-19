@@ -39,7 +39,7 @@ function generalReason(value, path, requiredCode, meta) {
  * 下限都係 byte：兩個中文字（6 byte）有效。唔會先行 §5.1 嘅 reason()（佢嘅 5 code point 下限同多行規則唔同）。
  * 但保留 Purchasing 原有嘅 malformed Unicode 保護（SEC-013）：lone surrogate 一律拒絕。
  */
-function inventoryBoundReason(value, path, requiredCode, meta) {
+export function inventoryBoundReason(value, path, requiredCode, meta) {
   if (blank(value)) return { value: "", issues: [issue(path, requiredCode, meta)] };
   const invalid = { value: "", issues: [issue(path, "PURCHASING_INPUT_INVALID")] };
   if (typeof value !== "string") return invalid;
