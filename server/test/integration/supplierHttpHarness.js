@@ -106,7 +106,9 @@ export function createSupplierHarness(prefix, { database = {}, importRoot = null
       const entries = [];
       for (const file of fs.existsSync(directory) ? fs.readdirSync(directory).sort() : []) {
         for (const line of fs.readFileSync(path.join(directory, file), "utf8").split("\n")) {
-          if (line.includes("\"api.registered\"") || line.includes("\"api.registration.completed\"")) entries.push(JSON.parse(line));
+          if (!line.includes("\"api.registered\"") && !line.includes("\"api.registration.completed\"")) continue;
+          // 讀到寫咗一半嘅行就略過：彙總未寫完時下一輪再讀，條數斷言仍然保證完整。
+          try { entries.push(JSON.parse(line)); } catch { /* partial line, retry next round */ }
         }
       }
       const completed = entries.find((entry) => entry.event === "api.registration.completed");
