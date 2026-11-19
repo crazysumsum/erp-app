@@ -73,6 +73,6 @@ test("AR commands run READ COMMITTED and translate lock and indeterminate failur
   await assert.rejects(failing(other).run(command, () => {}), (error) => error === other);
 
   assert.throws(() => new ArCommandRunner({ database: {} }), TypeError);
-  assert.throws(() => new ArReceiptService({ commands: {}, customers: {}, businessMaster: {} }), TypeError);
+  assert.throws(() => new ArReceiptService({ commands: {}, customers: {}, businessMaster: {}, time: {} }), TypeError);
   assert.throws(() => new ArInquiryService({ database: {} }), TypeError);
 });

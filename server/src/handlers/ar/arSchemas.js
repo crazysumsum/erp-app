@@ -60,9 +60,12 @@ export function arCommand(req) {
   return { claims: req.auth.claims, input: body, context: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ip: req.ip ?? "" } };
 }
 
+/** 客戶查詢綁在呼叫方的交易連線上：一個請求同一時間只佔一條連線。 */
+const customers = (executor) => new CustomerLookupService({ database: executor });
+
 export function arReceiptService(services) {
   const database = services.require("mysqldatabase"), time = services.require("time");
-  return new ArReceiptService({ commands: new ArCommandRunner({ database, time }), time, customers: new CustomerLookupService({ database }),
+  return new ArReceiptService({ commands: new ArCommandRunner({ database, time }), time, customers,
     businessMaster: new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() }) });
 }
 
