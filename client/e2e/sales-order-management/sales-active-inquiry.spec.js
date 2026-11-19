@@ -66,7 +66,13 @@ test("TC-044 Active query reaches Outstanding detail with committed quantities a
  const order=page.getByRole("link",{name:`查看 ${outstanding.number}`,exact:true});
  await expect(order).toBeVisible();
  await expect(page).toHaveURL(new RegExp(`number=${outstanding.number}`));
+ const sizeUrl=new URL(page.url());sizeUrl.searchParams.set("pageSize","10");
+ await page.goto(sizeUrl.href);
+ await expect(order).toBeVisible();
+ const reloadedPage=page.waitForRequest(request=>{const url=new URL(request.url());return url.pathname==="/api/v1/outstanding-sales-orders"&&url.searchParams.get("pageSize")==="10";});
  await page.reload();
+ await reloadedPage;
+ await expect(page).toHaveURL(/pageSize=10/u);
  const row=page.getByRole("row").filter({has:order});
  await expect(row).toBeVisible();
  expect((await row.getByRole("cell").allTextContents()).slice(-7,-1)).toEqual(["10","10","0","0","0","10"]);

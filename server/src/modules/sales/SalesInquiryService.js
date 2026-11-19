@@ -58,9 +58,19 @@ export class SalesInquiryService{
    const [page]=await tx.query(`SELECT id FROM sales_orders${where} ORDER BY ${sort[query.sortBy]} ${query.descending?"DESC":"ASC"},id ${query.descending?"DESC":"ASC"} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
    const [rows]=page.length?await tx.query(`SELECT ${summarySelect} FROM sales_orders WHERE id IN (${page.map(()=>"?").join(",")})`,page.map(row=>row.id)):[[]];
    const byId=new Map(rows.map(row=>[String(row.id),row]));
-   const [totals]=includeQuantities&&page.length?await tx.query(`SELECT sales_order_id,SUM(ordered_base_quantity) AS ordered,SUM(reserved_outstanding_base_quantity) AS reserved,SUM(backordered_base_quantity) AS backordered,SUM(fulfilled_base_quantity) AS fulfilled,SUM(cancelled_base_quantity) AS cancelled,SUM(ordered_base_quantity-fulfilled_base_quantity-cancelled_base_quantity) AS outstanding FROM sales_order_lines WHERE sales_order_id IN (${page.map(()=>"?").join(",")}) GROUP BY sales_order_id`,page.map(row=>row.id)):[[]];
-   const quantities=new Map(totals.map(row=>[String(row.sales_order_id),Object.fromEntries(["ordered","reserved","backordered","fulfilled","cancelled","outstanding"].map(key=>[key+"BaseQuantity",String(row[key])]))]));
-   return {items:page.map(row=>({...toSalesOrderSummary(byId.get(String(row.id))),...(includeQuantities?{quantities:quantities.get(String(row.id))}:{})})),total:Number(count.total),page:query.page,pageSize:query.pageSize};});
+   // An order-wide total is meaningful only when all lines share a verified base unit.
+   const [totals]=includeQuantities&&page.length?await tx.query(`SELECT l.sales_order_id,MIN(u.code) AS base_uom_code,
+    SUM(l.ordered_base_quantity) AS ordered,SUM(l.reserved_outstanding_base_quantity) AS reserved,
+    SUM(l.backordered_base_quantity) AS backordered,SUM(l.fulfilled_base_quantity) AS fulfilled,
+    SUM(l.cancelled_base_quantity) AS cancelled,SUM(l.ordered_base_quantity-l.fulfilled_base_quantity-l.cancelled_base_quantity) AS outstanding
+    FROM sales_order_lines l
+    LEFT JOIN item_sku_uoms b ON b.sku_id=l.sku_id AND b.base_slot=1
+    LEFT JOIN item_uoms u ON u.id=b.uom_id
+    WHERE l.sales_order_id IN (${page.map(()=>"?").join(",")}) GROUP BY l.sales_order_id
+    HAVING COUNT(u.id)=COUNT(*) AND COUNT(DISTINCT u.id)=1`,page.map(row=>row.id)):[[]];
+   const quantities=new Map(totals.map(row=>[String(row.sales_order_id),{baseUomCode:row.base_uom_code,...Object.fromEntries(
+    ["ordered","reserved","backordered","fulfilled","cancelled","outstanding"].map(key=>[key+"BaseQuantity",String(row[key])]))}]));
+   return {items:page.map(row=>({...toSalesOrderSummary(byId.get(String(row.id))),...(includeQuantities?{quantities:quantities.get(String(row.id))??null}:{})})),total:Number(count.total),page:query.page,pageSize:query.pageSize};});
  }
  listOutstanding(request){return this.list({...request,outstanding:true});}
  async listAudit({claims,input={}}) {
