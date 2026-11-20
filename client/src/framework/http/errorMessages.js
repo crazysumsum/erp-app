@@ -46,6 +46,7 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   SKU_NOT_PURCHASABLE: "貨品目前不可用於新採購，請更換或移除該貨品",
   DOCUMENT_SEQUENCE_EXHAUSTED: "本月文件編號已用盡，請聯絡系統管理員",
   GOODS_RECEIPT_NOT_FOUND: "找不到這張收貨單，請返回列表重新查詢",
+  PURCHASING_OPERATION_NOT_FOUND: "暫時查不到這個操作的結果；請稍後用同一操作再查，不要重新建立",
   GR_STATE_CONFLICT: "收貨單目前的狀態不允許這個操作，請重新整理",
   PO_LINE_NOT_RECEIVABLE: "採購單行不屬於這張採購單或已關閉，不能收貨",
   GR_DETAIL_MISMATCH: "收貨明細的貨品或單位與採購單行不符，請重新選擇",
