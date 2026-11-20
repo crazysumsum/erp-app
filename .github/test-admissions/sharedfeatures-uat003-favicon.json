@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "decision": "Sam assigned UAT-003 via PM on 2026-11-20 (agentmsg dafd8b99). TL independently approved the two product paths and reviewed their exact blobs at 6eb24e00 (9ac4651d). CI administrator requested this support receipt (d07c4da3).",
+  "purpose": "Serve the declared F&M favicon on login and refresh.",
+  "data": "Static HTML and one icon containing 16, 32 and 48 pixel images. No test data changes.",
+  "concurrency": "Unchanged.",
+  "repetitions": "Unchanged.",
+  "thresholds": "Existing functional assertions and coverage floors are unchanged.",
+  "trigger": "Existing functional CI. No new cases or triggers.",
+  "cost": "No additional test workload or jobs.",
+  "files": [
+    {
+      "path": "client/index.html",
+      "mode": "100644",
+      "blob": "60eb3058281992ce943aef981b387cd77531dada",
+      "kind": "support"
+    },
+    {
+      "path": "client/public/favicon.ico",
+      "mode": "100644",
+      "blob": "40b00db98e554ba5f7f4b47c495173f91337fdca",
+      "kind": "support"
+    }
+  ]
+}
