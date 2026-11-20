@@ -463,6 +463,8 @@ T40 ─────────────────────────�
 - [ ] `npm run lint -- server/src/modules/supplier`
 - [ ] Manual review：每個state與projection分支均有negative test。
 
+**接線註記（2026-11-19，TL ruling 4）：** reference guard的下游計數由`server/src/modules/supplier/supplierReferenceCheckers.js`的`createSupplierReferenceServices()`提供，五個`SupplierAdminService`建構點（create、lifecycle、query、update handlers及Import worker）共用；Purchasing checker見`PurchasingSupplierReferenceCheckers.js`。之前各handler沒有傳入checker，改Code的引用檢查恆為0。
+
 **Dependencies：** T05、T06
 
 **Files likely touched：**
@@ -895,6 +897,8 @@ T40 ─────────────────────────�
 - [ ] `npm test --workspace server -- test/supplierLifecycleService.test.js test/supplierLifecycleHandlers.test.js`
 - [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/supplierManagement.integration.test.js`
 - [ ] Manual API matrix：所有允許及禁止state transitions逐項核對。
+
+**接線註記（2026-11-19，TL ruling 4／ruling A）：** 封存的具名阻擋讀`openFlows`（Purchasing「未完成採購單」checker）；改Code及永久刪除讀`references`（「採購單」）。三條路徑遇`ER_LOCK_DEADLOCK`／`ER_LOCK_WAIT_TIMEOUT`回409 `CONCURRENT_OPERATION`、無寫入；改Code保留既有一次重做，封存及刪除不重試。
 
 **Dependencies：** T08、T20
 
