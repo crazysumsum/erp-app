@@ -4,7 +4,7 @@ import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSum
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
-import { invalidSupplierInput, retryOnceOnDeadlock, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, isLockConflict, retryOnceOnDeadlock, supplierConcurrentOperation, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import {
   escapeLikeTerm,
   normalizeContactEmail,
@@ -634,6 +634,8 @@ export class SupplierAdminService {
       if (duplicateEntry(error)) {
         throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
       }
+      // 現有嘅一次重做之後仍然等唔到鎖（或者 lock wait timeout）：有類型嘅 409，冇寫入。
+      if (isLockConflict(error)) throw supplierConcurrentOperation();
       throw error;
     }
 
@@ -745,6 +747,9 @@ export class SupplierAdminService {
         requestId: input.requestId,
         ip: input.ip
       });
+    }).catch((error) => {
+      // 封存會讀下游未完成流程（openFlows），等鎖失敗時回有類型嘅 409；唔重試（ruling A）。
+      throw openFlowCheck && isLockConflict(error) ? supplierConcurrentOperation() : error;
     });
     return this.getSupplier({
       actorId: input.actorId,
@@ -827,6 +832,7 @@ export class SupplierAdminService {
       if (referencedRow(error)) {
         throw supplierConflict("SUPPLIER_REFERENCED", "供應商已有引用，不可永久刪除");
       }
+      if (isLockConflict(error)) throw supplierConcurrentOperation();
       throw error;
     }
     return { id: input.id };
