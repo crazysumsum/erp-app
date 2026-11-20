@@ -3,6 +3,11 @@ import test from "node:test";
 
 import { SupplierApprovalService } from "../src/modules/supplier/SupplierApprovalService.js";
 import { LIFECYCLE_COMMANDS, SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
+import { CreateSupplierHandler } from "../src/handlers/suppliers/createSupplierHandler.js";
+import { ArchiveSupplierHandler, DeleteSupplierHandler } from "../src/handlers/suppliers/supplierLifecycleHandlers.js";
+import { GetSupplierHandler } from "../src/handlers/suppliers/supplierQueryHandlers.js";
+import { ChangeSupplierCodeHandler } from "../src/handlers/suppliers/supplierUpdateHandlers.js";
+import { createSupplierReferenceServices } from "../src/modules/supplier/supplierReferenceCheckers.js";
 
 function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null, deleteError = null, approverEligible = true } = {}) {
   const events = [];
@@ -279,4 +284,61 @@ test("the submitted note reaches the request on the activate submit path too", a
   assert.ok(insert, "a request must be opened");
   assert.ok(insert[2].includes("急單，請盡快批准"),
     `the submitter's note was replaced by something else: ${JSON.stringify(insert[2])}`);
+});
+
+// TL ruling 4（purchasing-cross-module-rulings-20261117）及 ruling A（supplier-po-edge-ruling-20261118）：
+// Supplier 改 Code／封存／刪除要經 handler 真係讀到 Purchasing 嘅 checker；等鎖失敗回有類型嘅 409。
+function lockError(code) {
+  return Object.assign(new Error("MySQL database query failed"), {
+    code: "DATABASE_OPERATION_FAILED",
+    cause: Object.assign(new Error(code), { code })
+  });
+}
+
+function handlerServices() {
+  return {
+    config: {},
+    require(name) {
+      if (name === "logging") return { logger: { warn() {}, info() {}, error() {} } };
+      return { query: async () => [[]], nowMs: () => 1 };
+    },
+    get() { return undefined; },
+    has() { return true; }
+  };
+}
+
+test("TC-026/TC-033 (TL ruling 4): the shared factory gives every Supplier handler the Purchasing reference and open-flow checkers", () => {
+  const { references, openFlows } = createSupplierReferenceServices();
+  assert.deepEqual(references.checkers.map((checker) => checker.name), ["採購單"]);
+  assert.deepEqual(openFlows.checkers.map((checker) => checker.name), ["未完成採購單"]);
+  for (const Handler of [CreateSupplierHandler, ArchiveSupplierHandler, DeleteSupplierHandler, GetSupplierHandler, ChangeSupplierCodeHandler]) {
+    const { suppliers } = new Handler(handlerServices());
+    assert.deepEqual(suppliers.references.checkers.map((checker) => checker.name), ["採購單"], Handler.name);
+    assert.deepEqual(suppliers.openFlows.checkers.map((checker) => checker.name), ["未完成採購單"], Handler.name);
+  }
+});
+
+test("TC-033 (ruling A): a deadlock while archive reads open flows answers 409 CONCURRENT_OPERATION, writes nothing and is not retried", async () => {
+  const blocked = harness({ status: "active" });
+  blocked.service.openFlows = { async describeReferences() { blocked.events.push(["open-flows"]); throw lockError("ER_LOCK_DEADLOCK"); } };
+  await assert.rejects(() => blocked.service.archiveSupplier({ ...context }), (error) => error.publicCode === "CONCURRENT_OPERATION" && error.statusCode === 409);
+  assert.equal(blocked.events.some(([name]) => name === "execute" || name === "audit"), false);
+  assert.equal(blocked.events.filter(([name, step]) => name === "transaction" && step === "begin").length, 1, "archive is not retried");
+  assert.equal(blocked.row.status, "active");
+});
+
+test("TC-035 (ruling A): a lock wait timeout while delete reads references answers 409 CONCURRENT_OPERATION and deletes nothing", async () => {
+  const blocked = harness({ status: "draft" });
+  blocked.service.references = { async describeReferences() { throw lockError("ER_LOCK_WAIT_TIMEOUT"); } };
+  await assert.rejects(() => blocked.service.deleteSupplier({ ...context }), (error) => error.publicCode === "CONCURRENT_OPERATION");
+  assert.equal(blocked.events.some(([name, sql]) => name === "execute" && String(sql).includes("DELETE FROM suppliers")), false);
+  assert.equal(blocked.events.some(([name]) => name === "audit"), false);
+});
+
+test("TC-033 (TL ruling 4): an unclassified PO status from the open-flow checker refuses archive and is never treated as clear", async () => {
+  const unknown = harness({ status: "active" });
+  unknown.service.openFlows = { async describeReferences() { throw new Error("Unclassified Purchasing PO status"); } };
+  await assert.rejects(() => unknown.service.archiveSupplier({ ...context }), /Unclassified Purchasing PO status/u);
+  assert.equal(unknown.events.some(([name]) => name === "execute" || name === "audit"), false);
+  assert.equal(unknown.row.status, "active");
 });
