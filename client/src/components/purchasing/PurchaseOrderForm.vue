@@ -239,6 +239,8 @@ async function submit() {
         <section aria-labelledby="po-terms-heading">
           <h2 id="po-terms-heading" class="text-h6 q-mt-none q-mb-md">供應商與商業條件</h2>
           <q-banner v-if="defaultsError" role="alert" class="bg-warning text-dark q-mb-md">{{ defaultsError }}</q-banner>
+          <q-banner v-if="document?.currentMasterDifferences?.supplier?.status === 'blocked' && form.supplierId === document.supplierId"
+            role="alert" class="bg-warning text-dark q-mb-md">此採購單的供應商已封鎖。請更換供應商並儲存草稿後再提交。</q-banner>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6"><q-select :model-value="supplier" label="供應商 *" :options="options.suppliers" :option-label="row => `${row.supplierCode} — ${row.displayName || row.supplierName}`" use-input input-debounce="250" :rules="[required]" :error="!!fieldError('supplierId')" :error-message="fieldError('supplierId')" outlined dense @filter="(q, update) => search('suppliers', 'lookupSuppliers', q, update)" @update:model-value="chooseSupplier"><template #no-option><q-item><q-item-section>沒有符合條件的啟用供應商；請縮小搜尋。</q-item-section></q-item></template></q-select></div>
             <div class="col-12 col-md-3"><q-select :model-value="form.currencyCode" label="貨幣 *" :options="currencyOptions" option-value="code" :option-label="row => `${row.code} — ${row.name}`" emit-value map-options :rules="[required]" :error="!!fieldError('currencyCode')" :error-message="fieldError('currencyCode')" outlined dense @update:model-value="value => touch('currencyCode', value)" /></div>
