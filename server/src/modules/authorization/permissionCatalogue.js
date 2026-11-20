@@ -61,8 +61,11 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "purchasing.approval", description: "審批指定給自己的採購單" }),
   Object.freeze({ name: "purchasing.settings", description: "管理採購模組參數" }),
   Object.freeze({ name: "receiving.operation", description: "建立及確認收貨單" }),
-  Object.freeze({ name: "receiving.expiry.override", description: "在剩餘效期不足時以原因批准收貨例外" })
-
+  Object.freeze({ name: "receiving.expiry.override", description: "在剩餘效期不足時以原因批准收貨例外" }),
+  // 開票與應收首期（Sam 2026-11-19 批准）：查看、發票管理、收款及核銷管理互不繼承。
+  Object.freeze({ name: "ar.view", description: "查看發票、收款、核銷及帳齡表" }),
+  Object.freeze({ name: "ar.invoice.mgmt", description: "由出貨建立、確認及作廢發票" }),
+  Object.freeze({ name: "ar.receipt.mgmt", description: "登記、確認及作廢收款，核銷及解除核銷" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

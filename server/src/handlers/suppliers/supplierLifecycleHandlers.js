@@ -4,6 +4,7 @@ import { BusinessMasterReadinessService } from "../../modules/businessMaster/Bus
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
 import { getActivationPolicy } from "../../modules/supplier/SupplierSettingsService.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { createSupplierReferenceServices } from "../../modules/supplier/supplierReferenceCheckers.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import {
   EMPTY_SUPPLIER_SCHEMA,
@@ -46,7 +47,8 @@ class SupplierLifecycleHandler extends BaseRequestHandler {
         provider,
         readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
       }),
-      approvalRequired: getActivationPolicy
+      approvalRequired: getActivationPolicy,
+      ...createSupplierReferenceServices()
     });
   }
 }
