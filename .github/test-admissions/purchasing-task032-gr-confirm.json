@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam's 2026-11-19 umbrella decision suspending per-case test admission until the end of 2026-11-26 (answer 「暫停 7 天」, relayed by PM claude-erp-app-pm-01, agentmsg f3f4c3c8): functional tests merge on an ordinary PR, green functional CI and one non-author review. This receipt merges every currently valid pin of purchasing-task029-gr-draft.json (which already carries the TASK-025 and TASK-028 pins) with the TASK-032 test and support files, refreshing the blobs of the five changed Purchasing support files (CI administrator rule e22106a2, a7db8098). Non-author review requested from the TL; the CI administrator registers the digest only after it. The author does not approve this receipt",
-  "purpose": "TASK-032 Goods Receipt Confirm over real HTTP, JWT, MySQL and the real Inventory batch posting: two-line confirm with one Inventory call, PO progress, PO status and history, a second GR completing the PO, over-receipt counted on the locked net, replay and event conflict, the over-receipt reason, inactive bin, inactive warehouse and bin outside its warehouse mapped to public errors, a missing or extra Inventory result line, an Audit failure and a PO progress failure (temporary trigger) each rolling back real Inventory writes, Blocked Supplier reason and quarantine, lot required at confirm, permission, stale version and an already confirmed GR. Carries the unchanged TASK-025, TASK-028 and TASK-029 cases",
-  "data": "TASK-032 file: 7 registrations sharing one application and pool; 2 users, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOMs, 2 warehouses, 3 bins; at most 2 POs, 2 GRs and 2 details per case, POs written by SQL; fault injection by same-process prototype patches restored in finally and one temporary BEFORE UPDATE trigger dropped in finally; the per-IP request limit raised for the test application only. TASK-025, TASK-028 and TASK-029 data unchanged. No fixture files",
-  "concurrency": "Within a case: 1, with no concurrent requests. Runner workers unchanged",
-  "repetitions": "1",
-  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
-  "trigger": "The existing ci.yml triggers in the existing server jobs; no new job",
-  "cost": "Not measured in CI. A 2026-11-19 local serial run of the confirm file took under 2 s and the 34 Purchasing and Inventory purchase files (331 tests, 69 opt-in skips) passed; history, not a promise. No capacity workload",
+  "decision": "Sam's 2026-11-19 through 2026-11-26 Taipei functional admission decision (PM f3f4c3c8), requiring an ordinary PR, green functional CI and one non-author review. As requested by CI administrator b9ec4fd6, this successor carries all 56 classifications and workloads from inventory-opening-phase1-functional.json approved by digest bea42f9553d70446fbe5c8c3f7850c9779468c4a517d95a0a3619b2b65381865 at main 3f1b3ff431f4ac921b5d384bd6f8bcbaec9af7cd, refreshes five directly changed Purchasing support blobs, and adds the TASK-032 handler, posting service, test and workload note. AR retains the TC-012 pin. Existing source review: Claude TL 2d9e0739. The new exact candidate goes to non-author review and to the trusted CI administrator for admission.",
+  "purpose": "TASK-029 Goods Receipt Draft create, update and cancel over real HTTP, JWT and MySQL: receivable-PO gate, full replace across UOM, warehouse, bin and status, typed refusals for foreign lines, wrong UOM, bin outside its warehouse, duplicate buckets, zero quantity and stale versions, the Inventory-bound reason byte rule, cancel only in DRAFT, permission, replay and the duplicate delivery-note warning; PO progress and Inventory unchanged. Carries the unchanged TASK-025 and TASK-028 cases; Opening parser, precheck and scoped atomic posting guard against invalid/double stock writes, stale Item codes and unsafe lot keys. TASK-032 adds HTTP/JWT/MySQL confirmation against real Inventory posting: atomic two-line posting, PO progress/history, procurement audit and full receipt, idempotent replay and event conflict, locked over-receipt and reasons, inactive or mismatched locations, rollback after posting or subsequent write failures, blocked supplier quarantine, invalid/empty lines and missing lot, permission/version/state refusals, SKU tracking drift and short-expiry authorization and evidence.",
+  "data": "TASK-029 file: 9 registrations sharing one application and pool; 2 users, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOMs, 2 warehouses, 3 bins; at most 3 POs, 2 GRs and 4 details per case, POs written by SQL; about 50 HTTP requests in the file, with the per-IP request limit raised for the test application only. TASK-025 and TASK-028 data unchanged. No fixture files; Opening routine adds 7 in-memory cases with at most 5,001 small lines in a parser-only count check, otherwise at most 6 lines. Explicit local suite only: 9 cases, one fresh isolated MySQL 26.7 schema, one warehouse, two bins, two SKUs and two actors, at most two positive rows per file. TASK-032: 9 registrations share one application and pool, with 3 users and 3 roles, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOM links, 2 warehouses and 3 bins. The file creates 9 two-line POs by SQL, 10 GR drafts by HTTP and issues 30 serial confirm requests. Per case: 1 PO, at most 2 GRs and 6 confirm requests; per request: at most 2 lines and 2 details. In-process fault stubs and one temporary PO progress trigger are restored or removed in finally; the per-IP request limit applies to the test application only. All TASK-032 fixtures are inline.",
+  "concurrency": "Within a case: 1, with no concurrent requests. Runner workers unchanged; Opening cases serial per file, one isolated database and HTTP app for the explicit local cases only.",
+  "repetitions": "1 per applicable existing run",
+  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold; Opening routine 7/7 and explicit local 9/9, both zero skips. All 9 TASK-032 cases must pass, including exact stock and PO effects, zero additional effect on replay or rejection, atomic rollback of injected faults, and persisted exception evidence.",
+  "trigger": "The existing ci.yml triggers in the existing server jobs; no new job. Opening routine unit files use existing discovery; nine guarded native cases must be executed via explicit local server/scripts/inventoryOpening.integration.js. No CI job, discovery flag or workflow change. TASK-032 uses the existing server integration discovery and job.",
+  "cost": "Not measured. A 2026-11-19 local serial run of the 12 Purchasing integration files (107 cases) was history, not a promise. No capacity workload; Seven small Opening units with no database calls, no separate CI overhead measurement. Explicit local MySQL/HTTP suite took about 1.3 seconds after schema migration. No new non-functional workload. TASK-032 CI execution time has not been measured. This adds a serial functional suite without a timing or capacity workload.",
   "files": [
     {
       "path": "docs/purchasing_receiving_management/00_module_manifest.json",
@@ -29,15 +29,6 @@
       "blob": "b74e68f0185ba4d3abf7f2d5c2835aced1433649",
       "kind": "support",
       "cases": []
-    },
-    {
-      "path": "server/test/business-master/http.integration.test.js",
-      "mode": "100644",
-      "blob": "4ba449146ef832127b7e0575830336555f1613c6",
-      "kind": "functional",
-      "cases": [
-        "TC-012 real HTTP authentication and authorized admin flow"
-      ]
     },
     {
       "path": "server/test/configuration.test.js",
@@ -386,7 +377,7 @@
     {
       "path": "server/src/modules/inventory/inventoryErrors.js",
       "mode": "100644",
-      "blob": "15cd88cea13df1de6da7bf1bbe9cf4943eb444f4",
+      "blob": "2d4af96b21d18b3a084c639693f8d4a3471d3e67",
       "kind": "support",
       "cases": []
     },
@@ -534,6 +525,74 @@
       "cases": []
     },
     {
+      "path": "server/test/inventoryOpeningCsv.test.js",
+      "kind": "functional",
+      "cases": [
+        "Opening CSV preserves batch fields and reports zero rows separately",
+        "Opening CSV reports safe row and field errors and withholds all posting rows",
+        "Opening CSV rejects missing or changed headers, invalid UTF-8 and malformed quoting",
+        "Opening CSV counts zero rows towards the 5000 data row limit"
+      ],
+      "mode": "100644",
+      "blob": "3dbb31935b9f96358f83aae657593436144e5262"
+    },
+    {
+      "path": "server/test/inventoryOpeningPrecheck.test.js",
+      "kind": "functional",
+      "cases": [
+        "Opening precheck resolves SKU and location and permits distinct bins for the same new lot",
+        "Opening precheck rejects the whole file and lists duplicate buckets and checks occupied positions across statuses",
+        "Opening precheck requires Item batch fields and rejects contradictory expiry for a lot"
+      ],
+      "mode": "100644",
+      "blob": "3c2ecdb882297395f81200e0b255c85b9cb2ebda"
+    },
+    {
+      "path": "server/scripts/inventoryOpening.integration.js",
+      "kind": "functional",
+      "cases": [
+        "Opening migration reruns without resetting its singleton version",
+        "Opening upload saves normalized ready rows and detail returns the same result",
+        "Opening invalid preview persists safe row errors and no normalized or stock rows",
+        "Opening authorization protects upload and detail and LIVE blocks new uploads",
+        "Opening confirmation rolls back both rows when the second movement link fails",
+        "Opening confirmation posts both rows once and rejects another file for the same position",
+        "Opening confirmation rejects an active persistent Stocktake Bin lock without effects",
+        "Opening rejects the complete snapshot if an Item SKU was renamed after precheck",
+        "Opening precheck enforces the normalized UTF-8 Lot lock key boundary"
+      ],
+      "mode": "100644",
+      "blob": "f5bacdf38c25c5d9675f017edbc376accc38398e"
+    },
+    {
+      "path": "server/database/migrations/0066_create_inventory_opening.js",
+      "kind": "support",
+      "cases": [],
+      "mode": "100644",
+      "blob": "cc40b672ee2d199b0ed692a1abbe2f7cfe0de2df"
+    },
+    {
+      "path": "docs/purchasing_receiving_management/implementation/P3_task032_gr_confirm.md",
+      "mode": "100644",
+      "blob": "70d2171541c7570e7b30b2c4eaec08aec5ce071f",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/handlers/goods-receipts/confirmGoodsReceiptHandler.js",
+      "mode": "100644",
+      "blob": "3e5bf8c31f2017b825c833f03c2c96497ee6e4c3",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/GoodsReceiptPostingService.js",
+      "mode": "100644",
+      "blob": "28f237aa8a603ac6b48a3f0994eb0497fc72e7b2",
+      "kind": "support",
+      "cases": []
+    },
+    {
       "path": "server/test/integration/purchasingGoodsReceiptConfirm.integration.test.js",
       "mode": "100644",
       "blob": "e95ba6ebf0a91a822fca1803f02e3e3645640f8d",
@@ -549,18 +608,6 @@
         "TASK-032 C9 PO 確認後 SKU 追蹤方式改變：冇原因拒絕、零效果；有原因就按 PO 快照確認並標記 SKU 例外（§3.6；兩邊各自判斷 drift）",
         "TASK-032 C10 剩餘效期不足：冇放行權限拒絕、有權冇原因拒絕、權限及原因齊就確認並標記效期放行（§3.6；Inventory 再驗）"
       ]
-    },
-    {
-      "path": "server/src/modules/purchasing/GoodsReceiptPostingService.js",
-      "mode": "100644",
-      "blob": "28f237aa8a603ac6b48a3f0994eb0497fc72e7b2",
-      "kind": "support"
-    },
-    {
-      "path": "server/src/handlers/goods-receipts/confirmGoodsReceiptHandler.js",
-      "mode": "100644",
-      "blob": "3e5bf8c31f2017b825c833f03c2c96497ee6e4c3",
-      "kind": "support"
     }
   ]
 }
