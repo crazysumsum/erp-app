@@ -15,10 +15,11 @@ export const CUSTOMER_IMPORT_UPLOAD_BODY = deepFreeze({
   properties: { mode: { type: "string", enum: ["create_only", "upsert"] } }
 });
 export const CUSTOMER_IMPORT_CONFIRM_BODY = deepFreeze({
-  type: "object", required: ["version", "activationMode"], additionalProperties: false,
+  type: "object", required: ["version", "activationMode", "password"], additionalProperties: false,
   properties: {
     version: { type: "integer", minimum: 1 }, activationMode: { type: "string", enum: ["draft", "activate"] },
-    approverUserId: { type: ["integer", "null"], minimum: 1 }
+    approverUserId: { type: ["integer", "null"], minimum: 1 },
+    password: { type: "string", minLength: 1, maxLength: 1024 }
   }
 });
 export const CUSTOMER_IMPORT_CANCEL_BODY = deepFreeze({

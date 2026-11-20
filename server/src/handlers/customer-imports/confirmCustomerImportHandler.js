@@ -13,8 +13,9 @@ export class ConfirmCustomerImportHandler extends BaseRequestHandler {
   };
   constructor(services = {}) { super(services); this.customerImport = customerImportService(services); }
   async execute(req) {
+    const { version, activationMode, approverUserId } = req.input.body;
     return this.response(await requireCustomerImport(this.customerImport).confirm({
-      ...customerImportActor(req), id: req.input.params.id, ...req.input.body,
+      ...customerImportActor(req), id: req.input.params.id, version, activationMode, approverUserId,
       idempotencyKey: req.get("Idempotency-Key"),
       requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || ""
     }));
