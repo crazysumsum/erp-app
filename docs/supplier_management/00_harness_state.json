@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 541,
+  "revision": 542,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,17 +11,17 @@
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
-    "code_commit": "6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32",
-    "source_fingerprint": "e10081e15a233427de461ea984704ea33c24d2ea2b94495c98f60c74844deb5e",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-client-ui-20261112",
-    "default_commit": "6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32",
+    "code_commit": "11f42ca31cf11ff564b5202330e713360b8591e2",
+    "source_fingerprint": "64fef73af4273b2d7cd0bee31fd478880f09e5014f945d8fd137605399c62bcd",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-checker-wiring-20261119",
+    "default_commit": "11f42ca31cf11ff564b5202330e713360b8591e2",
     "mode_entry_commit": "bebed130140146c98635cd40e42fc17281bd3b16"
   },
   "runtime": {
-    "instance_id": "supplier-client-ui-20261112",
+    "instance_id": "supplier-checker-wiring-20261119",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-client-ui-20261112 (claude/supplier-client-ui-20261112, cut from main 6bf4db87)",
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-checker-wiring-20261119 (claude/supplier-checker-wiring-20261119, cut from main 11f42ca3)",
       "database": "none: the private mysqld at 127.0.0.1:3450 was shut down and released on 2026-11-12; the client-ui suites use jsdom only",
       "mysql-schema": "none for this PR; a later formal server rerun needs a new private mysqld and erp_t51 only, never erp_t51p",
       "web-port": "none: the client suites open no port"
@@ -8457,6 +8457,39 @@
       "source_ref": "GitHub Actions run 43176267041 (push, head 6bf4db87, attempt 1): completed/success, 17 jobs success, 3 skipped by design (Related server capacity, Related client capacity, publish-admitted-result). Observed with gh run view on 2026-11-12. Not rerun.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-12T07:49:14Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "client-ui option B (PR #357) merged to main",
+      "code_commit": "abdd6893808b70a36f5d6bf069f2d88c5dbfec3d",
+      "spec_baseline": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+      "source_fingerprint": "64fef73af4273b2d7cd0bee31fd478880f09e5014f945d8fd137605399c62bcd",
+      "status": "PASS",
+      "source_ref": "PR #357 merged as abdd6893808b70a36f5d6bf069f2d88c5dbfec3d (parents eb72cb5b + c33a7344, tree 699c7dd8) at 2026-11-18T07:15:58Z by the PM after its code gate. Sam approved the package in the PM session (call_92488cadc66148ed995773e866a70b8a), the bounded recoveries (call_fd84d2fb…, call_f7ec285a…) and the narrow temporary audit exception for GHSA-fc5q-39xc-vjpf, relayed by agentmsg (bab72191, 65c70ac3, 2f0b2d33, 73f071aa, ab084529, 7ec529d8). The branch integrated main eb72cb5b once (99bb1898); the CI-made exception commits d5936ca6 and c33a7344 were fast-forwarded. Merge parents and tree checked through the GitHub API.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-19T01:28:09Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Admitted PR CI for PR #357 (final candidate c33a7344)",
+      "code_commit": "c33a734470f4cabafc3b1422978621f8ffe78db0",
+      "spec_baseline": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+      "source_fingerprint": "64fef73af4273b2d7cd0bee31fd478880f09e5014f945d8fd137605399c62bcd",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 44255928929 on merge candidate c373a0f4: success, 18 jobs success, 2 capacity jobs deferred by design. Earlier runs 44239950722 and 44252867266 failed on the dependency audit (picomatch advisory; then the audit helper's peer-cycle reading) and are kept as failed history.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-19T01:28:09Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Main push CI after PR #357",
+      "code_commit": "abdd6893808b70a36f5d6bf069f2d88c5dbfec3d",
+      "spec_baseline": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+      "source_fingerprint": "64fef73af4273b2d7cd0bee31fd478880f09e5014f945d8fd137605399c62bcd",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 44257528464 (push, head abdd6893, attempt 1): completed/success, 17 jobs success, 3 skipped by design. Observed with gh run view on 2026-11-18. Not rerun.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-19T01:28:09Z"
     }
   ],
   "pending_decisions": [
@@ -11334,6 +11367,14 @@
       "idempotency_key": "supplier-merge-pr-356",
       "status": "CONFIRMED",
       "source_ref": "Merged by the PM as 6bf4db87f19f784efbaa38a1d7efe9c7b08d5e32."
+    },
+    {
+      "id": "MERGE-PR-357",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#357",
+      "idempotency_key": "supplier-merge-pr-357",
+      "status": "CONFIRMED",
+      "source_ref": "Merged by the PM as abdd6893808b70a36f5d6bf069f2d88c5dbfec3d."
     }
   ],
   "evidence_files": [
@@ -12440,5 +12481,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "2026-11-12, PR #356 merged (6bf4db87) and main CI 43176267041 passed. What PR #356 proved: three TECHNICAL functional runs at 4ddad41e, harness source fingerprint 14f41e28 (the tested tree, not HEAD): supplier-server-integration 730/730 (90/90 required cases; 115 TC IDs observed), supplier-security 730/730 (10/10 required), supplier-bank-security 142/142 (15/15 required; 19 observed), 0 skipped, capacity excluded. Gate gap (review H-1): the receipt rebind in b9918684 moved the fingerprint to e10081e1, so verify_gate TECHNICAL_ACCEPTANCE does not accept these runs at HEAD (16 REQUIRED_RUN_MISSING). TL decision (agentmsg 79082fb7, narrowed in e4aaddbd): fix the evidence false positive in .github/scripts/test-admission.mjs (author chosen by the PM; needs its own receipt, Sam's decision and a new policy digest). After that merges, rerun the three suites locally on the final candidate (ask Sam first) and prove acceptance with verify_gate; do not assume it. Still open before Technical Acceptance: TECHNICAL supplier-client-ui (this PR), supplier-resilience, supplier-recovery, supplier-release-operations and supplier-performance (performance only after UAT); the whole REGRESSION stage (8 suites); TASK-051 group B (waits for Purchasing, Receiving and AP); formal UAT; capacity after UAT by main dispatch with a grant; TC-136 and sign-offs. The 14 old-baseline approvals stay as recorded. Now: IMPLEMENT for client-ui option B only (Sam 2026-11-12 '批准兩項，寫 receipt' item 2; TL SCOPE for client/package.json, agentmsg ecad64b7): the test case arm admits only --reporter=junit and --outputFile=*, both client suites' argv use that pair plus path filters, and client/test/supplier-management.vitest.config.js is removed. Done: the TL accepted the candidate (937c9b2f, 4d30aee4); final plan 3818ec73 and receipts fda88da4 and 2f0537d1 approved by Sam (APPROVAL-CLIENTUI-B-PLAN, -SCOPE). Next: the trusted administrator registers the two digests and I read them back; then one push to a Draft PR in the PM's window and one admitted functional CI run; on any drift or failure stop and report, no retry. Merge, the formal supplier-client-ui run, UAT and capacity are separate decisions. Back to TEST_AND_VERIFY in the next Supplier PR after this one merges."
+  "next_safe_action": "2026-11-19: PR #357 merged (abdd6893); PR CI 44255928929 and main CI 44257528464 passed. Main is now 11f42ca3. Phase-1 scope (new PM claude-erp-app-pm-01, 2026-11-19, under Sam's direction): Supplier functional close-out only; the non-functional parts of TASK-051 (backup/restore, rollback rehearsal, performance and capacity, sign-offs), the 12 DEFERRED defects, DEF-034, the 7 capacity catalog cases, TC-085/101/128/129/133 and the TC-136 release gate move to phase 2. Now: IMPLEMENT for the Supplier reference and open-flow checker wiring (PM decision agentmsg 944798c4: phase 1; the Supplier author writes both the Purchasing checkers and the Supplier wiring; the Purchasing owner reviews). Contract: TL ruling 4 (purchasing-cross-module-rulings-20261117, 94762244) and edge ruling A (supplier-po-edge-ruling-20261118, 26fada00): FOR SHARE checker reads, the cycle with PO -> Supplier writers is accepted, ER_LOCK_DEADLOCK and ER_LOCK_WAIT_TIMEOUT map to 409 CONCURRENT_OPERATION, Code correction keeps its single redo, Archive and hard delete get no retry. 12 functional cases; per-case test admission is suspended by Sam until 2026-11-26 (ordinary PR, functional CI, one non-author review). Scope approval for the Purchasing files is asked of the TL (agentmsg 21df33ba). Still open before Technical Acceptance (phase 2 or later): the H-1 forward evidence fix, formal TECHNICAL and REGRESSION runs on a frozen final tree, TASK-051 group B (UAT-032/033/034 SKU-first picker, UAT-035 GR Confirm and Purchasing TASK-040, UAT-029/053 AP), formal UAT and sign-offs."
 }
