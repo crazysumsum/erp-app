@@ -1,13 +1,16 @@
 import { ArCommandRunner } from "../../modules/ar/arCommand.js";
 import { arError } from "../../modules/ar/arErrors.js";
 import { ArInquiryService } from "../../modules/ar/ArInquiryService.js";
+import { ArInvoiceService } from "../../modules/ar/ArInvoiceService.js";
 import { ArReceiptService, PAYMENT_METHODS } from "../../modules/ar/ArReceiptService.js";
 import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
 import { CustomerLookupService } from "../../modules/customer/CustomerLookupService.js";
+import { readInvoiceSourcesInTransaction } from "../../modules/fulfillment/readInvoiceSourcesInTransaction.js";
 
 // 三個權限互不繼承：查看、發票管理、收款及核銷管理。
 export const AR_VIEW_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.view"] } });
+export const AR_INVOICE_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.invoice.mgmt"] } });
 export const AR_RECEIPT_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.receipt.mgmt"] } });
 
 const object = (properties, required = Object.keys(properties)) => ({ type: "object", required, additionalProperties: false, properties });
@@ -45,6 +48,31 @@ export const RECEIPT_COMMAND_RESPONSE = Object.freeze(object(COMMAND));
 export const ALLOCATION_COMMAND_RESPONSE = Object.freeze(object({ ...COMMAND, allocatedAmount: AMOUNT, availableAmount: AMOUNT,
   allocationIds: { type: "array", items: ID }, allocationId: ID }, [...Object.keys(COMMAND), "allocatedAmount", "availableAmount"]));
 
+const INVOICE_STATUSES = ["DRAFT", "CONFIRMED", "VOID", "CANCELLED"], QUANTITY = { type: "string", pattern: "^\\d+$" };
+export const INVOICE_LIST_QUERY = Object.freeze(object({ ...PAGE, status: { enum: INVOICE_STATUSES }, customerId: ID, currencyCode: CURRENCY,
+  invoiceDateFrom: DATE, invoiceDateTo: DATE, outstandingOnly: { type: "boolean" }, q: { type: "string", minLength: 1, maxLength: 190 } }, []));
+// 逗號分隔的出貨 ID，最多 100 個。
+export const INVOICED_SHIPMENTS_QUERY = Object.freeze(object({ shipmentIds: { type: "string", pattern: "^[1-9]\\d{0,15}(,[1-9]\\d{0,15}){0,99}$" } }));
+const INVOICE_SUMMARY = {
+  id: ID, number: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, customerId: ID, customerCode: TEXT, customerName: TEXT, currencyCode: CURRENCY,
+  currencyDecimalPlaces: { type: "integer", minimum: 0, maximum: 4 }, invoiceDate: TEXT, dueDate: TEXT, totalAmount: AMOUNT, allocatedAmount: AMOUNT,
+  outstandingAmount: AMOUNT, createdAt: TIME, updatedAt: TIME, allowedActions: actions("confirm", "cancel", "void")
+};
+export const INVOICE_LIST_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100, items: object(INVOICE_SUMMARY) },
+  total: { type: "integer", minimum: 0 }, ...PAGE }));
+export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
+  ...INVOICE_SUMMARY, paymentTermCode: TEXT, paymentTermName: TEXT, dueDateOverridden: { type: "boolean" }, dueDateReason: TEXT, notes: TEXT, voidReason: TEXT,
+  createdByLabel: TEXT, confirmedByLabel: TEXT, confirmedAt: NULLABLE_TIME, voidedByLabel: TEXT, voidedAt: NULLABLE_TIME,
+  lines: { type: "array", items: object({ id: ID, lineNo: ID, shipmentId: ID, shipmentLineId: ID, salesOrderId: ID, salesOrderLineId: ID, skuCode: TEXT, skuName: TEXT,
+    baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID, quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT }) },
+  allocations: { type: "array", items: object({ id: ID, receiptId: ID, receiptNumber: NULLABLE_TEXT, receiptDate: TEXT, amount: AMOUNT,
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) }
+}));
+export const INVOICE_COMMAND_RESPONSE = Object.freeze(object({ id: ID, number: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, totalAmount: AMOUNT,
+  replayed: { type: "boolean" } }, ["id", "number", "status", "version", "replayed"]));
+export const INVOICED_SHIPMENTS_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100,
+  items: object({ shipmentId: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT, invoiceStatus: { enum: ["DRAFT", "CONFIRMED"] } }) } }));
+
 const BUCKETS = { notDue: AMOUNT, days1To30: AMOUNT, days31To60: AMOUNT, days61To90: AMOUNT, over90: AMOUNT, total: AMOUNT };
 export const AGING_RESPONSE = Object.freeze(object({
   asOfDate: TEXT,
@@ -67,6 +95,13 @@ export function arReceiptService(services) {
   const database = services.require("mysqldatabase"), time = services.require("time");
   return new ArReceiptService({ commands: new ArCommandRunner({ database, time }), time, customers,
     businessMaster: new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() }) });
+}
+
+/** 發票來源只經 Fulfillment 的 reader；AR 不查 Sales 或 Fulfillment 的表。 */
+export function arInvoiceService(services) {
+  const database = services.require("mysqldatabase"), time = services.require("time");
+  return new ArInvoiceService({ commands: new ArCommandRunner({ database, time }), time, readInvoiceSources: readInvoiceSourcesInTransaction,
+    customers, businessMaster: new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() }) });
 }
 
 export function arInquiryService(services) {
