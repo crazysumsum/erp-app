@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope and schema: Sam approved the AR first phase and its seven new tables on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM); the table source is the TL's TABLES.md sha256 2ffa6b0b53c6d84c9133f0cea5fa5f860c91038850c363571d1d612c67718aca. Two more columns on ar_invoice_lines (sales unit code and base factor) were approved by Sam on 2026-11-19 (「批准加兩欄」, to the TL directly and relayed by the PM); source TABLES-ADDENDUM-1.md sha256 45f24a54a36603e614937a5cfb08fed90aa874aeec85ea13b10a05f19b1cbcd9. The author (claude-erp-app-ar-01) does not approve this receipt.",
+  "purpose": "AR first phase, PR 1 of 3: migrations 0122 (three ar.* permissions, no role grant), 0123 (seven new tables) and 0124 (two approved columns on ar_invoice_lines), plus the AR Business Master impact checker that must arrive with the tables: once ar_invoices exists, Business Master's reserved checker stops answering NOT_INSTALLED and, without a real one, every currency and payment term change fails closed. One MySQL test file pins the approved columns, keys, foreign keys, CHECK constraints and audit triggers, probes each constraint and runs the checker's SQL; one unit file covers the checker's classification and fail-closed paths. Four existing integration files and the catalogue conventions file change only so that the admin claim set and the seed list account for the three new permissions; the Business Master HTTP case now expects the AR checker READY instead of NOT_INSTALLED. No other existing case, assertion or data changes.",
+  "data": "arMigrations: 9 cases; each constraint or checker case writes at most 10 rows inside a transaction that is rolled back, with foreign key checks off on that connection only; no customer, shipment or order fixture. arBusinessMasterImpactChecker: 4 unit cases on a fake connection. Existing files: one extra prefix in a permission filter, one extra file name in a list, one expected status.",
+  "concurrency": "1 connection per case, serial; no concurrent trial.",
+  "repetitions": "1",
+  "thresholds": "All cases pass; exact equality on the schema lists; coverage floors unchanged; no timing threshold.",
+  "trigger": "Existing ci.yml triggers and discovery only: the existing server MySQL integration shards and server test job. No new job, schedule or dispatch. No capacity or performance workload.",
+  "cost": "Estimated under 1 second for the new files (local run: 0.13 s for 9 MySQL cases, under 0.1 s for 4 unit cases); not measured in CI. No new job.",
+  "files": [
+    {
+      "path": "server/test/integration/arMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "9c3d133888f7a820f0fb8e94ab3f85027cd15d85",
+      "kind": "functional",
+      "cases": [
+        "0122 lists exactly the three AR permissions with the catalogue descriptions and grants no role",
+        "0122, 0123 and 0124 rerun without changing anything: each permission exists once and the seven tables keep the approved columns",
+        "0123 creates exactly the approved keys, foreign keys, CHECK constraints and audit triggers",
+        "sequence and operation tables: one row per type and year, known types only, one effect per event_id",
+        "invoices: statuses, non-negative amounts, outstanding = total − allocated, due date not before invoice date, unique numbers",
+        "invoice lines: a shipment line sits on one active invoice at a time and is free again once released",
+        "receipts: amount relation holds by status, a void receipt keeps its amount with nothing allocated or available",
+        "allocations and audit: positive amounts, known statuses, bounded detail, and audit rows cannot be changed or removed",
+        "Business Master impact: with the AR tables present the AR checker is ready and counts open and settled documents by currency"
+      ]
+    },
+    {
+      "path": "server/test/ar/arBusinessMasterImpactChecker.test.js",
+      "mode": "100644",
+      "blob": "0c19c3c374f995dca95618a3addcd854f233bcef",
+      "kind": "functional",
+      "cases": [
+        "drafts and unsettled confirmed documents are open; settled, void and cancelled ones are historical",
+        "no AR tables means not installed; no reference, and any payment term, is ready with zero counts",
+        "the watermark changes when a referencing document changes and only then",
+        "anything it cannot classify or trust fails closed instead of reporting no use"
+      ]
+    },
+    {
+      "path": "server/test/business-master/http.integration.test.js",
+      "mode": "100644",
+      "blob": "a96d7f9173440b69e72d6cbf859959817d549673",
+      "kind": "functional",
+      "cases": [
+        "TC-012 real HTTP authentication and authorized admin flow"
+      ]
+    },
+    {
+      "path": "server/test/integration/migrations.integration.test.js",
+      "mode": "100644",
+      "blob": "84654cf994cf462dab51f84b7b3b1c591060c26a",
+      "kind": "functional",
+      "cases": [
+        "0006 gave users its two password columns, with defaults that leave existing rows alone",
+        "0007 built user_audit_logs with the three indexes and an actor FK that does not cascade",
+        "0038 seeds the Customer catalogue but does not grant bank permissions to system-admin",
+        "0010 seeded item.view/item.mgmt, and gave both to system-admin",
+        "0028 seeded all Supplier permissions and granted each to system-admin",
+        "0011 built item_categories: a generated parent_scope_id blocks duplicate root names too",
+        "0012 built item_brands with a case-insensitive unique name",
+        "0013 built item_uoms with a case-insensitive unique code",
+        "0014 built items with RESTRICT FKs to category and brand",
+        "0015 built item_skus: globally unique sku_code, per-item unique variant_signature, CASCADE from items, RESTRICT to UOMs",
+        "0016 built item_sku_uoms: at most one base/default-purchase/default-sale per SKU, CASCADE from SKU, RESTRICT to UOM",
+        "0017 built item_sku_barcodes: globally unique normalized_barcode, at most one primary per SKU UOM, composite FK ownership",
+        "0024 built item_audit_logs with a non-cascading actor FK and no target FK",
+        "re-running all twelve migrations changes nothing"
+      ]
+    },
+    {
+      "path": "server/test/integration/passwordChange.integration.test.js",
+      "mode": "100644",
+      "blob": "b088428c77e177d7b64026abae61f80a80e5a570",
+      "kind": "functional",
+      "cases": [
+        "create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked",
+        "self-changing to a password with outer whitespace: only the trimmed value logs in (DEF-004)",
+        "an unsigned request to an escalation endpoint is refused before it does anything",
+        "a replayed device signature nonce is refused on its second use",
+        "logging in with an expired temporary password returns TEMPORARY_PASSWORD_EXPIRED"
+      ]
+    },
+    {
+      "path": "server/test/integration/roleManagement.integration.test.js",
+      "mode": "100644",
+      "blob": "1ea57627b188a66bc64f8148edb542c2a1ec88fb",
+      "kind": "functional",
+      "cases": [
+        "system-admin refuses every write path: update, delete, permissions/assign",
+        "an actor holding only role.mgmt cannot grant a role the user.mgmt permission",
+        "protected admin delegates Customer bank access through role and user paths without receiving it",
+        "assigning permissions with a stale expected set returns ASSIGNMENT_STALE",
+        "deleting a role held by users succeeds, and their user_roles rows disappear (CASCADE)",
+        "create, list, assign permissions and update a role, with one audit row each",
+        "an actor holding only user.mgmt can read GET /api/v1/roles (match: any)",
+        "an actor holding neither user.mgmt nor role.mgmt cannot read GET /api/v1/roles"
+      ]
+    },
+    {
+      "path": "server/test/integration/userManagement.integration.test.js",
+      "mode": "100644",
+      "blob": "f3923e3d13a6424929d2be49b654edf833f535e1",
+      "kind": "functional",
+      "cases": [
+        "create, list, get, update, assign roles, disable and enable walk through with one audit row each",
+        "an actor holding only user.mgmt cannot grant themselves system-admin",
+        "a stale actor permission set is rejected before anything else runs",
+        "creating a user whose name is already taken returns 409 without a stray audit row",
+        "creating a user trims outer whitespace from username before it is stored",
+        "user.update audit row records the request's X-Request-Id and client IP",
+        "only one of two concurrent requests can disable the last two active admins",
+        "creating a user without an initial password is rejected by schema validation, not the password policy"
+      ]
+    },
+    {
+      "path": "server/test/permissionCatalogueConventions.test.js",
+      "mode": "100644",
+      "blob": "1e5efc83a0e94e2a8a8489fbb343b7dae0f6c4c3",
+      "kind": "functional",
+      "cases": [
+        "every permission a handler demands exists in the catalogue",
+        "no route authorizes by role name",
+        "P2 downstream permissions are catalogued and seeded in 0063",
+        "every seed migration only lists permissions that exist in the catalogue, with a matching description",
+        "every catalogue permission is seeded by exactly one migration"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0122_seed_ar_permissions.js",
+      "mode": "100644",
+      "blob": "cf82529ddd093e3c707732aae0e5531ec962cb1c",
+      "kind": "support"
+    }
+  ]
+}
