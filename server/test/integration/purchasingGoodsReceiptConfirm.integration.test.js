@@ -361,3 +361,19 @@ integrationTest("收貨單最小 list／detail GET：Draft 有編輯動作、確
   assert.equal((await f.read(`/api/v1/goods-receipts/${Number.MAX_SAFE_INTEGER}`)).status, 404);
   assert.equal((await f.read(`/api/v1/goods-receipts/${id}`, f.overrider.token)).status, 200);
 });
+
+integrationTest("收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403", async () => {
+  const f = await fixture();
+  const open = await f.order(), draftPo = await f.order("DRAFT");
+  const pos = (await f.read("/api/v1/receiving-lookups/purchase-orders")).body.data.items.map((item) => item.id);
+  assert.ok(pos.includes(open.id) && !pos.includes(draftPo.id));
+  const [[{ po_number: number }]] = await f.db.query("SELECT po_number FROM purchase_orders WHERE id = ?", [open.id]);
+  assert.deepEqual((await f.read(`/api/v1/receiving-lookups/purchase-orders?q=${number}`)).body.data.items.map((item) => item.id), [open.id]);
+  assert.ok((await f.read("/api/v1/receiving-lookups/warehouses")).body.data.items.some((item) => item.id === f.w1));
+  await f.db.query("UPDATE inventory_bins SET status = 'INACTIVE' WHERE id = ?", [f.b3]);
+  try {
+    const bins = (await f.read(`/api/v1/receiving-lookups/warehouses/${f.w1}/bins`)).body.data.items.map((item) => item.id);
+    assert.ok(bins.includes(f.b1) && !bins.includes(f.b3) && !bins.includes(f.b2));
+  } finally { await f.db.query("UPDATE inventory_bins SET status = 'ACTIVE' WHERE id = ?", [f.b3]); }
+  assert.equal((await f.read("/api/v1/receiving-lookups/warehouses", f.viewer.token)).status, 403);
+});
