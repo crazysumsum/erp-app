@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 544,
+  "revision": 545,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
-    "code_commit": "4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30",
-    "source_fingerprint": "d33be629a7d86e86c054db2c168dbc94ef36667428e037c7650a72924a65f0fb",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-uat-ui-fixes",
-    "default_commit": "4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30",
+    "code_commit": "1ae35d4c93c61d0fa7b5d74e8a129a13b394293d",
+    "source_fingerprint": "c855c64ed56534fa46d6ed1017c421ba7ebec57f60454a34ba469796636fc2cb",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/codex-supplier-uat-ui-fixes",
+    "default_commit": "1ae35d4c93c61d0fa7b5d74e8a129a13b394293d",
     "mode_entry_commit": "bebed130140146c98635cd40e42fc17281bd3b16"
   },
   "runtime": {
@@ -8501,6 +8501,17 @@
       "source_ref": "GitHub Actions run 44646053209 attempt 1 (Admitted PR CI): success, confirmed by the CI administrator (agentmsg 5e280c6e: eight shards, P1/P2 two each, coverage 95.93/86.99/94.74 and all 39 per-file floors, capacity jobs skipped by design). Merge gate run in code before merging: head fec38a15, main df2f2024 unchanged, every check SUCCESS or skipped cleanup. Not rerun. Main push CI after the merge not observed.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-20T01:04:51Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #377 functional CI on base bdfb0ed6 (Supplier route log harness)",
+      "code_commit": "bb9e3a2983199b560a52ec5ff13ec82a6c54fd14",
+      "spec_baseline": "a27f6b041600f071ddaf483e9a2a5dcfb7daa57818b0e09bd56e42795a87fa90",
+      "source_fingerprint": "c855c64ed56534fa46d6ed1017c421ba7ebec57f60454a34ba469796636fc2cb",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 44669170664 completed successfully. The tested commit bb9e3a29, PR head f5d2a91a and merge commit 1ae35d4c have the same tree afe8f3d59aa1ca559415ea5d2987775d9e32e4ad. Observed from GitHub Actions and Git commit metadata. Functional CI observation only.",
+      "actor": "codex-erp-app-supplier-01",
+      "observed_at": "2026-11-20T04:05:56Z"
     }
   ],
   "pending_decisions": [
@@ -11394,6 +11405,14 @@
       "idempotency_key": "supplier-merge-pr-368",
       "status": "CONFIRMED",
       "source_ref": "Merged by claude-erp-app-supplier-01 with gh pr merge --merge --match-head-commit fec38a15afe2c468d838735422c25388b55a50cd on 2026-11-20; merge commit 4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30 (parents df2f2024 + fec38a15, tree 1575ba06 equal to the head tree). Worktree and local/remote branch removed after the merge."
+    },
+    {
+      "id": "MERGE-PR-377",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#377",
+      "idempotency_key": "supplier-merge-pr-377",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #377 merged by claude-erp-app-pm-01 at 2026-11-20T03:53:08Z under Sam’s authorization (PM agentmsg 6aa4f805 and 0f2ae17b); merge commit 1ae35d4c93c61d0fa7b5d74e8a129a13b394293d, parents bdfb0ed6 and f5d2a91a, tree afe8f3d59aa1ca559415ea5d2987775d9e32e4ad."
     }
   ],
   "evidence_files": [
@@ -12500,5 +12519,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "2026-11-20: PR #368 merged (4b6ae2bc). Phase 1 (target UAT 2026-11-26): Supplier functional close-out only. This PR fixes two Supplier UI gaps found in the local UAT script-2 rehearsal (no link to the detail page after creating a supplier; status-change toasts read 已已暫停/已已封鎖). #377 (harness log fix) merges after #372. AR client work handed over to codex-erp-app-apar-01 on 2026-11-20 (Sam's decision)."
+  "next_safe_action": "2026-11-20: PR #368 merged (4b6ae2bc) and PR #377 merged (1ae35d4c) with functional CI 44669170664. Phase 1 (target UAT 2026-11-26): Supplier functional close-out only. The Supplier UAT UI branch links to the detail page after create, prevents resubmitting an unchanged successful form, and corrects lifecycle success copy. Its functional admission receipt was prechecked; registration and a PR are pending push authorization. The formal design and plan hashes recorded before #368 differ from the hashes observed after its documented checker changes. Reconcile that baseline before using it for formal acceptance. AR client work handed over to codex-erp-app-apar-01 on 2026-11-20 (Sam’s decision)."
 }
