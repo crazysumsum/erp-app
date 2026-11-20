@@ -1,0 +1,26 @@
+export const invoiceStatusLabels = Object.freeze({ DRAFT: "草稿", CONFIRMED: "已確認", VOID: "已作廢", CANCELLED: "已取消" });
+export const statusColors = Object.freeze({ DRAFT: "grey", CONFIRMED: "primary", VOID: "negative", CANCELLED: "negative" });
+export const allocationStatusLabels = Object.freeze({ ACTIVE: "有效", UNAPPLIED: "已解除" });
+
+/**
+ * Server 金額固定 4 位小數字串。按幣別小數位顯示，但只去走全零嘅尾數：
+ * lineAmount 可以有真 4 位小數，唔可以四捨五入改咗佢（契約：行金額照 server 顯示）。
+ */
+export function money(value, decimalPlaces) {
+  const [whole, fraction = ""] = String(value).split(".");
+  const keep = fraction.slice(0, decimalPlaces), rest = fraction.slice(decimalPlaces);
+  const shown = /^0*$/u.test(rest) ? keep : fraction;
+  return shown ? `${whole}.${shown}` : whole;
+}
+
+/** quantity 係基本單位，unitPrice 係每銷售單位；整除先顯示銷售單位，否則顯示基本單位並註明單價單位。唔自己乘。 */
+export function quantityText({ quantity, toBaseFactor, baseUomCode, salesUomCode, unitPrice }) {
+  if (/^\d+$/u.test(quantity) && BigInt(toBaseFactor) > 0n && BigInt(quantity) % BigInt(toBaseFactor) === 0n) {
+    return `${BigInt(quantity) / BigInt(toBaseFactor)} ${salesUomCode} × ${unitPrice}`;
+  }
+  return `${quantity} ${baseUomCode}（單價 ${unitPrice} 為每 ${salesUomCode}）`;
+}
+
+export function timestamp(value) {
+  return value ? new Intl.DateTimeFormat("zh-HK", { timeZone: "Asia/Hong_Kong", dateStyle: "short", timeStyle: "short" }).format(new Date(value)) : "—";
+}
