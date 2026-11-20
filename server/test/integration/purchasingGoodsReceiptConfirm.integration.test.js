@@ -47,6 +47,7 @@ async function setup() {
       return { id, token: await jwt.issue({ roles: [name], permissions }, { subject: String(id), version, authTime: Math.floor(now / 1000) }) };
     };
     const receiver = await person("receiver", ["purchasing.view", "receiving.operation"]), viewer = await person("viewer", ["purchasing.view"]);
+    const overrider = await person("overrider", ["purchasing.view", "receiving.operation", "receiving.expiry.override"]);
     const supplier = await insert("suppliers", { supplier_code: `GRC-${tag}`, supplier_code_key: `grc-${tag}`, supplier_name: "Confirm Supplier",
       supplier_name_key: "confirm supplier", default_currency_code: "HKD", status: "active", created_at: now, updated_at: now });
     const item = await insert("items", { name: `GR confirm ${tag}`, status: "active", created_at: now, updated_at: now });
@@ -65,7 +66,7 @@ async function setup() {
       created_at: now, updated_at: now });
     const b1 = await bin(w1, "1"), b3 = await bin(w1, "3"), b2 = await bin(w2, "2");
     /** line A（SKU A，BOX×12，訂 2 BOX＝24）同 line B（SKU B，batch，訂 10 EA）；最後先改表頭狀態（line trigger）。 */
-    const order = async (status = "CONFIRMED") => {
+    const order = async (status = "CONFIRMED", { minLifeB = null } = {}) => {
       const [[{ next }]] = await db.query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next FROM purchase_orders WHERE document_year_month = ?", [MONTH]);
       const id = await insert("purchase_orders", { po_number: `PO-${MONTH}-${String(next).padStart(6, "0")}`, document_year_month: MONTH, sequence_no: Number(next),
         supplier_id: supplier, supplier_code_snapshot: `GRC-${tag}`, supplier_name_snapshot: "Confirm Supplier", currency_code: "HKD", currency_name_snapshot: "HK Dollar",
@@ -76,7 +77,8 @@ async function setup() {
       const lineA = await line(1, { sku_id: skuA, sku_code_snapshot: `GRC-${tag}-a`, sku_name_snapshot: "Confirm SKU a", tracking_policy_snapshot: "none",
         purchase_sku_uom_id: boxA, purchase_uom_code_snapshot: `X${tag}`, uom_to_base_factor_snapshot: 12, ordered_quantity: "2", ordered_base_quantity: 24 });
       const lineB = await line(2, { sku_id: skuB, sku_code_snapshot: `GRC-${tag}-b`, sku_name_snapshot: "Confirm SKU b", tracking_policy_snapshot: "batch",
-        purchase_sku_uom_id: eachB, purchase_uom_code_snapshot: `E${tag}`, uom_to_base_factor_snapshot: 1, ordered_quantity: "10", ordered_base_quantity: 10 });
+        purchase_sku_uom_id: eachB, purchase_uom_code_snapshot: `E${tag}`, uom_to_base_factor_snapshot: 1, ordered_quantity: "10", ordered_base_quantity: 10,
+        minimum_receipt_life_days_snapshot: minLifeB });
       await db.query("UPDATE purchase_orders SET status = ?, confirmed_at = ? WHERE id = ?", [status, now, id]);
       return { id, lineA, lineB };
     };
@@ -90,7 +92,8 @@ async function setup() {
       { body: { eventId: randomUUID(), purchaseOrderId, businessReceiptDate: RECEIPT_DATE } })).body.data.id;
     const confirm = (id, version, lines, { token, eventId = randomUUID(), ...fields } = {}) => send(`/api/v1/goods-receipts/${id}/confirm`,
       { token, body: { eventId, version, businessReceiptDate: RECEIPT_DATE, lines, ...fields } });
-    const header = async (id) => (await db.query(`SELECT status, version, confirmed_at, confirm_event_id, has_over_receipt, supplier_status_at_confirm,
+    const time = application.services.require("time"), today = time.fileDate(time.at(time.nowMs()));
+    const header = async (id) => (await db.query(`SELECT status, version, confirmed_at, confirm_event_id, has_over_receipt, has_sku_exception, has_expiry_override, supplier_status_at_confirm,
       supplier_exception_reason FROM goods_receipts WHERE id = ?`, [id]))[0][0];
     const details = async (id) => (await db.query(`SELECT received_base_quantity, inventory_movement_id, inventory_operation_request_id, confirmed_at
       FROM goods_receipt_details WHERE goods_receipt_id = ? ORDER BY detail_number`, [id]))[0];
@@ -106,7 +109,7 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { db, cleanups, order, draft, confirm, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
+    return { db, cleanups, order, draft, confirm, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Goods receipt confirm fixture setup failed and its cleanup also failed") : error;
@@ -270,4 +273,36 @@ integrationTest("TASK-032 C7 Draft 准留空嘅批號喺 Confirm 必填；冇 re
   await assertUntouched(f, id, poRow, before);
   assert.equal((await f.confirm(id, 1, twoLines(f, poRow))).status, 200);
   assert.deepEqual(failure(await f.confirm(id, 2, twoLines(f, poRow))).slice(0, 2), [409, "GR_STATE_CONFLICT"]);
+});
+
+integrationTest("TASK-032 C9 PO 確認後 SKU 追蹤方式改變：冇原因拒絕、零效果；有原因就按 PO 快照確認並標記 SKU 例外（§3.6；兩邊各自判斷 drift）", async () => {
+  const f = await fixture();
+  const poRow = await f.order(), id = await f.draft(poRow.id), before = await snapshot(f, poRow);
+  const lines = [{ purchaseOrderLineId: poRow.lineA, details: [detail(f, { inputUomId: f.box })] }];
+  await f.db.query("UPDATE item_skus SET tracking_policy = 'batch' WHERE id = ?", [f.skuA]);
+  try {
+    assert.deepEqual(failure(await f.confirm(id, 1, lines)), [409, "SKU_COMMITMENT_REASON_REQUIRED", "lines.0.skuExceptionReason"]);
+    await assertUntouched(f, id, poRow, before);
+    lines[0].skuExceptionReason = "追蹤方式已改，仍按採購單收貨";
+    const done = await f.confirm(id, 1, lines);
+    assert.equal(done.status, 200, JSON.stringify(done.body));
+    assert.equal(Number((await f.header(id)).has_sku_exception), 1);
+  } finally { await f.db.query("UPDATE item_skus SET tracking_policy = 'none' WHERE id = ?", [f.skuA]); }
+});
+
+integrationTest("TASK-032 C10 剩餘效期不足：冇放行權限拒絕、有權冇原因拒絕、權限及原因齊就確認並標記效期放行（§3.6；Inventory 再驗）", async () => {
+  const f = await fixture();
+  const poRow = await f.order("CONFIRMED", { minLifeB: 30 }), id = await f.draft(poRow.id), before = await snapshot(f, poRow);
+  const expiryDate = new Date(Date.parse(`${f.today}T00:00:00Z`) + 10 * 86_400_000).toISOString().slice(0, 10);
+  const lines = (reason) => [{ purchaseOrderLineId: poRow.lineB,
+    details: [detail(f, { receivedQuantity: "10", lotNumber: `EXP-${id}`, expiryDate, ...(reason ? { expiryOverrideReason: reason } : {}) })] }];
+  const at = { businessReceiptDate: f.today };
+  assert.deepEqual(failure(await f.confirm(id, 1, lines("短效期貨品經主管放行"), at)), [403, "EXPIRY_OVERRIDE_DENIED", "lines.0.details.0.expiryOverrideReason"]);
+  assert.deepEqual(failure(await f.confirm(id, 1, lines(""), { ...at, token: f.overrider.token })), [409, "MINIMUM_RECEIPT_LIFE_FAILED", "lines.0.details.0.expiryOverrideReason"]);
+  await assertUntouched(f, id, poRow, before);
+  const done = await f.confirm(id, 1, lines("短效期貨品經主管放行"), { ...at, token: f.overrider.token });
+  assert.equal(done.status, 200, JSON.stringify(done.body));
+  assert.equal(Number((await f.header(id)).has_expiry_override), 1);
+  const [[row]] = await f.db.query("SELECT minimum_life_days_applied, actual_remaining_life_days, expiry_override_by FROM goods_receipt_details WHERE goods_receipt_id = ?", [id]);
+  assert.deepEqual([Number(row.minimum_life_days_applied), Number(row.actual_remaining_life_days), Number(row.expiry_override_by)], [30, 10, f.overrider.id]);
 });
