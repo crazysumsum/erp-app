@@ -40,6 +40,16 @@ async function load() {
 watch(id, load, { immediate: true });
 onBeforeUnmount(() => controller?.abort());
 
+// 結果不明時鎖住整張表單（TL 558fb167 R1）：畫面所見就係會重送嘅原內容，只可以喺 banner 以原 record 重試。
+const uncertainAction = computed(() => (confirm.isUncertain(key("confirm")) ? "confirm" : save.isUncertain(key("save")) ? "save" : null));
+const retrying = ref(false), retryError = ref("");
+async function retry() {
+  const action = uncertainAction.value, record = (action === "confirm" ? confirm : save).current(key(action));
+  if (!record) return;
+  retrying.value = true; retryError.value = "";
+  try { await (action === "confirm" ? onConfirm : onSave)(record.payload); } catch (failure) { retryError.value = failure.message || "重試失敗"; }
+  finally { retrying.value = false; }
+}
 async function onSave(body) {
   const result = await save.run(body, (payload) => purchasing.updateGoodsReceipt(id.value, payload), key("save"), { action: "save" });
   notifySuccess(`${result.number} 草稿已儲存。`);
@@ -61,10 +71,12 @@ async function onConfirm(body) {
       <q-skeleton v-if="loading" type="rect" aria-label="載入收貨單" />
       <q-banner v-else-if="loadError" role="alert" class="bg-negative text-white">{{ loadError }}<template #action><q-btn flat label="重試" @click="load" /></template></q-banner>
       <template v-else-if="receipt && purchaseOrder">
-        <q-banner v-if="uncertain" role="status" class="bg-warning text-dark q-mb-md">
-          {{ confirm.isUncertain(key('confirm')) ? "確認" : "儲存" }}結果尚未確認；請再按同一個按鈕，以原內容重試確認結果，不會重複入庫。
+        <q-banner v-if="uncertain" role="status" class="bg-warning text-dark q-mb-md" data-testid="gr-uncertain">
+          {{ uncertainAction === "confirm" ? "確認" : "儲存" }}結果尚未確認。表單已鎖定，畫面內容就是原本送出的內容；請以原內容重試以確認結果，不會重複入庫。
+          <template v-if="retryError"><br>{{ retryError }}</template>
+          <template #action><q-btn flat :label="uncertainAction === 'confirm' ? '以原內容重試確認' : '以原內容重試儲存'" :loading="retrying" @click="retry" /></template>
         </q-banner>
-        <GoodsReceiptForm :document="receipt" :purchase-order="purchaseOrder" :on-save="onSave" :on-confirm="onConfirm" />
+        <GoodsReceiptForm :document="receipt" :purchase-order="purchaseOrder" :on-save="onSave" :on-confirm="onConfirm" :locked="uncertain" />
       </template>
     </div>
   </div>

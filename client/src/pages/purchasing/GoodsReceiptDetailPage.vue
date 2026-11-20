@@ -9,7 +9,7 @@ import { promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import purchasing from "@/services/purchasing.js";
-import { receiptStatusColors, receiptStatusLabels } from "./goodsReceiptPresentation.js";
+import { receiptStatusColors, receiptStatusLabels } from "@/components/purchasing/goodsReceiptPresentation.js";
 
 // 收貨單詳情（TASK-034 最小形態）：表頭、風險標記、逐行明細及 Inventory movement；Draft 可去編輯或取消。首期冇沖銷。
 const route = useRoute(), cancelCommand = useCommandEvent();

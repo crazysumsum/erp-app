@@ -10,7 +10,7 @@ import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
 import purchasing from "@/services/purchasing.js";
-import { receiptStatusColors, receiptStatusLabels } from "./goodsReceiptPresentation.js";
+import { receiptStatusColors, receiptStatusLabels } from "@/components/purchasing/goodsReceiptPresentation.js";
 
 // 收貨單列表（TASK-031）：只用 server 支援嘅 status filter（設計 §5.3 子集；list 只接受 page、pageSize、status、purchaseOrderId）。
 const session = useSessionStore();
