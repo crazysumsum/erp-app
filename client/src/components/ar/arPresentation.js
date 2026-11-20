@@ -37,3 +37,13 @@ export function amountInputValid(value, decimalPlaces) {
   const pattern = decimalPlaces > 0 ? new RegExp(`^(0|[1-9]\\d{0,13})(\\.\\d{1,${decimalPlaces}})?$`, "u") : /^(0|[1-9]\d{0,13})$/u;
   return pattern.test(value) && /[1-9]/u.test(value);
 }
+
+/** 金額字串 ↔ 萬分之一嘅 BigInt：核銷要加減比較，唔可以用浮點。 */
+export function toUnits(value) {
+  const [whole, fraction = ""] = String(value).split(".");
+  return BigInt(whole) * 10000n + BigInt(fraction.padEnd(4, "0").slice(0, 4));
+}
+export function fromUnits(units, decimalPlaces) {
+  const text = `${units / 10000n}.${String(units % 10000n).padStart(4, "0")}`;
+  return money(text, decimalPlaces);
+}
