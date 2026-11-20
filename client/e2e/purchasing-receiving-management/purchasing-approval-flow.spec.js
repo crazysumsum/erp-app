@@ -275,7 +275,11 @@ test("PO approval: settings, submit, withdraw/resubmit, approve through a lost r
   // replay with a header (IdempotencyService.sendReplay); the service-level replayed:true never reaches HTTP here.
   expect(res.headers()["idempotency-replayed"]).toBe("true");
   expect((await res.json()).data).toEqual(committed.body.data);
-  await expect(rejectButton).toBeEnabled();                                            // uncertainty resolved
+  // Uncertainty resolved. On success the page reloads; the PO is now CONFIRMED, so the approval panel (and its reject
+  // button) is removed by design. Waiting for that button to become enabled raced the reload, so assert the settled result.
+  await expect(page.getByText("已確認", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "審批決定", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("po-detached-decision")).toHaveCount(0);
 
   await menu(page, "待我審批").click();                                               // #11
   await page.getByRole("link", { name: `處理 ${po.B.number}`, exact: true }).or(page.getByRole("button", { name: `處理 ${po.B.number}`, exact: true })).click();
