@@ -39,6 +39,12 @@
         "each shipment takes its half-up share of what remains, and the shipment that uses up the quantity takes the remainder",
         "the result depends only on the order line and the quantities shipped before it, and a shipment beyond the ordered quantity is refused"
       ]
+    },
+    {
+      "path": "docs/invoicing_accounts_receivable_management/tasks.md",
+      "mode": "100644",
+      "blob": "4e2b650965891066a34e45832f624e9bf39eae07",
+      "kind": "support"
     }
   ]
 }
