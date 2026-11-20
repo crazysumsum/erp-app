@@ -44,7 +44,8 @@ async function setup() {
         () => db.query("DELETE FROM user_roles WHERE user_id = ?", [id]));
       await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [id, role]);
       const version = await application.services.require("tokenRevocation").currentVersion(String(id));
-      return { id, token: await jwt.issue({ roles: [name], permissions }, { subject: String(id), version, authTime: Math.floor(now / 1000) }) };
+      const issue = async (granted) => jwt.issue({ roles: [name], permissions: granted }, { subject: String(id), version, authTime: Math.floor(Date.now() / 1000) });
+      return { id, role, issue, token: await issue(permissions) };
     };
     const receiver = await person("receiver", ["purchasing.view", "receiving.operation"]), viewer = await person("viewer", ["purchasing.view"]);
     const overrider = await person("overrider", ["purchasing.view", "receiving.operation", "receiving.expiry.override"]);
@@ -114,7 +115,7 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { db, cleanups, order, draft, confirm, lookup, other, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
+    return { db, cleanups, order, draft, confirm, lookup, other, person, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Goods receipt confirm fixture setup failed and its cleanup also failed") : error;
@@ -326,4 +327,12 @@ integrationTest("TASK-033 C8 按原 eventId 查確認結果：本人回 COMPLETE
   for (const token of [f.other.token, f.viewer.token]) assert.deepEqual(failure(await f.lookup(eventId, token)).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
   assert.deepEqual(failure(await f.lookup(randomUUID())).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
   assert.equal((await f.lookup("not-a-uuid")).status, 400);
+
+  // 同一個用戶之後失去原命令權限（receiving.operation）：用新 token 查自己嘅結果都係 404。
+  const lapsed = await f.person(`lapsed${randomUUID().slice(0, 4)}`, ["purchasing.view", "receiving.operation"]);
+  const ownPo = await f.order(), own = await f.draft(ownPo.id), ownEvent = randomUUID();
+  assert.equal((await f.confirm(own, 1, twoLines(f, ownPo), { eventId: ownEvent, token: lapsed.token })).status, 200);
+  assert.equal((await f.lookup(ownEvent, lapsed.token)).status, 200);
+  await f.db.query("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id = rp.permission_id WHERE rp.role_id = ? AND p.name = 'receiving.operation'", [lapsed.role]);
+  assert.deepEqual(failure(await f.lookup(ownEvent, await lapsed.issue(["purchasing.view"]))).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
 });
