@@ -350,6 +350,46 @@
         "Approved on 2026-11-05 with the TASK-022 proposal, covering three new Purchasing approval messages"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-013",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "agentmsg 500abde8 from PM claude-erp-app-pm-01 relaying Sam's 2026-11-20 answer 「補批並預先批准」 to: 是否補批 #367 的 7 條訊息，並預先批准首期各模組在共用檔新增自己的錯誤訊息？",
+      "recorded_at": "2026-11-20T08:30:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-029",
+        "client/src/framework/http/errorMessages.js",
+        "Retroactive approval given on 2026-11-20 AFTER PR #367 merged (3524e921): the seven Goods Receipt messages TASK-029 added without a prior SCOPE approval, because the boundary check was not run before that PR (self-reported to the PM, agentmsg 09294e29). Recorded as a retroactive approval, not a pre-merge one"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-014",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "agentmsg 500abde8 from PM claude-erp-app-pm-01 relaying Sam's 2026-11-20 answer 「補批並預先批准」 to: 是否補批 #367 的 7 條訊息，並預先批准首期各模組在共用檔新增自己的錯誤訊息？",
+      "recorded_at": "2026-11-20T08:30:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7cca891a3c9f9d9224d643b0784a926a15c4464f7271be0fc4275e758a8473dc",
+      "code_commit": null,
+      "scope": [
+        "TASK-030",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033",
+        "TASK-034",
+        "client/src/framework/http/errorMessages.js",
+        "Standing first-phase approval (until the 2026-11-26 UAT): add messages for Purchasing's own error codes only. No change to or removal of other modules' or shared existing text; the reviewing TL checks this in PR review. Does not cover other shared paths, edits to existing messages or other modules' codes. Run the module boundary check before each PR"
+      ],
+      "expires_at": "2026-11-26T23:59:59+08:00"
     }
   ],
   "reviews": [
