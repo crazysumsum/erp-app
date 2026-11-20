@@ -19,6 +19,17 @@ Every other case returns 404 `PURCHASING_OPERATION_NOT_FOUND`: not found, anothe
 
 Both need `purchasing.view`. Reversals, CSV export and risk filters belong to later tasks.
 
+**Front-end contract (TL a0d814cb):**
+- The list accepts exactly four query parameters: `page`, `pageSize`, `status` and `purchaseOrderId`. Any other parameter is ignored without an error, so a misspelled name silently returns the unfiltered list.
+- Every string field the detail returns is NOT NULL in the database (checked column by column on 2026-11-20). `skuWarningCodes` is the one nullable column, and it is returned as `[]`.
+
+**Receiving lookups (for the GR pages):**
+- `GET /api/v1/receiving-lookups/purchase-orders?q=`: CONFIRMED or PARTIALLY_RECEIVED with outstanding quantity; `q` is a prefix match on the PO number or the supplier code or name.
+- `GET /api/v1/receiving-lookups/warehouses`: active warehouses.
+- `GET /api/v1/receiving-lookups/warehouses/:id/bins`: active bins in that warehouse.
+
+All three need `purchasing.view` and `receiving.operation` and return at most 100 rows. The confirm rechecks everything.
+
 ## Tests
 
 Two cases were added to `purchasingGoodsReceiptConfirm.integration.test.js`:
