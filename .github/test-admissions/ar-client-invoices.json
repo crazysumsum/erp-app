@@ -61,6 +61,24 @@
       "mode": "100644",
       "blob": "3694282cd8bd3ed84e63c89c5935215230151515",
       "kind": "support"
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoicesPage.vue",
+      "mode": "100644",
+      "blob": "b95d335b86e25d11cd25b2d066c5b44a0b84c60f",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoiceDetailPage.vue",
+      "mode": "100644",
+      "blob": "700c0f0b170f14ec9771003bf6c6b3fff4c5f75e",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoiceCreatePage.vue",
+      "mode": "100644",
+      "blob": "c4c8ad77498841512d85facb305cde5d15da2dc2",
+      "kind": "support"
     }
   ]
 }
