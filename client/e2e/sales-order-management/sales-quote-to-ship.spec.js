@@ -107,12 +107,23 @@ async function shipConfirmedOrder(page, { db, orderId, orderNumber, skuId }) {
   );
   const button = (name) => page.getByRole("button", { name, exact: true });
   const [stockBefore] = await db.query(
-    `SELECT b.id, b.on_hand_quantity
+    `SELECT b.id, b.warehouse_id, b.bin_id, b.on_hand_quantity
      FROM inventory_stock_balances b JOIN sales_orders o ON o.fulfillment_warehouse_id=b.warehouse_id
      WHERE o.id=? AND b.sku_id=? AND b.stock_status='AVAILABLE' AND b.on_hand_quantity>0`, [orderId, skuId]
   );
   expect(stockBefore).toHaveLength(1);
-  expect(String(stockBefore[0].on_hand_quantity)).toBe("5");
+  const [balance] = stockBefore;
+  expect(String(balance.on_hand_quantity)).toBe("5");
+  async function onHand() {
+    const [[row]] = await db.query("SELECT on_hand_quantity FROM inventory_stock_balances WHERE id=?", [balance.id]);
+    return String(row.on_hand_quantity);
+  }
+  async function issueMovements() {
+    const [rows] = await db.query(`SELECT id, direction, quantity, balance_before, balance_after
+      FROM inventory_movements WHERE warehouse_id=? AND bin_id=? AND sku_id=? AND movement_type='ISSUE'`,
+    [balance.warehouse_id, balance.bin_id, skuId]);
+    return rows;
+  }
 
   await page.goto(`${origin}/fulfillment/queue?q=${encodeURIComponent(orderNumber)}`);
   const orderRow = page.getByRole("row").filter({ hasText: orderNumber });
@@ -141,8 +152,7 @@ async function shipConfirmedOrder(page, { db, orderId, orderNumber, skuId }) {
   await button("提交確認揀貨").click();
   await button("確認揀貨").click();
   await expect(page.getByText("版本 3", { exact: true })).toBeVisible();
-  const [[afterPick]] = await db.query("SELECT on_hand_quantity FROM inventory_stock_balances WHERE id=?", [stockBefore[0].id]);
-  expect(String(afterPick.on_hand_quantity)).toBe("5");
+  expect(await onHand()).toBe("5");
 
   const drafted = post(`/api/v1/fulfillments/${fulfillmentId}/shipments/create`);
   await button("建立出貨草稿").click();
@@ -150,6 +160,8 @@ async function shipConfirmedOrder(page, { db, orderId, orderNumber, skuId }) {
   expect(draftResponse.status()).toBe(201);
   const shipmentId = (await draftResponse.json()).data.outcome.id;
   await expect(page).toHaveURL(new RegExp(`/shipments/${shipmentId}$`, "u"));
+  expect(await onHand()).toBe("5");
+  expect(await issueMovements()).toHaveLength(0);
   await button("載入完整出貨庫位摘要").click();
   const confirmed = post(`/api/v1/shipments/${shipmentId}/confirm`);
   await button("提交確認出貨").click();
@@ -158,7 +170,7 @@ async function shipConfirmedOrder(page, { db, orderId, orderNumber, skuId }) {
   await expect(page.getByText("已出貨", { exact: true })).toBeVisible();
 
   const [[saved]] = await db.query(
-    `SELECT s.shipment_number, s.sales_order_id, s.fulfillment_id, s.status AS shipment_status,
+    `SELECT s.sales_order_id, s.fulfillment_id, s.status AS shipment_status,
             o.status AS sales_status, l.fulfilled_base_quantity, l.reserved_outstanding_base_quantity
      FROM shipments s JOIN sales_orders o ON o.id=s.sales_order_id
      JOIN sales_order_lines l ON l.sales_order_id=o.id AND l.sku_id=?
@@ -171,20 +183,19 @@ async function shipConfirmedOrder(page, { db, orderId, orderNumber, skuId }) {
   expect(String(saved.fulfilled_base_quantity)).toBe("3");
   expect(String(saved.reserved_outstanding_base_quantity)).toBe("0");
 
-  const [issues] = await db.query(
-    `SELECT i.issued_base_quantity, i.inventory_balance_id, m.id AS movement_id,
-            m.movement_type, m.direction, m.balance_before, m.balance_after
-     FROM shipment_issue_details i JOIN inventory_movements m ON m.id=i.inventory_movement_id
-     WHERE i.shipment_id=?`, [shipmentId]
-  );
+  const movements = await issueMovements();
+  expect(movements).toHaveLength(1);
+  const [movement] = movements;
+  expect(movement.direction).toBe("OUT");
+  expect([movement.quantity, movement.balance_before, movement.balance_after].map(String)).toEqual(["3", "5", "2"]);
+  const [issues] = await db.query(`SELECT issued_base_quantity, inventory_balance_id, inventory_movement_id
+    FROM shipment_issue_details WHERE shipment_id=?`, [shipmentId]);
   expect(issues).toHaveLength(1);
-  expect(issues[0]).toMatchObject({ movement_type: "ISSUE", direction: "OUT" });
-  expect(String(issues[0].inventory_balance_id)).toBe(String(stockBefore[0].id));
-  expect(String(issues[0].issued_base_quantity)).toBe("3");
-  expect(String(issues[0].balance_before)).toBe("5");
-  expect(String(issues[0].balance_after)).toBe("2");
-  const [[stockAfter]] = await db.query("SELECT on_hand_quantity FROM inventory_stock_balances WHERE id=?", [stockBefore[0].id]);
-  expect(String(stockAfter.on_hand_quantity)).toBe("2");
+  const [issue] = issues;
+  expect(String(issue.inventory_movement_id)).toBe(String(movement.id));
+  expect(String(issue.inventory_balance_id)).toBe(String(balance.id));
+  expect(String(issue.issued_base_quantity)).toBe("3");
+  expect(await onHand()).toBe("2");
 }
 
 test("A quoted order is reserved, picked and shipped through the browser", async ({ page }) => {
