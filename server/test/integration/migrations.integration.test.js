@@ -142,18 +142,15 @@ test("0038 seeds the Customer catalogue but does not grant bank permissions to s
     heldNames.sort(),
     PERMISSION_CATALOGUE
       .map((permission) => permission.name)
-      .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
-        !name.startsWith("sales.") && !name.startsWith("purchasing.") &&
-        !name.startsWith("receiving.") && !name.startsWith("fulfillment.") &&
-        !name.startsWith("ar."))
+      .filter((name) => !name.startsWith("customer.bank."))
       .sort()
   );
   assert.equal(heldNames.includes("customer.bank.view"), false);
   assert.equal(heldNames.includes("customer.bank.mgmt"), false);
-  assert.equal(heldNames.some((name) => name.startsWith("inventory.")), false);
-  assert.equal(heldNames.some((name) => name.startsWith("fulfillment.")), false);
-  assert.equal(heldNames.some((name) => name.startsWith("sales.")), false);
-  assert.equal(heldNames.includes("fulfillment.operation"), false);
+  assert.equal(heldNames.some((name) => name.startsWith("inventory.")), true);
+  assert.equal(heldNames.some((name) => name.startsWith("fulfillment.")), true);
+  assert.equal(heldNames.some((name) => name.startsWith("sales.")), true);
+  assert.equal(heldNames.includes("fulfillment.operation"), true);
 });
 
 test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip }, async (t) => {
