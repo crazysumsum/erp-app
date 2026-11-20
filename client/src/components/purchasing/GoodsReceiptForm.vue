@@ -15,7 +15,7 @@ const props = defineProps({
 });
 const form = reactive({ businessReceiptDate: "", supplierDeliveryNote: "", notes: "", supplierExceptionReason: "", lines: [] });
 const warehouses = ref([]), optionsError = ref(""), adding = ref(null);
-let intent = "save";
+const intent = ref("save");
 
 watch(() => props.document, (document) => Object.assign(form, toForm(document)), { immediate: true });
 onMounted(async () => {
@@ -36,7 +36,7 @@ function addLine(line) {
 async function submit() {
   const body = toPayload(form, props.document.version);
   try {
-    return await (intent === "confirm" ? props.onConfirm(body) : props.onSave(body));
+    return await (intent.value === "confirm" ? props.onConfirm(body) : props.onSave(body));
   } catch (error) {
     throw withFieldDetails(error);
   }
