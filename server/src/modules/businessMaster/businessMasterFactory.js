@@ -2,6 +2,7 @@ import { BusinessMasterAdminService } from "./BusinessMasterAdminService.js";
 import { BusinessMasterAuditLogService } from "./BusinessMasterAuditLogService.js";
 import { BusinessMasterImpactRegistry } from "./BusinessMasterImpactRegistry.js";
 import { BusinessMasterRepository } from "./BusinessMasterRepository.js";
+import { ArBusinessMasterImpactChecker } from "../ar/ArBusinessMasterImpactChecker.js";
 import { CustomerBusinessMasterImpactChecker } from "../customer/CustomerBusinessMasterImpactChecker.js";
 import { PurchasingBusinessMasterImpactChecker } from "../purchasing/PurchasingBusinessMasterImpactChecker.js";
 import { SalesBusinessMasterImpactChecker } from "../sales/SalesBusinessMasterImpactChecker.js";
@@ -45,6 +46,7 @@ export function createBusinessMasterAdminService(services) {
     if (id === "supplier" && supplierChecker) return supplierChecker;
     if (id === "sales") return new SalesBusinessMasterImpactChecker({ database });
     if (id === "purchasing") return new PurchasingBusinessMasterImpactChecker({ database });
+    if (id === "ar") return new ArBusinessMasterImpactChecker({ database });
     return readinessChecker(database, id, table);
   });
   const impactRegistry = new BusinessMasterImpactRegistry({ time, checkers, requiredCheckerIds: Object.keys(CONSUMER_TABLES) });
