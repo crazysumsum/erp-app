@@ -33,6 +33,23 @@ export function supplierConflict(code, publicMessage, details) {
   return supplierError(publicMessage, { code, statusCode: 409, publicMessage, details });
 }
 
+// 等鎖失敗（deadlock 或 lock wait timeout）：InnoDB 已經 rollback 成個 transaction，乜都冇寫入。
+// 只用喺會讀下游 checker 嘅三條路徑（改 Code、封存、永久刪除），TL ruling 4 及 ruling A：
+// 環係接受咗嘅，呢度只係俾被選中嘅一方一個有類型嘅 409，唔會消除 deadlock。
+// transaction／query timeout 唔算：喺 commit 附近逾時，唔保證冇效果，照舊 500。
+const LOCK_CONFLICT_CODES = new Set(["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"]);
+
+export function isLockConflict(error) {
+  for (let link = error, depth = 0; link && depth < 5; link = link.cause, depth += 1) {
+    if (LOCK_CONFLICT_CODES.has(link.code)) return true;
+  }
+  return false;
+}
+
+export function supplierConcurrentOperation() {
+  return supplierConflict("CONCURRENT_OPERATION", "供應商資料正被其他操作使用，請稍後再試；這次操作沒有任何變更。");
+}
+
 /** Import 嘅非 400 錯誤：413 檔案太大、503 未部署（HD-050）。 */
 export function supplierImportError(code, statusCode, publicMessage) {
   return supplierError(publicMessage, { code, statusCode, publicMessage });

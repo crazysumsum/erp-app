@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt.",
+  "purpose": "AR first phase, PR 2 of 3: receipts (draft, confirm, cancel, void), allocation and unapply, the receipt list and detail, and the aging report. Proves on real MySQL through real HTTP and JWT that amounts move correctly between receipt and invoices, that non-compliant allocations write nothing, that a void needs a reason and no active allocation, that aging buckets are exact at their boundary days, that the three permissions do not inherit, and that the same event_id returns the original result once.",
+  "data": "Integration file, 10 cases sharing one fixture (server/test/ar/arHttpFixture.js): 4 users, about 10 customers, 1 extra currency, about 40 ar_invoices rows written by SQL as fixtures and about 20 receipts created through the API. Unit file, 4 cases with inline values and fake connections.",
+  "concurrency": "Serial, except one case that sends 2 concurrent allocation requests for the same receipt to show only one succeeds.",
+  "repetitions": "1",
+  "thresholds": "All cases pass; exact equality on amounts, statuses and versions; coverage floors unchanged; no timing threshold.",
+  "trigger": "Existing ci.yml triggers and discovery only: the existing server MySQL integration shards and server test job. No new job, schedule or dispatch. No capacity or performance workload.",
+  "cost": "Local run: about 1.3 s for the integration file and under 0.1 s for the unit file; not measured in CI. No new job.",
+  "files": [
+    {
+      "path": "server/test/integration/arReceipts.integration.test.js",
+      "mode": "100644",
+      "blob": "f76c8c6d14963798836b2d0da56e92624faeba01",
+      "kind": "functional",
+      "cases": [
+        "收款草稿：建立後可讀，金額只收幣別小數位，未知客戶、欄位、方式及不符的 Idempotency-Key 都被拒絕而且不留資料",
+        "確認取年度流水號；版本不符及狀態不符分別回 VERSION_CONFLICT 及 AR_STATE_CONFLICT；草稿可取消，取消後不可確認",
+        "核銷：一筆收款部分核銷到兩張發票，未核銷的餘額留在收款上；各種不合規的核銷整個被拒絕而且不寫入",
+        "多筆收款核銷同一張發票直到收齊；兩個同時送出的核銷只有一個成功，收款不會被超額核銷",
+        "解除核銷：金額回到收款及發票，記錄保留為 UNAPPLIED；重複解除及不屬於該收款的核銷被拒絕",
+        "作廢收款：仍有核銷時不可作廢，解除後可以；須原因；作廢後金額保留、號碼保留、不可再核銷",
+        "帳齡表：按到期日分五桶，邊界日準確；只計已確認而仍有未收額的發票；按客戶及幣別分列，不同幣別不相加",
+        "收款列表：新到舊、分頁、狀態、客戶、幣別、日期及前綴搜尋；非法查詢參數被拒絕",
+        "權限：查看要 ar.view，收款及核銷命令要 ar.receipt.mgmt，兩者互不繼承；未登入一律 401",
+        "同一 eventId 重送：回原結果而且只生效一次；同一 eventId 用於不同內容或不同操作者是衝突；每個成功命令寫一行 Audit"
+      ]
+    },
+    {
+      "path": "server/test/ar/arCommand.test.js",
+      "mode": "100644",
+      "blob": "d10993706e906edc0c3560f4b6644f972bf11da5",
+      "kind": "functional",
+      "cases": [
+        "AR amounts are exact ten-thousandths, limited to the currency's decimal places, and never pass through Number",
+        "AR input validators reject by field path and never echo the value",
+        "AR document numbers are yearly, six digits, taken under the row lock, and stop at the limit instead of rolling over",
+        "AR commands run READ COMMITTED and translate lock and indeterminate failures; other errors pass through unchanged"
+      ]
+    },
+    {
+      "path": "server/test/ar/arHttpFixture.js",
+      "mode": "100644",
+      "blob": "0e39293da17645b1f56ae388a4cb684b95c7d4ce",
+      "kind": "functional",
+      "cases": [
+        "Shared HTTP fixture for the AR integration files: 4 synthetic users, 1 extra currency, SQL helpers for customers and invoices; registers no case of its own"
+      ]
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessM
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import { getActivationPolicy } from "../../modules/supplier/SupplierSettingsService.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { createSupplierReferenceServices } from "../../modules/supplier/supplierReferenceCheckers.js";
 import { EMPTY_SUPPLIER_SCHEMA, SUPPLIER_CREATE_SCHEMA, SUPPLIER_DETAIL_SCHEMA, SUPPLIER_MGMT_POLICY } from "./supplierSchemas.js";
 
 export class CreateSupplierHandler extends BaseRequestHandler {
@@ -27,7 +28,7 @@ export class CreateSupplierHandler extends BaseRequestHandler {
       readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
     });
     this.suppliers = new SupplierAdminService({ database, logger, time, businessMaster, approvalRequired: getActivationPolicy,
-      duplicateNameThreshold: services.config?.supplier?.duplicateNameThreshold });
+      duplicateNameThreshold: services.config?.supplier?.duplicateNameThreshold, ...createSupplierReferenceServices() });
   }
 
   async execute(req) {

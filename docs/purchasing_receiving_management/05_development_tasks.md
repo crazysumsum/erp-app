@@ -683,7 +683,7 @@ Phase 4 Reversal, Reporting & Release Evidence
 
 **驗收條件：**
 
-- [ ] none／batch／batch_expiry準確驗證，Serial、Expired、lot date conflict、無效Bin及非法Base quantity fail closed。
+- [ ] none／batch／batch_expiry準確驗證，Serial、Expired、lot date conflict及非法Base quantity fail closed（無效Bin移至P3-T06，TL 2026-11-18）。
 - [ ] Suspended／Archived要求原因；Blocked只准Quarantined＋原因；SKU committed changes要求warning＋原因。
 - [ ] 超收按提交時最新Outstanding重算並要求原因；效期override不能繞過其他安全規則。
 
@@ -766,6 +766,7 @@ Phase 4 Reversal, Reporting & Release Evidence
 - [ ] 多detail只呼叫一次batch contract，provider／Inventory結果集合缺失或多出均rollback。
 - [ ] Inventory第N detail、Audit或PO progress failure都令GR保持Draft且零部分Movement／Balance效果。
 - [ ] 成功時GR Confirmed、PO gross／net／outstanding／over及雙向source一次更新。
+- [ ] 無效Bin fail closed：Inventory過帳的`WAREHOUSE_INVALID`／`BIN_INVALID`／`BIN_WAREHOUSE_MISMATCH`對照成公開錯誤並各有案例（由P3-T02移入，TL 2026-11-18）。
 
 **驗證：** `goodsReceiptPostingService.test.js`及receiving MySQL integration failure injection。
 
@@ -1709,7 +1710,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 預計檔案：`ReceivingPolicyService.js`、`purchasingValidation.js`、`receivingSchemas.js`及最多2個tests。 驗證：`receivingPolicy.test.js`、`purchasingValidation.test.js`及quantity boundary tests。 規格追溯：Design §3.4～3.6、§8.6；FR-VAL、BR-025～039、AC-025～035。
 
 ### Acceptance criteria
-- none／batch／batch_expiry準確驗證，Serial、Expired、lot date conflict、無效Bin及非法Base quantity fail closed。
+- none／batch／batch_expiry準確驗證，Serial、Expired、lot date conflict及非法Base quantity fail closed（無效Bin移至TASK-032，TL 2026-11-18）。
 - Suspended／Archived要求原因；Blocked只准Quarantined＋原因；SKU committed changes要求warning＋原因。
 - 超收按提交時最新Outstanding重算並要求原因；效期override不能繞過其他安全規則。
 
@@ -1776,6 +1777,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 - 多detail只呼叫一次batch contract，provider／Inventory結果集合缺失或多出均rollback。
 - Inventory第N detail、Audit或PO progress failure都令GR保持Draft且零部分Movement／Balance效果。
 - 成功時GR Confirmed、PO gross／net／outstanding／over及雙向source一次更新。
+- 無效Bin fail closed：Inventory過帳的`WAREHOUSE_INVALID`／`BIN_INVALID`／`BIN_WAREHOUSE_MISMATCH`對照成公開錯誤並各有案例（由TASK-028移入，TL 2026-11-18）。
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-028, TASK-029, TASK-006。對應 mandatory 技術測試：TC-006, TC-007。
@@ -1904,6 +1906,7 @@ Confirmed GR commit後冪等更新Supplier最近供貨日期／soft SKU relation
 - Post-commit projection重試不重複、不設preferred，失敗不令已commit GR顯示失敗。
 - Reconciliation只補soft projection並輸出安全summary，不重算或直接修改PO／Inventory正本。
 - Structured log／metric不含Supplier／SKU名稱、reason全文、銀行資料或高基數labels。
+- 相關（已交付，2026-11-19）：Supplier引用及未完成流程checker `PurchasingSupplierReferenceCheckers.js`（TL ruling 4、ruling A；Supplier owner代寫，見implementation/P3_supplier_reference_checkers.md）。
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-032, TASK-004。對應 mandatory 技術測試：TC-011, TC-012。

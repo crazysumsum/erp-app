@@ -14,9 +14,15 @@ const COMMANDS = Object.freeze({
   WITHDRAW_CONFIRMATION_PURCHASE_ORDER: "PURCHASE_ORDER",
   CANCEL_PURCHASE_ORDER: "PURCHASE_ORDER",
   CLOSE_REMAINING_PURCHASE_ORDER: "PURCHASE_ORDER",
-  UPDATE_PURCHASING_SETTINGS: "SETTING"
+  UPDATE_PURCHASING_SETTINGS: "SETTING",
+  CREATE_GOODS_RECEIPT: "GOODS_RECEIPT",
+  UPDATE_GOODS_RECEIPT: "GOODS_RECEIPT",
+  CANCEL_GOODS_RECEIPT: "GOODS_RECEIPT"
 });
 const PO_STATUSES = ["DRAFT", "PENDING_APPROVAL", "CONFIRMED", "PARTIALLY_RECEIVED", "FULLY_RECEIVED", "CLOSED", "CANCELLED"];
+const GR_STATUSES = ["DRAFT", "CONFIRMED", "PARTIALLY_REVERSED", "REVERSED", "CANCELLED"];
+// 文件編號決定結果屬邊類：PO 或 GR（設計 §4.3、§4.14）。
+const DOCUMENTS = [{ type: "PO", pattern: /^PO-\d{6}-\d{6}$/u, statuses: PO_STATUSES }, { type: "GR", pattern: /^GR-\d{6}-\d{6}$/u, statuses: GR_STATUSES }];
 
 function identifier(value) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError("Invalid Purchasing operation identifier");
@@ -70,8 +76,10 @@ function safeResult(value) {
   if (result && Object.keys(result).sort().join(",") === "requirePoApproval,version" && typeof result.requirePoApproval === "boolean") {
     return { requirePoApproval: result.requirePoApproval, version: identifier(result.version) };
   }
-  if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
-      typeof result.number !== "string" || !/^PO-\d{6}-\d{6}$/u.test(result.number) || !PO_STATUSES.includes(result.status)) throw new TypeError("Invalid Purchasing operation result");
+  const document = typeof result?.number === "string" ? DOCUMENTS.find(({ pattern }) => pattern.test(result.number)) : undefined;
+  if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" || !document || !document.statuses.includes(result.status)) {
+    throw new TypeError("Invalid Purchasing operation result");
+  }
   identifier(result.id); identifier(result.version);
   return { id: result.id, number: result.number, status: result.status, version: result.version };
 }
@@ -108,7 +116,7 @@ export class PurchasingOperationService {
 
   async complete(connection, { operationId, result, nowMs }) {
     const summary = safeResult(result);
-    const [resultType, resultId] = summary.id ? ["PO", String(summary.id)] : ["SETTING", "1"];
+    const [resultType, resultId] = summary.id ? [summary.number.slice(0, 2), String(summary.id)] : ["SETTING", "1"];
     const [row] = await connection.execute(`UPDATE purchasing_operation_requests SET result_type = ?, result_id = ?, result_summary = ?,
       completed_at = ? WHERE id = ? AND completed_at IS NULL`, [resultType, resultId, JSON.stringify(summary), timestamp(nowMs), identifier(operationId)]);
     if (Number(row.affectedRows) !== 1) throw purchasingError("CONCURRENT_OPERATION");
