@@ -78,15 +78,15 @@ const retry = () => submit();
 
 <template>
   <div>
-    <PageHeader subtitle="選同一客戶、已出貨的出貨單（最多 20 張）。整張出貨開票，不拆數量；建立後是草稿，要確認才取號。" />
+    <PageHeader subtitle="選同一客戶、已出貨的出貨單（最多 20 張）。整張出貨開票，不拆數量；建立後是草稿，要確認才取號。每次最多列出最近更新的 100 張，較舊的出貨請用出貨日期或客戶篩選。" />
     <div class="q-px-md q-pb-md">
       <q-banner v-if="uncertain" role="status" class="bg-warning text-dark q-mb-md" data-testid="ar-create-uncertain">
         建立發票的結果尚未確認；請重試同一操作以確認結果，不會重複建立。期間不能修改選擇。
         <template #action><q-btn flat label="重試確認結果" :loading="busy" @click="retry" /></template>
       </q-banner>
       <div class="row q-col-gutter-md">
-        <div class="col-12 col-sm-6 col-md-3"><q-input v-model="search.customerId" label="客戶 ID" mask="################" :disable="locked" outlined dense @keyup.enter="find" /></div>
-        <div class="col-12 col-sm-6 col-md-3"><q-input v-model="search.q" label="出貨單／銷售單／客戶" maxlength="190" :disable="locked" outlined dense @keyup.enter="find" /></div>
+        <div class="col-12 col-sm-6 col-md-3"><q-input v-model="search.customerId" label="客戶 ID" hint="數字 ID，可在客戶詳情頁查看" mask="################" :disable="locked" outlined dense @keyup.enter="find" /></div>
+        <div class="col-12 col-sm-6 col-md-3"><q-input v-model="search.q" label="出貨單號或銷售單號" hint="須輸入完整編號" maxlength="190" :disable="locked" outlined dense @keyup.enter="find" /></div>
         <div class="col-6 col-md-3"><q-input v-model="search.shipmentDateFrom" label="出貨日期由" type="date" stack-label :disable="locked" outlined dense /></div>
         <div class="col-6 col-md-3"><q-input v-model="search.shipmentDateTo" label="出貨日期至" type="date" stack-label :disable="locked" outlined dense /></div>
       </div>
