@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 542,
+  "revision": 544,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
     "plan": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
-    "code_commit": "11f42ca31cf11ff564b5202330e713360b8591e2",
-    "source_fingerprint": "64fef73af4273b2d7cd0bee31fd478880f09e5014f945d8fd137605399c62bcd",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-checker-wiring-20261119",
-    "default_commit": "11f42ca31cf11ff564b5202330e713360b8591e2",
+    "code_commit": "4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30",
+    "source_fingerprint": "d33be629a7d86e86c054db2c168dbc94ef36667428e037c7650a72924a65f0fb",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/supplier-uat-ui-fixes",
+    "default_commit": "4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30",
     "mode_entry_commit": "bebed130140146c98635cd40e42fc17281bd3b16"
   },
   "runtime": {
@@ -8490,6 +8490,17 @@
       "source_ref": "GitHub Actions run 44257528464 (push, head abdd6893, attempt 1): completed/success, 17 jobs success, 3 skipped by design. Observed with gh run view on 2026-11-18. Not rerun.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-11-19T01:28:09Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #368 CI on base df2f2024 (Supplier checker wiring)",
+      "code_commit": "fec38a15afe2c468d838735422c25388b55a50cd",
+      "spec_baseline": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+      "source_fingerprint": "d33be629a7d86e86c054db2c168dbc94ef36667428e037c7650a72924a65f0fb",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 44646053209 attempt 1 (Admitted PR CI): success, confirmed by the CI administrator (agentmsg 5e280c6e: eight shards, P1/P2 two each, coverage 95.93/86.99/94.74 and all 39 per-file floors, capacity jobs skipped by design). Merge gate run in code before merging: head fec38a15, main df2f2024 unchanged, every check SUCCESS or skipped cleanup. Not rerun. Main push CI after the merge not observed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-11-20T01:04:51Z"
     }
   ],
   "pending_decisions": [
@@ -11375,6 +11386,14 @@
       "idempotency_key": "supplier-merge-pr-357",
       "status": "CONFIRMED",
       "source_ref": "Merged by the PM as abdd6893808b70a36f5d6bf069f2d88c5dbfec3d."
+    },
+    {
+      "id": "MERGE-PR-368",
+      "kind": "MERGE_PR",
+      "target": "crazysumsum/erp-app#368",
+      "idempotency_key": "supplier-merge-pr-368",
+      "status": "CONFIRMED",
+      "source_ref": "Merged by claude-erp-app-supplier-01 with gh pr merge --merge --match-head-commit fec38a15afe2c468d838735422c25388b55a50cd on 2026-11-20; merge commit 4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30 (parents df2f2024 + fec38a15, tree 1575ba06 equal to the head tree). Worktree and local/remote branch removed after the merge."
     }
   ],
   "evidence_files": [
@@ -12481,5 +12500,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "2026-11-19: PR #357 merged (abdd6893); PR CI 44255928929 and main CI 44257528464 passed. Main is now 11f42ca3. Phase-1 scope (new PM claude-erp-app-pm-01, 2026-11-19, under Sam's direction): Supplier functional close-out only; the non-functional parts of TASK-051 (backup/restore, rollback rehearsal, performance and capacity, sign-offs), the 12 DEFERRED defects, DEF-034, the 7 capacity catalog cases, TC-085/101/128/129/133 and the TC-136 release gate move to phase 2. Now: IMPLEMENT for the Supplier reference and open-flow checker wiring (PM decision agentmsg 944798c4: phase 1; the Supplier author writes both the Purchasing checkers and the Supplier wiring; the Purchasing owner reviews). Contract: TL ruling 4 (purchasing-cross-module-rulings-20261117, 94762244) and edge ruling A (supplier-po-edge-ruling-20261118, 26fada00): FOR SHARE checker reads, the cycle with PO -> Supplier writers is accepted, ER_LOCK_DEADLOCK and ER_LOCK_WAIT_TIMEOUT map to 409 CONCURRENT_OPERATION, Code correction keeps its single redo, Archive and hard delete get no retry. 12 functional cases; per-case test admission is suspended by Sam until 2026-11-26 (ordinary PR, functional CI, one non-author review). Scope approval for the Purchasing files is asked of the TL (agentmsg 21df33ba). Still open before Technical Acceptance (phase 2 or later): the H-1 forward evidence fix, formal TECHNICAL and REGRESSION runs on a frozen final tree, TASK-051 group B (UAT-032/033/034 SKU-first picker, UAT-035 GR Confirm and Purchasing TASK-040, UAT-029/053 AP), formal UAT and sign-offs."
+  "next_safe_action": "2026-11-20: PR #368 merged (4b6ae2bc). Phase 1 (target UAT 2026-11-26): Supplier functional close-out only. This PR fixes two Supplier UI gaps found in the local UAT script-2 rehearsal (no link to the detail page after creating a supplier; status-change toasts read 已已暫停/已已封鎖). #377 (harness log fix) merges after #372. AR client work handed over to codex-erp-app-apar-01 on 2026-11-20 (Sam's decision)."
 }
