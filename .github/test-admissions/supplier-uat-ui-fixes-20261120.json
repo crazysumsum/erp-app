@@ -14,14 +14,19 @@
       "mode": "100644",
       "blob": "e38fca1e8e155d03cd9c6c1b8b84416b8785cd6f",
       "kind": "functional",
-      "cases": []
+      "cases": [
+        "TC-122 (UI-002): saves a draft with only Code, Name and an active Currency"
+      ]
     },
     {
       "path": "client/test/pages/suppliers/lifecycle.test.js",
       "mode": "100644",
       "blob": "eecfc84f28d92e115d18c7f8f056bd16596df8c6",
       "kind": "functional",
-      "cases": []
+      "cases": [
+        "TC-124 (UI-004): requires reason and password for Block and explains the approved-device requirement",
+        "only activation carries the approver: other actions show no selector and send none, even with approval on (REV-119 L-4)"
+      ]
     },
     {
       "path": "client/src/pages/suppliers/SupplierCreatePage.vue",
