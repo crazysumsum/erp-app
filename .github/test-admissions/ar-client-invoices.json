@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Work item: PM work list ccea29fb of 2026-11-20 (Sam's instruction relayed), item 3a+3b, AR client pages by claude-erp-app-supplier-01. client/config/menu.js: one-off SCOPE from claude-erp-app-tl-01 (agentmsg fe7cd70a) for one added group only. The author does not approve this receipt.",
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Work item: PM work list ccea29fb of 2026-11-20 (Sam's instruction relayed), item 3a+3b, AR client pages by claude-erp-app-supplier-01. client/config/menu.js (one added group, one-off SCOPE from claude-erp-app-tl-01, agentmsg fe7cd70a) is pinned by purchasing-task024-client.json, whose menu.js pin this change refreshes (CI admin 1c5b13d6). The author does not approve this receipt.",
   "purpose": "AR client, invoice pages: a service for /api/v1/ar-invoices and /api/v1/ar-invoiced-shipments whose commands send Idempotency-Key equal to body.eventId; an invoice list with URL-restored filters; an invoice detail that shows the server totalAmount rather than a line sum, line amounts without rounding and sales-unit quantities and, with fulfillment.view, links from lines to their shipments, with confirm, cancel and void through the existing useCommandEvent (an uncertain outcome retries the same eventId); and a create-from-shipments page that lists SHIPPED shipments, marks those already invoiced, limits the selection to one customer and 20 shipments, and locks the form while an outcome is uncertain. menu.js gains the accountsReceivable group these pages declare.",
   "data": "No database or network: mocked services and real discovered pages, with inline objects of at most 4 shipments, 2 invoice lines and 1 invoice. No fixture files.",
   "concurrency": "Within a case: 1, no concurrent requests. Runner workers unchanged: the existing client job keeps Vitest's default file workers.",
@@ -55,12 +55,6 @@
         "結果未確定：鎖住選擇，重試用同一個 eventId 同內容",
         "讀取出貨失敗：顯示錯誤同重試；空結果有提示"
       ]
-    },
-    {
-      "path": "client/config/menu.js",
-      "mode": "100644",
-      "blob": "3694282cd8bd3ed84e63c89c5935215230151515",
-      "kind": "support"
     },
     {
       "path": "client/src/pages/ar/ArInvoicesPage.vue",
