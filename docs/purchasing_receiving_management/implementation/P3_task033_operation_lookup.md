@@ -28,7 +28,9 @@ Both need `purchasing.view`. Reversals, CSV export and risk filters belong to la
 - `GET /api/v1/receiving-lookups/warehouses`: active warehouses.
 - `GET /api/v1/receiving-lookups/warehouses/:id/bins`: active bins in that warehouse.
 
-All three need `purchasing.view` and `receiving.operation` and return at most 100 rows. The confirm rechecks everything.
+All three need `purchasing.view` and `receiving.operation` and return at most 100 rows. The confirm rechecks everything. The warehouse and bin lookups read Inventory's tables directly, without locks, following TASK-029's `#locations` precedent. They only offer choices; Inventory's check at confirm decides. If Inventory changes its availability rule for warehouses or bins, change these lookups too (TL 8a852727).
+
+**GR form contract (TASK-030):** only PO lines that still have an outstanding quantity and are not closed can be added. Receiving more against a fully received line is therefore not possible from the screen. Confirm asks once more before posting, because the first phase has no receipt reversal (Sam 2026-11-20).
 
 ## Tests
 

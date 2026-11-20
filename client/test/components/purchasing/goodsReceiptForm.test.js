@@ -1,6 +1,8 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { QSelect, Quasar } from "quasar";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
+import { confirm } from "@/framework/ui/confirm.js";
 vi.mock("@/services/purchasing.js", () => ({ default: { lookupReceivingWarehouses: vi.fn(), lookupReceivingBins: vi.fn() } }));
 import purchasing from "@/services/purchasing.js";
 import GoodsReceiptForm from "@/components/purchasing/GoodsReceiptForm.vue";
@@ -32,6 +34,7 @@ describe("GoodsReceiptForm（TASK-030）", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     purchasing.lookupReceivingWarehouses.mockResolvedValue([{ id: 3, code: "W3", name: "主倉" }, { id: 4, code: "W4", name: "副倉" }]);
+    confirm.mockResolvedValue(true);
     purchasing.lookupReceivingBins.mockImplementation(async (id) => (id === 3 ? [{ id: 31, code: "A1" }] : [{ id: 41, code: "B1" }]));
   });
   afterEach(() => wrapper?.unmount());
@@ -70,10 +73,21 @@ describe("GoodsReceiptForm（TASK-030）", () => {
     await type("超收原因", "整箱多送");
     await pick(select("庫位 *")[0], 31);
     await button("確認收貨並入庫").trigger("click"); await wrapper.find("form").trigger("submit"); await flushPromises();
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("不能在系統內撤回") }));
     expect(wrapper.vm.$.props.onConfirm).toHaveBeenCalledTimes(1);
     const lot = wrapper.findAll(".q-field").find((field) => field.find(".q-field__label").text().startsWith("批號"));
     expect(lot.text()).toContain("這個貨品必須填寫批號");
     expect(wrapper.find("[role=alert]").exists()).toBe(true);
+  });
+
+  it("確認前彈出不可撤回的確認；取消就唔送", async () => {
+    const { onConfirm, onSave } = await mountForm();
+    await pick(select("加入採購單行")[0], purchaseOrder.lines[0]);
+    await type("數量", "1");
+    await pick(select("庫位 *")[0], 31);
+    confirm.mockResolvedValueOnce(false);
+    await button("確認收貨並入庫").trigger("click"); await wrapper.find("form").trigger("submit"); await flushPromises();
+    expect([onConfirm.mock.calls.length, onSave.mock.calls.length]).toEqual([0, 0]);
   });
 
   it("toPayload 去走空白選填欄位，保留原因及批次資料", () => {

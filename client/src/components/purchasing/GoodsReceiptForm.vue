@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
+import { confirm } from "@/framework/ui/confirm.js";
 import purchasing from "@/services/purchasing.js";
 import ReceiptLineEditor from "./ReceiptLineEditor.vue";
 import { newLine, toForm, toPayload, withFieldDetails } from "./receiptForm.js";
@@ -35,6 +36,9 @@ function addLine(line) {
 }
 async function submit() {
   const body = toPayload(form, props.document.version);
+  // 首期冇收貨沖銷（Sam 2026-11-20），確認入庫唔可以撤回，所以送出前一定要再問一次（TL 8a852727）。
+  if (intent.value === "confirm" && !(await confirm({ title: "確認收貨並入庫", okLabel: "確認入庫",
+    message: "確認後會即時增加庫存並更新採購單收貨進度；首期不能在系統內撤回或沖銷。要繼續嗎？" }))) return null;
   try {
     return await (intent.value === "confirm" ? props.onConfirm(body) : props.onSave(body));
   } catch (error) {
