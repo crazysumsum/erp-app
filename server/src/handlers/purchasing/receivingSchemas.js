@@ -89,3 +89,22 @@ export function goodsReceiptService(services, logger) {
     audit: new PurchasingAuditService({ auditDetailMaxBytes: config.auditDetailMaxBytes }), posting
   });
 }
+
+// 收貨單最小 list／detail 回應（GoodsReceiptInquiryService；設計 §5.3 子集）。
+const TEXT = { type: "string" }, NTEXT = { type: ["string", "null"] }, INT = { type: "integer", minimum: 0 }, NINT = { type: ["integer", "null"], minimum: 0 };
+const BASE = { type: "string", pattern: "^[0-9]+$" }, FLAG = { type: "boolean" };
+const HEADER_PROPERTIES = { id: ID, number: TEXT, status: { enum: ["DRAFT", "CONFIRMED", "PARTIALLY_REVERSED", "REVERSED", "CANCELLED"] }, version: ID,
+  purchaseOrderId: ID, purchaseOrderNumber: TEXT, supplierId: ID, supplierCode: TEXT, supplierName: TEXT, businessReceiptDate: TEXT,
+  supplierDeliveryNote: TEXT, totalReceivedBaseQuantity: BASE, hasOverReceipt: FLAG, hasExpiryOverride: FLAG, hasSkuException: FLAG, updatedAt: INT, confirmedAt: NINT };
+const strict = (properties) => ({ type: "object", required: Object.keys(properties), additionalProperties: false, properties });
+const GR_DETAIL = strict({ id: ID, detailNumber: ID, inputUomId: ID, inputUomCode: TEXT, receivedQuantity: TEXT, receivedBaseQuantity: BASE, warehouseId: ID,
+  binId: ID, warehouseCode: TEXT, binCode: TEXT, lotNumber: TEXT, expiryDate: NTEXT, manufactureDate: NTEXT, stockStatus: TEXT, expiryOverrideReason: TEXT,
+  inventoryMovementId: NINT });
+const GR_LINE = strict({ id: ID, purchaseOrderLineId: ID, lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, receivedBaseQuantity: BASE,
+  overReceivedBaseQuantity: BASE, overReceiptReason: TEXT, skuExceptionReason: TEXT, skuWarningCodes: { type: "array", items: TEXT },
+  details: { type: "array", items: GR_DETAIL } });
+export const GOODS_RECEIPT_LIST_RESPONSE = strict({ items: { type: "array", items: strict(HEADER_PROPERTIES) }, total: INT, page: ID,
+  pageSize: { type: "integer", minimum: 1, maximum: 100 } });
+export const GOODS_RECEIPT_DETAIL_RESPONSE = strict({ ...HEADER_PROPERTIES, notes: TEXT, supplierStatusAtConfirm: TEXT, supplierExceptionReason: TEXT,
+  createdByLabel: TEXT, updatedByLabel: TEXT, createdAt: INT, cancelledAt: NINT, cancelReason: TEXT,
+  allowedActions: { type: "array", items: { enum: ["update", "cancel", "confirm"] } }, lines: { type: "array", items: GR_LINE } });

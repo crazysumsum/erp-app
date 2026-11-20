@@ -90,6 +90,10 @@ async function setup() {
         "Content-Type": "application/json" }, body: JSON.stringify(body) });
       return { status: response.status, body: await response.json() };
     };
+    const read = async (path, token = receiver.token) => {
+      const response = await fetch(`${url}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+      return { status: response.status, body: await response.json() };
+    };
     const lookup = async (eventId, token = receiver.token) => {
       const response = await fetch(`${url}/api/v1/purchasing-operations/by-event/${eventId}`, { headers: { Authorization: `Bearer ${token}` } });
       return { status: response.status, body: await response.json() };
@@ -115,7 +119,7 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { db, cleanups, order, draft, confirm, lookup, other, person, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
+    return { db, cleanups, order, draft, confirm, lookup, read, other, person, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Goods receipt confirm fixture setup failed and its cleanup also failed") : error;
@@ -335,4 +339,25 @@ integrationTest("TASK-033 C8 按原 eventId 查確認結果：本人回 COMPLETE
   assert.equal((await f.lookup(ownEvent, lapsed.token)).status, 200);
   await f.db.query("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id = rp.permission_id WHERE rp.role_id = ? AND p.name = 'receiving.operation'", [lapsed.role]);
   assert.deepEqual(failure(await f.lookup(ownEvent, await lapsed.issue(["purchasing.view"]))).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
+});
+
+integrationTest("收貨單最小 list／detail GET：Draft 有編輯動作、確認後冇；detail 帶 lines／details 及 Inventory movement；list 按 PO 及狀態篩；錯 status 400、唔存在 404", async () => {
+  const f = await fixture();
+  const poRow = await f.order(), id = await f.draft(poRow.id);
+  const before = await f.read(`/api/v1/goods-receipts/${id}`);
+  assert.equal(before.status, 200, JSON.stringify(before.body));
+  assert.deepEqual([before.body.data.status, before.body.data.allowedActions, before.body.data.lines], ["DRAFT", ["update", "cancel", "confirm"], []]);
+  assert.equal((await f.confirm(id, 1, twoLines(f, poRow))).status, 200);
+  const after = (await f.read(`/api/v1/goods-receipts/${id}`)).body.data;
+  assert.deepEqual([after.status, after.version, after.allowedActions, after.purchaseOrderId, after.businessReceiptDate], ["CONFIRMED", 2, [], poRow.id, "2098-12-02"]);
+  assert.deepEqual(after.lines.map((line) => [line.purchaseOrderLineId, line.receivedBaseQuantity, line.details.length]), [[poRow.lineA, "12", 1], [poRow.lineB, "10", 1]]);
+  const [a, b] = after.lines.map((line) => line.details[0]);
+  assert.deepEqual([a.inputUomId, a.receivedQuantity, a.binId, b.lotNumber, b.stockStatus], [f.box, "1.000000", f.b1, "L1", "AVAILABLE"]);
+  assert.ok(Number.isSafeInteger(a.inventoryMovementId) && Number.isSafeInteger(b.inventoryMovementId));
+  const list = (await f.read(`/api/v1/goods-receipts?purchaseOrderId=${poRow.id}&status=CONFIRMED`)).body.data;
+  assert.deepEqual([list.total, list.items.map((item) => [item.id, item.status, item.purchaseOrderNumber.startsWith("PO-")])], [1, [[id, "CONFIRMED", true]]]);
+  assert.equal((await f.read(`/api/v1/goods-receipts?purchaseOrderId=${poRow.id}&status=DRAFT`)).body.data.total, 0);
+  assert.equal((await f.read("/api/v1/goods-receipts?status=NOPE")).status, 400);
+  assert.equal((await f.read(`/api/v1/goods-receipts/${Number.MAX_SAFE_INTEGER}`)).status, 404);
+  assert.equal((await f.read(`/api/v1/goods-receipts/${id}`, f.overrider.token)).status, 200);
 });
