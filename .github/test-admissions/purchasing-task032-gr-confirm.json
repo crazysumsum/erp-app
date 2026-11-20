@@ -536,7 +536,7 @@
     {
       "path": "server/test/integration/purchasingGoodsReceiptConfirm.integration.test.js",
       "mode": "100644",
-      "blob": "cb46e24005c724729f9cdd93c3acfa5da0913e23",
+      "blob": "e95ba6ebf0a91a822fca1803f02e3e3645640f8d",
       "kind": "functional",
       "cases": [
         "TASK-032 C1 確認兩行：一次 Inventory 過帳、GR CONFIRMED、PO progress 及狀態、history、Audit；收齊後 FULLY_RECEIVED（AC-036、AC-040）",
@@ -545,7 +545,9 @@
         "TASK-032 C4 Inventory 第二個 detail 失敗（停用 Bin、停用倉）同 Bin 唔屬倉都對照成公開錯誤，GR 保持 Draft、零 Movement／Balance（TASK-028 移入）",
         "TASK-032 C5 Inventory 結果少一行或多一行、Audit 失敗、PO progress 失敗都令真實 Inventory 寫入一齊 rollback",
         "TASK-032 C6 Blocked Supplier：冇原因拒絕；有原因但唔係 QUARANTINED 拒絕；兩者都齊就確認（§3.6）",
-        "TASK-032 C7 Draft 准留空嘅批號喺 Confirm 必填；冇 receiving.operation 403；舊 version 409；已確認 GR 唔可以再確認"
+        "TASK-032 C7 Draft 准留空嘅批號喺 Confirm 必填；冇 receiving.operation 403；舊 version 409；已確認 GR 唔可以再確認",
+        "TASK-032 C9 PO 確認後 SKU 追蹤方式改變：冇原因拒絕、零效果；有原因就按 PO 快照確認並標記 SKU 例外（§3.6；兩邊各自判斷 drift）",
+        "TASK-032 C10 剩餘效期不足：冇放行權限拒絕、有權冇原因拒絕、權限及原因齊就確認並標記效期放行（§3.6；Inventory 再驗）"
       ]
     },
     {

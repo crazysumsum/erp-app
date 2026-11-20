@@ -50,7 +50,7 @@ The minimal confirm handler ships here, because Inventory's one-time context can
 
 ## Tests
 
-`server/test/integration/purchasingGoodsReceiptConfirm.integration.test.js` has 7 cases over real HTTP, JWT, MySQL and Inventory posting:
+`server/test/integration/purchasingGoodsReceiptConfirm.integration.test.js` has 9 cases over real HTTP, JWT, MySQL and Inventory posting:
 
 - **C1:** two-line confirm; a second GR completes the PO; over-receipt counted on the locked net.
 - **C2:** replay and event conflict.
@@ -59,5 +59,7 @@ The minimal confirm handler ships here, because Inventory's one-time context can
 - **C5:** missing result line, extra result line, Audit failure and PO progress failure (a temporary trigger); each rolls back real Inventory writes.
 - **C6:** Blocked Supplier.
 - **C7:** lot required at confirm, no permission, stale version, already confirmed.
+- **C9:** the SKU's tracking changed after the PO was confirmed; without `skuExceptionReason` the confirm is refused with `SKU_COMMITMENT_REASON_REQUIRED` and has no effect; with a reason it confirms on the PO snapshot, with `has_sku_exception = 1`. Inventory checks the same drift itself (TL handoff 4408d746).
+- **C10:** remaining life below the minimum: no `receiving.expiry.override` gives `EXPIRY_OVERRIDE_DENIED`; the permission without a reason gives `MINIMUM_RECEIPT_LIFE_FAILED` on `expiryOverrideReason`; both together confirm with `has_expiry_override = 1`, and the detail stores the applied minimum, the remaining days and the overrider. Inventory checks the permission and evidence again.
 
 Three mutations of `GoodsReceiptPostingService` were run, and each one turned a case red: no result-count check, no location mapping, and outstanding ignoring net.
