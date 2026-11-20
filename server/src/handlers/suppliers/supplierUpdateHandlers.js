@@ -3,6 +3,7 @@ import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMas
 import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { createSupplierReferenceServices } from "../../modules/supplier/supplierReferenceCheckers.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import {
   EMPTY_SUPPLIER_SCHEMA,
@@ -34,7 +35,8 @@ function supplierService(services) {
     businessMaster: new BusinessMasterLookupProvider({
       provider,
       readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
-    })
+    }),
+    ...createSupplierReferenceServices()
   });
 }
 

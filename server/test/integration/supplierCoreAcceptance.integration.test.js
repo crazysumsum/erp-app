@@ -414,3 +414,69 @@ integrationTest("TC-046 (PARTY-007): a Draft with only the three minimum fields 
   assert.equal(activated.status, 200, activated.text);
   assert.equal((await row(id)).status, "active");
 });
+
+// TL ruling 4（purchasing-cross-module-rulings-20261117）：經真 route，Supplier 嘅 Code 鎖定同封存阻擋
+// 讀到 Purchasing 嘅 PO。PO 直接寫入（只需最少欄位），測試完自己刪走，因為 Supplier 清理受 FK RESTRICT 約束。
+async function insertPurchaseOrder(supplierId, status = "DRAFT") {
+  const now = Date.now();
+  const sequence = 900000 + Math.floor(Math.random() * 99999);
+  const [result] = await h.db.query("INSERT INTO purchase_orders SET ?", [{
+    po_number: `PO-209912-${String(sequence).padStart(6, "0")}`, document_year_month: "209912", sequence_no: sequence,
+    supplier_id: supplierId, supplier_code_snapshot: "CHK", supplier_name_snapshot: "Checker", currency_code: "HKD",
+    currency_name_snapshot: "Hong Kong Dollar", currency_decimal_places_snapshot: 2, order_date: "2099-12-01",
+    buyer_label: "checker", created_at: now, updated_at: now, created_by_label: "checker", updated_by_label: "checker", status
+  }]);
+  return result.insertId;
+}
+
+integrationTest("TC-026 (TL ruling 4): a Supplier referenced by a purchase order cannot change its Code through the route", async () => {
+  const t = tag();
+  const made = await create({ supplierCode: `REF-${t}`, supplierName: `Referenced ${t}` });
+  const id = made.json.data.id;
+  const po = await insertPurchaseOrder(id);
+  try {
+    const changed = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/code/change"),
+      { ids: { id }, body: { supplierCode: `REF2-${t}`, reason: REASON, version: 1 } });
+    assert.equal(changed.status, 409, changed.text);
+    assert.equal(changed.code, "SUPPLIER_REFERENCED");
+    const stored = await row(id);
+    assert.deepEqual([stored.supplier_code, Number(stored.version)], [`REF-${t}`, 1], "the Code is unchanged");
+  } finally {
+    await h.db.execute("DELETE FROM purchase_orders WHERE id = ?", [po]);
+  }
+});
+
+integrationTest("TC-033 (TL ruling 4): an open purchase order blocks archive through the route, named for the user", async () => {
+  const t = tag();
+  const made = await create({ supplierCode: `OPN-${t}`, supplierName: `Open flow ${t}` });
+  const id = made.json.data.id;
+  const po = await insertPurchaseOrder(id, "CONFIRMED");
+  try {
+    const archived = await lifecycle("archive", id, { version: 1, reason: REASON });
+    assert.equal(archived.status, 409, archived.text);
+    assert.equal(archived.code, "SUPPLIER_OPEN_FLOWS");
+    assert.deepEqual(archived.json.error.details.references, { 未完成採購單: 1 });
+    assert.deepEqual([(await row(id)).status, Number((await row(id)).version)], ["draft", 1], "the Supplier is unchanged");
+  } finally {
+    await h.db.execute("DELETE FROM purchase_orders WHERE id = ?", [po]);
+  }
+});
+
+integrationTest("TC-026/TC-033 (TL ruling 4): a cancelled purchase order still locks the Code but no longer blocks archive", async () => {
+  const t = tag();
+  const made = await create({ supplierCode: `CNL-${t}`, supplierName: `Cancelled ${t}` });
+  const id = made.json.data.id;
+  const po = await insertPurchaseOrder(id);
+  try {
+    await h.db.execute("UPDATE purchase_orders SET status = 'CANCELLED' WHERE id = ?", [po]);
+    const changed = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/code/change"),
+      { ids: { id }, body: { supplierCode: `CNL2-${t}`, reason: REASON, version: 1 } });
+    assert.equal(changed.status, 409, changed.text);
+    assert.equal(changed.code, "SUPPLIER_REFERENCED");
+    const archived = await lifecycle("archive", id, { version: 1, reason: REASON });
+    assert.equal(archived.status, 200, archived.text);
+    assert.equal((await row(id)).status, "archived");
+  } finally {
+    await h.db.execute("DELETE FROM purchase_orders WHERE id = ?", [po]);
+  }
+});

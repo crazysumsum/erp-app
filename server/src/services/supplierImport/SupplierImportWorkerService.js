@@ -8,6 +8,7 @@ import { createSupplierImportApplier } from "../../modules/supplier/import/apply
 import { precheckSupplierCsv } from "../../modules/supplier/import/SupplierImportProcessor.js";
 import { SupplierAddressService } from "../../modules/supplier/SupplierAddressService.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { createSupplierReferenceServices } from "../../modules/supplier/supplierReferenceCheckers.js";
 import { SupplierContactService } from "../../modules/supplier/SupplierContactService.js";
 import { SupplierIdentifierService } from "../../modules/supplier/SupplierIdentifierService.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
@@ -69,7 +70,7 @@ export class SupplierImportWorkerService extends BaseService {
     const writers = { database: this.database, logger: this.logger, time };
     this.applyRow = options.applyRow ?? createSupplierImportApplier({
       suppliers: new SupplierAdminService({ ...writers, businessMaster: this.businessMaster,
-        duplicateNameThreshold: config?.supplier?.duplicateNameThreshold }),
+        duplicateNameThreshold: config?.supplier?.duplicateNameThreshold, ...createSupplierReferenceServices() }),
       addresses: new SupplierAddressService(writers),
       contacts: new SupplierContactService(writers),
       identifiers: new SupplierIdentifierService(writers)

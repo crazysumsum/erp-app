@@ -394,3 +394,22 @@ test("H2: with the policy ON, a plain draft create opens no activation request",
   const insert = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("INSERT INTO suppliers"));
   assert.ok(insert[2].includes("draft"));
 });
+
+test("TC-026 (ruling A): Code correction keeps its single redo; a second deadlock answers 409 CONCURRENT_OPERATION and writes nothing", async () => {
+  const { service, events } = updateHarness();
+  let attempts = 0;
+  service.references = {
+    async describeReferences() {
+      attempts += 1;
+      throw Object.assign(new Error("MySQL database query failed"), {
+        code: "DATABASE_OPERATION_FAILED", cause: Object.assign(new Error("Deadlock"), { code: "ER_LOCK_DEADLOCK" })
+      });
+    }
+  };
+  await assert.rejects(
+    () => service.changeSupplierCode({ ...updateInput, supplierCode: "SUP-NEW", reason: "Correct legacy code" }),
+    (error) => error.publicCode === "CONCURRENT_OPERATION" && error.statusCode === 409
+  );
+  assert.equal(attempts, 2, "exactly the existing single redo");
+  assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
+});
