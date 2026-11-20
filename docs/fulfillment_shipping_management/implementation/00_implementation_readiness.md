@@ -1,5 +1,22 @@
 # Fulfillment implementation readiness
 
+## 首期交付台帳（2026-11-20）
+
+- TASK-024 出貨草稿建立、修改及取消。PR #326，main CI 41610258737。
+- TASK-025 客戶送貨地址與聯絡人查找及交易重驗。PR #326，main CI 41610258737。
+- TASK-026 出貨確認 Phase A 持久意圖。PR #326，main CI 41610258737。
+- TASK-027 出貨確認 Phase B 固定鎖序及原子過帳。PR #326，main CI 41610258737。
+- TASK-028 確認 API、冪等及原事件查詢。PR #326，main CI 41610258737。
+- TASK-029 出貨確認 Recovery 及未知提交結果查證。PR #326，main CI 41610258737。
+- TASK-030 出貨查詢及送貨單／裝箱單投影。PR #326，main CI 41610258737。
+- TASK-031 出貨 client service 及原事件輪詢。PR #326，main CI 41610258737。
+- TASK-032 出貨列表、建立、詳情及取消頁面。PR #326，main CI 41610258737。
+- TASK-033 確認摘要、恢復及 A4 列印。PR #326，main CI 41610258737。
+- TASK-038 首期視圖、篩選保留及權限追溯連結。PR #373，main CI 44473481427。
+- DEF-027 已關閉。提交格式差異無執行影響。
+- DEF-029 保持開放，待核對特定失敗路徑的證據；現無已知正常出貨流程阻塞。PR #326，main CI 41610258737。
+- DEF-030 已關閉。路由及功能准入已驗證。PR #326，main CI 41610258737。
+
 ## 當前：功能交付繼續，非功能驗證延至 UAT 後（2026-11-02）
 
 Sam 已批准 HD026 A。共用 DB 薄切片已實作 rollback 失敗 quarantine／destroy／不回 pool、保留原診斷並回 INDETERMINATE，以及按真正 transaction executor 保存不可變終局結果。獨立源碼覆核0C/H/M；原12案12PASS，相關既有9＋14案23PASS，均0FAIL／0SKIP、沒有增加交易嘗試或容量負載；targeted lint通過。原11PASS／1預期FAIL的RED保留。這只完成 DB 元件；雙owner原事件ABSENT／SUCCEEDED／UNKNOWN查證、可信lease fence與完整Recovery仍未完成，DEF029保持OPEN，不能宣稱完整P2。

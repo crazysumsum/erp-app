@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "decision": "Sam 2026-11-19 temporary functional admission in AGENTS.md through Taipei end of 2026-11-26. Non-author review PASS codex-erp-app-tl-01 via agentmsg cb267cb3 on 854b8ca515849026a0357b6d27d7dabaf37668d3.",
+  "purpose": "Guard UAT-002 import confirmation against rejecting the existing password field or forwarding it into the import service.",
+  "data": "Existing three handler cases. One synthetic confirmation body and missing/unknown-field variants; one synthetic handler input. No fixture or database change.",
+  "concurrency": "Unchanged; no new workers or concurrency.",
+  "repetitions": "Once per existing case.",
+  "thresholds": "Accept valid schema, reject missing password and unknown fields, never forward password; existing assertions and floors preserved.",
+  "trigger": "Existing functional server tests. No workflow or capacity changes.",
+  "cost": "Negligible additional in-memory work; focused 25 checks completed in under a second locally.",
+  "files": [
+    {
+      "path": "server/test/customerImportHandlers.test.js",
+      "mode": "100644",
+      "blob": "9b75c1afdc7aaa5fee584e10154c418876ef1b67",
+      "kind": "functional",
+      "cases": [
+        "Customer import handlers enforce management permissions and strict schemas",
+        "Customer import route contract keeps static template ahead of parameter detail",
+        "Customer import confirm forwards the durable idempotency key"
+      ]
+    }
+  ]
+}
