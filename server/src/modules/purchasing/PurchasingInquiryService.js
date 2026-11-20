@@ -14,6 +14,7 @@ const OUTSTANDING = `(po.has_outstanding = 1 AND po.status IN (${RECEIVING_SQL})
 // BIGINT UNSIGNED 相減會 overflow，要先轉 SIGNED。
 const LINE_OUTSTANDING = `GREATEST(CAST(l.ordered_base_quantity AS SIGNED) - CAST(l.net_received_base_quantity AS SIGNED)
   - CAST(l.closed_remaining_base_quantity AS SIGNED), 0)`;
+const LINE_OVERDUE = `${LINE_OUTSTANDING} > 0 AND COALESCE(l.expected_delivery_date, po.expected_delivery_date) < ?`;
 const PO_NUMBER = /^PO-\d{6}-\d{6}$/u;
 const MAX_SEARCH_IDS = 100; // 設計 §8.9：名稱搜尋最多 100 個 ID。
 const date = (column) => `DATE_FORMAT(${column}, '%Y-%m-%d') AS ${column}`;
@@ -175,7 +176,10 @@ export class PurchasingInquiryService {
     const query = listQuery(input), today = this.time.fileDate(this.time.at(this.time.nowMs()));
     return this.database.withTransaction(async (tx) => {
       const { permissions } = await this.#actor(tx, claims);
-      const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null);
+      const overdueScope = query.overdue === undefined ? null : [
+        `${query.overdue ? "" : "NOT "}EXISTS (SELECT 1 FROM purchase_order_lines l WHERE l.purchase_order_id = po.id AND ${LINE_OVERDUE})`, today
+      ];
+      const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null, overdueScope);
       const [[{ total }]] = await tx.query(`SELECT COUNT(*) AS total FROM purchase_orders po${where}`, values);
       const direction = query.descending ? "DESC" : "ASC";
       const [page] = await tx.query(`SELECT po.id FROM purchase_orders po${where} ORDER BY po.${SORT[query.sortBy]} ${direction}, po.id ${direction} LIMIT ? OFFSET ?`,
@@ -188,7 +192,7 @@ export class PurchasingInquiryService {
       const [progress] = await tx.query(`SELECT l.purchase_order_id, COUNT(*) AS line_count, SUM(l.ordered_base_quantity) AS ordered,
           SUM(l.net_received_base_quantity) AS net_received, SUM(l.closed_remaining_base_quantity) AS closed_remaining, SUM(${LINE_OUTSTANDING}) AS outstanding,
           MAX(l.net_received_base_quantity > l.ordered_base_quantity) AS over_received, MAX(l.unit_price = 0) AS zero_price,
-          MAX(${LINE_OUTSTANDING} > 0 AND COALESCE(l.expected_delivery_date, po.expected_delivery_date) < ?) AS overdue
+          MAX(${LINE_OVERDUE}) AS overdue
         FROM purchase_order_lines l JOIN purchase_orders po ON po.id = l.purchase_order_id
         WHERE l.purchase_order_id IN (${marks}) GROUP BY l.purchase_order_id`, [today, ...ids]);
       const [inactive] = await tx.query(`SELECT po.id FROM purchase_orders po JOIN suppliers s ON s.id = po.supplier_id WHERE po.id IN (${marks}) AND s.status <> 'active'

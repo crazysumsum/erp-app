@@ -167,6 +167,38 @@ integrationTest("List 同 Detail 經 HTTP：view 讀到過咗 response schema �
   assert.equal((await get("")).status, 401);
 });
 
+integrationTest("Outstanding query lists only receivable orders and uses line delivery dates for overdue", async (t) => {
+  const { db, url, body, created, token, viewToken } = await setup(t);
+  const base = `${url}/api/v1/purchase-orders`;
+  const order = async (status, lineDeliveryDate) => {
+    const input = body({ orderDate: "2020-01-01", expectedDeliveryDate: "2098-12-10" });
+    input.lines[0].expectedDeliveryDate = lineDeliveryDate;
+    const result = await request(`${base}/create`, { token, key: input.eventId, body: input });
+    assert.equal(result.status, 201, JSON.stringify(result.body));
+    await db.query("UPDATE purchase_orders SET status = ? WHERE id = ?", [status, result.body.data.id]);
+    return result.body.data.id;
+  };
+  const overdue = await order("CONFIRMED", "2020-12-01");
+  const notOverdue = await order("PARTIALLY_RECEIVED", "2098-12-01");
+  await order("CLOSED", "2020-12-01");
+  await order("CANCELLED", "2020-12-01");
+  const scope = `supplierId=${created.supplier}&skuId=${created.sku}&buyerId=${created.buyer}&expectedDeliveryDateFrom=2098-12-10&expectedDeliveryDateTo=2098-12-10`;
+  const query = (extra = "", auth = viewToken) => request(`${base}/outstanding?${scope}${extra}`, { method: "GET", token: auth });
+
+  const page = await query("&sortBy=number&descending=false&pageSize=1");
+  assert.equal(page.status, 200, JSON.stringify(page.body));
+  const { total, items } = page.body.data;
+  assert.deepEqual([total, items.map(({ id, hasOutstanding, outstandingBaseQuantity, totalAmount, allowedActions }) =>
+    [id, hasOutstanding, outstandingBaseQuantity, totalAmount, allowedActions])], [2, [[overdue, true, "2", "2.50", []]]]);
+  assert.deepEqual((await query("&sortBy=number&descending=false&pageSize=1&page=2")).body.data.items.map(({ id }) => id), [notOverdue]);
+  assert.deepEqual((await query("&overdue=true")).body.data.items.map(({ id }) => id), [overdue]);
+  assert.deepEqual((await query("&overdue=false")).body.data.items.map(({ id }) => id), [notOverdue]);
+  assert.equal((await query("&overdue=invalid")).status, 400);
+  assert.equal((await query("&hasOutstanding=false")).status, 400);
+  assert.equal((await query("", token)).status, 403);
+  assert.equal((await request(`${base}/outstanding`, { method: "GET" })).status, 401);
+});
+
 integrationTest("Copy 經 HTTP 回 201 同新編號；同 key replay；只有 view 403、冇 token 401、唔存在 404", async (t) => {
   const { db, url, body, token, viewToken } = await setup(t), input = body();
   const { body: { data: po } } = await request(`${url}/api/v1/purchase-orders/create`, { token, key: input.eventId, body: input });
