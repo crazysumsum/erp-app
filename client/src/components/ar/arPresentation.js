@@ -1,5 +1,7 @@
 export const invoiceStatusLabels = Object.freeze({ DRAFT: "草稿", CONFIRMED: "已確認", VOID: "已作廢", CANCELLED: "已取消" });
 export const statusColors = Object.freeze({ DRAFT: "grey", CONFIRMED: "primary", VOID: "negative", CANCELLED: "negative" });
+export const receiptStatusLabels = Object.freeze({ DRAFT: "草稿", CONFIRMED: "已確認", CANCELLED: "已取消", VOID: "已作廢" });
+export const paymentMethodLabels = Object.freeze({ BANK_TRANSFER: "銀行轉帳", CHEQUE: "支票", CASH: "現金", OTHER: "其他" });
 export const allocationStatusLabels = Object.freeze({ ACTIVE: "有效", UNAPPLIED: "已解除" });
 
 /**
@@ -28,4 +30,10 @@ export function today(now = new Date()) {
 
 export function timestamp(value) {
   return value ? new Intl.DateTimeFormat("zh-HK", { timeZone: "Asia/Hong_Kong", dateStyle: "short", timeStyle: "short" }).format(new Date(value)) : "—";
+}
+
+/** 金額輸入：只收該幣別小數位內嘅非負十進制字串（契約：唔可以送 number，"10.005" 會被拒）。 */
+export function amountInputValid(value, decimalPlaces) {
+  const pattern = decimalPlaces > 0 ? new RegExp(`^(0|[1-9]\\d{0,13})(\\.\\d{1,${decimalPlaces}})?$`, "u") : /^(0|[1-9]\d{0,13})$/u;
+  return pattern.test(value) && /[1-9]/u.test(value);
 }
