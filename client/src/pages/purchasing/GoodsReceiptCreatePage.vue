@@ -15,12 +15,32 @@ const route = useRoute(), router = useRouter(), command = useCommandEvent();
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const form = reactive({ purchaseOrder: null, businessReceiptDate: today(), supplierDeliveryNote: "", notes: "" });
 const options = ref([]), lookupError = ref("");
+const linkedOrderUnavailable = ref(false);
 const required = (value) => Boolean(value) || "必填";
 
 // 可收貨 PO 最多 100 張（20 人規模），載入一次後喺前端同步篩選：冇非同步晚到結果，揀完唔會再打開選單。
 const all = ref([]);
 onMounted(async () => {
-  try { all.value = await purchasing.lookupReceivablePurchaseOrders(); options.value = all.value; } catch (failure) { lookupError.value = failure.message || "未能載入採購單"; }
+  try {
+    all.value = await purchasing.lookupReceivablePurchaseOrders();
+    options.value = all.value;
+    const linkedId = route.query.purchaseOrderId;
+    if (linkedId === undefined) return;
+
+    const id = typeof linkedId === "string" ? Number(linkedId) : NaN;
+    let order = all.value.find((row) => row.id === id);
+    if (!order && all.value.length === 100 && Number.isSafeInteger(id) && id > 0) {
+      const detail = await purchasing.getPurchaseOrder(id).catch((failure) => {
+        if (failure.code !== "PURCHASE_ORDER_NOT_FOUND") throw failure;
+        return null;
+      });
+      if (detail?.hasOutstanding) order = detail;
+    }
+    form.purchaseOrder ??= order ?? null;
+    linkedOrderUnavailable.value = !order;
+  } catch (failure) {
+    lookupError.value = failure.message || "未能載入採購單";
+  }
 });
 function search(q, update) {
   const needle = q.trim().toLowerCase();
@@ -33,7 +53,6 @@ async function save() {
   notifySuccess(`${created.number} 已建立，請加入收貨明細。`);
   await router.replace(`/purchasing/goods-receipts/${created.id}/edit`);
 }
-if (route.query.purchaseOrderId) form.purchaseOrder = { id: Number(route.query.purchaseOrderId), number: `#${route.query.purchaseOrderId}`, supplierName: "" };
 </script>
 
 <template>
@@ -41,6 +60,7 @@ if (route.query.purchaseOrderId) form.purchaseOrder = { id: Number(route.query.p
     <PageHeader subtitle="只列出已確認並仍有未收數量的採購單。" />
     <div class="q-px-md q-pb-md">
       <q-banner v-if="command.isUncertain('create')" role="status" class="bg-warning text-dark q-mb-md">建立結果尚未確認；請按「建立收貨單」重試同一操作以確認結果，不會重複建立。</q-banner>
+      <q-banner v-if="linkedOrderUnavailable && !form.purchaseOrder" role="alert" class="bg-warning text-dark q-mb-md">指定的採購單目前無法收貨，請選擇另一張採購單。</q-banner>
       <FormPanel v-slot="{ submitting, fieldError }" :on-submit="save">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6"><q-select v-model="form.purchaseOrder" label="採購單 *" :options="options" :option-label="row => `${row.number}${row.supplierName ? ` — ${row.supplierName}` : ''}`"

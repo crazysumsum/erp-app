@@ -73,7 +73,7 @@ async function onConfirm(body) {
       <template v-else-if="receipt && purchaseOrder">
         <q-banner v-if="uncertain" role="status" class="bg-warning text-dark q-mb-md" data-testid="gr-uncertain">
           {{ uncertainAction === "confirm" ? "確認" : "儲存" }}結果尚未確認。表單已鎖定，畫面內容就是原本送出的內容；請以原內容重試以確認結果，不會重複入庫。
-          <template v-if="retryError"><br>{{ retryError }}</template>
+          <template v-if="retryError"><br>{{ retryError }} 若重試被拒絕，可離開或重新整理頁面查看收貨單目前狀態。</template>
           <template #action><q-btn flat :label="uncertainAction === 'confirm' ? '以原內容重試確認' : '以原內容重試儲存'" :loading="retrying" @click="retry" /></template>
         </q-banner>
         <GoodsReceiptForm :document="receipt" :purchase-order="purchaseOrder" :on-save="onSave" :on-confirm="onConfirm" :locked="uncertain" />
