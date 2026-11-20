@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "decision": "Sam 2026-11-19 temporary functional admission decision in AGENTS.md, through Taipei end of 2026-11-26. Independent review PASS from claude-erp-app-tl-01 via agentmsg 7e786140 on test commit cebd5c774d375df527ffd6e895b31d5b41c1b58f and blob 1b62562b0c6878a586851c350ff64b6dcc2c098f.",
+  "purpose": "Verify existing-order shipping for a blocked customer, immutable shipment snapshot fields, and safe rejection of stale address or contact during concurrent updates.",
+  "data": "Four isolated uses of existing shipmentDraftFixture (one single-line confirmed SO, one Customer, one shipping Address, one shipping Contact each). Unchanged fixture pins are already covered by fulfillment-fixture-permission-catalogue.json.",
+  "concurrency": "One test process. Two concurrent transactions for each lock-wait variant plus read-only observation on the fixture connection.",
+  "repetitions": "One execution per behavior and one variant per child type.",
+  "thresholds": "Shipment succeeds for blocked Customer with valid children; saved snapshot fields equal original values after master edits; real child conflicts reject with no issued details and shipment returns to Draft. Existing coverage floors unchanged.",
+  "trigger": "Existing functional server integration suite. No workflow or capacity catalog changes.",
+  "cost": "New file took about 6 seconds on the isolated local MySQL instance; CI impact unmeasured.",
+  "files": [
+    {
+      "path": "server/test/integration/customerFulfillmentContract.integration.test.js",
+      "mode": "100644",
+      "blob": "1b62562b0c6878a586851c350ff64b6dcc2c098f",
+      "kind": "functional",
+      "cases": [
+        "TC-071 confirmed order can ship after its customer is blocked",
+        "TC-071 shipment preserves the exact original customer, address and contact fields",
+        "TC-071 shipment refuses a child version changed by a concurrent transaction"
+      ]
+    }
+  ]
+}
