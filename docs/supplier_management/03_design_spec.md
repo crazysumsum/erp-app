@@ -1248,6 +1248,7 @@ Supplier對下游公開的最小contract固定為：
 - `getPurchaseDefaultsInTransaction(connection, supplierId)`：回Currency／Payment Term reference及必要snapshot；不存在Payment Term時明確回`null`。
 - `findSkuRefsInTransaction(connection, supplierId, skuIds)`：在呼叫方transaction以普通讀取（不加鎖、不另借連線）讀取該Supplier的`supplier_sku_refs`；`skuIds`最多100個，可重複；空陣列回空Map且不查DB；回`Map<skuId, { relationId, relationshipStatus, supplierItemCode, lastSuppliedAt }>`，Map key及`relationId`均為number，`lastSuppliedAt`為epoch ms或`null`。Relation只作提示，不驗Supplier／SKU狀態；`stopped`照回，沒有relation的SKU不在Map內且不算錯誤。
 - `getOpenMatterStatusInTransaction(connection, supplierId)`：聚合已註冊下游providers，結果為`OPEN`、`CLEAR`或`UNKNOWN`；永久刪除／封存等安全操作不得把`UNKNOWN`當`CLEAR`。
+  - v1（TL ruling 4，2026-11-17；ruling A，2026-11-18）：不建此startup registry。未完成流程及引用改由`SupplierReferenceService`的checkers提供：Purchasing在`PurchasingSupplierReferenceCheckers.js`提供「採購單」（所有已分類PO）及「未完成採購單」（`OPEN_PO_STATUSES`）兩個checker，以呼叫方connection做一次`GROUP BY status FOR SHARE`；Supplier以`createSupplierReferenceServices()`接到五個`SupplierAdminService`建構點。未分類狀態throw，令操作被拒，不會當`CLEAR`。鎖序Supplier row→PO rows，與PO→Supplier寫入者的deadlock環已獲接受；`ER_LOCK_DEADLOCK`／`ER_LOCK_WAIT_TIMEOUT`回409 `CONCURRENT_OPERATION`，不新增重試。Registry留待日後真有多個下游時再建。
 
 所有provider在startup registry宣告name、purpose、required capability及health/readiness；不允許Fulfillment、Purchasing、Receiving、Returns、AP或Payment自行複製Supplier狀態判斷。一般lookup永不包含Bank欄；未來Payment Bank contract按§8.4的高信任流程另行增加。
 

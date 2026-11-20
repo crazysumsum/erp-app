@@ -3,6 +3,7 @@ import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMas
 import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { createSupplierReferenceServices } from "../../modules/supplier/supplierReferenceCheckers.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import {
   EMPTY_SUPPLIER_SCHEMA,
@@ -40,7 +41,8 @@ class SupplierQueryHandler extends BaseRequestHandler {
       businessMaster: new BusinessMasterLookupProvider({
         provider: new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() }),
         readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
-      })
+      }),
+      ...createSupplierReferenceServices()
     });
   }
 }
