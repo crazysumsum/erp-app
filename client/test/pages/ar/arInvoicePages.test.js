@@ -59,6 +59,16 @@ describe("AR 發票列表", () => {
     expect(button("查看").attributes("href")).toBe("/ar/invoices/8");
     expect(ar.listInvoices).toHaveBeenCalledWith(expect.objectContaining({ page: 1, rowsPerPage: 20 }));
   });
+  it("開票按鈕要 ar.invoice.mgmt 同 fulfillment.view；只有 view 唔見", async () => {
+    await open("/ar/invoices");
+    expect(button("由出貨開立發票")).toBeUndefined();
+    wrapper.unmount();
+    await open("/ar/invoices", [...MANAGE]);
+    expect(button("由出貨開立發票")).toBeUndefined();
+    wrapper.unmount();
+    await open("/ar/invoices", [...MANAGE, "fulfillment.view"]);
+    expect(button("由出貨開立發票").attributes("href")).toBe("/ar/invoices/new");
+  });
   it("URL 還原 filter 同頁碼；未知 key 唔送；搜尋寫入 URL", async () => {
     const router = await open("/ar/invoices?q=INV&status=DRAFT&currencyCode=HKD&invoiceDateFrom=2026-11-01&invoiceDateTo=2026-11-30&outstandingOnly=true&page=3&evil=1");
     const call = ar.listInvoices.mock.calls[0][0];

@@ -21,6 +21,11 @@ export function quantityText({ quantity, toBaseFactor, baseUomCode, salesUomCode
   return `${quantity} ${baseUomCode}（單價 ${unitPrice} 為每 ${salesUomCode}）`;
 }
 
+/** 香港今日（YYYY-MM-DD）：業務日期唔可以喺未來，預設值要用業務時區。 */
+export function today(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Hong_Kong" }).format(now);
+}
+
 export function timestamp(value) {
   return value ? new Intl.DateTimeFormat("zh-HK", { timeZone: "Asia/Hong_Kong", dateStyle: "short", timeStyle: "short" }).format(new Date(value)) : "—";
 }

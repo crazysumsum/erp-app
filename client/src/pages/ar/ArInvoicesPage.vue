@@ -9,9 +9,13 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { invoiceStatusLabels, money, statusColors, timestamp } from "@/components/ar/arPresentation.js";
+import { can } from "@/framework/authorization/can.js";
+import { useSessionStore } from "@/stores/session.js";
 import ar from "@/services/ar.js";
+import { page as createPage } from "./ArInvoiceCreatePage.vue";
 
-const route = useRoute(), router = useRouter();
+const route = useRoute(), router = useRouter(), session = useSessionStore();
+const canCreate = computed(() => can(session, createPage.requires));
 const SELECTS = ["status", "outstandingOnly"];
 const filters = reactive({ q: "", status: null, currencyCode: "", invoiceDateFrom: "", invoiceDateTo: "", outstandingOnly: null });
 const statusOptions = Object.entries(invoiceStatusLabels).map(([value, label]) => ({ value, label }));
@@ -47,7 +51,9 @@ function reset() { router.replace({ query: {} }); }
 
 <template>
   <div>
-    <PageHeader subtitle="由出貨開立的應收發票；可用發票編號、客戶代碼或名稱的開頭搜尋。" />
+    <PageHeader subtitle="由出貨開立的應收發票；可用發票編號、客戶代碼或名稱的開頭搜尋。">
+      <template #actions><q-btn v-if="canCreate" color="primary" label="由出貨開立發票" to="/ar/invoices/new" /></template>
+    </PageHeader>
     <div class="q-px-md q-pb-md">
       <div class="row q-col-gutter-md">
         <div class="col-12 col-md-6"><q-input v-model="filters.q" label="發票編號／客戶" maxlength="190" outlined dense @keyup.enter="apply" /></div>
