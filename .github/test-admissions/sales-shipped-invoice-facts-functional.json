@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-19 temporary functional CI decision, recorded in AGENTS.md via PR #366, applies through 2026-11-26 Taipei day end. PM agentmsg 224f0303 schedules this one functional regression. Codex TL non-author ACCEPT on d40ee1780ed3eec4254c1a8feac9ac098b6d1330, turn 01a1f27b-ffc2-7bc1-a740-84f6ca0984b0. The CI administrator separately verifies and registers the exact digest.",
+  "purpose": "Protect the first-release invoice reader's non-locking Sales facts by proving that Sales edits and withdrawal cannot change billed commercial facts after a real partial shipment (AR scope section 3.1).",
+  "data": "One disposable MySQL schema, one synthetic customer, warehouse, SKU and order line of five units. One real shipment of three units, two attempted Sales writes and two reads of that shipment. Existing fixture helpers already pinned by fulfillment-task036-event-recovery-functional.json are unchanged.",
+  "concurrency": "One functional case with sequential operations. Existing CI shard and worker settings unchanged.",
+  "repetitions": "One case registration through ordinary functional discovery; no retries, new jobs or recurring workload change.",
+  "thresholds": "Both current-version authorized Sales writes return 409 SALES_STATE_CONFLICT. The exact Sales detail and invoice reader snapshot retain currency, payment term ID/code/name, ordered quantity, unit price and original line amount. Existing coverage floors unchanged.",
+  "trigger": "Existing ordinary functional CI only. No change to workflow, routing, schedule or capacity.",
+  "cost": "Measured local incremental case time 1.77 seconds with an isolated MySQL 26.7.0 instance. CI time and critical-path effect unmeasured.",
+  "files": [
+    {
+      "path": "server/test/integration/salesShippedInvoiceFacts.integration.test.js",
+      "mode": "100644",
+      "blob": "a4084b5f49368f8da0c753b29847113b842ceb27",
+      "kind": "functional",
+      "cases": ["Sales edits and withdrawal cannot change invoice facts after partial shipment"]
+    }
+  ]
+}

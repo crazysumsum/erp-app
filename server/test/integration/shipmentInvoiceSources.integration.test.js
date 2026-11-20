@@ -57,19 +57,22 @@ nativeTest("invoice sources keep exact Sales facts and use original confirmation
   const secondId = secondDraft.outcome.id;
   assert.ok(BigInt(secondId) > BigInt(firstId));
 
-  const confirmation = new ShipmentConfirmationService(f.options);
-  const confirm = id => f.execute(async () => {
+  const confirm = (id, shipmentDate) => f.execute(async () => {
+    const confirmation = new ShipmentConfirmationService({
+      ...f.options, time: { ...f.options.time, fileDate: () => shipmentDate }
+    });
     const eventId = randomUUID();
     const started = await confirmation.startConfirmation(id, { eventId, version: 1 });
     const completed = await confirmation.completeConfirmation(started);
     assert.equal(completed.outcome, "SHIPPED");
     return eventId;
   });
-  const earlierEvent = await confirm(secondId);
-  const laterEvent = await confirm(firstId);
+  const earlierEvent = await confirm(secondId, "2023-11-14");
+  const laterEvent = await confirm(firstId, "2023-11-15");
 
   const [later, earlier] = await read([secondId, firstId]);
   assert.equal(later.id, firstId);
+  assert.equal(later.shipmentDate, "2023-11-15");
   assert.equal(later.confirmationEventId, laterEvent);
   assert.equal(later.salesOrderId, String(f.s.orderId));
   assert.equal(later.customerId, String(f.s.customerId));
@@ -85,6 +88,7 @@ nativeTest("invoice sources keep exact Sales facts and use original confirmation
   assert.equal(source.shippedBaseQuantity, "3");
   assert.equal(source.reversedBaseQuantity, "0");
   assert.equal(earlier.confirmationEventId, earlierEvent);
+  assert.equal(earlier.shipmentDate, "2023-11-14");
   assert.deepEqual(earlier.lines[0].priorShipments, []);
   assert.deepEqual(await read([secondId]), [earlier]);
   assert.ok(source.confirmationSequence > earlier.lines[0].confirmationSequence);
@@ -95,6 +99,25 @@ nativeTest("invoice sources keep exact Sales facts and use original confirmation
     confirmationSequence: earlier.lines[0].confirmationSequence,
     shippedBaseQuantity: "2"
   }]);
+
+  await assert.rejects(() => f.execute(() => f.database.withTransaction(async tx => {
+    const query = tx.query.bind(tx);
+    // Simulate a legacy NULL date while retaining the actual MySQL reads and guards.
+    const fault = t.mock.method(tx, "query", async (sql, values) => {
+      const result = await query(sql, values);
+      if (sql.includes("AS shipment_date")) {
+        const saved = result[0].find(row => String(row.shipment_id) === firstId);
+        assert.ok(saved);
+        saved.shipment_date = null;
+      }
+      return result;
+    });
+    try {
+      return await readInvoiceSourcesInTransaction(tx, { shipmentIds: [secondId, firstId] });
+    } finally {
+      fault.mock.restore();
+    }
+  }, rc)), { code: "FULFILLMENT_DEPENDENCY_UNAVAILABLE" });
 
   // Incomplete history must not be passed off as a first or partial shipment.
   await f.db.execute("DELETE FROM sales_order_status_history WHERE sales_order_id=? AND event_id=? AND action='FULFILLMENT_CONFIRM'",

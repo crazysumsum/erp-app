@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import Ajv from "ajv";
 
 import { DownloadCustomerImportTemplateHandler } from "../src/handlers/customer-imports/downloadCustomerImportTemplateHandler.js";
 import { DownloadCustomerImportResultHandler } from "../src/handlers/customer-imports/downloadCustomerImportResultHandler.js";
@@ -20,6 +21,11 @@ test("Customer import handlers enforce management permissions and strict schemas
   assert.equal(UploadCustomerImportHandler.api.idempotency.enabled, true);
   assert.equal(ConfirmCustomerImportHandler.api.authType, "jwt-password");
   assert.equal(ConfirmCustomerImportHandler.api.idempotency.enabled, true);
+  const validateConfirm = new Ajv({ allowUnionTypes: true }).compile(ConfirmCustomerImportHandler.api.requestSchema.body);
+  const confirm = { version: 1, activationMode: "activate", password: "synthetic-password" };
+  assert.equal(validateConfirm(confirm), true, JSON.stringify(validateConfirm.errors));
+  assert.equal(validateConfirm({ version: 1, activationMode: "activate" }), false);
+  assert.equal(validateConfirm({ ...confirm, unknown: true }), false);
   assert.equal(CancelCustomerImportHandler.api.idempotency.enabled, true);
   assert.equal(UploadCustomerImportHandler.api.upload.memoryOnly, true);
   assert.equal(UploadCustomerImportHandler.api.upload.maxFiles, 1);
@@ -45,9 +51,10 @@ test("Customer import confirm forwards the durable idempotency key", async () =>
   handler.customerImport = { async confirm(input) { received = input; return { id: 11 }; } };
   await handler.execute({
     auth: { claims: { sub: "3", roles: [], permissions: [] } },
-    input: { params: { id: 11 }, body: { version: 4, activationMode: "draft" } },
+    input: { params: { id: 11 }, body: { version: 4, activationMode: "draft", password: "synthetic-password" } },
     get(name) { return name === "Idempotency-Key" ? "confirm-11" : undefined; },
     requestId: "request-1", ip: "127.0.0.1"
   });
   assert.equal(received.idempotencyKey, "confirm-11");
+  assert.equal(Object.hasOwn(received, "password"), false);
 });
