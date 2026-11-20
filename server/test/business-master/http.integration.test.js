@@ -97,7 +97,7 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
     preview.body.data.results.map(({ checkerId, status, activeDefaultCount, openUseCount, historicalCount }) => ({ checkerId, status, activeDefaultCount, openUseCount, historicalCount })),
     [
       { checkerId: "ap", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
-      { checkerId: "ar", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "ar", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "customer", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "purchasing", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "sales", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
