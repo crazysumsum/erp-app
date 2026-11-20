@@ -1,13 +1,13 @@
 {
   "version": 1,
   "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Work item: PM work list ccea29fb of 2026-11-20 (Sam's instruction relayed), item 3c, AR client receipt, allocation and aging pages by claude-erp-app-supplier-01, stacked on the AR invoice client PR (receipt ar-client-invoices.json). No shared path changes. The author does not approve this receipt.",
-  "purpose": "AR client, receipts and aging: receipt list with URL-restored filters; receipt create whose customer and currency come from customers with outstanding invoices and whose amount is limited to the currency's decimals; receipt detail with confirm, cancel, void, allocate and unapply through the existing useCommandEvent (an uncertain outcome retries the same eventId), allocation amounts checked in BigInt ten-thousandths against each invoice's outstanding and the receipt's available amount, and a server rejection that names the invoice from error.details.field; and the aging report with one row per customer and currency and per-currency totals only.",
-  "data": "No database or network: mocked services and real discovered pages, with inline objects of at most 2 invoices, 1 receipt, 1 allocation and 2 aging rows. No fixture files.",
+  "purpose": "AR client, receipts and aging: receipt list with URL-restored filters; receipt create whose customer and currency come from the unpaginated aging report including customers missing from the latest invoice page and whose amount is limited to the currency's decimals; receipt detail with confirm, cancel, void, allocate and unapply through the existing useCommandEvent (an uncertain outcome retries the same eventId), allocation amounts checked in BigInt ten-thousandths against each invoice's outstanding and the receipt's available amount, and a server rejection that names the invoice from error.details.field; and the aging report with one row per customer and currency and per-currency totals only.",
+  "data": "No database or network: mocked services and real discovered pages, with inline objects of at most 2 invoices, 1 receipt, 1 allocation and 2 aging rows. No fixture files. The receipt-party regression uses one aging row and one simulated invoice page missing that customer; it does not generate additional rows.",
   "concurrency": "Within a case: 1, no concurrent requests. Runner workers unchanged: the existing client job keeps Vitest's default file workers.",
   "repetitions": "1",
   "thresholds": "All 17 new cases pass. The client coverage configuration is unchanged (it sets no numeric floor); server floors are untouched. No timing threshold.",
   "trigger": "Existing ci.yml triggers and discovery only, in the existing client test job: admitted PR dispatch, push to main and the existing weekly schedule. No new job, step, schedule or dispatch. No capacity or performance workload.",
-  "cost": "Local run of the 2 new files: 17 cases, under 1 s of test time. Not measured in CI. No new job. Browser evidence is a private Playwright run outside CI discovery (2 flows, mocked AR API because the receipt endpoints of #372 are not in main), kept in .worktrees/ci-pm-handoffs/ar-client-receipts-browser-20261120; it adds nothing to CI.",
+  "cost": "Local run of the 2 new files: 17 cases, under 1 s of test time. Not measured in CI. No new job. Browser evidence is a private Playwright run outside CI discovery (2 flows, mocked AR API because the receipt endpoints of #372 are not in main), kept in .worktrees/ci-pm-handoffs/ar-client-receipts-browser-20261120; it adds nothing to CI. The aging party lookup and real receipt form were also verified once in a private Playwright/MySQL environment outside CI.",
   "files": [
     {
       "path": "client/test/services/arReceipts.test.js",
@@ -24,11 +24,11 @@
     {
       "path": "client/test/pages/ar/arReceiptPages.test.js",
       "mode": "100644",
-      "blob": "a302a04521d19087bdc404d4f3dca3061fd0e1cf",
+      "blob": "0df7573306e64fbf4addf802160100191b202440",
       "kind": "functional",
       "cases": [
         "列表要 ar.view；顯示可核銷額同方式；登記按鈕要 ar.receipt.mgmt",
-        "登記：客戶及幣別由有未收發票嘅客戶揀；金額超出幣別小數位唔准送；成功去詳情",
+        "登記：最近發票頁沒有的欠款客戶仍可選；金額超出幣別小數位不送；成功去詳情",
         "登記被拒：顯示 server 訊息，保留輸入；結果未確定就鎖住並用同一 eventId 重試",
         "只有 ar.view：唔見命令、核銷區同解除",
         "核銷：只列同客戶同幣別未收發票；填入按可核銷額同幣別小數位；送 version 同 allocations",
@@ -51,7 +51,7 @@
     {
       "path": "client/src/pages/ar/ArReceiptCreatePage.vue",
       "mode": "100644",
-      "blob": "fc3bd483c53fe43e6eb5c8ce61d4f245589e13d7",
+      "blob": "ec9a828116af23ee04419f04034a5d638f39f454",
       "kind": "support"
     },
     {

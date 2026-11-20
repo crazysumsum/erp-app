@@ -47,6 +47,7 @@ beforeEach(() => {
   ar.listReceipts.mockResolvedValue({ rows: [receiptRow], rowsNumber: 1 });
   ar.getReceipt.mockResolvedValue(detail);
   ar.listInvoices.mockResolvedValue({ rows: [invoice(1, "100.0000"), invoice(2, "80.0050")], rowsNumber: 2 });
+  ar.getAging.mockResolvedValue({ items: [{ customerId: 3, customerCode: "C3", customerName: "客戶3", currencyCode: "HKD", currencyDecimalPlaces: 2 }] });
   confirm.mockResolvedValue(true);
 });
 afterEach(() => { wrapper?.unmount(); wrapper = null; document.body.innerHTML = ""; });
@@ -66,10 +67,12 @@ describe("AR 收款列表及登記", () => {
     await open("/ar/receipts", MANAGE);
     expect(button("登記收款").attributes("href")).toBe("/ar/receipts/new");
   });
-  it("登記：客戶及幣別由有未收發票嘅客戶揀；金額超出幣別小數位唔准送；成功去詳情", async () => {
+  it("登記：最近發票頁沒有的欠款客戶仍可選；金額超出幣別小數位不送；成功去詳情", async () => {
+    ar.listInvoices.mockResolvedValue({ rows: [invoice(1, "100.0000", { customerId: 4 })], rowsNumber: 101 });
     ar.createReceipt.mockResolvedValue({ id: 6, number: null, status: "DRAFT", version: 1, replayed: false });
     const router = await open("/ar/receipts/new", MANAGE);
-    expect(ar.listInvoices).toHaveBeenCalledWith(expect.objectContaining({ outstandingOnly: true }));
+    expect(ar.getAging).toHaveBeenCalledWith({ signal: expect.any(AbortSignal) });
+    expect(ar.listInvoices).not.toHaveBeenCalled();
     await wrapper.findComponent({ name: "QSelect" }).vm.$emit("update:modelValue", "3:HKD");
     await input("金額").setValue("10.005");
     await flushPromises();

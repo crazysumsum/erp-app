@@ -21,14 +21,15 @@ const uncertain = computed(() => command.isUncertain(key.value));
 const busy = computed(() => command.isBusy(key.value));
 const locked = computed(() => uncertain.value || busy.value);
 
-// 客戶及幣別：由仍有未收額嘅已確認發票揀（首期流程係收款後核銷到發票）；一個客戶每個幣別一個選項。
+// 帳齡每個客戶每個幣別一列，避免發票分頁漏掉較舊的欠款。
 const controller = new AbortController();
 onBeforeUnmount(() => controller.abort());
 onMounted(async () => {
   try {
-    const { rows } = await ar.listInvoices({ outstandingOnly: true, page: 1, rowsPerPage: 100, signal: controller.signal });
-    parties.value = [...new Map(rows.map((row) => [`${row.customerId}:${row.currencyCode}`, { value: `${row.customerId}:${row.currencyCode}`,
-      label: `${row.customerCode} — ${row.customerName}（${row.currencyCode}）`, customerId: row.customerId, currencyCode: row.currencyCode, decimalPlaces: row.currencyDecimalPlaces }])).values()];
+    const { items } = await ar.getAging({ signal: controller.signal });
+    if (controller.signal.aborted) return;
+    parties.value = items.map((row) => ({ value: `${row.customerId}:${row.currencyCode}`,
+      label: `${row.customerCode} — ${row.customerName}（${row.currencyCode}）`, customerId: row.customerId, currencyCode: row.currencyCode, decimalPlaces: row.currencyDecimalPlaces }));
   } catch (failure) {
     if (!controller.signal.aborted) submitError.value = failure.message || "載入客戶選項失敗";
   }
