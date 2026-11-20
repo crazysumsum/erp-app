@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Human answer 'A' in the Claude Code chat for Supplier management, session 486c4c60-92de-4122-b0e0-a68866140aa1, 2026-11-06, in reply to the Decision Required listing A (two cases, one push), B and C; recorded as HD-163 in docs/supplier_management/00_harness_state.json. The PM read this message and its question directly at 14:29 and passes them to the trusted approval administrator as the decision source; the feature agent does not approve this receipt. Profile pin moved from e50939e1 to 327593c6 by HD-165, the Product Owner's answer 'A，照建議改 profile' in the same Supplier chat on 2026-11-10. In supplier-server-integration and supplier-security, argv now goes through server's `npm test`, which adds the capacity catalog's --test-skip-pattern, which excludes catalog cases audit-16 to audit-20, audit-27 and audit-28 from the run. No test file, case, data, concurrency or CI trigger changes. Revision before merge (PR #354, not merged): max_skipped stays 0 in both suites. Node 26 drops pattern-excluded tests from the report and does not count them as skipped, so a value of 7 would have allowed seven arbitrary skips. Profile pin 327593c6 to e3fa76f7. Rebind 2026-11-12 (PR #356): Sam's answer '批准兩項，寫 receipt' in the same Supplier chat, item 1, adds six support pins for the run_check evidence of the three local TECHNICAL functional runs at 4ddad41e (three run.json and three stdout.log), which the admission controller rejected as unapproved inputs in run 43165266220. They are recorded results, not test code: no case, data, concurrency, repetition, threshold or CI trigger changes. Earlier registered digests stay registered and are not removed. Rebind 2026-11-12 (client-ui option B): Sam's answer '批准兩項，寫 receipt' in the same Supplier chat, item 2, and the TL's one-off SCOPE grant for client/package.json (agentmsg ecad64b7); the TL confirmed in agentmsg c64673ac that rebinding this receipt for the profile edit follows from the existing mechanism. Profile pin e3fa76f7 to cdfb68d0: supplier-client-ui passes --reporter=junit --outputFile=<xml> plus the path filters test/pages/suppliers test/services/supplier, the same 21 files and 208 existing tests as the removed config's include; supplier-phase-001-client keeps its original filters test/pages/suppliers test/services/supplier.test.js (17 files) and only moves the JUnit pair before them (TL ruling, agentmsg 6955bcd0). Reviewed deletion of client/test/supplier-management.vitest.config.js (null mode and blob). Both selections are unchanged; no case, data, concurrency, repetition, threshold or CI trigger changes. client/package.json itself is pinned by local-functional-entrypoints.json, not here.",
-  "purpose": "TASK-052: prove findSkuRefsInTransaction reads only this Supplier's rows on the caller's transaction. The PO Line foreign key has one column, so the database cannot catch a wrong Supplier's ref, and a fake cannot prove the SQL.",
-  "data": "No-DB case: fake rows only. MySQL case: 3 items, 3 SKUs, 2 Suppliers, 3 committed relations, 1 relation inserted inside the transaction. Inputs include duplicates, an empty list, 100 IDs and 101 IDs on the fake.",
-  "concurrency": "1 connection and 1 transaction in the MySQL case's own reads and write; serial within the existing shard. No two-connection trial.",
+  "decision": "Human answer 'A' in the Claude Code chat for Supplier management, session 486c4c60-92de-4122-b0e0-a68866140aa1, 2026-11-06, in reply to the Decision Required listing A (two cases, one push), B and C; recorded as HD-163 in docs/supplier_management/00_harness_state.json. The PM read this message and its question directly at 14:29 and passes them to the trusted approval administrator as the decision source; the feature agent does not approve this receipt. Profile pin moved from e50939e1 to 327593c6 by HD-165, the Product Owner's answer 'A，照建議改 profile' in the same Supplier chat on 2026-11-10. In supplier-server-integration and supplier-security, argv now goes through server's `npm test`, which adds the capacity catalog's --test-skip-pattern, which excludes catalog cases audit-16 to audit-20, audit-27 and audit-28 from the run. No test file, case, data, concurrency or CI trigger changes. Revision before merge (PR #354, not merged): max_skipped stays 0 in both suites. Node 26 drops pattern-excluded tests from the report and does not count them as skipped, so a value of 7 would have allowed seven arbitrary skips. Profile pin 327593c6 to e3fa76f7. Rebind 2026-11-12 (PR #356): Sam's answer '批准兩項，寫 receipt' in the same Supplier chat, item 1, adds six support pins for the run_check evidence of the three local TECHNICAL functional runs at 4ddad41e (three run.json and three stdout.log), which the admission controller rejected as unapproved inputs in run 43165266220. They are recorded results, not test code: no case, data, concurrency, repetition, threshold or CI trigger changes. Earlier registered digests stay registered and are not removed. Rebind 2026-11-12 (client-ui option B): Sam's answer '批准兩項，寫 receipt' in the same Supplier chat, item 2, and the TL's one-off SCOPE grant for client/package.json (agentmsg ecad64b7); the TL confirmed in agentmsg c64673ac that rebinding this receipt for the profile edit follows from the existing mechanism. Profile pin e3fa76f7 to cdfb68d0: supplier-client-ui passes --reporter=junit --outputFile=<xml> plus the path filters test/pages/suppliers test/services/supplier, the same 21 files and 208 existing tests as the removed config's include; supplier-phase-001-client keeps its original filters test/pages/suppliers test/services/supplier.test.js (17 files) and only moves the JUnit pair before them (TL ruling, agentmsg 6955bcd0). Reviewed deletion of client/test/supplier-management.vitest.config.js (null mode and blob). Both selections are unchanged; no case, data, concurrency, repetition, threshold or CI trigger changes. client/package.json itself is pinned by local-functional-entrypoints.json, not here. Rebind 2026-11-19 (Supplier checker wiring): Sam's blanket decision of 2026-11-19 suspending per-case test admission until 2026-11-26 (PM agentmsg 60f733a4, CI admin d1d3ef37), with one non-author review by the Purchasing owner claude-erp-app-purchasing-01; PM scope decision 944798c4; TL ruling 4 (94762244), edge ruling A (26fada00) and one-off SCOPE for the Purchasing files (a2b1a1e2). Design 03 and tasks 05 pins move for the :1250 and T08/T22 notes.",
+  "purpose": "TASK-052: prove findSkuRefsInTransaction reads only this Supplier's rows on the caller's transaction. The PO Line foreign key has one column, so the database cannot catch a wrong Supplier's ref, and a fake cannot prove the SQL. Checker wiring: prove through the real routes that a Supplier referenced by a PO cannot change its Code and that an open PO blocks archive, and that lock conflicts answer 409 CONCURRENT_OPERATION with nothing written.",
+  "data": "No-DB case: fake rows only. MySQL case: 3 items, 3 SKUs, 2 Suppliers, 3 committed relations, 1 relation inserted inside the transaction. Inputs include duplicates, an empty list, 100 IDs and 101 IDs on the fake. Checker wiring: unit cases use fakes; the 3 route-level cases use 1 Supplier and 1 directly inserted purchase_orders row each, deleted in the case.",
+  "concurrency": "1 connection and 1 transaction in the MySQL case's own reads and write; serial within the existing shard. No two-connection trial. Checker wiring: serial; no two-connection case.",
   "repetitions": "1",
-  "thresholds": "Exact equality on the returned Map; TypeError on invalid input; no locking clause in the SQL. No performance threshold.",
-  "trigger": "Routine functional server tests through existing discovery. One natural CI run on one push. No new job, schedule, dispatch or retry. No capacity: audit-17 and audit-18 are only statically related and are not selected on a PR.",
-  "cost": "Estimated under 1 second for the no-DB case and a few seconds for the MySQL case; not measured. No new job; effect on the CI critical path expected to be negligible, not measured.",
+  "thresholds": "Exact equality on the returned Map; TypeError on invalid input; no locking clause in the SQL. No performance threshold. Checker wiring: exact status codes and error codes; no performance threshold.",
+  "trigger": "Routine functional server tests through existing discovery. One natural CI run on one push. No new job, schedule, dispatch or retry. No capacity: audit-17 and audit-18 are only statically related and are not selected on a PR. Checker wiring: routine functional server tests through existing discovery; one PR CI.",
+  "cost": "Estimated under 1 second for the no-DB case and a few seconds for the MySQL case; not measured. No new job; effect on the CI critical path expected to be negligible, not measured. Checker wiring: 12 cases; unit cases run in milliseconds; the 3 route cases took about 0.4 s in total locally. Not a measured CI cost.",
   "files": [
     {
       "path": "server/test/supplierLookupService.test.js",
@@ -42,13 +42,13 @@
     {
       "path": "docs/supplier_management/03_design_spec.md",
       "mode": "100644",
-      "blob": "99dd92730d4c204bf47ec17344bbf04da833907b",
+      "blob": "ed1dcaf9d531ec0bd02ca02cbd50acc0bcef5151",
       "kind": "support"
     },
     {
       "path": "docs/supplier_management/05_development_tasks.md",
       "mode": "100644",
-      "blob": "ca51e1742dc6cd156c76f180929ba993881fa34f",
+      "blob": "f626a4666e0cceffbacec9591d6f225ff946ecf8",
       "kind": "support"
     },
     {
@@ -104,6 +104,50 @@
       "mode": null,
       "blob": null,
       "kind": "support"
+    },
+    {
+      "path": "server/test/supplierLifecycleService.test.js",
+      "mode": "100644",
+      "blob": "884f19f3b622de74bea0eaec1e66c001d0853ced",
+      "kind": "functional",
+      "cases": [
+        "TC-026/TC-033 (TL ruling 4): the shared factory gives every Supplier handler the Purchasing reference and open-flow checkers",
+        "TC-033 (ruling A): a deadlock while archive reads open flows answers 409 CONCURRENT_OPERATION, writes nothing and is not retried",
+        "TC-035 (ruling A): a lock wait timeout while delete reads references answers 409 CONCURRENT_OPERATION and deletes nothing",
+        "TC-033 (TL ruling 4): an unclassified PO status from the open-flow checker refuses archive and is never treated as clear"
+      ]
+    },
+    {
+      "path": "server/test/supplierAdminService.test.js",
+      "mode": "100644",
+      "blob": "376b577ccc8f3cdbb7ef95ba7bac1903ce158226",
+      "kind": "functional",
+      "cases": [
+        "TC-026 (ruling A): Code correction keeps its single redo; a second deadlock answers 409 CONCURRENT_OPERATION and writes nothing"
+      ]
+    },
+    {
+      "path": "server/test/integration/supplierCoreAcceptance.integration.test.js",
+      "mode": "100644",
+      "blob": "7b6ee68bebe4b0cf16fc7478b5560b89df9a3f00",
+      "kind": "functional",
+      "cases": [
+        "TC-026 (TL ruling 4): a Supplier referenced by a purchase order cannot change its Code through the route",
+        "TC-033 (TL ruling 4): an open purchase order blocks archive through the route, named for the user",
+        "TC-026/TC-033 (TL ruling 4): a cancelled purchase order still locks the Code but no longer blocks archive"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingSupplierReferenceCheckers.test.js",
+      "mode": "100644",
+      "blob": "5be74cae5b9d16f78625b2d7c5fae7d50bb7b3c4",
+      "kind": "functional",
+      "cases": [
+        "TL ruling 4: the reference checker sends one locking GROUP BY read on the caller's connection and counts every classified status",
+        "TL ruling 4: the open-flow checker counts only open PO statuses",
+        "TL ruling 4: an unclassified PO status fails closed in both checkers",
+        "TL ruling 4: a count that is not a non-negative safe integer is refused"
+      ]
     }
   ]
 }
