@@ -212,10 +212,10 @@ cd server && npm run migrate
 ### Step 4：建立第一個帳號
 
 ```bash
-cd server && npm run create-user -- admin "選一個強密碼" --name "System Admin" --role admin
+cd server && npm run create-user -- admin --name "System Admin"
 ```
 
-登入 API 需要一個已存在的帳號，而建立帳號的 API 需要一個已登入的人——這支腳本就是打破這個循環的那一步。密碼以 scrypt 雜湊儲存，不會寫進資料庫明文。
+在提示出現時輸入強密碼，腳本會以 scrypt 雜湊儲存。第一個帳號自動取得 `system-admin`。完成 migration 後，該角色持有庫存、銷售、履約、採購、收貨及應收模組的既有權限，可在「角色管理」配置給其他角色。首次從瀏覽器登入會送出設備綁定申請。從 `server/` 執行 `node scripts/approveDevice.js --list` 找到申請編號，再執行 `node scripts/approveDevice.js <編號>` 核准，然後重新登入。既有管理員升級後重新登入即可取得更新後的權限。
 
 ### Step 5：啟動開發伺服器
 
