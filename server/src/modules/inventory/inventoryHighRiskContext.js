@@ -13,16 +13,21 @@ const ROUTES = Object.freeze({
   "adjustment.post": "/api/v1/inventory/adjustments",
   "status_transfer.post": "/api/v1/inventory/status-transfers",
   "movement.reverse": "/api/v1/inventory/movements/:id/reverse",
-  "stocktake.post": "/api/v1/inventory/stocktakes/:id/post"
+  "stocktake.post": "/api/v1/inventory/stocktakes/:id/post",
+  "opening.post": "/api/v1/inventory/opening/jobs/:id/confirm"
 });
+
+function permissionFor(action) {
+  return action === "opening.post" ? "inventory.mgmt" : "inventory.adjust";
+}
 
 function intent(command) {
   const action = command?.authorization?.purpose;
-  if (!ROUTES[action] || command.authorization.requiredCallerPermission !== "inventory.adjust") {
+  if (!Object.hasOwn(ROUTES, action) || command.authorization.requiredCallerPermission !== permissionFor(action)) {
     throw permissionStaleError();
   }
   const commandType = action === "adjustment.post" ? "ADJUSTMENT_POST"
-    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : action === "stocktake.post" ? "STOCKTAKE_POST" : "MOVEMENT_REVERSE";
+    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : action === "stocktake.post" ? "STOCKTAKE_POST" : action === "opening.post" ? "OPENING_POST" : "MOVEMENT_REVERSE";
   const source = action === "stocktake.post" ? { ...command.source, lineId: command.source.lineId ?? "" } : command.source;
   const payload = action === "stocktake.post" ? { ...command.payload,
     ...(typeof command.payload.reason === "string" ? { reason: command.payload.reason.trim() } : {}) } : command.payload;
@@ -81,7 +86,7 @@ async function checkCurrent(tx, record, { locking = false } = {}) {
   const permissionNames = [...new Set(permissions)];
   assertPermissionsCurrent({ claimedRoles: record.claims.roles, claimedPermissions: record.claims.permissions,
     currentRoles: roleNames, currentPermissions: permissionNames });
-  if (!["inventory.view", "inventory.adjust"].every(value => permissionNames.includes(value))) throw permissionStaleError();
+  if (!["inventory.view", record.permission].every(value => permissionNames.includes(value))) throw permissionStaleError();
   const [devices] = await tx.query(`SELECT id, user_id, device_id, public_key, status FROM user_devices
     WHERE user_id = ? AND device_id = ?${lock}`, [record.actorId, record.claims.did]);
   const binding = devices[0];
@@ -106,9 +111,10 @@ export function issueInventoryHighRiskContext(req, command, options) {
       req.apiRoute?.authType !== "jwt-device-password" || !ROUTES[action] || req.apiRoute.path !== ROUTES[action] ||
       !Number.isSafeInteger(actorId) || actorId <= 0 || actorId !== command.actor.userId ||
       !Array.isArray(auth.claims.roles) || !Array.isArray(auth.claims.permissions)) throw permissionStaleError();
-  if (action === "movement.reverse" || action === "stocktake.post") {
+  if (action === "movement.reverse" || action === "stocktake.post" || action === "opening.post") {
     const params = req.input?.params;
-    const resourceId = action === "movement.reverse" ? command.payload.movementId : command.payload.stocktakeId;
+    const resourceId = action === "movement.reverse" ? command.payload.movementId
+      : action === "stocktake.post" ? command.payload.stocktakeId : command.payload.jobId;
     if (!params || typeof params !== "object" || Array.isArray(params) || Object.keys(params).length !== 1 ||
         typeof params.id !== "string" || !/^[1-9][0-9]*$/u.test(params.id) ||
         !Number.isSafeInteger(resourceId) || resourceId <= 0 ||
@@ -124,7 +130,7 @@ export function issueInventoryHighRiskContext(req, command, options) {
       !Number.isSafeInteger(options.clockToleranceSeconds) || options.clockToleranceSeconds < 0) {
     throw new TypeError("Inventory high-risk context requires existing authentication time limits");
   }
-  const record = { ...options, claims: deepFreeze(cloneData(auth.claims, "Inventory authenticated claims")), actorId,
+  const record = { ...options, permission: permissionFor(action), claims: deepFreeze(cloneData(auth.claims, "Inventory authenticated claims")), actorId,
     bindingId: Number(binding.id), keyHash: keyHash(binding.public_key), signal: req.requestTimeout?.signal,
     signedRequestAt: Number(req.get(DEVICE_HEADERS.timestamp)), intent: intent(command) };
   assertTime(record);
