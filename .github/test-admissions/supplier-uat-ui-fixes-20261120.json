@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional test changes carry no per-case approval. Work item: PM c3daad3f of 2026-11-20, item 1 (check the Supplier functions UAT script 2 uses on local main and fix gaps in small PRs). The author does not approve this receipt.",
+  "purpose": "Two Supplier client fixes found in a local real-API browser rehearsal of UAT script 2 on main 4b6ae2bc: the create page now links to the new supplier's detail page and keeps both create buttons disabled until the form changes (a second click used to resubmit the same code), and the lifecycle success toasts no longer read 已已暫停 / 已已封鎖 / 已已封存. No new test case: three existing cases gain assertions; no existing assertion is removed or relaxed.",
+  "data": "No database or network: the existing mocked services and inline objects in these two files; no fixture change.",
+  "concurrency": "Within a case: 1, no concurrent requests. Runner workers unchanged: the existing client job keeps Vitest's default file workers.",
+  "repetitions": "1",
+  "thresholds": "All cases in both files pass (21 locally); the client coverage configuration is unchanged (no numeric floor); server floors untouched. No timing threshold.",
+  "trigger": "Existing ci.yml triggers and discovery only, in the existing client test job. No new job, step, schedule or dispatch. No capacity or performance workload.",
+  "cost": "Same case count as before; three added expect lines. Local run of the two files under 1 s of test time. Not measured in CI. Browser evidence is a private Playwright run outside CI discovery against the real API and a private MySQL, kept in .worktrees/ci-pm-handoffs/supplier-uat-check-20261120; it adds nothing to CI.",
+  "files": [
+    {
+      "path": "client/test/pages/suppliers/create.test.js",
+      "mode": "100644",
+      "blob": "e38fca1e8e155d03cd9c6c1b8b84416b8785cd6f",
+      "kind": "functional",
+      "cases": []
+    },
+    {
+      "path": "client/test/pages/suppliers/lifecycle.test.js",
+      "mode": "100644",
+      "blob": "eecfc84f28d92e115d18c7f8f056bd16596df8c6",
+      "kind": "functional",
+      "cases": []
+    },
+    {
+      "path": "client/src/pages/suppliers/SupplierCreatePage.vue",
+      "mode": "100644",
+      "blob": "78b5c64026fc822c2a3e3cb64f23850a5edb9155",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/components/suppliers/SupplierStatusActions.vue",
+      "mode": "100644",
+      "blob": "c8f7365847a52587e4c4928dee650ff6ed8f0797",
+      "kind": "support"
+    }
+  ]
+}
