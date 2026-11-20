@@ -103,6 +103,13 @@ describe("AR 發票詳情", () => {
     expect(wrapper.text()).toContain("<b>備註</b>");
     expect(wrapper.text()).toContain("未有核銷");
   });
+  it("有 fulfillment.view 先將出貨單 ID 做成連結", async () => {
+    await open("/ar/invoices/8");
+    expect(wrapper.findAll("a").some((node) => node.attributes("href") === "/shipments/51")).toBe(false);
+    wrapper.unmount();
+    await open("/ar/invoices/8", [...VIEW, "fulfillment.view"]);
+    expect(wrapper.findAll("a").filter((node) => node.attributes("href") === "/shipments/51")).toHaveLength(2);
+  });
   it("只有 ar.view：server 有 action 都唔出命令按鈕", async () => {
     await open("/ar/invoices/8");
     expect(button("作廢發票")).toBeUndefined();

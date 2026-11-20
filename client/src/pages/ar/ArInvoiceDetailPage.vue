@@ -44,6 +44,7 @@ watch([invoiceId, () => session.user?.id], () => { generation += 1; });
 onBeforeUnmount(() => { generation += 1; controller?.abort(); });
 
 // allowedActions 只係提示（server 已按 ar.invoice.mgmt 過濾）；命令 server 會再驗。
+const canViewShipments = computed(() => session.permissions.includes("fulfillment.view"));
 const actions = computed(() => (session.permissions.includes("ar.invoice.mgmt") ? invoice.value?.allowedActions ?? [] : []));
 const dp = computed(() => invoice.value?.currencyDecimalPlaces ?? 2);
 const amount = (value) => `${invoice.value.currencyCode} ${money(value, dp.value)}`;
@@ -144,6 +145,7 @@ async function ask(action) {
           <template #body-cell-sku="{ row }"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" max-width="160px" /></template>
           <template #body-cell-quantity="{ row }"><q-td>{{ quantityText(row) }}</q-td></template>
           <template #body-cell-lineAmount="{ row }"><q-td class="text-right">{{ money(row.lineAmount, dp) }}</q-td></template>
+          <template #body-cell-shipmentId="{ row }"><q-td><router-link v-if="canViewShipments" :to="`/shipments/${row.shipmentId}`">出貨單 {{ row.shipmentId }}</router-link><template v-else>{{ row.shipmentId }}</template></q-td></template>
         </DataTable>
         <h2 class="text-h6 q-mt-lg q-mb-md">核銷記錄</h2>
         <DataTable :rows="invoice.allocations" :columns="allocationColumns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
