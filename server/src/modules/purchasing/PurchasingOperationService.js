@@ -20,6 +20,15 @@ const COMMANDS = Object.freeze({
   CANCEL_GOODS_RECEIPT: "GOODS_RECEIPT",
   CONFIRM_GOODS_RECEIPT: "GOODS_RECEIPT"
 });
+// Lookup 要目前仍有原命令嘅權限（同各 route 嘅 policy 一致；§6.1 權限互不繼承）。
+const PO_WRITE = ["purchasing.mgmt"], DECISION = ["purchasing.view", "purchasing.approval"], RECEIVING = ["purchasing.view", "receiving.operation"];
+const LOOKUP_PERMISSIONS = Object.freeze({
+  CREATE_PURCHASE_ORDER: PO_WRITE, UPDATE_PURCHASE_ORDER: PO_WRITE, COPY_PURCHASE_ORDER: PO_WRITE, SUBMIT_PURCHASE_ORDER: PO_WRITE,
+  APPROVE_PURCHASE_ORDER: DECISION, REJECT_PURCHASE_ORDER: DECISION, WITHDRAW_APPROVAL_PURCHASE_ORDER: PO_WRITE,
+  WITHDRAW_CONFIRMATION_PURCHASE_ORDER: PO_WRITE, CANCEL_PURCHASE_ORDER: PO_WRITE, CLOSE_REMAINING_PURCHASE_ORDER: PO_WRITE,
+  UPDATE_PURCHASING_SETTINGS: ["purchasing.settings"],
+  CREATE_GOODS_RECEIPT: RECEIVING, UPDATE_GOODS_RECEIPT: RECEIVING, CANCEL_GOODS_RECEIPT: RECEIVING, CONFIRM_GOODS_RECEIPT: RECEIVING
+});
 const PO_STATUSES = ["DRAFT", "PENDING_APPROVAL", "CONFIRMED", "PARTIALLY_RECEIVED", "FULLY_RECEIVED", "CLOSED", "CANCELLED"];
 const GR_STATUSES = ["DRAFT", "CONFIRMED", "PARTIALLY_REVERSED", "REVERSED", "CANCELLED"];
 // 文件編號決定結果屬邊類：PO 或 GR（設計 §4.3、§4.14）。
@@ -113,6 +122,21 @@ export class PurchasingOperationService {
       if (row.completed_at === null) throw purchasingError("CONCURRENT_OPERATION");
       return { operationId: identifier(Number(row.id)), replay: safeResult(row.result_summary) };
     }
+  }
+
+  /**
+   * §5.4 operation lookup（TASK-033）：COMMIT 結果不明時按原 eventId 查。只回本人、而且目前仍有原命令權限嘅結果；
+   * 唔存在、唔係本人或者冇權一律 404，唔可以列舉。Claim 同 complete 同一個 transaction，所以見到嘅 row 必定已完成。
+   */
+  async lookup(connection, { eventId, actorId, permissions }) {
+    const [rows] = await connection.query(`SELECT command_type, result_type, result_id, result_summary, completed_at
+      FROM purchasing_operation_requests WHERE event_id = ? AND actor_user_id = ? ORDER BY id LIMIT 2`, [validEventId(eventId), identifier(actorId)]);
+    const row = rows.length === 1 ? rows[0] : null;
+    if (!row || row.completed_at === null || !LOOKUP_PERMISSIONS[row.command_type]?.every((name) => permissions.includes(name))) {
+      throw purchasingError("PURCHASING_OPERATION_NOT_FOUND");
+    }
+    return { status: "COMPLETED", resultType: row.result_type, resultId: row.result_id, resultSummary: safeResult(row.result_summary),
+      completedAt: Number(row.completed_at) };
   }
 
   async complete(connection, { operationId, result, nowMs }) {

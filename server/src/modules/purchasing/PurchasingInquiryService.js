@@ -1,5 +1,6 @@
 import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { PurchasingOperationService } from "./PurchasingOperationService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { storedAmount } from "./moneyMath.js";
 import { purchasingError } from "./purchasingErrors.js";
@@ -235,6 +236,14 @@ export class PurchasingInquiryService {
       return toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot: stored?.approval_snapshot, history, actorId });
     });
     return { ...detail, currentMasterDifferences: await this.#differences(detail) };
+  }
+
+  /** §5.4（TASK-033）：COMMIT 結果不明時按原 eventId 查本人結果；權限按原命令，喺 PurchasingOperationService.lookup 驗。 */
+  operation({ claims, eventId }) {
+    return this.database.withTransaction(async (tx) => {
+      const fresh = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
+      return new PurchasingOperationService().lookup(tx, { eventId, actorId: fresh.id, permissions: fresh.permissions });
+    });
   }
 
   /** Read path 都要 token 同 DB 權限一致（同 Sales 一樣）；allowedActions 用呢度讀到嘅權限，唔信 JWT。 */

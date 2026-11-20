@@ -48,6 +48,7 @@ async function setup() {
     };
     const receiver = await person("receiver", ["purchasing.view", "receiving.operation"]), viewer = await person("viewer", ["purchasing.view"]);
     const overrider = await person("overrider", ["purchasing.view", "receiving.operation", "receiving.expiry.override"]);
+    const other = await person("other", ["purchasing.view", "receiving.operation"]);
     const supplier = await insert("suppliers", { supplier_code: `GRC-${tag}`, supplier_code_key: `grc-${tag}`, supplier_name: "Confirm Supplier",
       supplier_name_key: "confirm supplier", default_currency_code: "HKD", status: "active", created_at: now, updated_at: now });
     const item = await insert("items", { name: `GR confirm ${tag}`, status: "active", created_at: now, updated_at: now });
@@ -88,6 +89,10 @@ async function setup() {
         "Content-Type": "application/json" }, body: JSON.stringify(body) });
       return { status: response.status, body: await response.json() };
     };
+    const lookup = async (eventId, token = receiver.token) => {
+      const response = await fetch(`${url}/api/v1/purchasing-operations/by-event/${eventId}`, { headers: { Authorization: `Bearer ${token}` } });
+      return { status: response.status, body: await response.json() };
+    };
     const draft = async (purchaseOrderId) => (await send("/api/v1/goods-receipts/create",
       { body: { eventId: randomUUID(), purchaseOrderId, businessReceiptDate: RECEIPT_DATE } })).body.data.id;
     const confirm = (id, version, lines, { token, eventId = randomUUID(), ...fields } = {}) => send(`/api/v1/goods-receipts/${id}/confirm`,
@@ -109,7 +114,7 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { db, cleanups, order, draft, confirm, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
+    return { db, cleanups, order, draft, confirm, lookup, other, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Goods receipt confirm fixture setup failed and its cleanup also failed") : error;
@@ -305,4 +310,20 @@ integrationTest("TASK-032 C10 剩餘效期不足：冇放行權限拒絕、有�
   assert.equal(Number((await f.header(id)).has_expiry_override), 1);
   const [[row]] = await f.db.query("SELECT minimum_life_days_applied, actual_remaining_life_days, expiry_override_by FROM goods_receipt_details WHERE goods_receipt_id = ?", [id]);
   assert.deepEqual([Number(row.minimum_life_days_applied), Number(row.actual_remaining_life_days), Number(row.expiry_override_by)], [30, 10, f.overrider.id]);
+});
+
+integrationTest("TASK-033 C8 按原 eventId 查確認結果：本人回 COMPLETED 及摘要；其他用戶、冇原命令權限、唔存在都係 404；格式錯 400（§2.7、§5.4）", async () => {
+  const f = await fixture();
+  const poRow = await f.order(), id = await f.draft(poRow.id), eventId = randomUUID();
+  const done = await f.confirm(id, 1, twoLines(f, poRow), { eventId });
+  assert.equal(done.status, 200, JSON.stringify(done.body));
+  const found = await f.lookup(eventId);
+  assert.equal(found.status, 200, JSON.stringify(found.body));
+  const { completedAt, ...rest } = found.body.data;
+  assert.ok(Number.isSafeInteger(completedAt) && completedAt > 0);
+  assert.deepEqual(rest, { status: "COMPLETED", resultType: "GR", resultId: String(id),
+    resultSummary: { id, number: done.body.data.number, status: "CONFIRMED", version: 2 } });
+  for (const token of [f.other.token, f.viewer.token]) assert.deepEqual(failure(await f.lookup(eventId, token)).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
+  assert.deepEqual(failure(await f.lookup(randomUUID())).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
+  assert.equal((await f.lookup("not-a-uuid")).status, 400);
 });
