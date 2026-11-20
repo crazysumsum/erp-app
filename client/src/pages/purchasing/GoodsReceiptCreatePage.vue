@@ -2,7 +2,7 @@
 export const page = { name: "goods-receipt-create", path: "/purchasing/goods-receipts/new", title: "新增收貨單", requires: { permissions: ["purchasing.view", "receiving.operation"] } };
 </script>
 <script setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
@@ -17,13 +17,14 @@ const form = reactive({ purchaseOrder: null, businessReceiptDate: today(), suppl
 const options = ref([]), lookupError = ref("");
 const required = (value) => Boolean(value) || "必填";
 
-async function search(q, update) {
-  try {
-    const items = await purchasing.lookupReceivablePurchaseOrders({ q });
-    update(() => { options.value = items; lookupError.value = ""; });
-  } catch (failure) {
-    update(() => { options.value = []; lookupError.value = failure.message || "未能載入採購單"; });
-  }
+// 可收貨 PO 最多 100 張（20 人規模），載入一次後喺前端同步篩選：冇非同步晚到結果，揀完唔會再打開選單。
+const all = ref([]);
+onMounted(async () => {
+  try { all.value = await purchasing.lookupReceivablePurchaseOrders(); options.value = all.value; } catch (failure) { lookupError.value = failure.message || "未能載入採購單"; }
+});
+function search(q, update) {
+  const needle = q.trim().toLowerCase();
+  update(() => { options.value = needle ? all.value.filter((row) => `${row.number} ${row.supplierCode} ${row.supplierName}`.toLowerCase().includes(needle)) : all.value; });
 }
 async function save() {
   const body = { purchaseOrderId: form.purchaseOrder?.id, businessReceiptDate: form.businessReceiptDate,
@@ -43,7 +44,7 @@ if (route.query.purchaseOrderId) form.purchaseOrder = { id: Number(route.query.p
       <FormPanel v-slot="{ submitting, fieldError }" :on-submit="save">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6"><q-select v-model="form.purchaseOrder" label="採購單 *" :options="options" :option-label="row => `${row.number}${row.supplierName ? ` — ${row.supplierName}` : ''}`"
-            use-input input-debounce="250" :rules="[required]" :error="!!(fieldError('purchaseOrderId') || lookupError)" :error-message="fieldError('purchaseOrderId') || lookupError"
+            use-input hide-selected fill-input input-debounce="0" :rules="[required]" :error="!!(fieldError('purchaseOrderId') || lookupError)" :error-message="fieldError('purchaseOrderId') || lookupError"
             :disable="command.isUncertain('create')" outlined dense @filter="search"><template #no-option><q-item><q-item-section>沒有可收貨的採購單。</q-item-section></q-item></template></q-select></div>
           <div class="col-12 col-md-3"><q-input v-model="form.businessReceiptDate" label="收貨日期 *" type="date" :rules="[required]" :disable="command.isUncertain('create')" outlined dense
             :error="!!fieldError('businessReceiptDate')" :error-message="fieldError('businessReceiptDate')" /></div>
