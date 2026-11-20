@@ -26,6 +26,7 @@ const DETAIL = `${SUMMARY}, ordering_address_id, ordering_address_snapshot, curr
   updated_by_label, confirmed_at, closed_at, cancelled_at`;
 const LINE = `id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, tracking_policy_snapshot, inventory_tracked_snapshot,
   minimum_receipt_life_days_snapshot, base_uom_id, base_uom_code_snapshot, purchase_sku_uom_id, purchase_uom_code_snapshot, uom_to_base_factor_snapshot,
+  (SELECT su.uom_id FROM item_sku_uoms su WHERE su.id = purchase_sku_uom_id) AS purchase_uom_id,
   supplier_item_code_snapshot, ordered_quantity, ordered_base_quantity, unit_price, line_amount, zero_price_reason, ${date("expected_delivery_date")}, line_note,
   gross_received_base_quantity, reversed_base_quantity, net_received_base_quantity, closed_remaining_base_quantity, close_reason, version`;
 
@@ -121,7 +122,8 @@ function toPurchaseOrderLine(row, receiving, places) {
     id: Number(row.id), lineNumber: Number(row.line_number), skuId: Number(row.sku_id), skuCode: row.sku_code_snapshot, skuName: row.sku_name_snapshot,
     trackingPolicy: row.tracking_policy_snapshot, inventoryTracked: Boolean(row.inventory_tracked_snapshot),
     minimumReceiptLifeDays: nullableId(row.minimum_receipt_life_days_snapshot), baseUomId: Number(row.base_uom_id), baseUomCode: row.base_uom_code_snapshot,
-    purchaseSkuUomId: Number(row.purchase_sku_uom_id), purchaseUomCode: row.purchase_uom_code_snapshot, uomToBaseFactor: Number(row.uom_to_base_factor_snapshot),
+    // GR detail 嘅 inputUomId 係 item_uoms id：Purchase UOM 用呢個，Base UOM 用 baseUomId（TASK-030）。
+    purchaseSkuUomId: Number(row.purchase_sku_uom_id), purchaseUomId: Number(row.purchase_uom_id), purchaseUomCode: row.purchase_uom_code_snapshot, uomToBaseFactor: Number(row.uom_to_base_factor_snapshot),
     supplierItemCode: row.supplier_item_code_snapshot, orderedQuantity: String(row.ordered_quantity), orderedBaseQuantity: String(ordered),
     unitPrice: String(row.unit_price), lineAmount: storedAmount(row.line_amount, places), zeroPriceReason: row.zero_price_reason, expectedDeliveryDate: row.expected_delivery_date,
     lineNote: row.line_note, grossReceivedBaseQuantity: String(row.gross_received_base_quantity), reversedBaseQuantity: String(row.reversed_base_quantity),
