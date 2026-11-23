@@ -176,9 +176,9 @@ export function myApprovalsRequest(req) {
 export function purchaseOrderListRequest(req, { outstandingOnly = false } = {}) {
   const request = { query: structuredClone(req.input.query) };
   validated(outstandingOnly ? validateOutstanding : validateList, request, "query");
-  const input = request.input.query;
-  if (outstandingOnly) input.hasOutstanding = true;
-  return { claims: req.auth.claims, input };
+  const args = { claims: req.auth.claims, input: request.input.query };
+  if (outstandingOnly) args.outstandingOnly = true;
+  return args;
 }
 
 const object = (properties) => ({ type: "object", required: Object.keys(properties), additionalProperties: false, properties });

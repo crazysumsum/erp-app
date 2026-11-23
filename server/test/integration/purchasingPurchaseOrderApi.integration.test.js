@@ -179,10 +179,10 @@ integrationTest("Outstanding query lists only receivable orders and uses line de
     return result.body.data.id;
   };
   const overdue = await order("CONFIRMED", "2020-12-01");
-  const notOverdue = await order("PARTIALLY_RECEIVED", "2098-12-01");
+  const notOverdue = await order("PARTIALLY_RECEIVED", undefined);
   await order("CLOSED", "2020-12-01");
   await order("CANCELLED", "2020-12-01");
-  const scope = `supplierId=${created.supplier}&skuId=${created.sku}&buyerId=${created.buyer}&expectedDeliveryDateFrom=2098-12-10&expectedDeliveryDateTo=2098-12-10`;
+  const scope = `supplierId=${created.supplier}&skuId=${created.sku}&buyerId=${created.buyer}`;
   const query = (extra = "", auth = viewToken) => request(`${base}/outstanding?${scope}${extra}`, { method: "GET", token: auth });
 
   const page = await query("&sortBy=number&descending=false&pageSize=1");
@@ -193,6 +193,10 @@ integrationTest("Outstanding query lists only receivable orders and uses line de
   assert.deepEqual((await query("&sortBy=number&descending=false&pageSize=1&page=2")).body.data.items.map(({ id }) => id), [notOverdue]);
   assert.deepEqual((await query("&overdue=true")).body.data.items.map(({ id }) => id), [overdue]);
   assert.deepEqual((await query("&overdue=false")).body.data.items.map(({ id }) => id), [notOverdue]);
+  assert.deepEqual((await query("&expectedDeliveryDateFrom=2020-12-01&expectedDeliveryDateTo=2020-12-05"))
+    .body.data.items.map(({ id }) => id), [overdue]);
+  assert.deepEqual((await query("&expectedDeliveryDateFrom=2098-12-10")).body.data.items.map(({ id }) => id), [notOverdue]);
+  assert.deepEqual((await query("&expectedDeliveryDateTo=2020-11-30")).body.data.items, []);
   assert.equal((await query("&overdue=invalid")).status, 400);
   assert.equal((await query("&hasOutstanding=false")).status, 400);
   assert.equal((await query("", token)).status, 403);
