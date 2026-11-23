@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "decision": "Sam's temporary 2026-11-19 through Taipei day-end 2026-11-26 ordinary functional CI arrangement, PM e8ec7fc9 and b9ea7a97 for shipmentDate, and non-author Claude TL ACCEPT agentmsg 195cbb52 on exact two-file patch SHA256 b9bdab5f68c3358f6c3c57d194403380541e61daf10f08bbbb129e4eaea1054a. The CI administrator independently verifies and registers the digest.",
+  "purpose": "Expose canonical saved shipmentDate for FR-INV-008 in the existing transaction-local reader. Reject the entire source set if a selected shipment has no valid date.",
+  "data": "The single existing real MySQL case uses the same one SO, one SKU, one line and five units split between two shipments. Confirm with distinct calendar dates and inject one NULL read value into this same test for fail-closed behavior. Existing fixture structure, migrations and triggers are unchanged.",
+  "concurrency": "Single case, sequential. Existing CI jobs, shard and test concurrency unchanged.",
+  "repetitions": "Same existing functional test registration. No new discovery, repetition or capacity case.",
+  "thresholds": "Assert each saved date is returned unchanged as YYYY-MM-DD and an invalid source date fails with FULFILLMENT_DEPENDENCY_UNAVAILABLE. Existing history, amounts, quantities, lock order, permissions, coverage and 20-second limit unchanged.",
+  "trigger": "Ordinary functional PR and applicable main or schedule. No changes to workflows, triggers or capacity routing.",
+  "cost": "Same case and data. With the date assertions it ran in 1.45 to 1.48 seconds on the two local timezone configurations. No additional CI job. Incremental critical-path impact not measured.",
+  "inheritance": {
+    "receipt": ".github/test-admissions/fulfillment-invoice-source-reader.json",
+    "sha256": "75ee3e5f9ba4bb1aeead52df3c59fd78122588c566bc40a861ce407abc77b6b9",
+    "unchanged_cases": [
+      "invoice sources keep exact Sales facts and use original confirmation order within a split shipment"
+    ]
+  },
+  "files": [
+    {
+      "path": "server/test/integration/shipmentInvoiceSources.integration.test.js",
+      "mode": "100644",
+      "blob": "9d52840f0674196450f66ff72e2adb8cac0a432c",
+      "kind": "functional",
+      "cases": [
+        "invoice sources keep exact Sales facts and use original confirmation order within a split shipment"
+      ]
+    }
+  ]
+}
