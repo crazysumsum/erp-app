@@ -31,6 +31,8 @@ integrationTest("期初發票保留舊號、防重，作廢可重登，核銷後
     customerId: party.id, customerCode: party.code, customerName: party.name, active: false
   });
   assert.deepEqual(failure(await lookup(token, "NO-SUCH-CUSTOMER")), [409, "AR_CUSTOMER_NOT_FOUND", undefined]);
+  assert.deepEqual(failure(await lookup(token, "   ")), [400, "AR_INPUT_INVALID", "code"]);
+  assert.deepEqual(failure(await lookup(token, "A\tB")), [400, "AR_INPUT_INVALID", "code"]);
 
   assert.deepEqual(failure(await register(token, { amount: "65.251" })), [400, "AR_INPUT_INVALID", "amount"]);
   assert.deepEqual(failure(await register(token, { amount: "0" })), [400, "AR_INPUT_INVALID", "amount"]);

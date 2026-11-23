@@ -1,6 +1,7 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { arError } from "../../modules/ar/arErrors.js";
 import { CustomerLookupService } from "../../modules/customer/CustomerLookupService.js";
+import { CustomerNormalizationError } from "../../modules/customer/customerNormalization.js";
 import { AR_OPENING_POLICY, EMPTY, OPENING_CUSTOMER_QUERY, OPENING_CUSTOMER_RESPONSE } from "../ar/arSchemas.js";
 
 export class FindArOpeningCustomerHandler extends BaseRequestHandler {
@@ -20,7 +21,13 @@ export class FindArOpeningCustomerHandler extends BaseRequestHandler {
   }
 
   async execute(req) {
-    const customer = await this.customers.findByCode(req.input.query.code, { purpose: "ar_existing_document" });
+    let customer;
+    try {
+      customer = await this.customers.findByCode(req.input.query.code, { purpose: "ar_existing_document" });
+    } catch (error) {
+      if (error instanceof CustomerNormalizationError && error.field === "customerCode") throw arError("AR_INPUT_INVALID", { field: "code" });
+      throw error;
+    }
     if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
     return this.response({
       customerId: customer.customerId, customerCode: customer.customerCode, customerName: customer.legalName, active: customer.status === "active"
