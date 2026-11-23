@@ -41,6 +41,7 @@ const definitions = [
   ["MOVEMENT_TYPE_NOT_REVERSIBLE", 409, "這類庫存異動不可直接沖銷"],
   ["REVERSAL_NOT_ALLOWED", 409, "目前庫存狀態不允許沖銷"],
   ["OPENING_PRECHECK_STALE", 409, "期初庫存預檢已過期，請重新預檢"],
+  ["OPENING_POSITION_OCCUPIED", 409, "部分庫存位置已有結存或異動，請重新預檢"],
   ["OPENING_STATE_CONFLICT", 409, "期初庫存工作狀態已改變"],
   ["OPENING_CLOSED", 403, "系統上線後不可再匯入期初庫存"],
   ["INVENTORY_RESOURCE_NOT_FOUND", 404, "找不到指定的庫存資料"],

@@ -97,17 +97,30 @@ export function createSupplierHarness(prefix, { database = {}, importRoot = null
     for (const [sql, params] of [...h.cleanup].reverse()) await h.db.execute(sql, params);
   }
 
+  // 逐條讀 `api.registered`：彙總嘅 `api.registration.completed` 帶齊全部 route，已經接近 system logger
+  // 嘅 maxEntryBytes，超過就會被換成「[TRUNCATED: N bytes]」字串（TL 裁定 dd1580ef）。彙總仍然用作
+  // 「已經全部寫完」嘅訊號：同一個 writer 按次序寫，逐條嘅喺佢之前；讀到嘅條數要等於佢嘅 registeredApiCount。
   async function registeredSupplierRoutes() {
     const directory = path.join(h.logRoot, "system");
     for (let attempt = 0; attempt < 50; attempt += 1) {
-      for (const file of fs.existsSync(directory) ? fs.readdirSync(directory) : []) {
-        const line = fs.readFileSync(path.join(directory, file), "utf8").split("\n").find((entry) => entry.includes("\"api.registration.completed\""));
-        if (line) {
-          return JSON.parse(line).context.registeredApis
-            .filter((api) => api.path.startsWith("/api/v1/supplier"))
-            .map((api) => ({ key: `${api.method.toUpperCase()} ${api.path}`, method: api.method.toUpperCase(), path: api.path,
-              authType: api.authType, policies: api.authorizationPolicies, idempotent: api.idempotency?.enabled === true }));
+      const entries = [];
+      for (const file of fs.existsSync(directory) ? fs.readdirSync(directory).sort() : []) {
+        for (const line of fs.readFileSync(path.join(directory, file), "utf8").split("\n")) {
+          if (!line.includes("\"api.registered\"") && !line.includes("\"api.registration.completed\"")) continue;
+          // 讀到寫咗一半嘅行就略過：彙總未寫完時下一輪再讀，條數斷言仍然保證完整。
+          try { entries.push(JSON.parse(line)); } catch { /* partial line, retry next round */ }
         }
+      }
+      const completed = entries.find((entry) => entry.event === "api.registration.completed");
+      if (completed) {
+        const registered = entries.filter((entry) => entry.event === "api.registered").map((entry) => entry.context);
+        if (registered.length !== completed.context.registeredApiCount) {
+          throw new Error(`read ${registered.length} api.registered entries but registration completed with ${completed.context.registeredApiCount}`);
+        }
+        return registered
+          .filter((api) => api.path.startsWith("/api/v1/supplier"))
+          .map((api) => ({ key: `${api.method.toUpperCase()} ${api.path}`, method: api.method.toUpperCase(), path: api.path,
+            authType: api.authType, policies: api.authorizationPolicies, idempotent: api.idempotency?.enabled === true }));
       }
       await new Promise((resolve) => { setTimeout(resolve, 100); });
     }

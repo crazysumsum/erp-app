@@ -63,6 +63,8 @@
 | TASK-016 | Workbench/Invoice UI及A4/PDF | FR-011～058、FR-120～125；DES-016、024 | routes/pages/forms/source trace/polling/allowed actions/print/PDF；共用components及accessibility。 | TASK-009～015 | Vue、route、keyboard、375–1440px、visual/print、XSS；TC-042～044。 | UI可feature-off；files私有。 | MEDIUM；DoD=無client-only auth；PLANNED。 |
 | TASK-017 | Phase 2 Gate | 全Phase 2 | 完整回歸、provider contract、security、performance、UAT evidence及docs更新。 | TASK-009～016 | TC-021～045＋P1 P0 tests；UAT-001～030。 | 只在Gate後開flag。 | HIGH；DoD=PR reviewed/safe-to-merge；PLANNED。 |
 
+TASK-010 首期依據 `ar-minimal-scope-20261119/SCOPE.md` §3.1：AR 在同一 `READ COMMITTED` 交易呼叫 Fulfillment 的 `readInvoiceSourcesInTransaction`，並按出貨確認順序分攤訂單行金額。
+
 ## PHASE-003 — Credit、Receipt and Settlement
 
 - Objective / checkpoint outcome: 正式AR可用Credit及Receipt準確結清，支援Credit Balance、部分／多單核銷、重配、Void／Reversal及Shipment解除證據。
