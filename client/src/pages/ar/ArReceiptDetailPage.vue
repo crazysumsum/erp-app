@@ -17,21 +17,36 @@ import ar from "@/services/ar.js";
 const route = useRoute(), session = useSessionStore();
 const command = useCommandEvent();
 const receipt = ref(null), loading = ref(false), error = ref("");
-const invoices = ref([]), invoicesError = ref(""), amounts = reactive({});
+const INVOICE_PAGE_SIZE = 100;
+const invoices = ref([]), invoicesError = ref(""), invoicesLoading = ref(false);
+const invoicePage = ref(1), invoiceTotal = ref(0), invoiceSearch = ref(""), invoiceQuery = ref("");
+const invoicePages = computed(() => Math.max(1, Math.ceil(invoiceTotal.value / INVOICE_PAGE_SIZE)));
+const selected = reactive(new Map());
 const receiptId = computed(() => String(route.params.id));
-let controller;
+let controller, invoiceController;
 async function load({ keep = false } = {}) {
   controller?.abort();
+  invoiceController?.abort();
+  invoicesLoading.value = false;
   controller = new AbortController();
   const { signal } = controller, id = receiptId.value;
   error.value = "";
-  if (!keep) { receipt.value = null; loading.value = true; }
+  if (!keep) {
+    receipt.value = null;
+    loading.value = true;
+    invoices.value = [];
+    invoicesError.value = "";
+    invoicePage.value = 1;
+    invoiceTotal.value = 0;
+    invoiceSearch.value = invoiceQuery.value = "";
+    selected.clear();
+  }
   if (!/^[1-9]\d*$/u.test(id)) { error.value = "找不到這筆收款。"; loading.value = false; return; }
   try {
     const value = await ar.getReceipt(id, { signal });
     if (signal.aborted) return;
     receipt.value = value;
-    if (canAllocate.value) await loadInvoices(signal);
+    if (canAllocate.value) await loadInvoices();
   } catch (failure) {
     if (!signal.aborted) error.value = failure.message || "載入收款失敗";
   } finally {
@@ -39,21 +54,38 @@ async function load({ keep = false } = {}) {
   }
 }
 // 可核銷嘅發票：同客戶、同幣別、已確認而仍有未收額（契約建議嘅查詢）。
-async function loadInvoices(signal) {
+async function loadInvoices(page = invoicePage.value) {
+  invoiceController?.abort();
+  invoiceController = new AbortController();
+  const { signal } = invoiceController;
+  invoicePage.value = page;
   invoicesError.value = "";
+  invoicesLoading.value = true;
   try {
-    const { rows } = await ar.listInvoices({ customerId: receipt.value.customerId, currencyCode: receipt.value.currencyCode, outstandingOnly: true, page: 1, rowsPerPage: 100, signal });
+    const { rows, rowsNumber } = await ar.listInvoices({ customerId: receipt.value.customerId, currencyCode: receipt.value.currencyCode,
+      outstandingOnly: true, q: invoiceQuery.value, page, rowsPerPage: INVOICE_PAGE_SIZE, signal });
     if (signal.aborted) return;
+    invoiceTotal.value = rowsNumber;
+    if (page > invoicePages.value) return await loadInvoices(invoicePages.value);
     invoices.value = rows;
-    for (const key of Object.keys(amounts)) if (!rows.some((row) => String(row.id) === key)) delete amounts[key];
+    for (const row of rows) {
+      const entry = selected.get(row.id);
+      if (entry) entry.row = row;
+    }
   } catch (failure) {
     if (!signal.aborted) invoicesError.value = failure.message || "載入可核銷發票失敗";
+  } finally {
+    if (!signal.aborted) invoicesLoading.value = false;
   }
+}
+function searchInvoices() {
+  invoiceQuery.value = (invoiceSearch.value ?? "").trim();
+  return loadInvoices(1);
 }
 watch([receiptId, () => session.user?.id, () => session.permissions.join("|")], () => load(), { immediate: true });
 let generation = 0;
-watch([receiptId, () => session.user?.id], () => { generation += 1; for (const key of Object.keys(amounts)) delete amounts[key]; });
-onBeforeUnmount(() => { generation += 1; controller?.abort(); });
+watch([receiptId, () => session.user?.id], () => { generation += 1; });
+onBeforeUnmount(() => { generation += 1; controller?.abort(); invoiceController?.abort(); });
 
 const manage = computed(() => session.permissions.includes("ar.receipt.mgmt"));
 const actions = computed(() => (manage.value ? receipt.value?.allowedActions ?? [] : []));
@@ -82,9 +114,16 @@ const allocationColumns = [
 ];
 
 // 核銷輸入：逐張發票填金額；以 BigInt 萬分位計，唔用浮點。
-const entries = computed(() => invoices.value.filter((row) => (amounts[row.id] ?? "").trim() !== "").map((row) => ({ row, value: amounts[row.id].trim() })));
+const entries = computed(() => [...selected.values()]);
+const currentInvoiceIds = computed(() => new Set(invoices.value.map((row) => row.id)));
+const allocationRows = computed(() => [...entries.value.map(({ row }) => row).filter((row) => !currentInvoiceIds.value.has(row.id)), ...invoices.value]);
+function setAmount(row, value) {
+  const trimmed = (value ?? "").trim();
+  if (trimmed) selected.set(row.id, { row, value: trimmed });
+  else selected.delete(row.id);
+}
 const entryError = (row) => {
-  const value = (amounts[row.id] ?? "").trim();
+  const value = selected.get(row.id)?.value ?? "";
   if (!value) return "";
   if (!amountInputValid(value, dp.value)) return `請輸入大於零、最多 ${dp.value} 位小數的金額`;
   return toUnits(value) > toUnits(row.outstandingAmount) ? "超過發票未收額" : "";
@@ -98,7 +137,7 @@ function fill(row) {
   const units = remaining < outstanding ? remaining : outstanding;
   // 幣別小數位以下嘅尾數唔可以送（server 會拒），向下取到幣別小數位。
   const step = 10n ** BigInt(4 - dp.value), rounded = units - (units % step);
-  amounts[row.id] = rounded > 0n ? fromUnits(rounded, dp.value) : "";
+  setAmount(row, rounded > 0n ? fromUnits(rounded, dp.value) : "");
 }
 
 const ACTIONS = Object.freeze({
@@ -118,7 +157,7 @@ const locked = computed(() => busy.value || uncertain.value.length > 0);
 // 錯誤 field 係 "allocations.N.amount"：指返係邊張發票。
 function failureText(failure, payload) {
   const index = /^allocations\.(\d+)\./u.exec(failure.details?.field ?? "")?.[1];
-  const invoice = index === undefined ? null : invoices.value.find((row) => row.id === payload?.allocations?.[Number(index)]?.invoiceId);
+  const invoice = index === undefined ? null : selected.get(payload?.allocations?.[Number(index)]?.invoiceId)?.row;
   return `${failure.message || "操作失敗"}${invoice ? `（${invoice.number}）` : ""}`;
 }
 async function run(action, payload, meta = {}) {
@@ -127,7 +166,7 @@ async function run(action, payload, meta = {}) {
     const result = await command.run(payload, (body) => ACTIONS[action].send(id, body, meta), key, { action, ...meta });
     if (gen !== generation) return;
     notifySuccess(ACTIONS[action].done(result));
-    if (action === "allocate") for (const invoiceKey of Object.keys(amounts)) delete amounts[invoiceKey];
+    if (action === "allocate") selected.clear();
     await load({ keep: true });
   } catch (failure) {
     if (gen !== generation || command.isUncertain(key)) return;
@@ -189,22 +228,36 @@ async function unapply(row) {
         <q-card v-if="canAllocate" flat bordered class="q-mb-md" data-testid="ar-allocate-panel">
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">核銷到發票</h2>
-            <q-banner v-if="invoicesError" role="alert" class="bg-negative text-white">{{ invoicesError }}<template #action><q-btn flat label="重試" @click="load({ keep: true })" /></template></q-banner>
-            <p v-else-if="!invoices.length" role="status">此客戶在此幣別沒有仍有未收額的已確認發票。</p>
-            <q-list v-else separator>
-              <q-item v-for="row in invoices" :key="row.id">
+            <form class="row items-center q-gutter-sm q-mb-sm" @submit.prevent="searchInvoices">
+              <q-input v-model="invoiceSearch" label="發票編號前綴" type="search" maxlength="190" clearable :disable="locked || invoicesLoading" outlined dense />
+              <q-btn type="submit" label="搜尋發票" :disable="locked || invoicesLoading" flat />
+            </form>
+            <p v-if="invoicesLoading" role="status">載入可核銷發票…</p>
+            <q-banner v-else-if="invoicesError" role="alert" class="bg-negative text-white">{{ invoicesError }}<template #action><q-btn flat label="重試" @click="loadInvoices()" /></template></q-banner>
+            <template v-else>
+              <div class="row items-center q-gutter-sm">
+                <span role="status">{{ invoiceQuery ? "符合搜尋" : "未收發票" }}共 {{ invoiceTotal }} 張。第 {{ invoicePage }}／{{ invoicePages }} 頁</span>
+                <q-btn v-if="invoicePages > 1" flat dense label="上一頁" :disable="locked || invoicePage <= 1" @click="loadInvoices(invoicePage - 1)" />
+                <q-btn v-if="invoicePages > 1" flat dense label="下一頁" :disable="locked || invoicePage >= invoicePages" @click="loadInvoices(invoicePage + 1)" />
+              </div>
+              <p v-if="!invoices.length" role="status">{{ invoiceQuery ? "沒有符合搜尋的未收發票。" : "此客戶在此幣別沒有仍有未收額的已確認發票。" }}</p>
+            </template>
+            <q-list v-if="!invoicesLoading && !invoicesError" separator>
+              <q-item v-for="row in allocationRows" :key="row.id">
                 <q-item-section>
                   <q-item-label>{{ row.number }}，到期 {{ row.dueDate || "—" }}</q-item-label>
                   <q-item-label caption>未收額 {{ amount(row.outstandingAmount) }}／總額 {{ amount(row.totalAmount) }}</q-item-label>
+                  <q-item-label v-if="!currentInvoiceIds.has(row.id)" caption>已填金額，來自其他頁或搜尋結果</q-item-label>
                 </q-item-section>
                 <q-item-section side class="allocation-input">
-                  <q-input v-model="amounts[row.id]" :label="`${row.number} 核銷金額`" inputmode="decimal" :error="Boolean(entryError(row))" :error-message="entryError(row)" :disable="locked" outlined dense />
+                  <q-input :model-value="selected.get(row.id)?.value ?? ''" :label="`${row.number} 核銷金額`" inputmode="decimal" :error="Boolean(entryError(row))"
+                    :error-message="entryError(row)" :disable="locked" outlined dense @update:model-value="(value) => setAmount(row, value)" />
                 </q-item-section>
                 <q-item-section side><q-btn flat dense label="填入" :aria-label="`填入 ${row.number}`" :disable="locked" @click="fill(row)" /></q-item-section>
               </q-item>
             </q-list>
             <div class="row items-center q-gutter-sm q-mt-md">
-              <q-btn color="primary" label="核銷" :loading="command.isBusy(commandKey('allocate'))" :disable="!allocationReady || locked" @click="allocate" />
+              <q-btn color="primary" label="核銷" :loading="command.isBusy(commandKey('allocate'))" :disable="!allocationReady || locked || invoicesLoading || Boolean(invoicesError)" @click="allocate" />
               <span>合計 {{ receipt.currencyCode }} {{ fromUnits(totalUnits, dp) }}／可核銷 {{ amount(receipt.availableAmount) }}</span>
               <span v-if="overAvailable" role="alert" class="text-negative">合計超過可核銷額</span>
             </div>

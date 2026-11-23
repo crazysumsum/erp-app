@@ -136,6 +136,32 @@ describe("AR 收款詳情及核銷", () => {
     expect(notifySuccess).toHaveBeenCalledWith("已核銷；可核銷額尚餘 HKD 0.00。");
     expect(ar.getReceipt).toHaveBeenCalledTimes(2);
   });
+  it("核銷可翻頁及搜尋較舊發票，跨頁保留已填金額", async () => {
+    const newest = invoice(102, "100.0000", { number: "INV-2026-000102" });
+    const oldest = invoice(1, "80.0000");
+    ar.listInvoices.mockImplementation(async ({ page, q }) => {
+      if (q) return { rows: [oldest], rowsNumber: 1 };
+      return { rows: page === 2 ? [oldest] : [newest], rowsNumber: 102 };
+    });
+    ar.allocateReceipt.mockResolvedValue({ availableAmount: "0.0000" });
+    await open("/ar/receipts/5", MANAGE);
+    expect(wrapper.text()).toContain("共 102 張");
+    await input("INV-2026-000102 核銷金額").setValue("70.00");
+    await button("下一頁").trigger("click");
+    await flushPromises();
+    expect(ar.listInvoices).toHaveBeenLastCalledWith(expect.objectContaining({ customerId: 3, currencyCode: "HKD", outstandingOnly: true, page: 2, rowsPerPage: 100 }));
+    expect(input("INV-2026-000102 核銷金額").element.value).toBe("70.00");
+    expect(input("INV-2026-000001 核銷金額").exists()).toBe(true);
+    await input("發票編號前綴").setValue(" INV-2026-000001 ");
+    await button("搜尋發票").trigger("click");
+    await flushPromises();
+    expect(ar.listInvoices).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, q: "INV-2026-000001" }));
+    expect(wrapper.text()).toContain("共 1 張");
+    await input("INV-2026-000001 核銷金額").setValue("80.00");
+    await button("核銷").trigger("click");
+    await flushPromises();
+    expect(ar.allocateReceipt).toHaveBeenCalledWith("5", expect.objectContaining({ version: 4, allocations: [{ invoiceId: 102, amount: "70.00" }, { invoiceId: 1, amount: "80.00" }] }));
+  });
   it("填入：發票未收額有幣別以下嘅尾數時向下取到幣別小數位", async () => {
     await open("/ar/receipts/5", MANAGE);
     await wrapper.findAll("button").filter((node) => node.text() === "填入")[1].trigger("click");
