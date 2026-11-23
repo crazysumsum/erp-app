@@ -81,7 +81,7 @@ async function printInvoice() {
 @media print {
   html:has(.ar-invoice-print), body:has(.ar-invoice-print) { overflow: visible !important; height: auto !important; }
   html:has(.ar-invoice-print) body { position: static !important; page: ar-invoice; }
-  body:has(.ar-invoice-print) :is(.q-header, .q-drawer, .q-drawer__backdrop),
+  body:has(.ar-invoice-print) :is(.q-header, .q-drawer, .q-drawer__backdrop, .q-notifications),
   .ar-invoice-print :is(.invoice-print-actions, .invoice-print-status) { display: none !important; }
   body:has(.ar-invoice-print) .q-page-container,
   .ar-invoice-print .invoice-print-content { padding: 0 !important; }
