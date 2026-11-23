@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1926,
+  "revision": 1927,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -81,7 +81,7 @@
     "TASK-050": "PENDING",
     "TASK-051": "PENDING",
     "TASK-052": "DONE",
-    "TASK-053": "IN_PROGRESS"
+    "TASK-053": "DONE"
   },
   "approvals": [
     {
@@ -14671,6 +14671,14 @@
       "idempotency_key": "ext-purchase-b-pr-b77-32da2f",
       "status": "PLANNED",
       "source_ref": "Standing actualSam PR-A thenPR-B normaldelivery authorization; currentPRB candidateDesign/Plan approved, all25localnecessarygroups/nativecoverage/browser/review passed. Fresh main1e573 confirmed aftertests, no remoteBbranch or priorPR. Publication only, NOT finalSam unseen-source approval/DONE/merge. Rawproofexportnotauthorized: only approved source/contracts and minimizedsynthetictechnicalmetadata published; rawlogs/XML/keys/coverage/screens remainLOCAL."
+    },
+    {
+      "id": "EXT-PURCHASE-B-POSTMERGE-DISPOSITION-20261119",
+      "kind": "HUMAN_POST_MERGE_DISPOSITION",
+      "target": "inventory_management/TASK-053 PR #278 head 0982257abce6cfadb5423b16069d567808a9b083 merge bf0dde783c90b755c950e2f60fab7ad4326ea27d",
+      "idempotency_key": "purchase-b-sam-postmerge-20261119-054b89d2",
+      "status": "CONFIRMED",
+      "source_ref": "Sam 2026-11-19 「按已合併接受」 in PM session 5b99cb0e-6406-4d22-9c9b-c2a424ff3836, relayed by Claude PM agentmsg 054b89d2. Accepts PR #278 as merged. No pre-merge source review is recorded by this disposition. Functional UAT remains pending."
     }
   ],
   "evidence_files": [
