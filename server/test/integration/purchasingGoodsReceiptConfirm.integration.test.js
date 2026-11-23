@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test, { after } from "node:test";
+import mysql from "mysql2/promise";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
@@ -221,7 +222,7 @@ integrationTest("TASK-032 C4 Inventory 第二個 detail 失敗（停用 Bin、�
   await assertUntouched(f, id, poRow, before);
 });
 
-integrationTest("TASK-032 C5 Inventory 結果少一行或多一行、Audit 失敗、PO progress 失敗都令真實 Inventory 寫入一齊 rollback", async () => {
+integrationTest("TASK-032 C5 Inventory 結果少一行或多一行、Audit 失敗、PO progress 失敗都令真實 Inventory 寫入一齊 rollback", async (t) => {
   const f = await fixture();
   const poRow = await f.order(), id = await f.draft(poRow.id), before = await snapshot(f, poRow);
   const original = InventoryPostingService.prototype.postPurchaseReceiptBatchInTransaction;
@@ -246,12 +247,17 @@ integrationTest("TASK-032 C5 Inventory 結果少一行或多一行、Audit 失�
   } finally { PurchasingAuditService.prototype.record = record; }
   await assertUntouched(f, id, poRow, before);
 
-  await f.db.query(`CREATE TRIGGER test_gr_confirm_progress_failure BEFORE UPDATE ON purchase_order_lines FOR EACH ROW
+  // Binary logging requires the fixture administrator for trigger DDL. The HTTP application keeps its own DB account.
+  assert.ok(process.env.DB_ADMIN_USER, "DB_ADMIN_USER is required for the rollback trigger fixture");
+  const ddl = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
+    socketPath: process.env.DB_SOCKET_PATH, database: process.env.DB_NAME, user: process.env.DB_ADMIN_USER, password: process.env.DB_ADMIN_PASSWORD });
+  t.after(() => ddl.end());
+  await ddl.query(`CREATE TRIGGER test_gr_confirm_progress_failure BEFORE UPDATE ON purchase_order_lines FOR EACH ROW
     BEGIN IF NEW.id = ${Number(poRow.lineB)} AND NEW.gross_received_base_quantity <> OLD.gross_received_base_quantity THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Synthetic PO progress failure'; END IF; END`);
   try {
     assert.equal((await f.confirm(id, 1, twoLines(f, poRow))).status, 500);
-  } finally { await f.db.query("DROP TRIGGER test_gr_confirm_progress_failure"); }
+  } finally { await ddl.query("DROP TRIGGER test_gr_confirm_progress_failure"); }
   await assertUntouched(f, id, poRow, before);
   assert.equal((await f.confirm(id, 1, twoLines(f, poRow))).status, 200);
 });
