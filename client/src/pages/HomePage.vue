@@ -44,15 +44,12 @@ onMounted(loadHealth);
 
 <template>
   <div>
-    <PageHeader />
+    <PageHeader subtitle="請從側欄選單進入工作畫面。" />
 
     <div class="q-px-md">
       <q-card style="max-width: 520px">
         <q-card-section class="row items-center justify-between">
-          <div>
-            <div class="text-overline text-primary">開發環境</div>
-            <h2 class="text-h6 q-ma-none">系統狀態</h2>
-          </div>
+          <h2 class="text-h6 q-ma-none">系統狀態</h2>
           <q-btn
             color="primary"
             icon="refresh"

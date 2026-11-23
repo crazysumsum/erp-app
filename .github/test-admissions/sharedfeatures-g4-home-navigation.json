@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "decision": "PM assigned G4 for branch-only preparation on 2026-11-23 (agentmsg 31e12f6b). Functional-test admission suspension applies through 2026-11-26. CI administrator to precheck; publication and PR timing after UAT are to be arranged under the policy then in force.",
+  "purpose": "Prevent a misleading home-page environment label and ensure both error screens provide a working link back home.",
+  "data": "Two component fixtures (/403 and /missing); the existing home-page fixture adds two text assertions.",
+  "concurrency": "Existing client functional runner settings; no new workers or jobs.",
+  "repetitions": "One check per error view and the existing home test once per normal functional run.",
+  "thresholds": "Rendered home guidance with no development-only label; each error screen links to / and clicking navigates home. Existing thresholds unchanged.",
+  "trigger": "Existing client functional discovery; PR deferred until after UAT and CI administrator scheduling.",
+  "cost": "Two new component cases and two assertions in one existing case; estimated under one second incremental test execution, no new job. No capacity workload.",
+  "files": [
+    {
+      "path": "client/src/framework/auth/ForbiddenView.vue",
+      "mode": "100644",
+      "blob": "5fa447870368e6110f1d574c8f255df9e73f2573",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/framework/routing/NotFoundView.vue",
+      "mode": "100644",
+      "blob": "725572efa800a52323ca88ffe0321487fdfc61f4",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/HomePage.vue",
+      "mode": "100644",
+      "blob": "c58ce9500f9ce21574e4a509f2aafaeaabf91e92",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/pages/errorNavigation.test.js",
+      "mode": "100644",
+      "blob": "e2458e641da116a1236c33a7cc7e8c704f9b3d35",
+      "kind": "functional",
+      "cases": [
+        "/403 提供可返回首頁的連結",
+        "/missing 提供可返回首頁的連結"
+      ]
+    },
+    {
+      "path": "client/test/pages/home.test.js",
+      "mode": "100644",
+      "blob": "b44e8b0a6d9a91b974a1d090f67820a3db3b38da",
+      "kind": "functional",
+      "cases": [
+        "mounts with Quasar registered",
+        "reads the API base URL from the shared config",
+        "PageHeader 由當前路由 meta.title 出返標題"
+      ]
+    }
+  ]
+}
