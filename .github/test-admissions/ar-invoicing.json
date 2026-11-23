@@ -50,7 +50,11 @@
       "path": "server/test/ar/arShipmentFixture.js",
       "mode": "100644",
       "blob": "e8f156117e39bab7f8b705ef1d130ccdb5b1fdfb",
-      "kind": "support"
+      "kind": "functional",
+      "cases": [
+        "分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號",
+        "發票確認取年度流水號；取消只限草稿；作廢須原因而且須先解除全部核銷，作廢後號碼保留並離開帳齡表"
+      ]
     }
   ]
 }
