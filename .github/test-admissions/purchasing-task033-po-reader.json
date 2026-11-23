@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "decision": "Sam's explicit decision in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f (call_cb2041d1c4bd4425b8747c97b7046ed2, relayed by the PM in agentmsg 7f5cada8) approving ADMISSION_PROPOSAL.md sha256 3e97d26155aafb688e04140cc2073eb0f1de1b69a0fdc2b0aa2567d83ea2663b: 11 new cases (7 unit, 1 table, 3 integration), I1 and I2 rewritten, 3 existing cases with 6 assertion lines changed, at most 6 POs and 5 GR rows per case; enablement policy limited B, with no shared or production 0119 or enablement under this decision. The author does not approve this receipt; the trusted approval administrator must independently verify that answer and these blobs before registering the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending.",
+  "purpose": "The production ever-confirmed reader answers exactly true or false from a fully validated goods_receipts rowset under the PO root lock, or throws a typed 503; withdraw confirmation and cancel succeed only when the PO never had a confirmed GR; allowedActions lists cancel and withdrawConfirmation from the has_confirmed_receipt flag Refresh the PO inquiry source pin to account for the purchase UOM projection and operation lookup; existing ever-confirmed tests continue to run.",
+  "data": "Per case at most 6 synthetic POs and 5 goods_receipts rows (G6); other integration cases at most 3 POs and 1 GR; unit cases use a fake tx with at most 2 inline rows Existing case registration and fixture counts are unchanged.",
+  "concurrency": "1",
+  "repetitions": "1",
+  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
+  "trigger": "The existing ci.yml triggers: unit cases in the existing server test job, integration cases in the existing MySQL integration shards; every admitted PR dispatch, every push to main and the weekly schedule; no new job",
+  "cost": "Not measured; no capacity workload",
+  "files": [
+    {
+      "path": "server/test/purchasing/goodsReceiptFacts.test.js",
+      "mode": "100644",
+      "blob": "d1f79f715c9b0d3052afea3ee88cc3db710a1c39",
+      "kind": "functional",
+      "cases": [
+        "TASK-045 U1 CONFIRMED 缺 confirmed_at 即 throw，旁邊有合法已確認行都一樣",
+        "TASK-045 U2 DRAFT 帶 confirm_event_id 即 throw",
+        "TASK-045 U3 未知狀態即 throw",
+        "TASK-045 U4 讀取失敗變成 typed 503，原本嘅錯誤做 cause",
+        "TASK-045 U5 空 rowset 回 false，用 PO id 做參數、FOR SHARE 讀",
+        "TASK-045 U6 合法 CONFIRMED 回 true",
+        "TASK-045 U7 REVERSED／PARTIALLY_REVERSED 而且 confirmed_by 係 NULL 都回 true"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/purchasingInquiryActions.test.js",
+      "mode": "100644",
+      "blob": "9e1b2216dfcffb43fc538280d215137f04d06330",
+      "kind": "functional",
+      "cases": [
+        "TASK-045 allowedActions：未有確認收貨先列 cancel，CONFIRMED 另加 withdrawConfirmation"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingLifecycle.integration.test.js",
+      "mode": "100644",
+      "blob": "facb73d99644110dc5c17c4d8124f4cf8e1efea9",
+      "kind": "functional",
+      "cases": [
+        "TASK-025 I1 撤回確認：從未有 GR 就成功，PO 回 DRAFT，寫一行 history 同 Audit",
+        "TASK-025 I2 取消 DRAFT／PENDING／CONFIRMED：從未有 GR 就成功，待審批申請作廢",
+        "TASK-025 I3 Close Remaining：揀行同全部、錯誤、權限、原因；冇 Inventory 效果，只有轉 CLOSED 先寫 history",
+        "TASK-025 I4 Close Remaining 同一 key 同內容再送：回原本嘅 response，唔再關多次",
+        "TASK-045 G6 六張 PO 喺 PO lock 之下逐個問 reader：false、false、false、true、true、true",
+        "TASK-045 有 CONFIRMED GR 嘅 PO 撤回確認：PO_STATE_CONFLICT，PO 唔變",
+        "TASK-045 CONFIRMED PO 只有 DRAFT GR：撤回確認成功"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingInquiry.integration.test.js",
+      "mode": "100644",
+      "blob": "61efbd6d11ed0967ac69a2ada924d74571f897fb",
+      "kind": "functional",
+      "cases": [
+        "列表預設按更新時間同 ID 倒序，分頁穩定；summary 係交易快照同安全欄位，allowedActions 跟 DB 權限",
+        "每個 filter 都會篩，日期範圍包頭包尾，條件之間係 AND",
+        "q 搵 PO 編號、Supplier code／名稱、SKU code／名稱、barcode 同 Supplier Reference，已停用主檔都搵到；通配符只係普通字",
+        "Outstanding 只計已確認、收緊貨嘅 PO（HD-017 4A）；進度分開計，超收唔抵銷其他行，風險有文字碼",
+        "列表 query 數量固定，唔跟 PO 同 Line 數量增加",
+        "詳情回交易快照同逐行進度，目前主資料另外放；只回有分別嘅，唔露 Supplier 內部欄位",
+        "名稱配中超過 100 個時，完全相符嘅 Supplier code 同 SKU code 唔會畀上限截走",
+        "唔存在嘅 ID 回一致 404；撤咗權嘅 token 讀唔到"
+      ]
+    },
+    {
+      "path": "server/test/integration/purchasingApprovalCommands.integration.test.js",
+      "mode": "100644",
+      "blob": "2bb3962eb925a70fe6238d12ac094e3c52edee0a",
+      "kind": "functional",
+      "cases": [
+        "審批關閉：建單同確認都寫 status history；帶審批人被拒",
+        "審批開啟：一定要指定另一名有權限嘅人；提交後 PO 凍結；批准直接 Confirmed",
+        "拒絕同撤回都回 Draft，舊申請用唔返；可以再提交新申請",
+        "批准時主檔或人員失效：拒絕，申請保留 Pending，撤回之後改得返",
+        "批准同撤回同時發生：只有一個成功，結果一致",
+        "設定：讀要 settings 權限；改要裝置簽署同密碼；只影響之後嘅提交",
+        "待我審批：只回指派畀自己嘅 Pending，舊嘅排先；有分頁同篩選；要 view＋approval",
+        "詳情：待審批回完整快照；allowedActions 跟操作者；決定之後留歷史",
+        "審批人選項：要 mgmt；只有 approval 權限嘅人，排除自己；requireApproval 跟設定"
+      ]
+    },
+    {
+      "path": "server/src/modules/purchasing/GoodsReceiptFacts.js",
+      "mode": "100644",
+      "blob": "e813589eda10b13513ade73e137c0de1b567a42d",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/PurchaseOrderService.js",
+      "mode": "100644",
+      "blob": "2b9ca7279e95237e13816e9518e9d993b2e61d6c",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/purchasing/PurchasingInquiryService.js",
+      "mode": "100644",
+      "blob": "8808fa916260782b4e304640520934369a6bbe78",
+      "kind": "support",
+      "cases": []
+    }
+  ]
+}
