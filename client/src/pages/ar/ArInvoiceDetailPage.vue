@@ -129,6 +129,7 @@ async function ask(action) {
           <span>版本 {{ invoice.version }}</span>
           <q-btn v-for="action in actions.filter((name) => ACTIONS[name])" :key="action" :label="ACTIONS[action].label" :color="action === 'confirm' ? 'primary' : undefined"
             :loading="command.isBusy(commandKey(action))" :disable="busy || uncertain.length > 0" @click="ask(action)" />
+          <q-btn v-if="invoice.status === 'CONFIRMED' && invoice.number && invoice.lines.length && !invoice.openingReference" flat label="列印預覽" :to="`/ar/invoices/${invoice.id}/print`" />
           <q-btn flat label="返回發票列表" to="/ar/invoices" />
         </div>
         <q-card flat bordered class="q-mb-md">

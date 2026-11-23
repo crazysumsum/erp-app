@@ -12,6 +12,7 @@ export default {
     return httpClient.get("/api/v1/ar-invoices", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getInvoice(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-invoices/${id}`, { signal }); },
+  getInvoicePrint(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-invoices/${id}/print`, { signal }); },
   createInvoice(payload) { return write("/api/v1/ar-invoices", payload); },
   // 所問出貨之中已在有效發票上嘅；server 最多收 100 個 ID。
   listInvoicedShipments(shipmentIds, { signal } = {}) {
