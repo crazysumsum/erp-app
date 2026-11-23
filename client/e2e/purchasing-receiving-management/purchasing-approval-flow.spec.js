@@ -18,6 +18,7 @@ const supplierCode = `PW-SUP-${run}`.toUpperCase();
 const skuCode = `PW-SKU-${run}`.toUpperCase();
 const warehouseCode = `PW-WH-${run}`.toUpperCase();
 const binCode = "PW-01";
+const lotNumber = `PW-LOT-${run}`;
 const users = Object.fromEntries(["U1", "U2", "U3"].map((k) => [k, {
   username: `pw-${k.toLowerCase()}-${run}`, name: `PW ${k} ${run}`, password: `Pw-${k}-${run}-Aa1!`, wrongPassword: `Wrong-${k}-${run}-Aa1!`
 }]));
@@ -39,7 +40,7 @@ test.beforeAll(async () => {
   createUser(`pw-boot-${run}`, `PW Boot ${run}`, `Pw-boot-${run}-Aa1!`);
   await db.execute("UPDATE users SET status = 'disabled' WHERE username = ?", [`pw-boot-${run}`]);
   for (const u of Object.values(users)) createUser(u.username, u.name, u.password);
-  for (const [key, perms] of [["U1", ["purchasing.view", "purchasing.mgmt", "receiving.operation"]], ["U2", ["purchasing.view", "purchasing.approval"]], ["U3", ["purchasing.settings"]]]) {
+  for (const [key, perms] of [["U1", ["purchasing.view", "purchasing.mgmt", "receiving.operation", "inventory.view"]], ["U2", ["purchasing.view", "purchasing.approval"]], ["U3", ["purchasing.settings"]]]) {
     const [role] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`pw-${key.toLowerCase()}-${run}`, now]);
     await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)", [role.insertId, perms]);
     await db.execute("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username = ?", [role.insertId, users[key].username]);
@@ -52,7 +53,7 @@ test.beforeAll(async () => {
     display_name: `PW Supplier ${run}`, supplier_name_key: `pw supplier ${run}`, default_currency_code: "HKD", default_payment_term_id: null, status: "active", created_at: now, updated_at: now });
   const itemId = await ins("items", { name: `PW Item ${run}`, status: "active", created_at: now, updated_at: now });
   const uomId = await ins("item_uoms", { code: `PW${run}`.toUpperCase().slice(0, 20), name: "EA", status: "active", created_at: now, updated_at: now });
-  skuId = await ins("item_skus", { item_id: itemId, sku_code: skuCode, sku_name: `PW SKU ${run}`, status: "active", tracking_policy: "none",
+  skuId = await ins("item_skus", { item_id: itemId, sku_code: skuCode, sku_name: `PW SKU ${run}`, status: "active", tracking_policy: "batch",
     purchasable: 1, inventory_tracked: 1, min_receipt_life_days: null, created_at: now, updated_at: now });
   await ins("item_sku_uoms", { sku_id: skuId, uom_id: uomId, to_base_factor: 1, is_base: 1, created_at: now, updated_at: now });
   const warehouseId = await ins("inventory_warehouses", { warehouse_code: warehouseCode, normalized_code: warehouseCode.toLowerCase(), warehouse_name: `PW Warehouse ${run}`, created_at: now, updated_at: now });
@@ -142,7 +143,7 @@ async function createPo(page, key) {
   await expect(date).toHaveValue(orderDate);
   await pickLookup(page, { label: "搜尋貨品", kind: "skus", text: skuCode, optionPrefix: `${skuCode} — ` });
   await page.getByRole("button", { name: "新增明細", exact: true }).click();
-  await page.getByLabel("數量 1 *", { exact: true }).fill("1");
+  await page.getByLabel("數量 1 *", { exact: true }).fill(key === "A" ? "2" : "1");
   await page.getByLabel("單價 1 *", { exact: true }).fill("2.50");
   const created = response(page, "POST", "/api/v1/purchase-orders/create");
   await page.getByRole("button", { name: "儲存草稿", exact: true }).click();
@@ -308,6 +309,10 @@ test("PO approval and receipt: settings, submit, withdraw/resubmit, approve thro
     const [[{ quantity }]] = await db.execute("SELECT COALESCE(SUM(on_hand_quantity), 0) AS quantity FROM inventory_stock_balances WHERE sku_id = ?", [skuId]);
     return Number(quantity);
   };
+  const movementCount = async () => {
+    const [[{ count }]] = await db.execute("SELECT COUNT(*) AS count FROM inventory_movements WHERE sku_id = ?", [skuId]);
+    return Number(count);
+  };
   expect(await onHand()).toBe(0);
   const orderPath = `/purchasing/purchase-orders/${po.A.id}`;
   await page.goto(orderPath);
@@ -324,27 +329,51 @@ test("PO approval and receipt: settings, submit, withdraw/resubmit, approve thro
   await page.waitForURL(`**${receiptPath}/edit`);
   await page.getByLabel("加入採購單行").click();
   await page.getByRole("option", { name: /第 1 行/u }).click();
-  await page.getByLabel("數量 *", { exact: true }).fill("1");
+  const quantity = page.getByLabel("數量 *", { exact: true });
+  await quantity.fill("3");
   await page.getByLabel("倉庫 *", { exact: true }).click();
   await page.getByRole("option", { name: `${warehouseCode} — PW Warehouse ${run}`, exact: true }).click();
   await page.getByLabel("庫位 *", { exact: true }).click();
   await page.getByRole("option", { name: binCode, exact: true }).click();
-  await page.getByRole("button", { name: "確認收貨並入庫", exact: true }).click();
-  await expect(page.getByText("首期不能在系統內撤回或沖銷")).toBeVisible();
-  pending = response(page, "POST", `/api/v1/goods-receipts/${receipt.id}/confirm`);
-  await page.getByRole("button", { name: "確認入庫", exact: true }).click();
-  res = await pending;
+  await page.getByLabel("批號 *", { exact: true }).fill(lotNumber);
+  const confirmPath = `/api/v1/goods-receipts/${receipt.id}/confirm`;
+  const confirmReceipt = async () => {
+    await page.getByRole("button", { name: "確認收貨並入庫", exact: true }).click();
+    await expect(page.getByText("首期不能在系統內撤回或沖銷")).toBeVisible();
+    const confirmation = response(page, "POST", confirmPath);
+    await page.getByRole("button", { name: "確認入庫", exact: true }).click();
+    return confirmation;
+  };
+  await expect(page.getByText(/預計超收 1/u)).toBeVisible();
+  res = await confirmReceipt();
+  expect(res.status()).toBe(409);
+  expect((await res.json()).error.code).toBe("OVER_RECEIPT_REASON_REQUIRED");
+  await expect(page.getByLabel("超收原因（超收時必填）")).toHaveAttribute("aria-invalid", "true");
+  await expect(page).toHaveURL(new RegExp(`${receiptPath}/edit$`, "u"));
+  expect([await onHand(), await movementCount()]).toEqual([0, 0]);
+
+  await quantity.fill("1");
+  res = await confirmReceipt();
   expect(res.status()).toBe(200);
   await page.waitForURL(`**${receiptPath}`);
   await expect(page.getByText("已確認", { exact: true }).first()).toBeVisible();
-  expect(await onHand()).toBe(1);
-  const [[{ count }]] = await db.execute("SELECT COUNT(*) AS count FROM inventory_movements WHERE sku_id = ?", [skuId]);
-  expect(Number(count)).toBe(1);
+  const movementLabel = page.getByText(/^庫存異動 #\d+$/u);
+  await expect(movementLabel).toBeVisible();
+  const movementId = (await movementLabel.innerText()).split("#")[1];
+  expect([await onHand(), await movementCount()]).toEqual([1, 1]);
   await page.goBack();
   await page.waitForURL(`**${orderPath}`);
   await expect(orderReceipts.getByRole("link", { name: new RegExp(receipt.number, "u") })).toHaveAttribute("href", receiptPath);
-  await expect(orderReceipts.getByText(/^收貨：.*已全部收貨/u)).toBeVisible();
-  expect(unexpectedResponses).toEqual([]);
+  await expect(orderReceipts.getByText(/^收貨：.*部分收貨/u)).toBeVisible();
+
+  await page.goto(`/inventory/stocks?q=${encodeURIComponent(skuCode)}&skuId=${skuId}`);
+  const stockSummary = page.locator('[aria-label="SKU 數量摘要"]');
+  await expect(stockSummary).toContainText(/總 On Hand\s*1/u);
+  await expect(page.getByRole("row").filter({ hasText: lotNumber })).toBeVisible();
+  await page.goto(`/inventory/movements?skuId=${skuId}&movementId=${movementId}`);
+  await expect(page.getByRole("heading", { name: `Movement ${movementId} 詳情` })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: skuCode }).getByText("入 1", { exact: true })).toBeVisible();
+  expect(unexpectedResponses).toEqual([`409 ${confirmPath}`]);
   await context.close();
   expect(browserErrors).toEqual([]);
 });
