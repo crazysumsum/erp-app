@@ -1,0 +1,7 @@
+skuId,expectedSkuVersion,skuCode,skuName,itemName,categoryName,brandName,defaultTrackingPolicy,suggestedPriceAmount,purchasable,sellable,baseUomCode
+,,UAT-A1,UAT 箱售零出 A1,UAT 箱售零出 A1,UAT 庫存樣本,UAT 樣本品牌,none,100.0000,true,true,EA
+,,UAT-A2,UAT 箱售零出 A2,UAT 箱售零出 A2,UAT 庫存樣本,UAT 樣本品牌,none,144.0000,true,true,EA
+,,UAT-B1,UAT 批效 B1,UAT 批效 B1,UAT 庫存樣本,UAT 樣本品牌,batch_expiry,35.0000,true,true,EA
+,,UAT-B2,UAT 批效 B2,UAT 批效 B2,UAT 庫存樣本,UAT 樣本品牌,batch_expiry,42.0000,true,true,EA
+,,UAT-C1,UAT 件售 C1,UAT 件售 C1,UAT 庫存樣本,UAT 樣本品牌,none,12.5000,true,true,EA
+,,UAT-C2,UAT 件售 C2,UAT 件售 C2,UAT 庫存樣本,UAT 樣本品牌,none,8.7500,true,true,EA

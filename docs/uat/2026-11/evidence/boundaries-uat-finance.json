@@ -1,0 +1,17 @@
+{
+  "name": "uat-finance",
+  "denied": [
+    "/sales/orders/new",
+    "/purchasing/approvals",
+    "/purchasing/settings",
+    "/purchasing/purchase-orders/new",
+    "/inventory/adjustments",
+    "/inventory/warehouses",
+    "/suppliers/approvals",
+    "/customers/new",
+    "/system/roles"
+  ],
+  "actions": [
+    "queue: no create action"
+  ]
+}

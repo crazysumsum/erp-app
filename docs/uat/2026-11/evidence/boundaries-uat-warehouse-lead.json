@@ -1,0 +1,17 @@
+{
+  "name": "uat-warehouse-lead",
+  "denied": [
+    "/sales/orders/new",
+    "/purchasing/approvals",
+    "/purchasing/settings",
+    "/purchasing/purchase-orders/new",
+    "/inventory/adjustments",
+    "/suppliers/approvals",
+    "/customers/new",
+    "/system/roles"
+  ],
+  "actions": [
+    "PO detail: no approval button",
+    "warehouse list: no create action"
+  ]
+}

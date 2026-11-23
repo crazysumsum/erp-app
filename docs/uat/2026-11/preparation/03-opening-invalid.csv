@@ -1,0 +1,4 @@
+warehouseCode,binCode,skuCode,lotNumber,expiryDate,stockStatus,baseQuantity
+UAT-MAIN,UAT-PICK,UAT-B1,,2027-01-15,AVAILABLE,3
+UAT-SECOND,UAT-PICK,UAT-C1,,,AVAILABLE,4
+UAT-SECOND,UAT-PICK,UAT-C1,,,AVAILABLE,6

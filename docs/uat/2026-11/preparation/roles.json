@@ -1,0 +1,9 @@
+{
+  "uat-sales": ["銷售", "sales.view sales.mgmt sales.operation customer.view item.view"],
+  "uat-warehouse": ["倉務", "fulfillment.view fulfillment.operation purchasing.view receiving.operation inventory.view inventory.operation item.view sales.view"],
+  "uat-warehouse-lead": ["倉務主管", "fulfillment.view fulfillment.operation purchasing.view receiving.operation inventory.view inventory.operation item.view sales.view receiving.expiry.override"],
+  "uat-buyer": ["採購", "purchasing.view purchasing.mgmt supplier.view item.view inventory.view"],
+  "uat-approver": ["採購主管", "purchasing.view purchasing.approval purchasing.settings supplier.view item.view"],
+  "uat-finance": ["財務", "ar.view ar.invoice.mgmt ar.receipt.mgmt fulfillment.view customer.view sales.view business_master.view"],
+  "uat-inventory": ["庫存主管", "inventory.view inventory.mgmt inventory.adjust inventory.operation"]
+}

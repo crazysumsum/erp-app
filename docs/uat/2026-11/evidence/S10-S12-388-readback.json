@@ -1,0 +1,27 @@
+{
+  "receipt": "RCT-2026-000001",
+  "allocations": [
+    {
+      "invoice": "INV-2026-000001",
+      "applied": "225.00",
+      "outstanding": "0.00",
+      "active": true
+    },
+    {
+      "invoice": "INV-2026-000002",
+      "applied": "100.00",
+      "outstanding": "0.00",
+      "active": true
+    }
+  ],
+  "amount": "HKD 325.00",
+  "applied": "HKD 325.00",
+  "available": "HKD 0.00",
+  "aging": {
+    "customerId": 1,
+    "currencyCode": "HKD",
+    "asOfDate": "2026-11-23",
+    "items": [],
+    "totals": []
+  }
+}

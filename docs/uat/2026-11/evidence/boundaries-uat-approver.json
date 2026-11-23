@@ -1,0 +1,15 @@
+{
+  "name": "uat-approver",
+  "denied": [
+    "/sales/orders",
+    "/sales/orders/new",
+    "/fulfillment/queue",
+    "/purchasing/purchase-orders/new",
+    "/inventory/adjustments",
+    "/inventory/warehouses",
+    "/suppliers/approvals",
+    "/customers/new",
+    "/system/roles"
+  ],
+  "actions": []
+}

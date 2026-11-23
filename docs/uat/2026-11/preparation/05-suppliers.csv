@@ -1,0 +1,3 @@
+﻿supplierId,supplierCode,supplierName,displayName,defaultCurrencyCode,paymentTermCode,website,generalPhone,generalEmail,notes,addressLabel,addressPurpose,addressLine1,addressLine2,addressLine3,city,stateRegion,postalCode,countryCode,addressPhone,contactName,contactPurpose,jobTitle,department,contactEmail,contactPhone,contactMobile,identifierType,issuerCountryCode,identifierValue
+,UAT-SUP-A,UAT 正常供應商有限公司,,HKD,UAT-NET30,,,,,Head office,ordering,1 UAT Road,,,Hong Kong,,,HK,,UAT Buyer A,orders,,,uat-a@example.test,,,,,
+,UAT-SUP-B,UAT 封鎖測試供應商有限公司,,HKD,UAT-NET30,,,,,Head office,ordering,2 UAT Road,,,Hong Kong,,,HK,,UAT Buyer B,orders,,,uat-b@example.test,,,,,

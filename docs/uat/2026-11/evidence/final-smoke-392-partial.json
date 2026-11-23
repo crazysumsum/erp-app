@@ -1,0 +1,26 @@
+[
+  {
+    "sku": 1,
+    "day": "2026-11-27",
+    "order": "PO-202611-000003",
+    "status": "PARTIALLY_RECEIVED"
+  },
+  {
+    "sku": 1,
+    "day": "2026-11-28",
+    "order": null,
+    "status": null
+  },
+  {
+    "sku": 4,
+    "day": "2026-11-29",
+    "order": "PO-202611-000003",
+    "status": "PARTIALLY_RECEIVED"
+  },
+  {
+    "sku": 4,
+    "day": "2026-11-28",
+    "order": null,
+    "status": null
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "results": [
+    [
+      "SUPPLIER_EXCEPTION_REASON_REQUIRED",
+      409
+    ],
+    [
+      "BLOCKED_SUPPLIER_QUARANTINE_REQUIRED",
+      409
+    ],
+    [
+      "EXPIRY_OVERRIDE_DENIED",
+      403
+    ]
+  ],
+  "movements": "17"
+}

@@ -1,0 +1,13 @@
+{
+  "id": 4,
+  "number": "GR-202611-000004",
+  "lot": "SMOKE-L1",
+  "qty": "60",
+  "before": "22\nUAT-A1\t168\nUAT-B2\t100",
+  "after": "24\nUAT-A1\t192\nUAT-B2\t160",
+  "rejected": "LOT_REQUIRED",
+  "moves": [
+    "庫存異動 #23",
+    "庫存異動 #24"
+  ]
+}

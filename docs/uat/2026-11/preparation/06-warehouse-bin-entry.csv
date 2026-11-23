@@ -1,0 +1,4 @@
+﻿warehouseCode,warehouseName,binCode,binName
+UAT-MAIN,UAT 主倉,UAT-PICK,主倉揀貨位
+UAT-MAIN,UAT 主倉,UAT-HOLD,主倉隔離位
+UAT-SECOND,UAT 副倉,UAT-PICK,副倉揀貨位

@@ -1,0 +1,18 @@
+{
+  "name": "uat-buyer",
+  "denied": [
+    "/sales/orders",
+    "/sales/orders/new",
+    "/fulfillment/queue",
+    "/purchasing/approvals",
+    "/purchasing/settings",
+    "/inventory/adjustments",
+    "/suppliers/approvals",
+    "/customers/new",
+    "/system/roles"
+  ],
+  "actions": [
+    "PO detail: no approval button",
+    "warehouse list: no create action"
+  ]
+}

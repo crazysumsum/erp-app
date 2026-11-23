@@ -1,0 +1,14 @@
+{
+  "counts_sales_po_invoices_receipts_movements_users": [
+    "0",
+    "0",
+    "0",
+    "0",
+    "8",
+    "8"
+  ],
+  "db": "erp_uat_rehearse_20261123",
+  "revision": "d434d74c1f20ff707a8c9da1c4e1249930348359",
+  "backup": "20261123-143612",
+  "hashes_verified": 8
+}

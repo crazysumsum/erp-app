@@ -1,0 +1,15 @@
+{
+  "name": "uat-inventory",
+  "denied": [
+    "/sales/orders",
+    "/sales/orders/new",
+    "/fulfillment/queue",
+    "/purchasing/approvals",
+    "/purchasing/settings",
+    "/purchasing/purchase-orders/new",
+    "/suppliers/approvals",
+    "/customers/new",
+    "/system/roles"
+  ],
+  "actions": []
+}
