@@ -24,6 +24,7 @@ import { BusinessMasterRepository } from "../../src/modules/businessMaster/Busin
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
 import { readInvoiceSourcesInTransaction } from "../../src/modules/fulfillment/readInvoiceSourcesInTransaction.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
+import { secondShipment } from "../ar/arShipmentFixture.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
 
 const nativeTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -50,9 +51,9 @@ async function arFixture(t, { lineAmount, unitPrice }) {
     businessMaster: new BusinessMasterProvider({ database: f.database, repository: new BusinessMasterRepository() }) };
   const invoices = new ArInvoiceService({ ...shared, readInvoiceSources: readInvoiceSourcesInTransaction }), receipts = new ArReceiptService(shared);
   const inquiry = new ArInquiryService({ database: f.database, time });
-  const confirmation = new ShipmentConfirmationService(f.options);
   /** 把一張出貨草稿確認為 SHIPPED。 */
-  const ship = (id) => f.execute(async () => {
+  const ship = (id, shipmentDate = TODAY) => f.execute(async () => {
+    const confirmation = new ShipmentConfirmationService({ ...f.options, time: { ...f.options.time, fileDate: () => shipmentDate } });
     const completed = await confirmation.completeConfirmation(await confirmation.startConfirmation(id, { eventId: randomUUID(), version: 1 }));
     assert.equal(completed.outcome, "SHIPPED");
   });
@@ -64,28 +65,14 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   return { f, claims, label, invoices, receipts, inquiry, ship, run, create, act, first, count: async (sql, values) => Number((await f.db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total) };
 }
 
-/** 同一訂單行餘下的 2 件：另一張履約、揀貨及出貨草稿（與 Fulfillment reader 的測試同一做法）。 */
-async function secondShipment({ f }) {
-  const [[order]] = await f.db.query("SELECT version FROM sales_orders WHERE id = ?", [f.s.orderId]);
-  const work = await f.execute(() => f.fulfillments.create({ eventId: randomUUID(), salesOrderId: f.s.orderId, salesOrderVersion: Number(order.version),
-    lines: [{ salesOrderLineId: f.s.lineId, plannedBaseQuantity: "2" }] }));
-  const [[balance]] = await f.db.query("SELECT version FROM inventory_stock_balances WHERE id = ?", [f.balance]);
-  const line = Number(work.fulfillment.lines[0].id);
-  const allocated = await f.execute(() => f.allocator.allocate(work.outcome.id, { eventId: randomUUID(), version: 1, lines: [{ fulfillmentLineId: line, overrideReason: "",
-    allocations: [{ inventoryReservationId: Number(f.reservationId), inventoryBalanceId: Number(f.balance), balanceVersion: Number(balance.version), baseQuantity: "2" }] }] }));
-  const allocation = allocated.fulfillment.allocations.items[0];
-  await f.execute(() => f.picking.confirmPick(work.outcome.id, { eventId: randomUUID(), version: 2, lines: [{ fulfillmentLineId: line, shortPickReason: "",
-    allocations: [{ fulfillmentAllocationId: Number(allocation.id), inventoryAllocationVersion: allocation.inventoryVersion, pickedBaseQuantity: "2" }] }] }));
-  return (await f.execute(() => f.service.createDraft(work.outcome.id, f.body()))).outcome.id;
-}
-
 nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號", async (t) => {
   const a = await arFixture(t, { lineAmount: "0.1000", unitPrice: "0.0143" }), { f } = a;
   // 未出貨的草稿不可開票。
   await assert.rejects(a.create([a.first]), code("SHIPMENT_STATE_CONFLICT"));
-  const second = await secondShipment(a);
-  await a.ship(second); // 2 件的一張先確認出貨。
+  const second = await secondShipment(f);
+  await a.ship(second, "2023-11-13"); // 2 件的一張先確認出貨。
   await a.ship(a.first); // 3 件的一張後確認。
+  await assert.rejects(a.create([second, a.first], { invoiceDate: "2023-11-13" }), code("AR_INVOICE_BEFORE_SHIPMENT_DATE"));
   assert.equal(await a.count("ar_invoices"), 0);
   // 把訂單行改為訂 7 件（仍有 2 件未出），令「較早出貨的數量」在數字上分辨得出：
   // 先出的 2 件取 0.1000 × 2/7 = 0.0286；後出的 3 件從剩餘的 0.0714 及 5 件取 3/5 = 0.0428。若不計較早的出貨，會是 0.1000 × 3/7 = 0.0429。
@@ -114,7 +101,19 @@ nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計�
   const cancelled = await a.act("cancel", alone.id, { version: 1 });
   assert.deepEqual([cancelled.status, cancelled.version], ["CANCELLED", 2]);
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: String(a.first) })).items, []);
-  const both = await a.create([second, a.first]);
+  // 模擬修正前已存的舊草稿。拒絕確認後，草稿和兩張出貨的占用保留。
+  const legacy = await a.create([second, a.first], { invoiceDate: TODAY });
+  await f.db.query("UPDATE ar_invoices SET invoice_date = ? WHERE id = ?", ["2023-11-13", legacy.id]);
+  await assert.rejects(a.act("confirm", legacy.id, { version: 1 }), code("AR_INVOICE_BEFORE_SHIPMENT_DATE"));
+  const rejected = await a.inquiry.getInvoice({ claims: a.claims, id: legacy.id });
+  assert.deepEqual([rejected.status, rejected.version, rejected.number], ["DRAFT", 1, null]);
+  assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: `${a.first},${second}` })).items.map((row) => row.invoiceId),
+    [legacy.id, legacy.id]);
+  const legacyCancelled = await a.act("cancel", legacy.id, { version: 1 });
+  assert.equal(legacyCancelled.status, "CANCELLED");
+  assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: `${a.first},${second}` })).items, []);
+
+  const both = await a.create([second, a.first], { invoiceDate: TODAY });
   assert.equal(both.totalAmount, "0.0700"); // 0.0428 + 0.0286 = 0.0714，按幣別小數位 half-up。
   const lines = (await a.inquiry.getInvoice({ claims: a.claims, id: both.id })).lines;
   assert.deepEqual(lines.map((row) => [row.lineNo, row.shipmentId, row.quantity, row.lineAmount]), [[1, Number(a.first), "3", "0.0428"], [2, Number(second), "2", "0.0286"]]);
@@ -143,13 +142,14 @@ nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計�
 
   // 每個成功命令一行 Audit；被拒絕的命令沒有留下操作列。
   const [audit] = await f.db.query("SELECT action FROM ar_audit_logs ORDER BY id");
-  assert.deepEqual(audit.map((row) => row.action), ["invoice.created", "invoice.cancelled", "invoice.created", "invoice.confirmed", "invoice.voided", "invoice.created", "invoice.confirmed"]);
-  assert.equal(await a.count("ar_operation_requests"), 7);
+  assert.deepEqual(audit.map((row) => row.action), ["invoice.created", "invoice.cancelled", "invoice.created", "invoice.cancelled",
+    "invoice.created", "invoice.confirmed", "invoice.voided", "invoice.created", "invoice.confirmed"]);
+  assert.equal(await a.count("ar_operation_requests"), 9);
 });
 
 nativeTest("到期日由付款條款現行日數計算，可改而須原因；沒有條款時必須輸入；兩個同時開同一張出貨的請求只有一個成功；權限在交易內重驗", async (t) => {
   const a = await arFixture(t, { lineAmount: "5.0000", unitPrice: "1.0000" }), { f } = a;
-  await a.ship(a.first);
+  await a.ship(a.first, "2023-11-10");
   const bare = (fields) => a.run("create", { shipmentIds: [Number(a.first)], ...fields });
 
   // 訂單沒有付款條款：必須輸入到期日，而且不可早於發票日期。
