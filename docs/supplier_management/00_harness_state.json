@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 545,
+  "revision": 546,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
-    "design": "addac69507c6188c074351e55db47ac84cf6cbcd2d1f02ec6b6cc5b2bbd5fcf5",
-    "plan": "3818ec73f7857041dcf355a0eb44be4526cce6507362816840d07c60310fe51c",
+    "design": "fdc16405f0dcacb22f618e0419ff86d9001946893318d91da992dd88348a9db2",
+    "plan": "a27f6b041600f071ddaf483e9a2a5dcfb7daa57818b0e09bd56e42795a87fa90",
     "code_commit": "1ae35d4c93c61d0fa7b5d74e8a129a13b394293d",
     "source_fingerprint": "c855c64ed56534fa46d6ed1017c421ba7ebec57f60454a34ba469796636fc2cb",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/codex-supplier-uat-ui-fixes",
@@ -3302,6 +3302,43 @@
       "scope": [
         "supplier-management",
         "client/package.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PR-368-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "On 2026-11-23 Sam answered 「接受」 in the PM session to 「Supplier #368 的設計及計劃新版本，是否按 TL 建議接受？」, as relayed by claude-erp-app-pm-01 in agentmsg 514059b4. The question named design fdc16405f0dcacb22f618e0419ff86d9001946893318d91da992dd88348a9db2 and plan a27f6b041600f071ddaf483e9a2a5dcfb7daa57818b0e09bd56e42795a87fa90. Scope: design 03 v1 Supplier-to-Purchasing checker wiring, the conditions that block Code correction and archive, and HTTP 409 on lock conflicts; development task 05 wiring notes T08/T22. References: PR #368; TL rulings 94762244 and 26fada00; TL baseline review a517199e. The approval is limited to those versions and deltas and does not grant Technical Acceptance.",
+      "recorded_at": "2026-11-23T01:28:01Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "fdc16405f0dcacb22f618e0419ff86d9001946893318d91da992dd88348a9db2",
+      "code_commit": "4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30",
+      "scope": [
+        "PR-368",
+        "v1 Supplier-to-Purchasing checker wiring",
+        "Code correction and archive blocking conditions",
+        "HTTP 409 on checker lock conflicts"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PR-368-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "On 2026-11-23 Sam answered 「接受」 in the PM session to 「Supplier #368 的設計及計劃新版本，是否按 TL 建議接受？」, as relayed by claude-erp-app-pm-01 in agentmsg 514059b4. The question named design fdc16405f0dcacb22f618e0419ff86d9001946893318d91da992dd88348a9db2 and plan a27f6b041600f071ddaf483e9a2a5dcfb7daa57818b0e09bd56e42795a87fa90. Scope: design 03 v1 Supplier-to-Purchasing checker wiring, the conditions that block Code correction and archive, and HTTP 409 on lock conflicts; development task 05 wiring notes T08/T22. References: PR #368; TL rulings 94762244 and 26fada00; TL baseline review a517199e. The approval is limited to those versions and deltas and does not grant Technical Acceptance.",
+      "recorded_at": "2026-11-23T01:28:01Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a27f6b041600f071ddaf483e9a2a5dcfb7daa57818b0e09bd56e42795a87fa90",
+      "code_commit": "4b6ae2bcd0e7803e08ae8ce46e5d48b402106e30",
+      "scope": [
+        "PR-368",
+        "T08 checker wiring note",
+        "T22 checker wiring note"
       ],
       "expires_at": null
     }
@@ -12519,5 +12556,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "2026-11-20: PR #368 merged (4b6ae2bc) and PR #377 merged (1ae35d4c) with functional CI 44669170664. Phase 1 (target UAT 2026-11-26): Supplier functional close-out only. The Supplier UAT UI branch links to the detail page after create, prevents resubmitting an unchanged successful form, and corrects lifecycle success copy. Its functional admission receipt was prechecked; registration and a PR are pending push authorization. The formal design and plan hashes recorded before #368 differ from the hashes observed after its documented checker changes. Reconcile that baseline before using it for formal acceptance. AR client work handed over to codex-erp-app-apar-01 on 2026-11-20 (Sam’s decision)."
+  "next_safe_action": "2026-11-20: PR #368 merged (4b6ae2bc) and PR #377 merged (1ae35d4c) with functional CI 44669170664. Phase 1 (target UAT 2026-11-26): Supplier functional close-out only. The Supplier UAT UI branch links to the detail page after create, prevents resubmitting an unchanged successful form, and corrects lifecycle success copy. Its functional admission receipt was prechecked; registration and a PR are pending push authorization. On 2026-11-23 Sam accepted the exact #368 design and plan deltas (APPROVAL-PR-368-DESIGN and APPROVAL-PR-368-PLAN). Technical Acceptance remains subject to its own requirements. AR client work handed over to codex-erp-app-apar-01 on 2026-11-20 (Sam’s decision)."
 }
