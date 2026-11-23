@@ -7,7 +7,7 @@
   "repetitions": "1",
   "thresholds": "All cases pass; exact equality on amounts, statuses, versions and numbers; coverage floors unchanged; no timing threshold.",
   "trigger": "Existing ci.yml triggers and discovery only: the existing server MySQL integration shards and server test job. No new job, schedule or dispatch. No capacity or performance workload.",
-  "cost": "Local run: about 2 s per isolated-database case (4 s for the file), about 1.2 s for the HTTP file, under 0.1 s for the unit file; not measured in CI. No new job.",
+  "cost": "FR-INV-008 local MySQL run: sum of test case durations about 3.1 s for arInvoiceFromShipments and 6.1 s for arInvoices, including two isolated HTTP databases. The unit cases take under 0.1 s. CI time not measured. No new job.",
   "files": [
     {
       "path": "server/test/integration/arInvoiceFromShipments.integration.test.js",
