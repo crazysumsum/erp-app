@@ -5,6 +5,19 @@ export const MAX_INVOICE_SHIPMENTS = 20; // 一張發票最多 20 張出貨（TL
 const PERMISSION = "ar.invoice.mgmt";
 const invalid = (field) => arError("AR_INPUT_INVALID", { field });
 
+function assertInvoiceDate(invoiceDate, shipments) {
+  for (const { shipmentDate } of shipments) {
+    if (typeof shipmentDate !== "string") throw new TypeError("Invoice source must include a shipment date");
+    if (invoiceDate < shipmentDate) throw arError("AR_INVOICE_BEFORE_SHIPMENT_DATE", { field: "invoiceDate" });
+  }
+}
+
+async function draftShipmentIds(tx, invoiceId, version) {
+  const [rows] = await tx.query(`SELECT DISTINCT l.shipment_id FROM ar_invoice_lines l JOIN ar_invoices i ON i.id = l.invoice_id
+    WHERE i.id = ? AND i.status = 'DRAFT' AND i.version = ? ORDER BY l.shipment_id`, [invoiceId, version]);
+  return rows.map(({ shipment_id }) => String(shipment_id));
+}
+
 /** Half-up 到 `step`（以萬分之一為單位）的倍數。 */
 const roundHalfUp = (units, step) => (units + step / 2n) / step * step;
 const currencyStep = (decimalPlaces) => 10n ** BigInt(4 - decimalPlaces);
@@ -72,9 +85,9 @@ export class ArInvoiceService {
         const customer = await this.customers(tx).findById(Number(customerId), { purpose: "invoice_existing_shipment" });
         if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
         const currency = await this.businessMaster.assertCurrencyUsableInTransaction(tx, { code: currencyCode, purpose: "history" });
-        // 發票日期預設當日，不可在未來（FR-INV-008、BR-011）。「不早於最晚來源出貨日」要 reader 提供出貨日期，待 PM 協調。
         const today = this.time.fileDate(this.time.at(nowMs)), invoiceDate = request.invoiceDate ?? today;
         if (invoiceDate > today) throw arError("AR_DATE_IN_FUTURE", { field: "invoiceDate" });
+        assertInvoiceDate(invoiceDate, shipments);
         const due = await this.#dueDate(tx, shipments, invoiceDate, request);
 
         const lines = [];
@@ -115,7 +128,7 @@ export class ArInvoiceService {
 
   /** 確認：取號，形成應收。 */
   confirm(command) {
-    return this.#transition(command, { commandType: "CONFIRM_INVOICE", from: "DRAFT", action: "invoice.confirmed" }, async (tx, invoice, { actor, nowMs }) => {
+    return this.#transition(command, { commandType: "CONFIRM_INVOICE", from: "DRAFT", action: "invoice.confirmed", checkShipmentDate: true }, async (tx, invoice, { actor, nowMs }) => {
       const number = await nextDocumentNumber(tx, { documentType: "INVOICE", time: this.time, nowMs });
       return { number, changes: { status: "CONFIRMED", invoice_number: number, confirmed_by: actor.id, confirmed_by_label: actor.username, confirmed_at: nowMs } };
     });
@@ -152,15 +165,27 @@ export class ArInvoiceService {
   }
 
   /** 只改狀態的命令：鎖發票、驗版本及來源狀態、寫入 `changes`；`release` 時在同一交易釋放出貨行。 */
-  #transition({ claims, invoiceId, input, context }, { commandType, from, action, needsReason = false, release = false }, changesFor) {
+  #transition({ claims, invoiceId, input, context }, { commandType, from, action, needsReason = false, release = false, checkShipmentDate = false }, changesFor) {
     const id = positiveId(invoiceId, "invoiceId"), body = onlyFields(input, ["eventId", "version", ...(needsReason ? ["reason"] : [])]);
     const request = { version: positiveId(body.version, "version"), ...(needsReason ? { reason: validReason(body.reason) } : {}) };
     return this.commands.run({ claims, permission: PERMISSION, commandType, targetType: "INVOICE", targetId: id, eventId: eventId(body.eventId), payload: request, context },
       async (tx, command) => {
-        const [[invoice]] = await tx.query("SELECT id, invoice_number, status, version, customer_id, allocated_amount FROM ar_invoices WHERE id = ? FOR UPDATE", [id]);
+        // 確認時依出貨 → 發票的鎖序取得來源，鎖住發票後再核對實際來源。
+        const shipmentIds = checkShipmentDate ? await draftShipmentIds(tx, id, request.version) : [];
+        const shipments = shipmentIds.length ? await this.readInvoiceSources(tx, { shipmentIds }) : [];
+        const [[invoice]] = await tx.query(`SELECT id, invoice_number, status, version, customer_id, allocated_amount,
+          DATE_FORMAT(invoice_date, '%Y-%m-%d') AS invoice_date FROM ar_invoices WHERE id = ? FOR UPDATE`, [id]);
         if (!invoice) throw arError("AR_INVOICE_NOT_FOUND");
         if (Number(invoice.version) !== request.version) throw arError("VERSION_CONFLICT", { currentVersion: Number(invoice.version) });
         if (invoice.status !== from) throw arError("AR_STATE_CONFLICT");
+        if (checkShipmentDate) {
+          const currentShipmentIds = await draftShipmentIds(tx, id, request.version);
+          if (!currentShipmentIds.length || currentShipmentIds.length !== shipmentIds.length ||
+              currentShipmentIds.some((shipmentId, index) => shipmentId !== shipmentIds[index])) {
+            throw arError("AR_STATE_CONFLICT");
+          }
+          assertInvoiceDate(invoice.invoice_date, shipments);
+        }
         const { changes, number = invoice.invoice_number } = await changesFor(tx, invoice, command, request);
         const version = request.version + 1;
         await tx.query("UPDATE ar_invoices SET ? WHERE id = ?", [{ ...changes, version, updated_at: command.nowMs }, id]);
