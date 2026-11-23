@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Sam's November 19 blanket decision documented in AGENTS.md permits functional test edits through November 26 with functional CI and one non-author review. PM agentmsg 8b86a9eb authorized the TC-094 fixture change after the investigation of PR #387 run 45105138776. CI registration is controlled by the trusted admission administrator.",
+  "purpose": "Make TC-094 wait for MySQL to release the killed worker's job row before advancing the test clock and checking recovery. Exiting the child process can precede rollback completion, causing the recovery claim to skip the job and leave it in the queue for TC-095.",
+  "data": "Unchanged: one job of three rows for each of the existing before-commit and after-commit fault points. TC-095 and the two catalogued capacity cases are unchanged; the latter remain excluded from routine CI.",
+  "concurrency": "The existing worker process and database connections. A short transaction waits for the existing job lock and releases it before recovery. No additional worker or concurrent task.",
+  "repetitions": "Unchanged: one before-commit and one after-commit fault injection in TC-094.",
+  "thresholds": "All original checks are retained, including recovery of all three rows and exactly-once Supplier creation. No timeout, skip rule, coverage floor or capacity threshold change.",
+  "trigger": "Existing server functional regression shard discovery. No workflow, runner, frequency or workload changes.",
+  "cost": "Two primary-key reads in existing worker-fault scenarios. No new job; rollback wait is bounded by the existing transaction timeout. Incremental CI overhead has not been measured.",
+  "files": [
+    {
+      "path": "server/test/integration/supplierImport.integration.test.js",
+      "mode": "100644",
+      "blob": "846e5f4021fb40430cebb379e3a905777f4af8a9",
+      "kind": "mixed",
+      "cases": [
+        "TC-094 (IMP-009): TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once",
+        "TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes precheck against 2,000 Suppliers well inside the job timeout",
+        "TASK-045 (HD-048 3): each row, job lock included, finishes far inside DB_TRANSACTION_TIMEOUT_MS"
+      ],
+      "capacityIds": ["audit-17", "audit-18"]
+    },
+    {
+      "path": "server/test-support/supplierImportCrashChild.js",
+      "mode": "100644",
+      "blob": "8f743b150b1d40ab53fc20e4a91ecb3ff3efb5ba",
+      "kind": "support"
+    }
+  ]
+}

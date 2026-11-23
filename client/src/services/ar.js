@@ -18,6 +18,18 @@ export default {
     if (!shipmentIds.length) return Promise.resolve([]);
     return httpClient.get("/api/v1/ar-invoiced-shipments", { params: { shipmentIds: shipmentIds.join(",") }, signal }).then(({ items }) => items);
   },
+  listReceipts({ signal, ...query } = {}) {
+    return httpClient.get("/api/v1/ar-receipts", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+  getReceipt(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-receipts/${id}`, { signal }); },
+  createReceipt(payload) { return write("/api/v1/ar-receipts", payload); },
+  confirmReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/confirm`, payload); },
+  cancelReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/cancel`, payload); },
+  voidReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/void`, payload); },
+  allocateReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/allocations`, payload); },
+  unapplyAllocation(id, allocationId, payload) { return write(`/api/v1/ar-receipts/${id}/allocations/${allocationId}/unapply`, payload); },
+  // 只做今日現況，唔分頁；唔同幣別唔可以相加。
+  getAging({ signal, ...query } = {}) { return httpClient.get("/api/v1/ar-aging", { params: listParams(query), signal }); },
   confirmInvoice(id, payload) { return write(`/api/v1/ar-invoices/${id}/confirm`, payload); },
   cancelInvoice(id, payload) { return write(`/api/v1/ar-invoices/${id}/cancel`, payload); },
   voidInvoice(id, payload) { return write(`/api/v1/ar-invoices/${id}/void`, payload); }
