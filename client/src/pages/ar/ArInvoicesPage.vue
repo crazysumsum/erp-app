@@ -8,7 +8,7 @@ import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
-import { invoiceStatusLabels, money, statusColors, timestamp } from "@/components/ar/arPresentation.js";
+import { invoiceOutstandingText, invoiceStatusLabels, money, statusColors, timestamp } from "@/components/ar/arPresentation.js";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
 import ar from "@/services/ar.js";
@@ -72,7 +72,7 @@ function reset() { router.replace({ query: {} }); }
         <template #body-cell-customer="{ row }"><EllipsisCell :text="`${row.customerCode} — ${row.customerName}`" max-width="160px" /></template>
         <template #body-cell-dueDate="{ row }"><q-td>{{ row.dueDate || "—" }}</q-td></template>
         <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ money(row.totalAmount, row.currencyDecimalPlaces) }}</q-td></template>
-        <template #body-cell-outstandingAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ money(row.outstandingAmount, row.currencyDecimalPlaces) }}</q-td></template>
+        <template #body-cell-outstandingAmount="{ row }"><q-td class="text-right">{{ invoiceOutstandingText(row) }}</q-td></template>
         <template #body-cell-updatedAt="{ row }"><q-td>{{ timestamp(row.updatedAt) }}</q-td></template>
         <template #body-cell-actions="{ row }"><q-td class="text-right"><q-btn flat dense label="查看" :aria-label="`查看 ${row.number || `草稿 ${row.id}`}`" :to="`/ar/invoices/${row.id}`" /></q-td></template>
         <template #no-data><p role="status" class="q-ma-none">沒有符合條件的發票；請調整搜尋條件。</p></template>

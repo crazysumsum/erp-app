@@ -8,7 +8,7 @@ import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
-import { allocationStatusLabels, invoiceStatusLabels, money, quantityText, statusColors, timestamp } from "@/components/ar/arPresentation.js";
+import { allocationStatusLabels, invoiceOutstandingText, invoiceStatusLabels, money, quantityText, statusColors, timestamp } from "@/components/ar/arPresentation.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { confirm, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
@@ -55,7 +55,7 @@ const overview = computed(() => {
     ["發票日期", value.invoiceDate], ["到期日", value.dueDate ? `${value.dueDate}${value.dueDateOverridden ? `（手動：${value.dueDateReason}）` : ""}` : "—"],
     ["付款條款", value.paymentTermCode ? `${value.paymentTermCode} — ${value.paymentTermName}` : "—"],
     // 總額直接用 server 嘅 totalAmount：各行 lineAmount 有 4 位小數，相加唔一定等於總額（Sam 2026-11-19「採用 A」）。
-    ["總額", amount(value.totalAmount)], ["已核銷", amount(value.allocatedAmount)], ["未收額", amount(value.outstandingAmount)],
+    ["總額", amount(value.totalAmount)], ["已核銷", amount(value.allocatedAmount)], ["未收額", invoiceOutstandingText(value)],
     ["建立", `${value.createdByLabel}，${timestamp(value.createdAt)}`],
     ...(value.confirmedAt ? [["確認", `${value.confirmedByLabel}，${timestamp(value.confirmedAt)}`]] : []),
     ...(value.voidedAt ? [["作廢", `${value.voidedByLabel}，${timestamp(value.voidedAt)}`], ["作廢原因", value.voidReason]] : [])
