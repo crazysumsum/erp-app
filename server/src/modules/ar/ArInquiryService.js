@@ -75,7 +75,8 @@ export class ArInquiryService {
   /** 發票詳情連同發票行及其核銷記錄。 */
   async getInvoice({ claims, id }) {
     const [[row]] = await this.database.query(`SELECT ${INVOICE}, payment_term_code_snapshot, payment_term_name_snapshot, due_date_overridden, due_date_reason, notes,
-      void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at FROM ar_invoices WHERE id = ?`, [id]);
+      void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at,
+      billing_address_snapshot <> '' AS has_billing_address_snapshot FROM ar_invoices WHERE id = ?`, [id]);
     if (!row) throw arError("AR_INVOICE_NOT_FOUND");
     const [lines] = await this.database.query(`SELECT id, line_no, shipment_id, shipment_line_id, sales_order_id, sales_order_line_id, sku_code_snapshot, sku_name_snapshot,
       base_uom_code_snapshot, sales_uom_code_snapshot, to_base_factor_snapshot, quantity, unit_price_snapshot, line_amount
@@ -85,6 +86,7 @@ export class ArInquiryService {
     const time = (value) => value === null ? null : Number(value);
     return {
       ...invoiceSummary(row, claims?.permissions ?? []), paymentTermCode: row.payment_term_code_snapshot, paymentTermName: row.payment_term_name_snapshot,
+      hasBillingAddressSnapshot: Number(row.has_billing_address_snapshot) === 1,
       dueDateOverridden: Boolean(row.due_date_overridden), dueDateReason: row.due_date_reason, notes: row.notes, voidReason: row.void_reason,
       createdByLabel: row.created_by_label, confirmedByLabel: row.confirmed_by_label, confirmedAt: time(row.confirmed_at), voidedByLabel: row.voided_by_label, voidedAt: time(row.voided_at),
       lines: lines.map((line) => ({ id: Number(line.id), lineNo: Number(line.line_no), shipmentId: Number(line.shipment_id), shipmentLineId: Number(line.shipment_line_id),

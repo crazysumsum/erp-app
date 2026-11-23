@@ -5,6 +5,7 @@ import InvoicePrintSheet from "@/components/ar/ArInvoicePrintSheet.vue";
 it("列印版顯示帳單地址、來源單號、銷售單位、快照單價及伺服器總額", () => {
   const wrapper = mount(InvoicePrintSheet, { props: {
     issuerName: "Example Trading",
+    issuerHeader: "10 Example Street\nHong Kong\ninvoice-qa@example.invalid",
     paymentInstructions: "Example payment instructions",
     footer: "Example invoice footer",
     invoice: {
@@ -16,6 +17,8 @@ it("列印版顯示帳單地址、來源單號、銷售單位、快照單價及�
     }
   } });
   expect(wrapper.get("h2").text()).toContain("INV-2026-000042");
+  expect(wrapper.get("header").text()).toContain("10 Example Street\nHong Kong");
+  expect(wrapper.get("header").text()).toContain("invoice-qa@example.invalid");
   expect(wrapper.get("address").text()).toContain("42 Bill Road");
   expect(wrapper.get("tbody tr").text()).toContain("SO-42");
   expect(wrapper.get("tbody tr").text()).toContain("SHP-42");

@@ -3,6 +3,7 @@ import { money, quantityText } from "@/components/ar/arPresentation.js";
 
 defineProps({
   issuerName: { type: String, required: true },
+  issuerHeader: { type: String, default: "" },
   paymentInstructions: { type: String, default: "" },
   footer: { type: String, default: "" },
   invoice: { type: Object, required: true }
@@ -13,6 +14,7 @@ defineProps({
   <article class="invoice-print-sheet" aria-label="發票預覽">
     <header>
       <p class="text-h6 q-ma-none">{{ issuerName }}</p>
+      <p v-if="issuerHeader" class="invoice-print-company-text q-ma-none">{{ issuerHeader }}</p>
       <h2 class="text-h5 q-mt-xs q-mb-md">發票 {{ invoice.number }}</h2>
       <dl class="invoice-print-summary">
         <div>
@@ -58,7 +60,7 @@ defineProps({
           </tr>
         </thead>
         <tbody>
-          <tr v-for="line in invoice.lines" :key="line.id">
+          <tr v-for="line in invoice.lines" :key="line.lineNo">
             <td>{{ line.lineNo }}</td>
             <td>{{ line.skuCode }} — {{ line.skuName }}</td>
             <td>{{ quantityText(line) }}</td>
@@ -78,11 +80,13 @@ defineProps({
         </tfoot>
       </table>
     </div>
-    <section v-if="paymentInstructions" class="invoice-print-payment">
-      <h3 class="text-subtitle1 text-weight-bold q-mb-none">付款資料</h3>
-      <p>{{ paymentInstructions }}</p>
-    </section>
-    <footer v-if="footer" class="invoice-print-footer">{{ footer }}</footer>
+    <div v-if="paymentInstructions || footer" class="invoice-print-end">
+      <section v-if="paymentInstructions" class="invoice-print-payment">
+        <h3 class="text-subtitle1 text-weight-bold q-mb-none">付款資料</h3>
+        <p>{{ paymentInstructions }}</p>
+      </section>
+      <footer v-if="footer" class="invoice-print-footer">{{ footer }}</footer>
+    </div>
   </article>
 </template>
 
@@ -98,14 +102,14 @@ caption { text-align: start; font-weight: 600; padding-block-end: .35em; }
 th, td { border-block-end: 1px solid var(--app-border); padding: .5em; text-align: start; vertical-align: top; }
 .text-right { text-align: end; }
 .line-number { inline-size: 3em; }
-.invoice-print-payment, .invoice-print-footer { white-space: pre-line; }
+.invoice-print-company-text, .invoice-print-payment, .invoice-print-footer { white-space: pre-wrap; }
 
 @media print {
   .invoice-print-sheet { page: ar-invoice; max-inline-size: none; margin: 0; background: white; color: black; font-size: 10pt; line-height: 1.35; }
   .invoice-print-table { overflow: visible; }
   table { min-inline-size: 0; table-layout: fixed; }
-  th, td { border-block-end-color: #bdbdbd; padding: .36em .45em; }
-  header, tr, .invoice-print-payment, .invoice-print-footer { break-inside: avoid; }
+  th, td { border-block-end-color: #bdbdbd; padding: .32em .45em; }
+  header, tr, .invoice-print-end { break-inside: avoid; }
   thead { display: table-header-group; }
   tfoot { display: table-row-group; }
 }

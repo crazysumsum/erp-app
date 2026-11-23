@@ -71,6 +71,7 @@ async function printInvoice() {
         <template v-if="validId" #action><q-btn flat label="重新載入" @click="load" /></template>
       </q-banner>
       <ArInvoicePrintSheet v-else-if="invoice" :invoice="invoice" :issuer-name="invoice.issuerName"
+        :issuer-header="invoice.issuerHeader"
         :payment-instructions="invoice.paymentInstructions" :footer="invoice.footer" />
     </section>
   </div>
