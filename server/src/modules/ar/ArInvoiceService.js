@@ -180,7 +180,8 @@ export class ArInvoiceService {
         if (invoice.status !== from) throw arError("AR_STATE_CONFLICT");
         if (checkShipmentDate) {
           const currentShipmentIds = await draftShipmentIds(tx, id, request.version);
-          if (currentShipmentIds.length !== shipmentIds.length || currentShipmentIds.some((shipmentId, index) => shipmentId !== shipmentIds[index])) {
+          if (!currentShipmentIds.length || currentShipmentIds.length !== shipmentIds.length ||
+              currentShipmentIds.some((shipmentId, index) => shipmentId !== shipmentIds[index])) {
             throw arError("AR_STATE_CONFLICT");
           }
           assertInvoiceDate(invoice.invoice_date, shipments);

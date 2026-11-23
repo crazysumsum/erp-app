@@ -42,7 +42,7 @@
     {
       "path": "server/test/ar/arHttpFixture.js",
       "mode": "100644",
-      "blob": "0e39293da17645b1f56ae388a4cb684b95c7d4ce",
+      "blob": "d8364ef5aea4f0cd8d03c46a54c266f980724ecd",
       "kind": "functional",
       "cases": [
         "Shared HTTP fixture for the AR integration files: 4 synthetic users, 1 extra currency, SQL helpers for customers and invoices; registers no case of its own"

@@ -24,6 +24,7 @@ import { BusinessMasterRepository } from "../../src/modules/businessMaster/Busin
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
 import { readInvoiceSourcesInTransaction } from "../../src/modules/fulfillment/readInvoiceSourcesInTransaction.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
+import { secondShipment } from "../ar/arShipmentFixture.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
 
 const nativeTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -64,26 +65,11 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   return { f, claims, label, invoices, receipts, inquiry, ship, run, create, act, first, count: async (sql, values) => Number((await f.db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total) };
 }
 
-/** 同一訂單行餘下的 2 件：另一張履約、揀貨及出貨草稿（與 Fulfillment reader 的測試同一做法）。 */
-async function secondShipment({ f }) {
-  const [[order]] = await f.db.query("SELECT version FROM sales_orders WHERE id = ?", [f.s.orderId]);
-  const work = await f.execute(() => f.fulfillments.create({ eventId: randomUUID(), salesOrderId: f.s.orderId, salesOrderVersion: Number(order.version),
-    lines: [{ salesOrderLineId: f.s.lineId, plannedBaseQuantity: "2" }] }));
-  const [[balance]] = await f.db.query("SELECT version FROM inventory_stock_balances WHERE id = ?", [f.balance]);
-  const line = Number(work.fulfillment.lines[0].id);
-  const allocated = await f.execute(() => f.allocator.allocate(work.outcome.id, { eventId: randomUUID(), version: 1, lines: [{ fulfillmentLineId: line, overrideReason: "",
-    allocations: [{ inventoryReservationId: Number(f.reservationId), inventoryBalanceId: Number(f.balance), balanceVersion: Number(balance.version), baseQuantity: "2" }] }] }));
-  const allocation = allocated.fulfillment.allocations.items[0];
-  await f.execute(() => f.picking.confirmPick(work.outcome.id, { eventId: randomUUID(), version: 2, lines: [{ fulfillmentLineId: line, shortPickReason: "",
-    allocations: [{ fulfillmentAllocationId: Number(allocation.id), inventoryAllocationVersion: allocation.inventoryVersion, pickedBaseQuantity: "2" }] }] }));
-  return (await f.execute(() => f.service.createDraft(work.outcome.id, f.body()))).outcome.id;
-}
-
 nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號", async (t) => {
   const a = await arFixture(t, { lineAmount: "0.1000", unitPrice: "0.0143" }), { f } = a;
   // 未出貨的草稿不可開票。
   await assert.rejects(a.create([a.first]), code("SHIPMENT_STATE_CONFLICT"));
-  const second = await secondShipment(a);
+  const second = await secondShipment(f);
   await a.ship(second, "2023-11-13"); // 2 件的一張先確認出貨。
   await a.ship(a.first); // 3 件的一張後確認。
   await assert.rejects(a.create([second, a.first], { invoiceDate: "2023-11-13" }), code("AR_INVOICE_BEFORE_SHIPMENT_DATE"));
@@ -115,7 +101,7 @@ nativeTest("分兩次出貨的訂單行：金額按出貨次序由剩餘池計�
   const cancelled = await a.act("cancel", alone.id, { version: 1 });
   assert.deepEqual([cancelled.status, cancelled.version], ["CANCELLED", 2]);
   assert.deepEqual((await a.inquiry.invoicedShipments({ shipmentIds: String(a.first) })).items, []);
-  // Simulate a draft saved before the rule was enforced. Rejection preserves the draft and both claims.
+  // 模擬修正前已存的舊草稿。拒絕確認後，草稿和兩張出貨的占用保留。
   const legacy = await a.create([second, a.first], { invoiceDate: TODAY });
   await f.db.query("UPDATE ar_invoices SET invoice_date = ? WHERE id = ?", ["2023-11-13", legacy.id]);
   await assert.rejects(a.act("confirm", legacy.id, { version: 1 }), code("AR_INVOICE_BEFORE_SHIPMENT_DATE"));
