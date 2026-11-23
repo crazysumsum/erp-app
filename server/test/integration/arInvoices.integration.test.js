@@ -1,23 +1,24 @@
 /**
  * 開票與應收首期：發票的確認、取消、作廢、列表、詳情及權限，經真 HTTP、真 JWT 及真 MySQL（SCOPE §1、§4）。
  *
- * Fixture 見 ../ar/arHttpFixture.js（全檔共用一次）。這裡的發票草稿以 SQL 直接寫入（沒有發票行），全檔約 15 張，收款 1 筆；
- * 由真實出貨建立草稿、防重開票及金額計算在 arInvoiceFromShipments.integration.test.js 以隔離資料庫驗。
+ * 確認案例以隔離庫的兩張真實出貨經 HTTP 建立草稿；空來源及其他查詢、權限案例按需以 SQL 建立發票。
+ * Fixture 見 ../ar/arHttpFixture.js；防重開票及金額分攤另見 arInvoiceFromShipments.integration.test.js。
  * 每案 1 次，無並發。沒有容量或效能斷言。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { arHttpFixture as fixture, failure } from "../ar/arHttpFixture.js";
+import { arHttpFixture as fixture, arHttpShipmentFixture, failure } from "../ar/arHttpFixture.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const REASON = "發票作廢測試原因";
 
-integrationTest("發票確認取年度流水號；取消只限草稿；作廢須原因而且須先解除全部核銷，作廢後號碼保留並離開帳齡表", async () => {
-  const f = await fixture(), party = await f.customer();
+integrationTest("發票確認取年度流水號；取消只限草稿；作廢須原因而且須先解除全部核銷，作廢後號碼保留並離開帳齡表", async (t) => {
+  const f = await arHttpShipmentFixture(t, { includeSecond: true }), { party } = f;
   const read = async (id, token = f.biller.token) => f.ok(await f.send(`/api/v1/ar-invoices/${id}`, { token }));
-  const first = await f.invoice(party, "120.0000", { status: "DRAFT" }), second = await f.invoice(party, "80.0000", { status: "DRAFT" });
+  const create = async (id) => f.ok(await f.invoicePost("", { shipmentIds: [id], dueDate: f.day(30) })).id;
+  const first = await create(f.shipmentIds[0]), second = await create(f.shipmentIds[1]);
   assert.deepEqual([(await read(first)).allowedActions, (await read(first)).number], [["confirm", "cancel"], null]);
 
   const confirmed = f.ok(await f.invoicePost(`/${first}/confirm`, { version: 1 })), next = f.ok(await f.invoicePost(`/${second}/confirm`, { version: 1 }));
@@ -25,8 +26,8 @@ integrationTest("發票確認取年度流水號；取消只限草稿；作廢須
   assert.ok(Number(next.number.slice(-6)) > Number(confirmed.number.slice(-6))); // 流水號全庫共用，只斷言嚴格遞增。
   assert.deepEqual([confirmed.status, confirmed.version, confirmed.replayed], ["CONFIRMED", 2, false]);
   let detail = await read(first);
-  assert.deepEqual([detail.number, detail.status, detail.confirmedByLabel, detail.totalAmount, detail.outstandingAmount, detail.allowedActions, detail.lines, detail.allocations],
-    [confirmed.number, "CONFIRMED", f.biller.username, "120.0000", "120.0000", ["void"], [], []]);
+  assert.deepEqual([detail.number, detail.status, detail.confirmedByLabel, detail.totalAmount, detail.outstandingAmount, detail.allowedActions, detail.lines.map(({ shipmentId }) => shipmentId), detail.allocations],
+    [confirmed.number, "CONFIRMED", f.biller.username, "120.0000", "120.0000", ["void"], [f.shipmentIds[0]], []]);
   assert.equal(typeof detail.confirmedAt, "number");
 
   const stale = await f.invoicePost(`/${first}/confirm`, { version: 1 });
@@ -37,7 +38,7 @@ integrationTest("發票確認取年度流水號；取消只限草稿；作廢須
   assert.deepEqual(failure(await f.send("/api/v1/ar-invoices/999999999999", { token: f.biller.token })).slice(0, 2), [404, "AR_INVOICE_NOT_FOUND"]);
 
   // 有核銷的發票不可作廢；詳情列出核銷及其收款。
-  const rcpt = await f.receipt(party, "50.00");
+  const rcpt = await f.receipt(party, "50.00", { currencyCode: f.currencyCode });
   const { allocationIds: [allocation] } = f.ok(await f.post(`/${rcpt.id}/allocations`, { version: 2, allocations: [{ invoiceId: first, amount: "50.00" }] }));
   assert.deepEqual(failure(await f.invoicePost(`/${first}/void`, { version: 3, reason: REASON })).slice(0, 2), [409, "AR_INVOICE_HAS_ALLOCATIONS"]);
   detail = await read(first);
@@ -67,9 +68,14 @@ integrationTest("發票確認取年度流水號；取消只限草稿；作廢須
   assert.deepEqual(failure(await f.invoicePost(`/${third}/confirm`, { version: 2 })).slice(0, 2), [409, "AR_STATE_CONFLICT"]);
   assert.deepEqual([(await read(third)).allowedActions, (await read(fourth, f.viewer.token)).allowedActions], [[], []]);
 
+  assert.deepEqual(failure(await f.invoicePost(`/${fourth}/confirm`, { version: 1 })).slice(0, 2), [409, "AR_STATE_CONFLICT"]);
+  const withoutSource = await read(fourth);
+  assert.deepEqual([withoutSource.status, withoutSource.version, withoutSource.number], ["DRAFT", 1, null]);
+  assert.equal(f.ok(await f.invoicePost(`/${fourth}/cancel`, { version: 1 })).status, "CANCELLED");
+
   const [audit] = await f.db.query("SELECT action, target_type, target_label, reason FROM ar_audit_logs WHERE customer_id = ? AND target_type = 'INVOICE' ORDER BY id", [party.id]);
-  assert.deepEqual(audit.map((row) => [row.action, row.target_label, row.reason]), [["invoice.confirmed", confirmed.number, ""], ["invoice.confirmed", next.number, ""],
-    ["invoice.voided", confirmed.number, REASON], ["invoice.cancelled", "", ""]]);
+  assert.deepEqual(audit.map((row) => [row.action, row.target_label, row.reason]), [["invoice.created", "", ""], ["invoice.created", "", ""], ["invoice.confirmed", confirmed.number, ""], ["invoice.confirmed", next.number, ""],
+    ["invoice.voided", confirmed.number, REASON], ["invoice.cancelled", "", ""], ["invoice.cancelled", "", ""]]);
 });
 
 integrationTest("發票列表：新到舊、分頁、狀態、客戶、幣別、日期、只列未收及前綴搜尋；已開票出貨查詢及建立草稿的輸入驗證", async () => {
@@ -124,9 +130,10 @@ integrationTest("發票列表：新到舊、分頁、狀態、客戶、幣別、
   assert.equal(await f.count("ar_operation_requests WHERE event_id = ?", [missing]), 0);
 });
 
-integrationTest("權限：發票命令要 ar.invoice.mgmt，查看要 ar.view，兩者互不繼承，收款權限不能操作發票；未登入一律 401", async () => {
-  const f = await fixture(), party = await f.customer();
-  const draft = await f.invoice(party, "10.0000", { status: "DRAFT" }), confirmed = await f.invoice(party, "10.0000");
+integrationTest("權限：發票命令要 ar.invoice.mgmt，查看要 ar.view，兩者互不繼承，收款權限不能操作發票；未登入一律 401", async (t) => {
+  const f = await arHttpShipmentFixture(t), { party } = f;
+  const draft = f.ok(await f.invoicePost("", { shipmentIds: f.shipmentIds, dueDate: f.day(30) })).id;
+  const confirmed = await f.invoice(party, "10.0000");
   const commands = [["", { shipmentIds: [1], dueDate: f.day(30) }], [`/${draft}/confirm`, { version: 1 }], [`/${draft}/cancel`, { version: 1 }], [`/${confirmed}/void`, { version: 1, reason: REASON }]];
   for (const [path, fields] of commands) {
     assert.equal((await f.invoicePost(path, fields, f.viewer.token)).status, 403, path);
