@@ -6,10 +6,14 @@
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { readdir } from "node:fs/promises";
 import { after } from "node:test";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
+import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
+import { secondShipment } from "./arShipmentFixture.js";
 
 async function runCleanups(cleanups) {
   const errors = [];
@@ -21,11 +25,12 @@ async function runCleanups(cleanups) {
 
 let shared = null;
 
-async function setup() {
+async function setup(database = {}) {
   const cleanups = [];
   const source = defaultConfigurationSource();
   // 這個檔案的請求數超過預設的每 IP 流量上限；同 supplierHttpHarness 一樣只放寬這一項。
   const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 },
+    database: { ...source.database, ...database },
     requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100_000 } } });
   cleanups.push(() => application.shutdown("ar_integration_complete"));
   try {
@@ -96,6 +101,37 @@ async function setup() {
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "AR fixture setup failed and its cleanup also failed") : error;
   }
 }
+/** 發票確認案例使用真實出貨，application 與 Fulfillment 共用隔離庫。 */
+export async function arHttpShipmentFixture(t, { includeSecond = false } = {}) {
+  const cleanups = [];
+  t.after(async () => {
+    const errors = await runCleanups(cleanups);
+    if (errors.length) throw new AggregateError(errors, "AR shipment fixture cleanup failed");
+  });
+  const shipment = await shipmentDraftFixture({ after: (cleanup) => cleanups.push(cleanup) });
+  const directory = new URL("../../database/migrations/", import.meta.url);
+  const installed = new Set([92, 93, 95, 96, 98]);
+  const migrations = (await readdir(directory))
+    .filter((name) => /^[0-9]{4}_.*\.js$/u.test(name) && Number(name.slice(0, 4)) > 88 && !installed.has(Number(name.slice(0, 4))))
+    .sort();
+  for (const name of migrations) await (await import(new URL(name, directory).href)).up(shipment.db);
+  await shipment.db.query("UPDATE sales_order_lines SET unit_selling_price = 40, line_amount = 200 WHERE id = ?", [shipment.s.lineId]);
+  const first = (await shipment.create(shipment.body())).outcome.id;
+  const shipmentIds = [first];
+  if (includeSecond) shipmentIds.push(await secondShipment(shipment));
+  const confirmation = new ShipmentConfirmationService(shipment.options);
+  for (const id of shipmentIds) {
+    const completed = await shipment.execute(async () =>
+      confirmation.completeConfirmation(await confirmation.startConfirmation(id, { eventId: randomUUID(), version: 1 })));
+    assert.equal(completed.outcome, "SHIPPED");
+  }
+  const [[party]] = await shipment.db.query("SELECT id, customer_code AS code, legal_name AS name FROM customers WHERE id = ?", [shipment.s.customerId]);
+  const [[{ currency_code: currencyCode }]] = await shipment.db.query("SELECT currency_code FROM sales_orders WHERE id = ?", [shipment.s.orderId]);
+  const http = await setup({ ...shipment.f.connectionOptions, database: shipment.f.name });
+  cleanups.push(...http.cleanups);
+  return { ...http, party, currencyCode, shipmentIds: shipmentIds.map(Number) };
+}
+
 export const arHttpFixture = () => (shared ??= setup());
 after(async () => {
   if (!shared) return;
