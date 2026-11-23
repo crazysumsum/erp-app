@@ -1151,6 +1151,10 @@ integrationTest("TC-094 (IMP-009): TASK-045 fault injection: a worker killed bef
     assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
     assert.deepEqual(await crashWorker(point), { code: null, signal: "SIGKILL" }, `${point}: the worker died by SIGKILL`);
 
+    // Client exit does not acknowledge MySQL rollback; wait for this job's lock before testing recovery.
+    await h.db.withTransaction(async (connection) => {
+      await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [id]);
+    });
     const stored = await job(id);
     assert.equal(stored.status, "running", `${point}: the dead worker still holds the lease`);
     const first = await supplierByCode(codes[0]);
