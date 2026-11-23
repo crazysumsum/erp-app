@@ -9,7 +9,7 @@ const PATH = "/api/v1/ar-opening-invoices";
 
 integrationTest("期初發票保留舊號、防重，作廢可重登，核銷後帳齡歸零", async () => {
   const f = await arHttpFixture(), party = await f.customer();
-  const openingReference = "0000_" + randomUUID().slice(0, 8);
+  const openingReference = " 0000_" + randomUUID().slice(0, 8) + " ";
   const input = { customerId: party.id, currencyCode: "HKD", openingReference, invoiceDate: f.day(-40), dueDate: f.day(-10), amount: "65.25", notes: "截數清單" };
   const register = (token, values = {}, eventId = randomUUID()) => f.send(PATH, { token, body: { ...input, ...values, eventId } });
   assert.equal((await register(null)).status, 401);
@@ -43,6 +43,8 @@ integrationTest("期初發票保留舊號、防重，作廢可重登，核銷後
   assert.deepEqual([first.openingReference, first.invoiceDate, first.dueDate, first.outstandingAmount, first.allocatedAmount, first.lines],
     [openingReference, input.invoiceDate, input.dueDate, "65.2500", "0.0000", []]);
   assert.deepEqual((await list()).items.map(({ openingReference: reference }) => reference), [openingReference]);
+  const byNumber = f.ok(await f.send(`/api/v1/ar-invoices?q=${encodeURIComponent(` ${opened.number} `)}`, { token: f.viewer.token }));
+  assert.deepEqual(byNumber.items.map(({ id }) => id), [opened.id]);
   assert.deepEqual((await aging()).items.map(({ invoiceCount, days1To30 }) => [invoiceCount, days1To30]), [[1, "65.2500"]]);
 
   const voided = f.ok(await f.invoicePost(`/${opened.id}/void`, { version: 1, reason: "期初餘額更正" }, token));

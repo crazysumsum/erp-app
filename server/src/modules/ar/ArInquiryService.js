@@ -64,7 +64,8 @@ export class ArInquiryService {
     if (query.outstandingOnly) where.push("status = 'CONFIRMED' AND outstanding_amount > 0");
     if (query.q) {
       where.push(`(${["invoice_number", "opening_reference", "customer_code_snapshot", "customer_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
-      values.push(...Array(4).fill(prefix(query.q)));
+      const regularPrefix = prefix(query.q.trim() || query.q);
+      values.push(regularPrefix, prefix(query.q), regularPrefix, regularPrefix);
     }
     const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ar_invoices ${filter}`, values);

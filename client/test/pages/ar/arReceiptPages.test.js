@@ -155,7 +155,7 @@ describe("AR 收款詳情及核銷", () => {
     await input("發票編號前綴").setValue(" INV-2026-000001 ");
     await button("搜尋發票").trigger("click");
     await flushPromises();
-    expect(ar.listInvoices).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, q: "INV-2026-000001" }));
+    expect(ar.listInvoices).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, q: " INV-2026-000001 " }));
     expect(wrapper.text()).toContain("共 1 張");
     await input("INV-2026-000001 核銷金額").setValue("80.00");
     await button("核銷").trigger("click");

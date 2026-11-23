@@ -24,6 +24,12 @@ describe("AR 發票 client 契約", () => {
     await ar.getInvoice(8, { signal: "detail" });
     expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/ar-invoices/8", { signal: "detail" });
   });
+
+  it("期初登記使用專用端點，並以 eventId 去重", async () => {
+    const payload = { eventId: "0f8fad5b-d9cb-469f-a165-70867728950e", openingReference: "000125" };
+    await ar.registerOpeningInvoice(payload);
+    expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/ar-opening-invoices", { idempotent: true, idempotencyKey: payload.eventId, body: payload });
+  });
 });
 
 describe("AR 金額及數量顯示", () => {

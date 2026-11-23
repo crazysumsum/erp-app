@@ -79,7 +79,8 @@ async function loadInvoices(page = invoicePage.value) {
   }
 }
 function searchInvoices() {
-  invoiceQuery.value = (invoiceSearch.value ?? "").trim();
+  const search = invoiceSearch.value ?? "";
+  invoiceQuery.value = search.trim() ? search : "";
   return loadInvoices(1);
 }
 watch([receiptId, () => session.user?.id, () => session.permissions.join("|")], () => load(), { immediate: true });
@@ -229,7 +230,7 @@ async function unapply(row) {
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">核銷到發票</h2>
             <form class="row items-center q-gutter-sm q-mb-sm" @submit.prevent="searchInvoices">
-              <q-input v-model="invoiceSearch" label="發票編號前綴" type="search" maxlength="190" clearable :disable="locked || invoicesLoading" outlined dense />
+              <q-input v-model="invoiceSearch" label="發票編號前綴" hint="可輸入舊發票號碼的開頭" type="search" maxlength="190" clearable :disable="locked || invoicesLoading" outlined dense />
               <q-btn type="submit" label="搜尋發票" :disable="locked || invoicesLoading" flat />
             </form>
             <p v-if="invoicesLoading" role="status">載入可核銷發票…</p>
@@ -246,7 +247,8 @@ async function unapply(row) {
               <q-item v-for="row in allocationRows" :key="row.id">
                 <q-item-section>
                   <q-item-label>{{ row.number }}，到期 {{ row.dueDate || "—" }}</q-item-label>
-                  <q-item-label caption>未收額 {{ amount(row.outstandingAmount) }}／總額 {{ amount(row.totalAmount) }}</q-item-label>
+                  <q-item-label v-if="row.openingReference" caption>舊號 <span style="white-space: break-spaces">{{ row.openingReference }}</span></q-item-label>
+                  <q-item-label caption>未收額 {{ amount(row.outstandingAmount) }}／{{ row.openingReference ? "截數餘額" : "總額" }} {{ amount(row.totalAmount) }}</q-item-label>
                   <q-item-label v-if="!currentInvoiceIds.has(row.id)" caption>已填金額，來自其他頁或搜尋結果</q-item-label>
                 </q-item-section>
                 <q-item-section side class="allocation-input">
@@ -265,7 +267,7 @@ async function unapply(row) {
         </q-card>
         <h2 class="text-h6 q-ma-none q-mb-md">核銷記錄</h2>
         <DataTable :rows="receipt.allocations" :columns="allocationColumns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
-          <template #body-cell-invoiceNumber="{ row }"><q-td><router-link :to="`/ar/invoices/${row.invoiceId}`">{{ row.invoiceNumber }}</router-link></q-td></template>
+          <template #body-cell-invoiceNumber="{ row }"><q-td><router-link :to="`/ar/invoices/${row.invoiceId}`">{{ row.invoiceNumber }}</router-link><div v-if="row.invoiceOpeningReference" class="text-caption">舊號 <span style="white-space: break-spaces">{{ row.invoiceOpeningReference }}</span></div></q-td></template>
           <template #body-cell-invoiceOutstandingAmount="{ row }"><q-td class="text-right">{{ amount(row.invoiceOutstandingAmount) }}</q-td></template>
           <template #body-cell-amount="{ row }"><q-td class="text-right">{{ amount(row.amount) }}</q-td></template>
           <template #body-cell-status="{ row }"><q-td>{{ allocationStatusLabels[row.status] ?? row.status }}<div v-if="row.unappliedAt" class="text-caption">{{ row.unappliedByLabel }}，{{ timestamp(row.unappliedAt) }}</div></q-td></template>
