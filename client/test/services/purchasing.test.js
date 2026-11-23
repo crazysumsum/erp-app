@@ -123,3 +123,29 @@ describe("useCommandEvent", () => {
     expect(command.uncertainRecords.value.map(({ key, meta }) => [key, meta.action])).toEqual([["k", "approve"]]);
   });
 });
+
+describe("收貨 client contract（TASK-030）", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("收貨寫入用 eventId 做 Idempotency-Key；列表映射 DataTable；detail、operation lookup 及收貨選項轉發 AbortSignal", async () => {
+    const payload = { eventId: "intent", version: 2, lines: [] };
+    for (const [method, path, args] of [["createGoodsReceipt", "/create", [payload]], ["updateGoodsReceipt", "/5/update", [5, payload]],
+      ["cancelGoodsReceipt", "/5/cancel", [5, payload]], ["confirmGoodsReceipt", "/5/confirm", [5, payload]]]) {
+      await purchasing[method](...args);
+      expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/goods-receipts${path}`, { idempotent: true, idempotencyKey: "intent", body: payload });
+    }
+    httpClient.get.mockResolvedValue({ items: [{ id: 1 }], total: 3 });
+    await expect(purchasing.listGoodsReceipts({ page: 2, rowsPerPage: 20, status: "DRAFT", purchaseOrderId: "", signal: "abort" })).resolves.toEqual({ rows: [{ id: 1 }], rowsNumber: 3 });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/goods-receipts", { params: { page: 2, pageSize: 20, status: "DRAFT" }, signal: "abort" });
+    await purchasing.getGoodsReceipt(5, { signal: "detail" });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/goods-receipts/5", { signal: "detail" });
+    await purchasing.getOperationByEvent("intent", { signal: "op" });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/purchasing-operations/by-event/intent", { signal: "op" });
+    for (const [call, path, params] of [[() => purchasing.lookupReceivablePurchaseOrders({ q: "PO-", signal: "s" }), "purchase-orders", { q: "PO-" }],
+      [() => purchasing.lookupReceivingWarehouses({ signal: "s" }), "warehouses", {}], [() => purchasing.lookupReceivingBins(7, { signal: "s" }), "warehouses/7/bins", {}]]) {
+      httpClient.get.mockResolvedValue({ items: [{ id: path }] });
+      await expect(call()).resolves.toEqual([{ id: path }]);
+      expect(httpClient.get).toHaveBeenLastCalledWith(`/api/v1/receiving-lookups/${path}`, { params, signal: "s" });
+    }
+  });
+});

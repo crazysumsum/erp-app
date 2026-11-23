@@ -106,14 +106,10 @@ async function signedAuthed(device, token, { path, body }) {
   return { method: "POST", headers: { ...headers, Authorization: `Bearer ${token}` }, body: bodyText };
 }
 
-// Customer bank、Inventory 與 Sales 權限存在於目錄，但 migrations 刻意不授予 system-admin；claims 要反映
-// 遷移後的實際角色權限，否則測試會先撞 PERMISSION_STALE。
+// Claims 跟隨 migration 授予 system-admin 的權限，Customer bank 權限需要另行指派。
 const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
   .map(({ name }) => name)
-  .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
-    !name.startsWith("sales.") && !name.startsWith("purchasing.") &&
-    !name.startsWith("receiving.") && !name.startsWith("fulfillment.") &&
-    !name.startsWith("ar."));
+  .filter((name) => !name.startsWith("customer.bank."));
 
 test("create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked", { skip }, async (t) => {
   const application = await startApplication();

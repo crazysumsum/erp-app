@@ -59,6 +59,7 @@ async function readShipmentSequence(tx, shipmentIds) {
      )
      SELECT l.id, l.shipment_id, l.sales_order_line_id, s.sales_order_id, s.customer_id,
       s.status, s.confirmation_event_id, h.sequence_no,
+      DATE_FORMAT(s.shipment_date, '%Y-%m-%d') AS shipment_date,
       CAST(l.shipped_base_quantity AS CHAR) AS shipped_base_quantity,
       CAST(l.reversed_base_quantity AS CHAR) AS reversed_base_quantity
      FROM cutoffs cutoff
@@ -73,9 +74,13 @@ async function readShipmentSequence(tx, shipmentIds) {
   );
   // An incomplete history cannot reproduce the remaining-pool calculation.
   if (rows.length > maxHistoryMembers) throw unavailable();
-  for (const row of rows) sequenceNumber(row);
+  const shipmentDates = new Map();
+  for (const row of rows) {
+    sequenceNumber(row);
+    shipmentDates.set(stringId(row.shipment_id), row.shipment_date);
+  }
   rows.sort((a, b) => Number(a.sequence_no) - Number(b.sequence_no));
-  return groupBy(rows, "sales_order_line_id");
+  return { shipmentSequence: groupBy(rows, "sales_order_line_id"), shipmentDates };
 }
 
 function sequenceNumber(row) {
@@ -172,7 +177,7 @@ export async function readInvoiceSourcesInTransaction(tx, input) {
   const linesByShipment = groupBy(lines, "shipment_id");
   const salesLineIds = sortedFulfillmentIds(lines.map(row => stringId(row.sales_order_line_id)));
   const orderLines = await readOrderLines(tx, salesLineIds);
-  const shipmentSequence = await readShipmentSequence(tx, ids);
+  const { shipmentSequence, shipmentDates } = await readShipmentSequence(tx, ids);
   let priorReferences = 0;
   const takePriorReference = () => {
     if (++priorReferences > maxPriorReferences) throw unavailable();
@@ -189,10 +194,14 @@ export async function readInvoiceSourcesInTransaction(tx, input) {
     }).sort((a, b) => a.lineNo - b.lineNo);
     if (projected.some(line => line.confirmationSequence !== projected[0].confirmationSequence) ||
         !projected.some(line => line.shippedBaseQuantity !== "0")) throw unavailable();
+    const shipmentDate = shipmentDates.get(shipmentId);
+    if (typeof shipmentDate !== "string" || !/^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$/u.test(shipmentDate) ||
+        !Number.isFinite(Date.parse(shipmentDate)) || new Date(shipmentDate).toISOString().slice(0, 10) !== shipmentDate) throw unavailable();
 
     return {
       id: shipmentId,
       shipmentNumber: shipment.shipment_number,
+      shipmentDate,
       confirmationEventId: shipment.confirmation_event_id,
       salesOrderId: stringId(shipment.sales_order_id),
       customerId: stringId(shipment.customer_id),

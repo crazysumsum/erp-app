@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-19 temporary functional CI decision recorded in AGENTS.md through 2026-11-26 Taipei day end. PM work plan b41d078c schedules one real Sales quote-to-ship browser flow. CodexTL non-author ACCEPT ef78b3a3 of exact case/config revision 98ef433617a8d724519d5917a7fd06c9872c7dde.",
+  "purpose": "Verify the same Sales quote, order, reservation, pick, and Shipment through real UI and HTTP, including the single Inventory issue and the completed order leaving Outstanding.",
+  "data": "One disposable fully migrated MySQL schema, one synthetic operator and customer, one SKU/bin, a five-unit balance, one quote and one order/Shipment of three units. Unchanged nativeDatabase.js and Sales fixtures.js are already pinned by fulfillment-fixture-permission-catalogue.json.",
+  "concurrency": "One headless Chromium worker and one case with sequential business actions.",
+  "repetitions": "One journey per explicit invocation under its dedicated config, zero configured retries. No routinely discovered case added to the existing workflows.",
+  "thresholds": "Real UI and API; no unexpected browser/network errors. Three reserved, balance five and zero ISSUE at Shipment draft; one confirmed ISSUE of three (five to two) linked to that Shipment; order completed and excluded from Outstanding.",
+  "trigger": "Explicit isolated developer invocation of playwright.quote-to-ship.config.js. The PR uses existing functional CI; workflow, schedule, catalog and other case routing are unchanged.",
+  "cost": "Measured 12.11 seconds for the one primary local case; the whole local Playwright command took about 18 seconds plus isolated server startup. No added routinely scheduled workload.",
+  "files": [
+    {
+      "path": "client/e2e/sales-order-management/playwright.quote-to-ship.config.js",
+      "mode": "100644",
+      "blob": "01e2301ed70c22568950c5cf1554af8cf0e87d35",
+      "kind": "functional",
+      "cases": ["A quoted order is reserved, picked and shipped through the browser"]
+    },
+    {
+      "path": "client/e2e/sales-order-management/sales-quote-to-ship.spec.js",
+      "mode": "100644",
+      "blob": "5ae53f66eea1406f6741d97056d5d501eed87884",
+      "kind": "functional",
+      "cases": ["A quoted order is reserved, picked and shipped through the browser"]
+    }
+  ]
+}

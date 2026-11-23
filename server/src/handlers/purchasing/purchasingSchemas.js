@@ -207,7 +207,7 @@ const ADDRESS = object(Object.fromEntries(["addressLine1", "addressLine2", "addr
 const PAYMENT_TERM = object({ code: TEXT, name: TEXT, calculationType: TEXT, dueDays: { type: ["integer", "null"] } });
 const PO_LINE = object({
   id: ID, lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, trackingPolicy: TEXT, inventoryTracked: { type: "boolean" },
-  minimumReceiptLifeDays: { type: ["integer", "null"] }, baseUomId: ID, baseUomCode: TEXT, purchaseSkuUomId: ID, purchaseUomCode: TEXT, uomToBaseFactor: ID,
+  minimumReceiptLifeDays: { type: ["integer", "null"] }, baseUomId: ID, baseUomCode: TEXT, purchaseSkuUomId: ID, purchaseUomId: ID, purchaseUomCode: TEXT, uomToBaseFactor: ID,
   supplierItemCode: TEXT, orderedQuantity: TEXT, orderedBaseQuantity: BASE_QUANTITY, unitPrice: TEXT, lineAmount: AMOUNT, zeroPriceReason: TEXT,
   expectedDeliveryDate: NULLABLE_DATE, lineNote: TEXT, grossReceivedBaseQuantity: BASE_QUANTITY, reversedBaseQuantity: BASE_QUANTITY,
   netReceivedBaseQuantity: BASE_QUANTITY, outstandingBaseQuantity: BASE_QUANTITY, overReceivedBaseQuantity: BASE_QUANTITY,
