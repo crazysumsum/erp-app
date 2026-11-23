@@ -25,7 +25,9 @@ describe("AR 發票 client 契約", () => {
     expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/ar-invoices/8", { signal: "detail" });
   });
 
-  it("期初登記使用專用端點，並以 eventId 去重", async () => {
+  it("期初按客戶代碼查找，登記使用專用端點並以 eventId 去重", async () => {
+    await ar.findOpeningCustomer("C-0012", { signal: "lookup" });
+    expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/ar-opening-invoices/customer", { params: { code: "C-0012" }, signal: "lookup" });
     const payload = { eventId: "0f8fad5b-d9cb-469f-a165-70867728950e", openingReference: "000125" };
     await ar.registerOpeningInvoice(payload);
     expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/ar-opening-invoices", { idempotent: true, idempotencyKey: payload.eventId, body: payload });

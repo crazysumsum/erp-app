@@ -130,8 +130,8 @@ export class ArInvoiceService {
   registerOpening({ claims, input, context }) {
     const body = onlyFields(input, ["eventId", "customerId", "currencyCode", "openingReference", "invoiceDate", "dueDate", "amount", "notes"]);
     if (typeof body.currencyCode !== "string" || !/^[A-Z]{3}$/u.test(body.currencyCode)) throw invalid("currencyCode");
-    const openingReference = text(body.openingReference, "openingReference", { minimum: 1, maximum: 50 });
-    if (!openingReference.trim()) throw invalid("openingReference");
+    if (typeof body.openingReference !== "string") throw invalid("openingReference");
+    const openingReference = text(body.openingReference.trim(), "openingReference", { minimum: 1, maximum: 50 });
     const invoiceDate = localDate(body.invoiceDate, "invoiceDate"), dueDate = localDate(body.dueDate, "dueDate");
     if (dueDate < invoiceDate) throw invalid("dueDate");
     const request = {
@@ -166,7 +166,7 @@ export class ArInvoiceService {
         throw error;
       }
       return {
-        summary: { id, number, status: "CONFIRMED", version: 1, totalAmount: request.amount },
+        summary: { id, number, status: "CONFIRMED", version: 1, totalAmount: request.amount, customerCode: customer.customerCode, customerName: customer.legalName },
         audit: { action: "invoice.opening_registered", targetType: "INVOICE", targetId: id, customerId: customer.customerId,
           label: number, detail: { openingReference, amount: request.amount, currencyCode: currency.code } }
       };

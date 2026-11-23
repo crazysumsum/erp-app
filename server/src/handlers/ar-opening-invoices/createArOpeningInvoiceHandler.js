@@ -1,5 +1,5 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
-import { AR_OPENING_POLICY, EMPTY, INVOICE_COMMAND_RESPONSE, arCommand, arInvoiceService } from "../ar/arSchemas.js";
+import { AR_OPENING_POLICY, EMPTY, OPENING_INVOICE_RESPONSE, arCommand, arInvoiceService } from "../ar/arSchemas.js";
 
 export class CreateArOpeningInvoiceHandler extends BaseRequestHandler {
   static handlerName = "createArOpeningInvoice";
@@ -10,7 +10,7 @@ export class CreateArOpeningInvoiceHandler extends BaseRequestHandler {
     authorizationPolicies: [AR_OPENING_POLICY],
     idempotency: { enabled: true },
     requestSchema: { params: EMPTY, query: EMPTY, body: {} },
-    responseSchema: { 200: INVOICE_COMMAND_RESPONSE }
+    responseSchema: { 200: OPENING_INVOICE_RESPONSE }
   };
 
   constructor(services = {}) { super(services); this.invoices = arInvoiceService(services); }

@@ -79,8 +79,7 @@ async function loadInvoices(page = invoicePage.value) {
   }
 }
 function searchInvoices() {
-  const search = invoiceSearch.value ?? "";
-  invoiceQuery.value = search.trim() ? search : "";
+  invoiceQuery.value = (invoiceSearch.value ?? "").trim();
   return loadInvoices(1);
 }
 watch([receiptId, () => session.user?.id, () => session.permissions.join("|")], () => load(), { immediate: true });

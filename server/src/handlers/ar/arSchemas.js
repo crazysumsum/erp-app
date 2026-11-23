@@ -71,6 +71,9 @@ export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
 }));
 export const INVOICE_COMMAND_RESPONSE = Object.freeze(object({ id: ID, number: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, totalAmount: AMOUNT,
   replayed: { type: "boolean" } }, ["id", "number", "status", "version", "replayed"]));
+export const OPENING_CUSTOMER_QUERY = Object.freeze(object({ code: { type: "string", minLength: 1, maxLength: 64 } }));
+export const OPENING_CUSTOMER_RESPONSE = Object.freeze(object({ customerId: ID, customerCode: TEXT, customerName: TEXT, active: { type: "boolean" } }));
+export const OPENING_INVOICE_RESPONSE = Object.freeze(object({ ...INVOICE_COMMAND_RESPONSE.properties, customerCode: TEXT, customerName: TEXT }));
 export const INVOICED_SHIPMENTS_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100,
   items: object({ shipmentId: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT, invoiceStatus: { enum: ["DRAFT", "CONFIRMED"] } }) } }));
 
