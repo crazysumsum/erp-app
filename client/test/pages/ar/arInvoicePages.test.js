@@ -59,6 +59,25 @@ describe("AR 發票列表", () => {
     expect(button("查看").attributes("href")).toBe("/ar/invoices/8");
     expect(ar.listInvoices).toHaveBeenCalledWith(expect.objectContaining({ page: 1, rowsPerPage: 20 }));
   });
+  it("已取消及已作廢的發票在列表及詳情以破折號顯示未收額", async () => {
+    const closed = ["CANCELLED", "VOID"].map((status, index) =>
+      ({ ...detail, id: 10 + index, number: `INV-2026-00001${index}`, status, outstandingAmount: "12.3456", allowedActions: [] }));
+    ar.listInvoices.mockResolvedValue({ rows: [...closed, row], rowsNumber: 3 });
+    await open("/ar/invoices");
+    for (const invoice of closed) {
+      const listRow = wrapper.findAll("tbody tr").find((node) => node.text().includes(invoice.number));
+      expect(listRow.findAll("td").map((cell) => cell.text())).toContain("—");
+      expect(listRow.text()).not.toContain("12.3456");
+    }
+    expect(wrapper.text()).toContain("HKD 100.01");
+    for (const invoice of closed) {
+      wrapper.unmount();
+      ar.getInvoice.mockResolvedValue(invoice);
+      await open(`/ar/invoices/${invoice.id}`);
+      const label = wrapper.findAll("dt").find((node) => node.text() === "未收額");
+      expect(label.element.nextElementSibling.textContent).toBe("—");
+    }
+  });
   it("開票按鈕要 ar.invoice.mgmt 同 fulfillment.view；只有 view 唔見", async () => {
     await open("/ar/invoices");
     expect(button("由出貨開立發票")).toBeUndefined();

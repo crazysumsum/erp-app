@@ -15,6 +15,11 @@ export function money(value, decimalPlaces) {
   return shown ? `${whole}.${shown}` : whole;
 }
 
+export function invoiceOutstandingText({ status, currencyCode, outstandingAmount, currencyDecimalPlaces }) {
+  if (status === "VOID" || status === "CANCELLED") return "—";
+  return `${currencyCode} ${money(outstandingAmount, currencyDecimalPlaces)}`;
+}
+
 /** quantity 係基本單位，unitPrice 係每銷售單位；整除先顯示銷售單位，否則顯示基本單位並註明單價單位。唔自己乘。 */
 export function quantityText({ quantity, toBaseFactor, baseUomCode, salesUomCode, unitPrice }) {
   if (/^\d+$/u.test(quantity) && BigInt(toBaseFactor) > 0n && BigInt(quantity) % BigInt(toBaseFactor) === 0n) {
