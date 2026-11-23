@@ -10,6 +10,7 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import ApprovalSnapshotPanel from "@/components/purchasing/ApprovalSnapshotPanel.vue";
 import PurchaseOrderProgress from "@/components/purchasing/PurchaseOrderProgress.vue";
+import PurchaseOrderReceipts from "@/components/purchasing/PurchaseOrderReceipts.vue";
 import { addressText, printKind, statusColors, statusLabels, timestamp, warningText } from "@/components/purchasing/purchaseOrderPresentation.js";
 import { isZeroPrice } from "@/components/purchasing/purchasingEditorMath.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
@@ -196,6 +197,7 @@ async function askCopy() {
           <template #body-cell-expectedDeliveryDate="{ row }"><q-td>{{ row.expectedDeliveryDate || "未設定" }}</q-td></template>
           <template #body-cell-lineNote="{ row }"><EllipsisCell :text="row.lineNote" /></template>
         </DataTable>
+        <PurchaseOrderReceipts v-if="document.status !== 'DRAFT'" :purchase-order="document" />
         <q-card v-if="master.supplier || master.lines.length" flat bordered class="q-mt-md" data-testid="po-current-master">
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">目前主資料</h2>
