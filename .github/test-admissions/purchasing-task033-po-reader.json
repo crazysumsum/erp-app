@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f (call_cb2041d1c4bd4425b8747c97b7046ed2, relayed by the PM in agentmsg 7f5cada8) approving ADMISSION_PROPOSAL.md sha256 3e97d26155aafb688e04140cc2073eb0f1de1b69a0fdc2b0aa2567d83ea2663b: 11 new cases (7 unit, 1 table, 3 integration), I1 and I2 rewritten, 3 existing cases with 6 assertion lines changed, at most 6 POs and 5 GR rows per case; enablement policy limited B, with no shared or production 0119 or enablement under this decision. The author does not approve this receipt; the trusted approval administrator must independently verify that answer and these blobs before registering the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending.",
-  "purpose": "The production ever-confirmed reader answers exactly true or false from a fully validated goods_receipts rowset under the PO root lock, or throws a typed 503; withdraw confirmation and cancel succeed only when the PO never had a confirmed GR; allowedActions lists cancel and withdrawConfirmation from the has_confirmed_receipt flag Refresh the PO inquiry source pin to account for the purchase UOM projection and operation lookup; existing ever-confirmed tests continue to run.",
-  "data": "Per case at most 6 synthetic POs and 5 goods_receipts rows (G6); other integration cases at most 3 POs and 1 GR; unit cases use a fake tx with at most 2 inline rows Existing case registration and fixture counts are unchanged.",
+  "decision": "Sam's explicit decision in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f (call_cb2041d1c4bd4425b8747c97b7046ed2, relayed by the PM in agentmsg 7f5cada8) approving ADMISSION_PROPOSAL.md sha256 3e97d26155aafb688e04140cc2073eb0f1de1b69a0fdc2b0aa2567d83ea2663b: 11 new cases (7 unit, 1 table, 3 integration), I1 and I2 rewritten, 3 existing cases with 6 assertion lines changed, at most 6 POs and 5 GR rows per case; enablement policy limited B, with no shared or production 0119 or enablement under this decision. The author does not approve this receipt; the trusted approval administrator must independently verify that answer and these blobs before registering the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending. Receives the functional-only 2026-11-19 through 2026-11-26 Taipei umbrella decision (Sam: 「暫停 7 天」, PM agentmsg f3f4c3c8); non-author review, green functional CI, and external administrator registration apply to this exact revision.",
+  "purpose": "The production ever-confirmed reader answers exactly true or false from a fully validated goods_receipts rowset under the PO root lock, or throws a typed 503; withdraw confirmation and cancel succeed only when the PO never had a confirmed GR; allowedActions lists cancel and withdrawConfirmation from the has_confirmed_receipt flag Refresh the PO inquiry source pin to account for the purchase UOM projection and operation lookup; existing ever-confirmed tests continue to run. Refresh the inquiry service support pin for the TASK-037 overdue scope and existing PO date fallback.",
+  "data": "Per case at most 6 synthetic POs and 5 goods_receipts rows (G6); other integration cases at most 3 POs and 1 GR; unit cases use a fake tx with at most 2 inline rows Existing case registration and fixture counts are unchanged. Reader case registrations and fixture sizes are unchanged. The new HTTP workload is recorded in the receipt-server owner.",
   "concurrency": "1",
   "repetitions": "1",
   "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
@@ -98,7 +98,7 @@
     {
       "path": "server/src/modules/purchasing/PurchasingInquiryService.js",
       "mode": "100644",
-      "blob": "8808fa916260782b4e304640520934369a6bbe78",
+      "blob": "967062951ba7a312df61135259a1037681e4ac8e",
       "kind": "support",
       "cases": []
     }
