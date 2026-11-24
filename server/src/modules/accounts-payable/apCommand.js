@@ -115,11 +115,17 @@ export class ApCommandRunner {
         const { operationId, replay } = await this.#claim(tx, { commandType, targetType, targetId, event, payload, actor, nowMs });
         if (replay) return { ...replay, replayed: true };
 
-        const { summary, audit } = await work(tx, { actor, nowMs });
-        await tx.execute(`INSERT INTO ap_audit_logs (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, supplier_id,
-            target_label, reason, detail, request_id, correlation_id, ip) VALUES (?, ?, ?, ?, 'SUCCEEDED', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [nowMs, actor.id, actor.username, audit.action, audit.targetType, audit.targetId, audit.supplierId, audit.label ?? "", audit.reason ?? "",
-          JSON.stringify(audit.detail), String(context.requestId ?? "").slice(0, 64), String(context.correlationId ?? "").slice(0, 64), String(context.ip ?? "").slice(0, 45)]);
+        const { summary, audit, changeAudits = [] } = await work(tx, { actor, nowMs });
+        // Each changed receipt line gets its own bounded, immutable audit detail.
+        const requestId = String(context.requestId ?? "").slice(0, 64);
+        const correlationId = String(context.correlationId ?? "").slice(0, 64);
+        const ip = String(context.ip ?? "").slice(0, 45);
+        const audits = [audit, ...changeAudits].map((entry) => [
+          nowMs, actor.id, actor.username, entry.action, "SUCCEEDED", entry.targetType, entry.targetId, entry.supplierId,
+          entry.label ?? "", entry.reason ?? "", JSON.stringify(entry.detail), requestId, correlationId, ip
+        ]);
+        await tx.query(`INSERT INTO ap_audit_logs (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, supplier_id,
+            target_label, reason, detail, request_id, correlation_id, ip) VALUES ?`, [audits]);
         await tx.execute("UPDATE ap_operation_requests SET result_summary = ?, completed_at = ? WHERE id = ?", [JSON.stringify(summary), nowMs, operationId]);
         return { ...summary, replayed: false };
       }, { isolationLevel: "READ COMMITTED" });

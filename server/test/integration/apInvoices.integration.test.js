@@ -203,6 +203,37 @@ integrationTest("AP restricts receipt price overrides while preserving PO amount
     ["62.5000", "60.0100", "24.0040"]);
   denied(await f.post(`/${draft.id}/update`, { version: 1, receiptOverrides: [{ ...receiptOverrides[0], lineAmount: "60.02" }] }),
     403, "AP_PRICE_OVERRIDE_FORBIDDEN");
-  ok(await f.post(`/${draft.id}/update`, { version: 1, notes: "Matched PO and supplier amounts" }));
+  denied(await f.post(`/${draft.id}/update`, { version: 1,
+    receiptOverrides: [{ ...receiptOverrides[0], lineAmount: "62.5000", reason: "Restore PO amount" }] }),
+    403, "AP_PRICE_OVERRIDE_FORBIDDEN");
+  ok(await f.post(`/${draft.id}/update`, { version: 1, notes: "Matched PO and supplier amounts", receiptOverrides: [] }));
   assert.equal(ok(await f.read(draft.id)).lines[0].lineAmount, "60.0100");
+  ok(await f.post(`/${draft.id}/update`, { version: 2,
+    receiptOverrides: [{ ...receiptOverrides[0], lineAmount: "59.01", reason: "Corrected supplier price" }] }, f.overrider));
+  ok(await f.post(`/${draft.id}/update`, { version: 3,
+    receiptOverrides: [{ ...receiptOverrides[0], lineAmount: "62.5000", reason: "Restore PO amount" }] }, f.overrider));
+  assert.deepEqual(ok(await f.read(draft.id)).lines.map((row) => [row.lineAmount, row.amountOverrideReason]), [["62.5000", ""], ["62.5000", ""]]);
+  const [audit] = await f.db.query("SELECT actor_label, reason, detail FROM ap_audit_logs WHERE target_id = ? AND action = 'invoice.receipt_amount_changed' ORDER BY id", [draft.id]);
+  assert.ok(audit.every((row) => row.actor_label.startsWith("ap_invoice_price_")));
+  assert.deepEqual(audit.map((row) => {
+    const entry = typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail;
+    return [entry.goodsReceiptLineId, entry.poLineAmount, entry.previousAmount, entry.lineAmount, row.reason];
+  }), [
+    [n30.line, "62.5000", "62.5000", "60.0100", "Supplier price"],
+    [n30.line, "62.5000", "60.0100", "59.0100", "Corrected supplier price"],
+    [n30.line, "62.5000", "59.0100", "62.5000", "Restore PO amount"]
+  ]);
+});
+
+integrationTest("AP rejects future invoice dates before writing or issuing a number and allows cancelling legacy drafts", async () => {
+  const f = await fixture();
+  const party = await f.supplier();
+  const request = { supplierId: party.id, currencyCode: "HKD", supplierInvoiceNumber: "FUTURE", dueDate: "2099-01-31",
+    supplierTotalAmount: "10.00", noPoReason: "Test services", expenses: [{ description: "Service", lineAmount: "10.00" }] };
+  denied(await f.post("", { ...request, invoiceDate: "2099-01-01" }), 409, "AP_DATE_IN_FUTURE");
+  const draft = ok(await f.post("", { ...request, invoiceDate }));
+  await f.db.query("UPDATE ap_invoices SET invoice_date = '2099-01-01' WHERE id = ?", [draft.id]);
+  denied(await f.post(`/${draft.id}/confirm`, { version: 1 }), 409, "AP_DATE_IN_FUTURE");
+  assert.equal(ok(await f.read(draft.id)).number, null);
+  ok(await f.post(`/${draft.id}/cancel`, { version: 1 }));
 });
