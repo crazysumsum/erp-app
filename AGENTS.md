@@ -19,8 +19,8 @@ Follow the explicit approval requirements below for CI and capacity testing.
 
 ## Temporary suspension of per-case test admission — Sam's decision, 2026-11-19, extended 2026-11-24
 
-In force from 2026-11-19 until production go-live, planned for mid-December
-2026. It ends when Sam declares go-live complete; then the section below
+In force from 2026-11-19 until production go-live, estimated for mid-December
+2026. The suspension ends at production go-live. The section below then
 applies again in full unless Sam decides otherwise. On 2026-11-19 the PM asked:
 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 Sam
 answered: 「暫停 7 天」. On 2026-11-24 the PM asked: 「逐案測試准入的暫停（11-26
