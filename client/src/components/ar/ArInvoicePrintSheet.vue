@@ -113,7 +113,7 @@ th, td { border-block-end: 1px solid var(--app-border); padding: .5em; text-alig
 .invoice-print-company-text, .invoice-print-payment, .invoice-print-footer { white-space: pre-wrap; }
 
 @media print {
-  .invoice-print-sheet { page: ar-invoice; max-inline-size: none; margin: 0; background: white; color: black; font-size: 10pt; line-height: 1.35; }
+  .invoice-print-sheet { page: ar-invoice; max-inline-size: none; margin: 0; background: white; color: black; font-family: var(--ar-invoice-print-font); font-size: 10pt; line-height: 1.35; }
   .invoice-print-table { overflow: visible; }
   table { min-inline-size: 0; table-layout: fixed; }
   th, td { border-block-end-color: #bdbdbd; padding: .32em .45em; }
@@ -124,6 +124,12 @@ th, td { border-block-end: 1px solid var(--app-border); padding: .5em; text-alig
 </style>
 
 <style>
+@media print {
+  html:has(.ar-invoice-print) {
+    --ar-invoice-print-font: Roboto, "-apple-system", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+}
+
 @page ar-invoice {
   size: A4 portrait;
   margin: 14mm;
@@ -131,12 +137,14 @@ th, td { border-block-end: 1px solid var(--app-border); padding: .5em; text-alig
   @top-right {
     content: var(--ar-invoice-print-reference, "");
     color: #333;
+    font-family: var(--ar-invoice-print-font);
     font-size: 9pt;
   }
 
   @bottom-right {
     content: "第 " counter(page) " 頁，共 " counter(pages) " 頁";
     color: #333;
+    font-family: var(--ar-invoice-print-font);
     font-size: 9pt;
   }
 }
