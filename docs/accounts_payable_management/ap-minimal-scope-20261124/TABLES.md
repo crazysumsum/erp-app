@@ -1,9 +1,9 @@
 # 應付與付款最小版本：資料表說明（供Sam批准）
 
-日期：2026-11-24（r5）。作者：`claude-erp-app-tl-01`。對應同目錄的`SCOPE.md`及`DECISIONS.md`。
-**草稿；未獲Sam批准前不寫migration。** 來源：`origin/main` `80b54298`（只讀）；以已在main上的應收七張表（`server/database/migrations/0123_create_ar_tables.js`）為藍本，下面逐欄列出，不以「同應收」代替。
+日期：2026-11-24（r6）。作者：`claude-erp-app-tl-01`。對應同目錄的`SCOPE.md`及`DECISIONS.md`。
+**Sam已批准這七張表**（2026-11-24，原話及範圍見`DECISIONS.md`第6節）。批准綁定r5的內容：commit `8f0c308770777118530294487aa263de61e782eb`，本檔當時的sha256 `e3d0412e4716c3b19957fa228ff3901f7197bed2da1029779ac31239093e86f5`。**r6相對r5只改了四行文字**：文首的日期、這一段狀態說明、下一段說明Sam已選A、A、A的一句，以及「刪除行為的改變」一項內關於Supplier永久刪除的一句（r5那句是錯的）；第1至第7節一字未改，沒有改動任何欄位、型別、NULL、預設、鍵、外鍵、`CHECK`或trigger。實作與本文件有任何出入都不在批准之內：先停下，告訴TL及PM，由PM再問Sam。 來源：`origin/main` `80b54298`（只讀）；以已在main上的應收七張表（`server/database/migrations/0123_create_ar_tables.js`）為藍本，下面逐欄列出，不以「同應收」代替。
 
-本文件按`DECISIONS.md`決定一、二、三的建議（都是A）寫成。Sam若選其他選項，受影響的欄位在各節末以「**隨決定而變**」標明；決定五送批的是按他所選版本定稿的完整欄位。決定三若保留貸項或關帳日，需要的表不在這七張之內，要另行說明及批准。
+本文件按`DECISIONS.md`決定一、二、三的建議（都是A）寫成。Sam已選A、A、A，所以下面的欄位就是定稿；各節末的「**隨決定而變**」只保留作其他選項的記錄；決定五送批的是按他所選版本定稿的完整欄位。決定三若保留貸項或關帳日，需要的表不在這七張之內，要另行說明及批准。
 
 共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒的`BIGINT UNSIGNED`；業務日期為`DATE`；金額為`DECIMAL(19,4)`；標「ascii」的欄位是`CHARACTER SET ascii COLLATE ascii_bin`（令`CHECK`及比較分大小寫）；其餘文字欄用表的預設`utf8mb4`／`utf8mb4_unicode_ci`。各表`ENGINE=InnoDB`。全部是**新表**，不修改任何現有的表。
 
@@ -210,7 +210,7 @@
 
 - **現有資料**：零改動。全部是新表，沒有`ALTER`現有的表，沒有回填。
 - **鎖**：建立外鍵時會短暫取得被引用的表（`suppliers`、`currencies`、`users`、`goods_receipts`、`goods_receipt_lines`）的metadata lock；沒有量度過，按現時的資料量預期很短。
-- **刪除行為的改變**：有發票或付款的供應商、被開票的收貨，其後不可被實體刪除（`RESTRICT`）。已確認的收貨本來就由trigger禁止刪除；Supplier沒有實體刪除供應商的路徑。
+- **刪除行為的改變**：有發票或付款的供應商、被開票的收貨，其後不可被實體刪除（`RESTRICT`）。已確認的收貨本來就由trigger禁止刪除。Supplier有受控的永久刪除（只限從未啟用的草稿供應商，`SupplierAdminService.js:790–835`），遇到應付的引用時回409 `SUPPLIER_REFERENCED`，不會變成未處理的錯誤。
 - **Business Master**：新表一出現，幣別及付款條款的異動檢查就需要應付的影響檢查，否則全部被擋；影響檢查與資料表在同一個PR交付。
 - **權限**：在權限目錄加入`ap.view`、`ap.invoice.mgmt`、`ap.payment.mgmt`及（決定一採A或C時）`ap.invoice.price.override`，並授予系統管理員；這是資料不是表結構。新增權限會影響現有以完整權限集合比對的測試，實作時一併處理。
 - **回滾**：新表仍是空的、沒有產生任何業務資料時，刪除這七張表及新權限即可，不影響現有資料。一旦有了發票、付款或核銷，這些是財務記錄，不可以刪表回滾，只能以修正的migration向前處理。
