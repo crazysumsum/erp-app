@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "decision": "TASK-033 extends the effective purchasing-task024-approval-browser.json workload under Sam's Taipei 2026-11-19 to 2026-11-26 functional-only instruction. The prior approval workflow and assertions stay in the same test case. The independent review and the trusted CI administrator must verify this exact candidate and its workload before admission.",
+  "purpose": "The TASK-024 approval UI end to end against the real API and MySQL: U3 enables PO approval (wrong password rejected, reason kept), U1 creates and submits two POs and withdraws and resubmits one, U2 checks the decision form focus order, gets 403 on a wrong password, approves through a response lost after the server committed, stays locked while uncertain, replays the same eventId to the committed decision (Idempotency-Replayed header, identical body), then rejects the second PO; no uncaught page or console errors Extend the same approval scenario through batch receiving; reject an unexplained over-receipt and prove the partial receipt is visible in PO history, the stock balance and its linked movement.",
+  "data": "Per run with a unique suffix, inserted into the already-migrated erp_dev: 4 users via server/scripts/createUser.js (1 disabled bootstrap), 3 roles, 1 supplier, 1 item, 1 UOM, 1 SKU, 1 SKU-UOM, 3 device approvals via server/scripts/approveDevice.js; the run creates 2 purchase orders of 1 line each. Sets purchasing_settings row 1 require_po_approval=0 before the run Retains four users including the disabled bootstrap, two one-line POs, one SKU and three device approvals. Approved PO quantity is two. One SKU is batch-tracked. Adds two U1 permissions, one warehouse, one bin and one one-line/one-detail receipt. Two confirm attempts are sequential, rejected quantity three and successful quantity one.",
+  "concurrency": "One Playwright worker and three actor contexts in total. Up to two contexts stay open because the buyer context is reused after approval. Actor operations and the two receipt attempts run sequentially.",
+  "repetitions": "1 (no retries)",
+  "thresholds": "The junit report has exactly 1 testcase and no failure, error or skipped element; no timing threshold The same one-testcase JUnit gate, with one movement and on-hand increase from zero to one; no new timing threshold.",
+  "trigger": "Proposed: server-tests shard 1, in the existing real-MySQL browser step after coverage and the shard identity record: every admitted PR dispatch, every push to main and the existing weekly schedule. Wired by the TL in ci.yml inside that step: two port variables, one npx playwright line and one junit assertion, plus the report path in the retain step. The ci.yml blob is pinned by the composition receipt fulfillment-task035-reversal-functional.json (refreshed in the same commit), which is the single ci.yml pinner by convention",
+  "cost": "Measured locally on an already-migrated database, excluding migrate: 12.8-14.3 s over 3 runs at 9c1680fb. Not measured in CI. No new job, no new service, no capacity workload Current combined case measured at 15.6 s locally; CI cost is unmeasured.",
+  "files": [
+    {
+      "path": "client/e2e/purchasing-receiving-management/purchasing-approval-flow.spec.js",
+      "mode": "100644",
+      "blob": "bff1f0726efef4240a67f9672f4e121cd89bf5a7",
+      "kind": "functional",
+      "cases": [
+        "PO approval: settings, submit, withdraw/resubmit, approve through a lost response, reject",
+        "PO approval and receipt: settings, submit, withdraw/resubmit, approve through a lost response, reject, post stock"
+      ]
+    },
+    {
+      "path": "client/e2e/purchasing-receiving-management/playwright.config.js",
+      "mode": "100644",
+      "blob": "7dd2630e4331ee3818395a44e3e61a2af10b5ab6",
+      "kind": "functional",
+      "cases": [
+        "PO approval: settings, submit, withdraw/resubmit, approve through a lost response, reject"
+      ]
+    },
+    {
+      "path": "server/scripts/createUser.js",
+      "mode": "100644",
+      "blob": "d413b18098e0d91988f6a3a6284344ba99c3269e",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/scripts/approveDevice.js",
+      "mode": "100644",
+      "blob": "6802933a6be1a05ba61d3a60c138cdeee0748aa1",
+      "kind": "support",
+      "cases": []
+    }
+  ]
+}

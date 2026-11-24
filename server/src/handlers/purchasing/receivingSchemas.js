@@ -1,4 +1,6 @@
 import { RequestValidator } from "../../framework/validation/requestValidator.js";
+import { InventoryPostingService } from "../../modules/inventory/InventoryPostingService.js";
+import { GoodsReceiptPostingService } from "../../modules/purchasing/GoodsReceiptPostingService.js";
 import { GoodsReceiptService } from "../../modules/purchasing/GoodsReceiptService.js";
 import { normalizePurchasingConfig } from "../../modules/purchasing/normalizePurchasingConfig.js";
 import { PurchasingAuditService } from "../../modules/purchasing/PurchasingAuditService.js";
@@ -14,6 +16,9 @@ const DATE = { type: "string", format: "date" }, OPTIONAL_DATE = { type: ["strin
 const REASON = { type: "string", maxLength: 2000 };
 
 export const GOODS_RECEIPT_ID_PARAMS = PURCHASE_ORDER_ID_PARAMS;
+/** Confirm 嘅 id 保持字串（唔 coerce）：Inventory issuer 要求 params.id 同 source.documentId 字串完全相等（provider v1 §2）。 */
+export const GOODS_RECEIPT_CONFIRM_PARAMS = Object.freeze({ type: "object", required: ["id"], additionalProperties: false,
+  properties: { id: { type: "string", pattern: "^[1-9][0-9]{0,15}$" } } });
 // 設計 §5.3、§6.1：GR Draft 寫入要 purchasing.view＋receiving.operation（權限唔繼承）；service 喺 transaction 入面再驗。
 export const GOODS_RECEIPT_WRITE_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["purchasing.view", "receiving.operation"] } });
 
@@ -47,7 +52,7 @@ export const GOODS_RECEIPT_CANCEL_INPUT = Object.freeze({ type: "object", requir
 export const GOODS_RECEIPT_COMMAND_RESPONSE = Object.freeze({
   type: "object", required: ["id", "number", "status", "version", "warnings", "replayed"], additionalProperties: false,
   properties: {
-    id: ID, number: { type: "string", pattern: "^GR-\\d{6}-\\d{6}$" }, status: { enum: ["DRAFT", "CANCELLED"] }, version: ID,
+    id: ID, number: { type: "string", pattern: "^GR-\\d{6}-\\d{6}$" }, status: { enum: ["DRAFT", "CANCELLED", "CONFIRMED"] }, version: ID,
     warnings: { type: "array", maxItems: 1, items: { type: "object", required: ["code", "field", "count"], additionalProperties: false,
       properties: { code: { const: "DUPLICATE_DELIVERY_NOTE" }, field: { const: "supplierDeliveryNote" }, count: { type: "integer", minimum: 1, maximum: 5 } } } },
     replayed: { type: "boolean" }
@@ -59,10 +64,12 @@ const validator = new RequestValidator({ config: { enabled: true, allErrors: fal
 const VALIDATORS = {
   create: validator.compile({ body: GOODS_RECEIPT_CREATE_INPUT }, "Goods Receipt create body"),
   update: validator.compile({ body: GOODS_RECEIPT_UPDATE_INPUT }, "Goods Receipt update body"),
-  cancel: validator.compile({ body: GOODS_RECEIPT_CANCEL_INPUT }, "Goods Receipt cancel body")
+  cancel: validator.compile({ body: GOODS_RECEIPT_CANCEL_INPUT }, "Goods Receipt cancel body"),
+  // §5.3：Confirm body 同 update 一樣（完整 replace＋confirm）。
+  confirm: validator.compile({ body: GOODS_RECEIPT_UPDATE_INPUT }, "Goods Receipt confirm body")
 };
 
-/** 驗 body 同 `Idempotency-Key`＝`eventId`（§5.1）。`kind` 係 create、update 或者 cancel。 */
+/** 驗 body 同 `Idempotency-Key`＝`eventId`（§5.1）。`kind` 係 create、update、cancel 或者 confirm。 */
 export function goodsReceiptCommand(req, kind) {
   const body = req.input.body;
   validated(VALIDATORS[kind], { body }, "body");
@@ -73,9 +80,31 @@ export function goodsReceiptCommand(req, kind) {
 
 export function goodsReceiptService(services, logger) {
   const config = normalizePurchasingConfig(services.config.purchasing);
+  const database = services.require("mysqldatabase"), time = services.require("time"), jwt = services.require("jwt");
+  // Inventory issuer 用返現有 JWT 嘅 session／clock 限額（同 Inventory 高風險 handler 一樣），唔另訂。
+  const posting = new GoodsReceiptPostingService({ database, logger, time, inventory: new InventoryPostingService({ database, logger, time }),
+    auth: { sessionMaxAgeSeconds: jwt.sessionMaxAgeSeconds, clockToleranceSeconds: jwt.config.jwt.clockToleranceSeconds } });
   return new GoodsReceiptService({
-    database: services.require("mysqldatabase"), logger, time: services.require("time"), config,
-    sequences: new PurchasingSequenceService(), operations: new PurchasingOperationService(),
-    audit: new PurchasingAuditService({ auditDetailMaxBytes: config.auditDetailMaxBytes })
+    database, logger, time, config, sequences: new PurchasingSequenceService(), operations: new PurchasingOperationService(),
+    audit: new PurchasingAuditService({ auditDetailMaxBytes: config.auditDetailMaxBytes }), posting
   });
 }
+
+// 收貨單最小 list／detail 回應（GoodsReceiptInquiryService；設計 §5.3 子集）。
+const TEXT = { type: "string" }, NTEXT = { type: ["string", "null"] }, INT = { type: "integer", minimum: 0 }, NINT = { type: ["integer", "null"], minimum: 0 };
+const BASE = { type: "string", pattern: "^[0-9]+$" }, FLAG = { type: "boolean" };
+const HEADER_PROPERTIES = { id: ID, number: TEXT, status: { enum: ["DRAFT", "CONFIRMED", "PARTIALLY_REVERSED", "REVERSED", "CANCELLED"] }, version: ID,
+  purchaseOrderId: ID, purchaseOrderNumber: TEXT, supplierId: ID, supplierCode: TEXT, supplierName: TEXT, businessReceiptDate: TEXT,
+  supplierDeliveryNote: TEXT, totalReceivedBaseQuantity: BASE, hasOverReceipt: FLAG, hasExpiryOverride: FLAG, hasSkuException: FLAG, updatedAt: INT, confirmedAt: NINT };
+const strict = (properties) => ({ type: "object", required: Object.keys(properties), additionalProperties: false, properties });
+const GR_DETAIL = strict({ id: ID, detailNumber: ID, inputUomId: ID, inputUomCode: TEXT, receivedQuantity: TEXT, receivedBaseQuantity: BASE, warehouseId: ID,
+  binId: ID, warehouseCode: TEXT, binCode: TEXT, lotNumber: TEXT, expiryDate: NTEXT, manufactureDate: NTEXT, stockStatus: TEXT, expiryOverrideReason: TEXT,
+  inventoryMovementId: NINT });
+const GR_LINE = strict({ id: ID, purchaseOrderLineId: ID, lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, receivedBaseQuantity: BASE,
+  overReceivedBaseQuantity: BASE, overReceiptReason: TEXT, skuExceptionReason: TEXT, skuWarningCodes: { type: "array", items: TEXT },
+  details: { type: "array", items: GR_DETAIL } });
+export const GOODS_RECEIPT_LIST_RESPONSE = strict({ items: { type: "array", items: strict(HEADER_PROPERTIES) }, total: INT, page: ID,
+  pageSize: { type: "integer", minimum: 1, maximum: 100 } });
+export const GOODS_RECEIPT_DETAIL_RESPONSE = strict({ ...HEADER_PROPERTIES, notes: TEXT, supplierStatusAtConfirm: TEXT, supplierExceptionReason: TEXT,
+  createdByLabel: TEXT, updatedByLabel: TEXT, createdAt: INT, cancelledAt: NINT, cancelReason: TEXT,
+  allowedActions: { type: "array", items: { enum: ["update", "cancel", "confirm"] } }, lines: { type: "array", items: GR_LINE } });

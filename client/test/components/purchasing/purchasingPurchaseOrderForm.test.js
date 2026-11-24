@@ -67,6 +67,11 @@ describe("預覽同 server 一致（§7.3）", () => {
 });
 
 describe("TC-003 PO form", () => {
+  it("供應商顯示名稱留空時，選項用供應商名稱（UAT 預演 75f15d34）", async () => {
+    await mountForm();
+    const label = select("供應商 *").props("optionLabel");
+    expect([label({ supplierCode: "S9", displayName: "", supplierName: "九號供應商" }), label(supplierA)]).toEqual(["S9 — 九號供應商", "S2 — 供應商二"]);
+  });
   it("建立：帶入 Supplier 預設、預設 Buyer 係自己，只送可編輯欄位", async () => {
     purchasing.createPurchaseOrder.mockResolvedValue(saved);
     const { form } = await mountForm();

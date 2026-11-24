@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Work item: PM work list ccea29fb of 2026-11-20 (Sam's instruction relayed), item 3a+3b, AR client pages by claude-erp-app-supplier-01. client/config/menu.js (one added group, one-off SCOPE from claude-erp-app-tl-01, agentmsg fe7cd70a) is pinned by purchasing-task024-client.json, whose menu.js pin this change refreshes (CI admin 1c5b13d6). The author does not approve this receipt.",
+  "purpose": "AR client, invoice pages: a service for /api/v1/ar-invoices and /api/v1/ar-invoiced-shipments whose commands send Idempotency-Key equal to body.eventId; an invoice list with URL-restored filters; an invoice detail that shows the server totalAmount rather than a line sum, line amounts without rounding and sales-unit quantities and, with fulfillment.view, links from lines to their shipments, with confirm, cancel and void through the existing useCommandEvent (an uncertain outcome retries the same eventId); and a create-from-shipments page that lists SHIPPED shipments, marks those already invoiced, limits the selection to one customer and 20 shipments, and locks the form while an outcome is uncertain. menu.js gains the accountsReceivable group these pages declare. The receipt UI follow-up displays an em dash for outstanding amounts on voided or cancelled invoices in both the list and details.",
+  "data": "No database or network: mocked services and real discovered pages, with inline objects of at most 4 shipments, 2 invoice lines and 1 invoice. No fixture files. One follow-up case uses three inline invoice rows, with no database or network.",
+  "concurrency": "Within a case: 1, no concurrent requests. Runner workers unchanged: the existing client job keeps Vitest's default file workers.",
+  "repetitions": "1",
+  "thresholds": "All 24 cases pass. The client coverage configuration is unchanged (it sets no numeric floor); server floors are untouched. No timing threshold.",
+  "trigger": "Existing ci.yml triggers and discovery only, in the existing client test job: admitted PR dispatch, push to main and the existing weekly schedule. No new job, step, schedule or dispatch. No capacity or performance workload.",
+  "cost": "Local run of the 3 new files: 23 cases in about 0.3 s of test time (about 1.1 s wall). Not measured in CI. No new job. Browser evidence is a private Playwright run outside CI discovery (3 flows, mocked AR API because the AR endpoints of #372/#375 are not in main), kept in .worktrees/ci-pm-handoffs/ar-client-invoices-browser-20261120; it adds nothing to CI. The follow-up additionally verifies the amount display once using the existing private real HTTP and Playwright receipt and aging flow.",
+  "files": [
+    {
+      "path": "client/test/services/ar.test.js",
+      "mode": "100644",
+      "blob": "e8df6aa8435d978bd1fc6fbc78896a196a381d62",
+      "kind": "functional",
+      "cases": [
+        "confirm、cancel、void 用 body.eventId 做 Idempotency-Key，body 原封不動",
+        "列表映射 DataTable；唔送 sortBy／descending 同空 filter；detail 轉發 AbortSignal",
+        "按幣別小數位顯示，但唔四捨五入真 4 位小數",
+        "整除顯示銷售單位 × 單價；否則顯示基本單位並註明單價單位；大數用 BigInt"
+      ]
+    },
+    {
+      "path": "client/test/pages/ar/arInvoicePages.test.js",
+      "mode": "100644",
+      "blob": "a4e01f019be89e8fc3987b31c1dd99a0b35fd105",
+      "kind": "functional",
+      "cases": [
+        "要 ar.view；掛喺應收管理菜單；顯示幣別小數位嘅金額同查看連結",
+        "已取消及已作廢的發票在列表及詳情以破折號顯示未收額",
+        "開票按鈕要 ar.invoice.mgmt 同 fulfillment.view；只有 view 唔見",
+        "URL 還原 filter 同頁碼；未知 key 唔送；搜尋寫入 URL",
+        "頁碼唔合法用第 1 頁；草稿冇編號有文字；空結果有提示",
+        "總額用 server 嘅 totalAmount，唔係各行相加；行金額照 4 位小數；數量按銷售單位換算",
+        "有 fulfillment.view 先將出貨單 ID 做成連結",
+        "只有 ar.view：server 有 action 都唔出命令按鈕",
+        "id 唔係正整數：唔發 HTTP，顯示找不到",
+        "確認草稿：先問確認，送 version 同 eventId，成功後重新讀取",
+        "取消確認對話框就唔發命令",
+        "作廢要原因；取消原因對話框唔發；有原因就送 trim 過嘅原因",
+        "結果未確定：顯示 banner，重試用同一個 eventId；期間命令按鈕停用",
+        "版本衝突：顯示 server 訊息並重新讀取；下次係新 eventId"
+      ]
+    },
+    {
+      "path": "client/test/pages/ar/arInvoiceCreatePage.test.js",
+      "mode": "100644",
+      "blob": "517fdf2173b6e9ab27525f140fc8a20509e648fb",
+      "kind": "functional",
+      "cases": [
+        "要 ar.view、ar.invoice.mgmt 同 fulfillment.view；只搜 SHIPPED，再問邊啲已開票",
+        "揀咗一個客戶，其他客戶嘅出貨唔可以揀；送整數 shipmentIds 同發票日期，成功去詳情",
+        "到期日要原因：顯示 server 訊息，保留選擇，補原因後用新 eventId 再送",
+        "所選出貨已開票：顯示訊息並重新查詢標記",
+        "結果未確定：鎖住選擇，重試用同一個 eventId 同內容",
+        "讀取出貨失敗：顯示錯誤同重試；空結果有提示"
+      ]
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoicesPage.vue",
+      "mode": "100644",
+      "blob": "af688c728ea44b40da4f73558dbe3cdd16813621",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoiceDetailPage.vue",
+      "mode": "100644",
+      "blob": "c2c4fc723d08859912c48d1b9d28f994fbec1e20",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoiceCreatePage.vue",
+      "mode": "100644",
+      "blob": "c4c8ad77498841512d85facb305cde5d15da2dc2",
+      "kind": "support"
+    }
+  ]
+}
