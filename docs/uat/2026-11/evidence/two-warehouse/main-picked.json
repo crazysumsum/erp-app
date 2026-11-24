@@ -1,0 +1,50 @@
+{
+  "stage": "main-picked",
+  "balances": [
+    [
+      "UAT-MAIN",
+      "UAT-PICK",
+      "UAT-B1-EARLY",
+      "2027-01-15",
+      "36"
+    ],
+    [
+      "UAT-MAIN",
+      "UAT-PICK",
+      "UAT-B1-LATE",
+      "2027-03-15",
+      "60"
+    ],
+    [
+      "UAT-SECOND",
+      "UAT-PICK",
+      "UAT-B1-SECOND-1124",
+      "2027-04-15",
+      "10"
+    ],
+    [
+      "UAT-SECOND",
+      "UAT-PICK",
+      "UAT-B1-SECOND-LATE",
+      "2027-06-15",
+      "10"
+    ]
+  ],
+  "orders": [
+    [
+      "UAT-MAIN",
+      "2",
+      "2",
+      "0",
+      "0"
+    ],
+    [
+      "UAT-SECOND",
+      "2",
+      "2",
+      "0",
+      "0"
+    ]
+  ],
+  "issue": []
+}

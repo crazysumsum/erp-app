@@ -21,3 +21,5 @@
 4. 按操作卡逐步執行，記下本次單據編號並代入下一步。例如 `node preparation/order-steps.cjs S01` 建報價，再以本次報價 ID 執行 S02。首批 P03 依序以 `node preparation/receive.cjs new 1`、`post 1`、`check 1` 建立、過帳及對帳，P05 的批次參數為 2。腳本中的樣本 ID 與既有結果對應 11/23 指定的預演資料，重演前請先核對。[Playwright 操作卡](preparation/playwright-steps.md) · [實跑操作與時間戳](evidence/scenario-times.jsonl)
 
 `evidence/` 保存合成測試單據的對帳結果及時間戳。每次重做預演時以新的證據目錄保存該次結果。正式驗收用當時部署的完整 SHA 及當次單據另行記錄。
+
+11/24 在含 #393 的版本補驗兩倉批次出貨，並以貨品範本確認分類與品牌的建檔前置。兩倉另計，見 [補驗結果](20261124-rehearsal.md)。

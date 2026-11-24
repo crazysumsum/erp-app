@@ -1,0 +1,21 @@
+{
+  "warehouse": "UAT-MAIN",
+  "bin": "UAT-PICK",
+  "sku": "UAT-B1",
+  "lot": "UAT-B1-EARLY",
+  "expiry": "2027-01-15",
+  "quantity": 2,
+  "quote": "QT-202611-000004",
+  "quoteId": 4,
+  "quoteDone": true,
+  "order": "SO-202611-000004",
+  "orderId": 4,
+  "orderDone": true,
+  "fulfillment": "FUL-202611-000008",
+  "fulfillmentId": 8,
+  "fulfillDone": true,
+  "pickDone": true,
+  "shipId": 8,
+  "shipment": "SHP-202611-000008",
+  "shipDone": true
+}

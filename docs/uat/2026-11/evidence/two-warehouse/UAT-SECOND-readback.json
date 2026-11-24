@@ -1,0 +1,9 @@
+{
+  "shipment": "SHP-202611-000009",
+  "movement": "31",
+  "warehouse": "UAT-SECOND",
+  "bin": "UAT-PICK",
+  "lot": "UAT-B1-SECOND-1124",
+  "expiry": "2027-04-15",
+  "quantity": 2
+}
