@@ -53,7 +53,7 @@
 - `KEY(status,invoice_date,id)`：發票列表。
 - 外鍵：`supplier_id`→`suppliers`、`currency_code`→`currencies`，`ON DELETE RESTRICT`：有發票的供應商及幣別不可刪除。
 - `CHECK`：三個金額不為負；`outstanding_amount = total_amount − allocated_amount`；`due_date`不早於`invoice_date`；`status`取值；`supplier_total_amount`為NULL或不為負。
-- **隨決定而變**：決定一採B時不設`supplier_total_amount`及`no_po_reason`。
+- **隨決定而變**：決定一採B時不設`supplier_total_amount`及`no_po_reason`；採C時不設`no_po_reason`。
 
 ## 4. `ap_invoice_lines` — 發票行（收貨行或費用行）
 
@@ -78,10 +78,11 @@
 - `UNIQUE(active_goods_receipt_line_id)`：**一個收貨行同一時間只可在一張有效發票上**。由資料庫保證，兩人同時為同一張收貨開票時只有一個成功。
 - `UNIQUE(invoice_id,line_no)`：同一發票內行號不重複。
 - `KEY(goods_receipt_id,id)`：按收貨查其發票（建立發票頁標示「已在發票上」）。
-- 外鍵：`invoice_id`→`ap_invoices`、`goods_receipt_id`→`goods_receipts`、`goods_receipt_line_id`→`goods_receipt_lines`，均`ON DELETE RESTRICT`。對採購單及採購行不設外鍵：收貨對採購單已有`RESTRICT`外鍵，再加一層只會令插入時多取採購一側的鎖。
+- 外鍵：`invoice_id`→`ap_invoices`、`goods_receipt_id`→`goods_receipts`、（`goods_receipt_line_id`,`goods_receipt_id`）→`goods_receipt_lines`（`id`,`goods_receipt_id`），均`ON DELETE RESTRICT`。收貨行用複合外鍵（對應現有的唯一鍵`uq_gr_lines_id_gr`），由資料庫保證該行確實屬於該收貨；這是Purchasing負責人`9e2fd7ab`的建議。對採購單及採購行不設外鍵：收貨對採購單已有`RESTRICT`外鍵，再加一層只會令插入時多取採購一側的鎖。
 - `CHECK`：`line_type`取值；收貨行的兩個收貨ID不為NULL而且`quantity`大於0；費用行的兩個收貨ID及`active_goods_receipt_line_id`為NULL、`quantity`為0、`line_amount`大於0；`unit_price`、`po_unit_price_snapshot`及`line_amount`不為負。
 - 不在表結構內的規則（由程式檢查）：改價須`ap.invoice.price.override`及原因；費用行描述不可空白。
-- **隨決定而變**：決定一採B時不設`line_type`、`unit_price`、`price_override_reason`、`description`，兩個收貨ID改為`NOT NULL`。決定二採B（按數量部分開票）時，這張表的唯一鍵不適用，要另加一張按收貨行記錄已佔用數量的表，共八張。
+- 「整張收貨只屬於一張發票」由兩件事合起來保證：這個按收貨行的唯一鍵，加上程式在同一交易為收貨的全部行各建一行、取消或作廢時一併釋放。資料庫本身只保證到行。
+- **隨決定而變**：決定一採B時不設`line_type`、`unit_price`、`price_override_reason`、`description`，兩個收貨ID改為`NOT NULL`。決定一採C時不設`line_type`及`description`（發票表不設`no_po_reason`），兩個收貨ID改為`NOT NULL`，其餘與A相同。決定二採B（按數量部分開票）時，這張表的唯一鍵不適用，要另加一張按收貨行記錄已佔用數量的表，共八張。
 
 ## 5. `ap_payments` — 付款
 
