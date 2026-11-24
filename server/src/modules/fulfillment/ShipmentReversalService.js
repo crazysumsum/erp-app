@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { FulfillmentTransactionService,assertFulfillmentTransaction } from "./FulfillmentTransactionService.js";
 import { FulfillmentOperationService } from "./FulfillmentOperationService.js";
 import { FulfillmentSequenceService } from "./FulfillmentSequenceService.js";
-import { FulfillmentDownstreamMatterService } from "./FulfillmentDownstreamMatterService.js";
+import { FulfillmentDownstreamMatterService, SHIPMENT_DOWNSTREAM_PROVIDERS_VERSION } from "./FulfillmentDownstreamMatterService.js";
 import { lockFulfillmentRowsInTransaction } from "./FulfillmentLockService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { normalizeShipmentReversal } from "./shipmentReversalCommand.js";
@@ -38,8 +38,10 @@ export class ShipmentReversalService {
  #recoveryVerifier;
  #recoveryStarts=new WeakMap();
  #zeroSessions=new WeakMap();
- constructor({database,time,logger,downstreamRegistry,operationLeaseMs=60000,recoveryVerifier=null}){
-  Object.assign(this,{database,time});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry});
+ #recheckLegacyDownstream;
+ constructor({database,time,logger,downstreamRegistry,downstreamProviders,operationLeaseMs=60000,recoveryVerifier=null}){
+  Object.assign(this,{database,time});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry,providers:downstreamProviders});
+  this.#recheckLegacyDownstream=downstreamProviders===undefined;
   this.#admission=new ShipmentEventAdmission({database,readWriter:token=>this.#startedAttempts.get(token)});
   if(recoveryVerifier!==null&&typeof recoveryVerifier!=="function")throw new TypeError("Private reversal Recovery verifier required");
   this.#recoveryVerifier=recoveryVerifier;
@@ -93,6 +95,7 @@ export class ShipmentReversalService {
     if(durable.actorId!==observed.durable.actorId||fulfillmentOperationHash(durable.request)!==fulfillmentOperationHash(observed.durable.request)||durable.request.correlationId!==observed.durable.request.correlationId)return {state:"UNKNOWN"};
     const terminalResult=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId:durable.request.target.id,command:durable.request.payload});
     if(terminalResult)return {state:terminalResult.status==="SUCCEEDED"?"SUCCEEDED":"FAILED",result:terminalResult};
+    if(!this.#recheckLegacyDownstream&&durable.registryVersion!==SHIPMENT_DOWNSTREAM_PROVIDERS_VERSION)return {state:"UNKNOWN"};
     const record={tx,token,signal:transactionSignal,durable,phase:null,source:null};
     const current=await this.#inspectionFence(tx,record),attemptCount=Number(current.row.attempt_count);
     if(!Number.isSafeInteger(attemptCount)||attemptCount<1||attemptCount>4294967295)return {state:"UNKNOWN"};
@@ -107,7 +110,7 @@ export class ShipmentReversalService {
     const locked=await readLockedShipmentReversalSnapshot(this.database,tx,{request:durable.request,reversalId:String(durable.reversal.id),fulfillmentId:record.source.fulfillmentId,actorId:durable.actorId});
     if(JSON.stringify(shipmentReversalZeroEffectSource(locked,durable))!==JSON.stringify(record.source))return {state:"UNKNOWN"};
     await assertLocalShipmentReversalZeroEffect(tx,locked,durable);
-    await this.downstream.assertShipmentReversibleInTransaction(tx,{shipmentId:durable.request.target.id});
+    if(this.#recheckLegacyDownstream)await this.downstream.assertShipmentReversibleInTransaction(tx,{shipmentId:durable.request.target.id});
     record.phase="reversal.zero.inventory.finish";const inventoryProof=await inventory.readShipmentReversalZeroEffectInTransaction(tx,inventoryContext);
     record.phase="reversal.zero.inventory.verify";const inventoryResult=await inventory.verifyShipmentReversalZeroEffectProofInTransaction(tx,session,inventoryProof);
     record.phase="reversal.zero.sales.verify";const salesResult=await sales.verifyShipmentReversalZeroEffectProofInTransaction(tx,session,salesProof);
@@ -275,7 +278,8 @@ export class ShipmentReversalService {
        const salesProof=await sales.lockLinesForFulfillmentInTransaction(tx,intent);if(salesProof.replay!==false||!salesProof.order)fail("FULFILLMENT_SOURCE_CONFLICT");
        const snapshot=await readLockedShipmentReversalSnapshot(this.database,tx,{request,reversalId:started.reversal.id,fulfillmentId:prepared.inventoryPayload.fulfillmentId,actorId:binding.initiatorId});
        assertShipmentReversalSource(snapshot,command.payload,intent,salesProof.order,salesScope);
-       await this.downstream.assertShipmentReversibleInTransaction(tx,{shipmentId:request.target.id});
+       // Provider writers share the Shipment lock and cannot claim a REVERSING shipment.
+       if(this.#recheckLegacyDownstream)await this.downstream.assertShipmentReversibleInTransaction(tx,{shipmentId:request.target.id});
        const result=await inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,proof),projection=shipmentReversalProjection(result,command.payload,proof,snapshot,inventoryScope);
        const salesResult=await sales.applyFulfillmentResultInTransaction(tx,{intent,inventoryResult:result});assertReversedSalesProjection(salesResult,intent,salesProof.order);
        const output=await saveShipmentReversalProjection(tx,snapshot,projection,request,actor,this.time.nowMs());
