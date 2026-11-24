@@ -1,6 +1,6 @@
 # 片RT 客戶退貨及退回供應商：資料表說明（供Sam批准）
 
-日期：2026-11-25（r1）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.2、7.3。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者補上號碼、往來方快照、確認事件及約束。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r3）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.2、7.3。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者補上號碼、往來方快照、確認事件及約束。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
 
 ## 1. `returns_operation_requests` — 退貨模組的操作識別
 
@@ -25,7 +25,7 @@
 | 欄位 | 型別 | NULL | 預設 | 用途 |
 | --- | --- | --- | --- | --- |
 | `id` | BIGINT UNSIGNED AUTO_INCREMENT | 否 | 自動 | 主鍵 |
-| `return_number` | VARCHAR(24) ascii | 是 | NULL | 過帳時取號（`CRT-YYYY-000001`）；草稿為空 |
+| `return_number` | VARCHAR(24) ascii | 否 | 無 | 建立時在同一交易寫入`CRT-`加ID（r3：不用年度流水號，因為過帳在成本池鎖之後不可再鎖編號列） |
 | `status` | VARCHAR(20) ascii | 否 | `DRAFT` | `DRAFT`、`POSTED`、`CANCELLED` |
 | `shipment_id` | BIGINT UNSIGNED | 否 | 無 | 原出貨 |
 | `customer_id` | BIGINT UNSIGNED | 否 | 無 | 客戶（取自原出貨） |
@@ -47,7 +47,7 @@
 
 - 主鍵`id`；`UNIQUE(return_number)`；`UNIQUE(id, shipment_id)`（供明細複合外鍵）；`KEY(shipment_id, status, id)`（出貨沖銷的檢查及按出貨查詢）；`KEY(customer_id, return_date, id)`。
 - 外鍵：`shipment_id`→`shipments(id)`、`customer_id`→`customers(id)` `RESTRICT`；人員→`users` `SET NULL`。
-- `CHECK`：`status`取值；`POSTED`時`return_number`及`posted_at`不為NULL，其餘狀態`return_number`為NULL；`version >= 1`。
+- `CHECK`：`status`取值；`POSTED`時`posted_at`不為NULL；`version >= 1`。
 
 ## 3. `customer_return_lines` — 客戶退貨行
 
@@ -72,7 +72,7 @@
 | 欄位 | 型別 | NULL | 預設 | 用途 |
 | --- | --- | --- | --- | --- |
 | `id` | BIGINT UNSIGNED AUTO_INCREMENT | 否 | 自動 | 主鍵 |
-| `return_number` | VARCHAR(24) ascii | 是 | NULL | 過帳時取號（`SRT-YYYY-000001`） |
+| `return_number` | VARCHAR(24) ascii | 否 | 無 | 建立時在同一交易寫入`SRT-`加ID（同上） |
 | `status` | VARCHAR(20) ascii | 否 | `DRAFT` | `DRAFT`、`POSTED`、`CANCELLED` |
 | `goods_receipt_id` | BIGINT UNSIGNED | 否 | 無 | 原收貨 |
 | `purchase_order_id` | BIGINT UNSIGNED | 否 | 無 | 原採購單（鎖序及查詢） |
@@ -95,7 +95,7 @@
 
 - 主鍵`id`；`UNIQUE(return_number)`；`UNIQUE(id, goods_receipt_id)`；`KEY(goods_receipt_id, status, id)`；`KEY(supplier_id, return_date, id)`。
 - 外鍵：`goods_receipt_id`→`goods_receipts(id)`、`purchase_order_id`→`purchase_orders(id)`、`supplier_id`→`suppliers(id)` `RESTRICT`；人員`SET NULL`。
-- `CHECK`：`status`取值；`POSTED`時`return_number`及`posted_at`不為NULL，其餘狀態`return_number`為NULL；`version >= 1`。
+- `CHECK`：`status`取值；`POSTED`時`posted_at`不為NULL；`version >= 1`。
 
 ## 5. `supplier_return_lines` — 退回供應商行
 

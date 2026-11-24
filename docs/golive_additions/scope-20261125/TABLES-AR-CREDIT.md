@@ -1,6 +1,6 @@
 # 片ARC 應收貸項單及客戶退款：資料表說明（供Sam批准）
 
-日期：2026-11-25（r2）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者改為「核銷計入發票現有的`allocated_amount`、不加發票欄」（`SCOPE.md` 7.4的理由），並去掉生效日期（應收沒有關帳日）。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r3）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者改為「核銷計入發票現有的`allocated_amount`、不加發票欄」（`SCOPE.md` 7.4的理由），並去掉生效日期（應收沒有關帳日）。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
 
 ## 1. `ar_credit_notes` — 應收貸項單
 
@@ -18,7 +18,7 @@
 | `credit_date` | DATE | 否 | 無 | 貸項日期 |
 | `reason` | VARCHAR(500) | 否 | 無 | 原因 |
 | `customer_return_id` | BIGINT UNSIGNED | 是 | NULL | 連結的客戶退貨單（可空） |
-| `total_amount` | DECIMAL(19,4) | 否 | 無 | 貸項金額（各行之和，到幣別小數位） |
+| `total_amount` | DECIMAL(19,4) | 否 | 無 | 貸項金額＝各行之和（各行已是幣別小數位，不再進位） |
 | `applied_amount` | DECIMAL(19,4) | 否 | 0 | 已核銷額（含對原發票的那一筆） |
 | `refunded_amount` | DECIMAL(19,4) | 否 | 0 | 已退款額 |
 | `available_amount` | DECIMAL(19,4) | 否 | 無 | 可用額 |
@@ -50,13 +50,13 @@
 | `invoice_line_id` | BIGINT UNSIGNED | 是 | NULL | 原發票行；只有原發票是沒有行的期初發票時為NULL |
 | `customer_return_line_id` | BIGINT UNSIGNED | 是 | NULL | 連結的退貨行 |
 | `base_quantity` | BIGINT UNSIGNED | 是 | NULL | 涉及的數量（只供顯示；純價差為空） |
-| `amount` | DECIMAL(19,4) | 否 | 無 | 本行金額 |
+| `amount` | DECIMAL(19,4) | 否 | 無 | 本行金額，只收幣別小數位（程式驗；r3） |
 | `description` | VARCHAR(500) | 否 | `''` | 說明 |
 
 - 主鍵`id`；`UNIQUE(credit_note_id, line_no)`；`KEY(invoice_line_id, id)`（求原發票行的已貸累計）。
 - 外鍵：（`credit_note_id`,`invoice_id`）→`ar_credit_notes(id, invoice_id)`；`invoice_line_id`→`ar_invoice_lines(id)`；`customer_return_line_id`→`customer_return_lines(id)`；均`RESTRICT`。
 - `CHECK`：`amount > 0`；`base_quantity`為NULL或大於0。
-- 由程式在原發票鎖下檢查：發票行屬於`invoice_id`；同一原發票行的已確認貸項累計不超過該行金額；期初發票只容許一行、`invoice_line_id`為NULL。
+- 由程式在原發票鎖下檢查：發票行屬於`invoice_id`；同一原發票行的已確認貸項累計不超過該行金額；同一原發票的已確認貸項總額累計不超過發票總額；期初發票只容許一行、`invoice_line_id`為NULL；所連退貨行屬於所連退貨單，而且其原出貨行是該發票行的來源。
 
 ## 3. `ar_credit_applications` — 貸項核銷
 
