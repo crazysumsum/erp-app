@@ -1,0 +1,4 @@
+﻿supplierId,supplierCode,supplierName,displayName,defaultCurrencyCode,paymentTermCode,website,generalPhone,generalEmail,notes,addressLabel,addressPurpose,addressLine1,addressLine2,addressLine3,city,stateRegion,postalCode,countryCode,addressPhone,contactName,contactPurpose,jobTitle,department,contactEmail,contactPhone,contactMobile,identifierType,issuerCountryCode,identifierValue
+,DEMO-SUP-001,【合成示例】供應商甲,,HKD,,,,,,,,,,,,,,,,,,,,,,,,,
+,DEMO-SUP-002,【合成示例】供應商乙,示例乙,HKD,,https://supplier.example.test,,office@supplier.example.test,請刪除此合成例子,,,,,,,,,,,,,,,,,,,,
+,DEMO-SUP-003,【合成示例】供應商丙,,HKD,,,,,,示例採購地址,ordering,示例路（虛構地址）,,,Hong Kong,,,HK,,示例聯絡人,orders,,,orders@supplier.example.test,,,other,HK,DEMO-ID-003

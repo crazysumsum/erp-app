@@ -1,0 +1,4 @@
+templateVersion,sourceOrderKey,channelCode,externalOrderId,customerId,warehouseCode,orderDate,requestedDeliveryDate,currencyCode,paymentTermCode,customerPoReference,orderNotes,skuCode,salesUomCode,quantity,unitSellingPrice,lineNote
+1.0,SYN-SO-001-A,SYNTHETIC,SYN-OLD-001-A,990001,SYN-WH-A,2026-11-24,2026-12-15,HKD,,SYN-PO-001,合成範例，A倉,SYN-SKU-A,EA,2,1.2500,合成明細
+1.0,SYN-SO-001-A,SYNTHETIC,SYN-OLD-001-A,990001,SYN-WH-A,2026-11-24,2026-12-15,HKD,,SYN-PO-001,合成範例，A倉,SYN-SKU-B,EA,1,2.5000,
+1.0,SYN-SO-001-B,SYNTHETIC,SYN-OLD-001-B,990001,SYN-WH-B,2026-11-24,2026-12-15,HKD,,SYN-PO-001,合成範例B倉,SYN-SKU-A,EA,3,1.2500,同舊單的另一倉

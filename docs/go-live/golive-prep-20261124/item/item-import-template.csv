@@ -1,0 +1,4 @@
+skuId,expectedSkuVersion,skuCode,skuName,itemName,categoryName,brandName,defaultTrackingPolicy,suggestedPriceAmount,purchasable,sellable,baseUomCode
+,,DEMO-ITEM-001,合成範例普通款,合成範例非批次商品,合成範例分類,合成範例品牌,none,,true,true,EA
+,,DEMO-ITEM-002,合成範例批次款,合成範例批次商品,合成範例分類,合成範例品牌,batch,,true,true,EA
+,,DEMO-ITEM-003,合成範例效期款,合成範例效期商品,合成範例分類,合成範例品牌,batch_expiry,,true,true,EA

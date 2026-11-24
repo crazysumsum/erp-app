@@ -1,0 +1,4 @@
+﻿帳號,顯示名稱,部門／職務,核准角色,開通批次,備註
+demo-user-01,示範銷售員,示範銷售／銷售員,demo-sales,1,示範資料
+demo-user-02,示範倉務員,示範倉務／倉務員,demo-warehouse,2,示範資料
+demo-user-03,示範採購員,示範採購／建單人,demo-buyer,3,示範資料

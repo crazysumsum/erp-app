@@ -1,0 +1,3 @@
+事件編號,登記時間台北,類型,出貨單號,銷售訂單號,履約單號,倉庫,庫位,SKU,批號,效期,基礎數量,單位,原操作識別碼,狀態或錯誤,庫存異動號,發票狀態及號碼,處理及證據,值班角色,覆核及結案時間
+DEMO-INC-001,2026-11-24 09:00,結果不明,DEMO-SHP-001,DEMO-SO-001,DEMO-FUL-001,DEMO-WH-A,DEMO-PICK-A,DEMO-SKU-01,DEMO-LOT-A1,2027-01-31,2,EA,DEMO-EVENT-01,原確認待查,,示範未開票,示範保留原分頁及單號,示範倉務主管,
+DEMO-INC-002,2026-11-24 09:10,誤出貨,DEMO-SHP-002,DEMO-SO-002,DEMO-FUL-002,DEMO-WH-B,DEMO-PICK-B,DEMO-SKU-01,DEMO-LOT-B1,2027-02-28,2,EA,DEMO-EVENT-02,已出貨待核對,DEMO-ISSUE-02,示範已通知財務,示範貨物隔離及等待實收對帳,示範倉務主管,
