@@ -5,7 +5,9 @@ export const page = { name: "ap-invoice-create", path: "/ap/invoices/new", title
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import ApCurrencyPicker from "@/components/ap/ApCurrencyPicker.vue";
 import ApExpenseRows from "@/components/ap/ApExpenseRows.vue";
+import ApSupplierPicker from "@/components/ap/ApSupplierPicker.vue";
 import { amountInputValid, today } from "@/components/ap/apPresentation.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
@@ -16,10 +18,12 @@ import purchasing from "@/services/purchasing.js";
 const router = useRouter(), session = useSessionStore();
 const command = useCommandEvent();
 const canReadReceipts = computed(() => session.permissions.includes("purchasing.view"));
+const canSearchSuppliers = computed(() => session.permissions.includes("supplier.view"));
 const mode = ref(canReadReceipts.value ? "receipt" : "expense");
 const key = computed(() => `${session.user?.id}:ap-invoice-create`);
-const filter = reactive({ supplierId: "", purchaseOrderId: "" });
-const form = reactive({ supplierId: "", currencyCode: "", supplierInvoiceNumber: "", invoiceDate: today(), dueDate: "",
+const receiptSupplier = ref(null), expenseSupplier = ref(null);
+const filter = reactive({ purchaseOrderId: "" });
+const form = reactive({ currencyCode: "", supplierInvoiceNumber: "", invoiceDate: today(), dueDate: "",
   dueDateReason: "", supplierTotalAmount: "", noPoReason: "", notes: "" });
 const expenses = ref([]);
 const receipts = ref([]), selected = reactive(new Map()), invoiced = ref(new Map());
@@ -34,13 +38,14 @@ const locked = computed(() => uncertain.value || busy.value);
 let controller;
 onBeforeUnmount(() => controller?.abort());
 watch(mode, () => { error.value = ""; });
+watch(expenseSupplier, (row) => { form.currencyCode = row?.defaultCurrencyCode ?? ""; });
 
 async function find(page = 1, fromForm = false) {
   controller?.abort();
   controller = new AbortController();
   const { signal } = controller;
   loading.value = true; lookupError.value = ""; searched.value = true;
-  if (fromForm) loadedFilters.value = { ...filter };
+  if (fromForm) loadedFilters.value = { ...filter, supplierId: canSearchSuppliers.value ? receiptSupplier.value?.id : undefined };
   try {
     const { rows, rowsNumber } = await purchasing.listGoodsReceipts({ ...loadedFilters.value, page, rowsPerPage: pageSize, status: "CONFIRMED", signal });
     const hits = await ap.listInvoicedReceipts(rows.map(({ id }) => id), { signal });
@@ -80,13 +85,12 @@ async function showError(message) {
 async function submit() {
   const pending = command.pending(key.value);
   const fromReceipts = mode.value === "receipt";
-  const supplierId = Number(form.supplierId), currencyCode = form.currencyCode.trim().toUpperCase();
+  const supplierId = expenseSupplier.value?.id, currencyCode = form.currencyCode;
   error.value = "";
   if (!pending) {
     if (fromReceipts && !selected.size) return showError("請選至少一張同供應商、同幣別的已確認收貨。");
-    if (!fromReceipts && (!Number.isSafeInteger(supplierId) || supplierId < 1 || !/^[A-Z]{3}$/u.test(currencyCode))) {
-      return showError("請輸入有效的供應商 ID 和貨幣代碼。");
-    }
+    if (!fromReceipts && !canSearchSuppliers.value) return showError("登記無採購單發票需要「查看供應商」權限。");
+    if (!fromReceipts && (!supplierId || !currencyCode)) return showError("請選擇供應商和幣別。");
     if (!fromReceipts && (!form.noPoReason.trim() || !expenses.value.length)) return showError("無採購單發票須填原因，並至少有一個費用行。");
     if (form.supplierTotalAmount && !amountInputValid(form.supplierTotalAmount, 4, true)) return showError("請核對供應商發票總額格式。");
     if (expenses.value.some((row) => !row.description.trim() || !amountInputValid(row.lineAmount, 4))) return showError("每個費用行須有說明和正數金額。");
@@ -128,10 +132,11 @@ async function submit() {
       </fieldset>
       <template v-if="mode === 'receipt'">
         <form role="search" method="get" class="row items-start q-gutter-md q-mb-md" @submit.prevent="find(1, true)">
-            <q-input v-model="filter.supplierId" name="supplierId" label="篩選供應商 ID" inputmode="numeric" pattern="[1-9][0-9]*" :disable="locked" outlined dense />
+            <ApSupplierPicker v-if="canSearchSuppliers" v-model="receiptSupplier" label="篩選供應商" :disable="locked" class="col-12 col-sm-4" />
             <q-input v-model="filter.purchaseOrderId" name="purchaseOrderId" label="篩選採購單 ID" inputmode="numeric" pattern="[1-9][0-9]*" :disable="locked" outlined dense />
             <q-btn type="submit" label="搜尋已確認收貨" flat :loading="loading" :disable="locked" />
         </form>
+        <p v-if="!canSearchSuppliers" class="text-grey-8">依供應商篩選需要「查看供應商」權限。</p>
         <div aria-live="polite" class="q-mb-md">
           <p v-if="loading" role="status">載入收貨中…</p>
           <q-banner v-else-if="lookupError" role="alert" class="bg-negative text-white">{{ lookupError }}<template #action><q-btn flat label="重試" @click="find(pageNumber)" /></template></q-banner>
@@ -158,13 +163,14 @@ async function submit() {
           </div>
         </div>
       </template>
-      <form method="post" @submit.prevent="submit">
+      <p v-if="mode === 'expense' && !canSearchSuppliers" role="status">登記無採購單發票需要「查看供應商」權限。</p>
+      <form v-else method="post" @submit.prevent="submit">
         <fieldset class="q-pa-md q-mb-md" :disabled="locked">
           <legend>發票資料</legend>
           <div class="row q-col-gutter-md">
             <template v-if="mode === 'expense'">
-              <div class="col-12 col-sm-6"><q-input v-model="form.supplierId" label="供應商 ID" name="supplierId" inputmode="numeric" pattern="[1-9][0-9]*" outlined dense required /></div>
-              <div class="col-12 col-sm-6"><q-input v-model="form.currencyCode" label="貨幣代碼" name="currencyCode" maxlength="3" autocapitalize="characters" pattern="[A-Za-z]{3}" outlined dense required /></div>
+              <div class="col-12 col-sm-6"><ApSupplierPicker v-model="expenseSupplier" active-only :disable="locked" /></div>
+              <div class="col-12 col-sm-6"><ApCurrencyPicker v-model="form.currencyCode" :disable="locked || !expenseSupplier" /></div>
               <div class="col-12"><q-input v-model="form.noPoReason" label="無採購單原因" name="noPoReason" maxlength="500" outlined dense required /></div>
             </template>
             <div class="col-12 col-sm-6"><q-input v-model="form.supplierInvoiceNumber" label="供應商發票號碼" name="supplierInvoiceNumber" maxlength="100" outlined dense required /></div>

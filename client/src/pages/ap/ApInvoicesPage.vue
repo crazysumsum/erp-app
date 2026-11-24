@@ -8,7 +8,7 @@ import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
-import { invoiceOutstandingText, invoiceStatusLabels, money, statusColors, timestamp } from "@/components/ap/apPresentation.js";
+import { invoiceOutstandingText, invoiceStatusLabels, money, statusColors, timestamp, toUnits } from "@/components/ap/apPresentation.js";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
 import ap from "@/services/ap.js";
@@ -16,6 +16,7 @@ import { page as createPage } from "./ApInvoiceCreatePage.vue";
 
 const route = useRoute(), router = useRouter(), session = useSessionStore();
 const canCreate = computed(() => can(session, createPage.requires));
+const canPay = computed(() => session.permissions.includes("ap.payment.mgmt"));
 const SELECTS = ["status", "outstandingOnly"];
 const filters = reactive({ q: "", status: null, currencyCode: "", invoiceDateFrom: "", invoiceDateTo: "", outstandingOnly: null });
 const statusOptions = Object.entries(invoiceStatusLabels).map(([value, label]) => ({ value, label }));
@@ -75,7 +76,13 @@ function reset() { router.replace({ query: {} }); }
         <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ money(row.totalAmount, row.currencyDecimalPlaces) }}</q-td></template>
         <template #body-cell-outstandingAmount="{ row }"><q-td class="text-right">{{ invoiceOutstandingText(row) }}</q-td></template>
         <template #body-cell-updatedAt="{ row }"><q-td>{{ timestamp(row.updatedAt) }}</q-td></template>
-        <template #body-cell-actions="{ row }"><q-td class="text-right"><q-btn flat dense label="查看" :aria-label="`查看 ${row.number || `草稿 ${row.id}`}`" :to="`/ap/invoices/${row.id}`" /></q-td></template>
+        <template #body-cell-actions="{ row }">
+          <q-td class="text-right">
+            <q-btn flat dense label="查看" :aria-label="`查看 ${row.number || `草稿 ${row.id}`}`" :to="`/ap/invoices/${row.id}`" />
+            <q-btn v-if="canPay && row.status === 'CONFIRMED' && toUnits(row.outstandingAmount) > 0n" flat dense label="登記付款"
+              :to="{ name: 'ap-payment-create', query: { supplierId: row.supplierId, currencyCode: row.currencyCode } }" />
+          </q-td>
+        </template>
         <template #no-data><p role="status" class="q-ma-none">沒有符合條件的發票；請調整搜尋條件。</p></template>
       </DataTable>
     </div>
