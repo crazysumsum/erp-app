@@ -1,12 +1,20 @@
 <script setup>
+import { watchPostEffect } from "vue";
 import { money, quantityText } from "@/components/ar/arPresentation.js";
 
-defineProps({
+const props = defineProps({
   issuerName: { type: String, required: true },
   issuerHeader: { type: String, default: "" },
   paymentInstructions: { type: String, default: "" },
   footer: { type: String, default: "" },
   invoice: { type: Object, required: true }
+});
+
+watchPostEffect((onCleanup) => {
+  const rootStyle = document.documentElement.style;
+  const property = "--ar-invoice-print-reference";
+  rootStyle.setProperty(property, JSON.stringify(`發票 ${props.invoice.number}`));
+  onCleanup(() => rootStyle.removeProperty(property));
 });
 </script>
 
@@ -116,5 +124,20 @@ th, td { border-block-end: 1px solid var(--app-border); padding: .5em; text-alig
 </style>
 
 <style>
-@page ar-invoice { size: A4 portrait; margin: 14mm; }
+@page ar-invoice {
+  size: A4 portrait;
+  margin: 14mm;
+
+  @top-right {
+    content: var(--ar-invoice-print-reference, "");
+    color: #333;
+    font-size: 9pt;
+  }
+
+  @bottom-right {
+    content: "第 " counter(page) " 頁，共 " counter(pages) " 頁";
+    color: #333;
+    font-size: 9pt;
+  }
+}
 </style>
