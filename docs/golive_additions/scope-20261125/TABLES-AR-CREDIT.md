@@ -1,6 +1,6 @@
 # 片ARC 應收貸項單及客戶退款：資料表說明（供Sam批准）
 
-日期：2026-11-25（r1）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者改為「核銷計入發票現有的`allocated_amount`、不加發票欄」（`SCOPE.md` 7.4的理由），並去掉生效日期（應收沒有關帳日）。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r2）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者改為「核銷計入發票現有的`allocated_amount`、不加發票欄」（`SCOPE.md` 7.4的理由），並去掉生效日期（應收沒有關帳日）。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
 
 ## 1. `ar_credit_notes` — 應收貸項單
 
@@ -111,7 +111,7 @@
 
 - `ar_document_sequences.chk_ar_sequence_type`：取值加`CREDIT_NOTE`、`REFUND`（已核`0123:34`）。
 - `ar_audit_logs.chk_ar_audit_target`：取值加`CREDIT_NOTE`、`CREDIT_APPLICATION`、`REFUND`（已核`0123:225`）。
-- `ArBusinessMasterImpactChecker`須把兩張新表列入幣別引用（照應收現行做法）。
+- `ArBusinessMasterImpactChecker`須把貸項單及退款列入幣別引用：草稿貸項、可用額大於0的已確認貸項及草稿退款算「進行中」，其餘算歷史。
 
 ## 影響
 

@@ -1,6 +1,6 @@
 # 片APC 應付貸項單及供應商退款：資料表說明（供Sam批准）
 
-日期：2026-11-25（r1）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 以應付七張表（Sam已批准、待合併的`0129`，整合版`62fd35f7`）為藍本，依賴它先合併。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r2）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 以應付七張表（Sam已批准、待合併的`0129`，整合版`62fd35f7`）為藍本，依賴它先合併。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
 
 ## 1. `ap_credit_notes` — 應付貸項單
 
@@ -112,7 +112,7 @@
 
 - `ap_document_sequences.chk_ap_sequence_type`：取值加`CREDIT_NOTE`、`REFUND`（`62fd35f7`的`0129:31`）。
 - `ap_audit_logs.chk_ap_audit_target`：取值加`CREDIT_NOTE`、`CREDIT_APPLICATION`、`REFUND`（同檔`:240`）。
-- `ApBusinessMasterImpactChecker`須把新表列入幣別引用；Supplier的應付引用檢查（S1）把貸項單及退款算作「有應付文件」（鎖定供應商代碼）；封存檢查仍只看未付的已確認發票（Sam批准的決定四A不變）。
+- `ApBusinessMasterImpactChecker`須把貸項單及退款列入幣別引用（草稿貸項、可用額大於0的已確認貸項及草稿退款算「進行中」）；Supplier的應付引用檢查（S1）把貸項單及退款算作「有應付文件」（鎖定供應商代碼）；封存檢查仍只看未付的已確認發票（Sam批准的決定四A不變）。
 
 ## 影響
 
