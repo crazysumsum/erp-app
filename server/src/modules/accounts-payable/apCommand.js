@@ -111,7 +111,7 @@ export class ApCommandRunner {
       return await this.database.withTransaction(async (tx) => {
         const fresh = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
         if (!fresh.permissions.includes(permission)) throw permissionStaleError();
-        const actor = { id: fresh.id, username: fresh.username }, nowMs = this.time.nowMs();
+        const actor = { id: fresh.id, username: fresh.username, permissions: fresh.permissions }, nowMs = this.time.nowMs();
         const { operationId, replay } = await this.#claim(tx, { commandType, targetType, targetId, event, payload, actor, nowMs });
         if (replay) return { ...replay, replayed: true };
 
