@@ -118,6 +118,7 @@ function error(result, status, code) {
 integrationTest("AP records payment against an archived supplier, replays commands, and retains void history", async () => {
   const f = await fixture();
   const party = await f.supplier("archived");
+  const invoice = await f.invoice(party, "217.5000");
   const eventId = randomUUID();
   const created = ok(await f.draft(party, "217.50", { eventId, reference: "WIRE-1" }));
   assert.deepEqual([created.status, created.version, created.number, created.replayed], ["DRAFT", 1, null, false]);
@@ -130,7 +131,6 @@ integrationTest("AP records payment against an archived supplier, replays comman
   await assert.rejects(service.create({ claims: f.payer.claims, input: { ...input, amount: "217.51" } }), { code: "AP_EVENT_CONFLICT" });
   const confirmed = ok(await f.post(`/${created.id}/confirm`, { version: 1 }));
   assert.match(confirmed.number, /^PMT-\d{4}-\d{6}$/u);
-  const invoice = await f.invoice(party, "217.5000");
   const allocated = ok(await f.post(`/${created.id}/allocations`, {
     version: 2, allocations: [{ invoiceId: invoice, amount: "217.50" }]
   }));
@@ -141,6 +141,31 @@ integrationTest("AP records payment against an archived supplier, replays comman
   assert.deepEqual([detail.status, detail.number, detail.amount, detail.availableAmount, detail.allocations[0].status],
     ["VOID", confirmed.number, "217.5000", "0.0000", "UNAPPLIED"]);
   assert.equal(ok(await f.request(`${base}?supplierId=${party.id}&status=VOID&q=WIRE`)).total, 1);
+});
+
+integrationTest("AP rechecks debt and supplier eligibility when creating and confirming a payment", async () => {
+  const f = await fixture();
+  const supplier = await f.supplier("archived");
+  await f.invoice(supplier, "10.0000", { status: "DRAFT" });
+  await f.db.query("INSERT IGNORE INTO currencies (code, name, decimal_places, status, created_at, updated_at) VALUES ('XAP', 'AP synthetic FX', 2, 'ACTIVE', 1, 1)");
+  await f.invoice(supplier, "20.0000", { currency: "XAP" });
+  error(await f.draft(supplier, "30.00"), 409, "AP_PREPAYMENT_REQUIRES_ACTIVE_SUPPLIER");
+  const debt = await f.invoice(supplier, "10.0000");
+  const payment = ok(await f.draft(supplier, "30.00"));
+
+  await f.db.query("UPDATE ap_invoices SET outstanding_amount = 0, allocated_amount = total_amount WHERE id = ?", [debt]);
+  error(await f.post(`/${payment.id}/confirm`, { version: 1 }), 409, "AP_PREPAYMENT_REQUIRES_ACTIVE_SUPPLIER");
+  const unchanged = ok(await f.read(payment.id));
+  assert.deepEqual([unchanged.status, unchanged.version, unchanged.number], ["DRAFT", 1, null]);
+
+  await f.db.query("UPDATE ap_invoices SET outstanding_amount = total_amount, allocated_amount = 0 WHERE id = ?", [debt]);
+  for (const status of ["suspended", "blocked", "archived"]) {
+    await f.db.query("UPDATE suppliers SET status = ? WHERE id = ?", [status, supplier.id]);
+    const draft = status === "archived" ? payment : ok(await f.draft(supplier, "30.00"));
+    const confirmed = ok(await f.post(`/${draft.id}/confirm`, { version: 1 }));
+    assert.equal(confirmed.status, "CONFIRMED");
+    assert.equal(ok(await f.read(draft.id)).availableAmount, "30.0000");
+  }
 });
 
 integrationTest("AP allocation is atomic across invoices and later spends prepayments by supplier and currency", async () => {
