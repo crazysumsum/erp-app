@@ -9,8 +9,8 @@ import { defaultConfigurationSource } from "../../../server/src/framework/config
 
 const serverDir = fileURLToPath(new URL("../../../server/", import.meta.url));
 const tag = randomUUID().replaceAll("-", "").slice(0, 12);
-const username = `ap-browser-${tag}`;
-const password = `Ap-test-${tag}-1!`;
+const actor = { username: `ap-browser-${tag}`, password: `Ap-test-${tag}-1!`, name: "AP Browser Test" };
+const peer = { username: `ap-peer-${tag}`, password: `Ap-peer-${tag}-1!`, name: "AP Browser Peer" };
 const invoiceNumber = `BROWSER-${tag}`;
 let db, app, supplierId, receiptId, receiptNumber, today;
 
@@ -25,10 +25,17 @@ test.beforeAll(async () => {
   } });
   db = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, socketPath: process.env.DB_SOCKET_PATH });
-  execFileSync(process.execPath, ["scripts/createUser.js", username, "--name", "AP Browser Test"], {
-    cwd: serverDir, input: `${password}\n`, stdio: ["pipe", "ignore", "inherit"]
-  });
-  const [[{ id: user }]] = await db.query("SELECT id FROM users WHERE username = ?", [username]);
+  function createUser({ username, password, name }) {
+    execFileSync(process.execPath, ["scripts/createUser.js", username, "--name", name], {
+      cwd: serverDir, input: `${password}\n`, stdio: ["pipe", "ignore", "inherit"]
+    });
+  }
+  const bootstrap = `ap-bootstrap-${tag}`;
+  createUser({ username: bootstrap, password: `Ap-boot-${tag}-1!`, name: "AP Bootstrap" });
+  await db.query("UPDATE users SET status = 'disabled' WHERE username = ?", [bootstrap]);
+  createUser(actor);
+  createUser(peer);
+  const [[{ id: user }]] = await db.query("SELECT id FROM users WHERE username = ?", [actor.username]);
   const time = app.services.require("time"), now = time.nowMs();
   today = time.fileDate(time.at(now));
   const dates = { created_at: now, updated_at: now };
@@ -36,7 +43,9 @@ test.beforeAll(async () => {
   const role = await insert("roles", { name: `ap-browser-${tag}`, created_at: now });
   await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)",
     [role, ["ap.view", "ap.invoice.mgmt", "ap.invoice.price.override", "ap.payment.mgmt", "purchasing.view"]]);
-  await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user, role]);
+  await db.query("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username IN (?, ?)", [role, actor.username, peer.username]);
+  const [actors] = await db.query("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = ?", [user]);
+  expect(actors.map(({ name }) => name)).toEqual([`ap-browser-${tag}`]);
 
   const code = `AP-${tag}`;
   const vendor = { supplier_code_snapshot: code, supplier_name_snapshot: "Browser Test Supplier" };
@@ -80,25 +89,35 @@ test.afterAll(async () => {
   await db?.end();
 });
 
-async function login(page) {
+async function login(page, account, freshDevice) {
   await page.goto("/login");
   async function signIn() {
-    await page.getByLabel("帳號", { exact: true }).fill(username);
-    await page.getByLabel("密碼", { exact: true }).fill(password);
+    await page.getByLabel("帳號", { exact: true }).fill(account.username);
+    await page.getByLabel("密碼", { exact: true }).fill(account.password);
     await page.getByRole("button", { name: "登入", exact: true }).click();
   }
   await signIn();
-  await page.waitForURL("**/device/pending");
-  const [[{ id }]] = await db.query("SELECT d.id FROM user_devices d JOIN users u ON u.id = d.user_id WHERE u.username = ? AND d.status = 'pending'", [username]);
-  execFileSync(process.execPath, ["scripts/approveDevice.js", String(id)], { cwd: serverDir, stdio: ["ignore", "ignore", "inherit"] });
-  await page.getByRole("button", { name: "返回登入", exact: true }).click();
-  await page.waitForURL("**/login");
-  await signIn();
+  if (freshDevice) {
+    await page.waitForURL("**/device/pending");
+    const [[{ id }]] = await db.query("SELECT d.id FROM user_devices d JOIN users u ON u.id = d.user_id WHERE u.username = ? AND d.status = 'pending'", [account.username]);
+    execFileSync(process.execPath, ["scripts/approveDevice.js", String(id)], { cwd: serverDir, stdio: ["ignore", "ignore", "inherit"] });
+    await page.getByRole("button", { name: "返回登入", exact: true }).click();
+    await page.waitForURL("**/login");
+    await signIn();
+  }
   await page.waitForURL((url) => url.pathname === "/");
+}
+
+async function logout(page, account) {
+  await page.getByRole("button", { name: account.name }).click();
+  await page.getByText("登出", { exact: true }).click();
+  await page.waitForURL("**/login");
 }
 
 test("AP browser flow confirms a receipt-backed invoice, pays it and clears aging", async ({ page }) => {
   const errors = [];
+  const paymentEndpoint = "**/api/v1/ap-payments";
+  let discardedRequest;
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "warning" || (message.type() === "error" && !message.text().startsWith("Failed to load resource"))) {
@@ -110,9 +129,11 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
     if (isApApi(response.url()) && response.status() >= 400) errors.push(`${response.status()} ${new URL(response.url()).pathname}`);
   });
   page.on("requestfailed", (request) => {
-    if (isApApi(request.url()) && request.failure()?.errorText !== "net::ERR_ABORTED") errors.push(`request failed: ${new URL(request.url()).pathname}`);
+    if (request !== discardedRequest && isApApi(request.url()) && request.failure()?.errorText !== "net::ERR_ABORTED") {
+      errors.push(`request failed: ${new URL(request.url()).pathname}`);
+    }
   });
-  await login(page);
+  await login(page, actor, true);
   await page.goto(`/purchasing/goods-receipts/${receiptId}`);
   await expect(page.getByRole("heading", { name: receiptNumber })).toBeVisible();
   await page.goto("/ap/invoices");
@@ -151,7 +172,46 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   await page.getByRole("button", { name: "登記付款草稿" }).click();
   await expect(page.getByLabel("轉帳參考", { exact: true })).toBeFocused();
   await page.getByLabel("轉帳參考", { exact: true }).fill(`TEST-${tag}`);
+  const loseResponse = async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    const response = await route.fetch();
+    expect(response.ok()).toBe(true);
+    discardedRequest = route.request();
+    await route.abort("failed");
+  };
+  await page.route(paymentEndpoint, loseResponse);
   await page.getByRole("button", { name: "登記付款草稿" }).click();
+  const retry = page.getByRole("button", { name: "重試原操作", exact: true });
+  await expect(retry).toBeVisible();
+  await page.unroute(paymentEndpoint, loseResponse);
+  const countDrafts = async () => Number((await db.query(
+    "SELECT COUNT(*) AS total FROM ap_payments WHERE supplier_id = ? AND reference = ?", [supplierId, `TEST-${tag}`]
+  ))[0][0].total);
+  expect(await countDrafts()).toBe(1);
+  await page.reload();
+  await expect(retry).toBeVisible();
+  await expect(page.getByLabel("付款金額", { exact: true })).toHaveValue("325.00");
+  const expectedEvent = discardedRequest.postDataJSON().eventId;
+  await logout(page, actor);
+  await login(page, peer, true);
+  await page.goto("/ap/payments/new");
+  await expect(page.getByRole("button", { name: "登記付款草稿" })).toBeEnabled();
+  await expect(retry).toHaveCount(0);
+  await expect(page.getByLabel("付款金額", { exact: true })).toHaveValue("");
+  await logout(page, peer);
+  await login(page, actor, false);
+  await page.goto("/ap/payments/new");
+  await expect(retry).toBeVisible();
+  const resent = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === "/api/v1/ap-payments");
+  await retry.click();
+  expect((await resent).postDataJSON().eventId).toBe(expectedEvent);
+  await page.getByRole("button", { name: "確認付款", exact: true }).waitFor();
+  expect(await countDrafts()).toBe(1);
+  const paymentPath = new URL(page.url()).pathname;
+  await page.goto("/ap/payments/new");
+  await expect(retry).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "登記付款草稿" })).toBeEnabled();
+  await page.goto(paymentPath);
   await page.getByRole("button", { name: "確認付款", exact: true }).click();
   await page.getByRole("dialog", { name: "確認付款" }).getByRole("button", { name: "確認付款", exact: true }).click();
   const paymentHeading = page.getByRole("heading", { name: /^PMT-\d{4}-\d{6}$/u });
