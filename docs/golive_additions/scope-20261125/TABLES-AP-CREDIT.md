@@ -1,6 +1,6 @@
 # 片APC 應付貸項單及供應商退款：資料表說明（供Sam批准）
 
-日期：2026-11-25（r3）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 以應付七張表（Sam已批准、待合併的`0129`，整合版`62fd35f7`）為藍本，依賴它先合併。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r4）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 以應付七張表（Sam已批准、待合併的`0129`，整合版`62fd35f7`）為藍本，依賴它先合併。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
 
 ## 1. `ap_credit_notes` — 應付貸項單
 
@@ -57,7 +57,7 @@
 - 主鍵`id`；`UNIQUE(credit_note_id, line_no)`；`KEY(invoice_line_id, id)`。
 - 外鍵：（`credit_note_id`,`invoice_id`）→`ap_credit_notes(id, invoice_id)`；`invoice_line_id`→`ap_invoice_lines(id)`；`supplier_return_line_id`→`supplier_return_lines(id)`；均`RESTRICT`。
 - `CHECK`：`amount > 0`；`base_quantity`為NULL或大於0。
-- 由程式在原發票鎖下檢查：發票行屬於`invoice_id`；同一原發票行的已確認貸項累計不超過該行金額；同一原發票的已確認貸項總額累計不超過發票總額；所連退回行屬於所連退回單，而且其原收貨明細屬於該發票行的收貨行。
+- 由程式在原發票鎖下檢查：發票行屬於`invoice_id`；同一原發票行的已確認貸項累計不超過該行的可貸上限（`SCOPE.md` 7.4：由行金額按最大餘數法分派發票總額）；同一原發票的已確認貸項總額累計不超過發票總額；所連退回行屬於所連退回單，而且其原收貨明細屬於該發票行的收貨行。
 
 ## 3. `ap_credit_applications` — 貸項核銷
 

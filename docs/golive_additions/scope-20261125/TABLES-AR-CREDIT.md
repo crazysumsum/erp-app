@@ -1,6 +1,6 @@
 # 片ARC 應收貸項單及客戶退款：資料表說明（供Sam批准）
 
-日期：2026-11-25（r3）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者改為「核銷計入發票現有的`allocated_amount`、不加發票欄」（`SCOPE.md` 7.4的理由），並去掉生效日期（應收沒有關帳日）。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r4）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.4、7.5。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者改為「核銷計入發票現有的`allocated_amount`、不加發票欄」（`SCOPE.md` 7.4的理由），並去掉生效日期（應收沒有關帳日）。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；金額`DECIMAL(19,4)`；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
 
 ## 1. `ar_credit_notes` — 應收貸項單
 
@@ -56,7 +56,7 @@
 - 主鍵`id`；`UNIQUE(credit_note_id, line_no)`；`KEY(invoice_line_id, id)`（求原發票行的已貸累計）。
 - 外鍵：（`credit_note_id`,`invoice_id`）→`ar_credit_notes(id, invoice_id)`；`invoice_line_id`→`ar_invoice_lines(id)`；`customer_return_line_id`→`customer_return_lines(id)`；均`RESTRICT`。
 - `CHECK`：`amount > 0`；`base_quantity`為NULL或大於0。
-- 由程式在原發票鎖下檢查：發票行屬於`invoice_id`；同一原發票行的已確認貸項累計不超過該行金額；同一原發票的已確認貸項總額累計不超過發票總額；期初發票只容許一行、`invoice_line_id`為NULL；所連退貨行屬於所連退貨單，而且其原出貨行是該發票行的來源。
+- 由程式在原發票鎖下檢查：發票行屬於`invoice_id`；同一原發票行的已確認貸項累計不超過該行的可貸上限（`SCOPE.md` 7.4：由行金額按最大餘數法分派發票總額）；同一原發票的已確認貸項總額累計不超過發票總額；期初發票只容許一行、`invoice_line_id`為NULL；所連退貨行屬於所連退貨單，而且其原出貨行是該發票行的來源。
 
 ## 3. `ar_credit_applications` — 貸項核銷
 

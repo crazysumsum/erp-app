@@ -1,6 +1,8 @@
 # 片RT 客戶退貨及退回供應商：資料表說明（供Sam批准）
 
-日期：2026-11-25（r3）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.2、7.3。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者補上號碼、往來方快照、確認事件及約束。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+日期：2026-11-25（r4）。作者：`claude-erp-app-tl-01`。對應`SCOPE.md` 7.2、7.3。**草稿；未獲批准前不寫migration。** 候選來自`returns.md`；作者補上號碼、往來方快照、確認事件及約束。共同慣例：ID為`BIGINT UNSIGNED`；時間為epoch毫秒；「ascii」指`CHARACTER SET ascii COLLATE ascii_bin`；人員欄為`users(id)`外鍵`ON DELETE SET NULL`。全部是新表。
+
+單號（r4，Returns `cbc61325`）：不設號碼欄，也不用年度流水號（過帳在成本池鎖之後不可再鎖編號列）；顯示及查詢一律用`CRT-`或`SRT-`加ID，按單號查詢時解析回ID。
 
 ## 1. `returns_operation_requests` — 退貨模組的操作識別
 
@@ -25,7 +27,6 @@
 | 欄位 | 型別 | NULL | 預設 | 用途 |
 | --- | --- | --- | --- | --- |
 | `id` | BIGINT UNSIGNED AUTO_INCREMENT | 否 | 自動 | 主鍵 |
-| `return_number` | VARCHAR(24) ascii | 否 | 無 | 建立時在同一交易寫入`CRT-`加ID（r3：不用年度流水號，因為過帳在成本池鎖之後不可再鎖編號列） |
 | `status` | VARCHAR(20) ascii | 否 | `DRAFT` | `DRAFT`、`POSTED`、`CANCELLED` |
 | `shipment_id` | BIGINT UNSIGNED | 否 | 無 | 原出貨 |
 | `customer_id` | BIGINT UNSIGNED | 否 | 無 | 客戶（取自原出貨） |
@@ -45,7 +46,7 @@
 | `cancelled_at` | BIGINT UNSIGNED | 是 | NULL | 取消時間 |
 | `updated_at` | BIGINT UNSIGNED | 否 | 無 | 時間 |
 
-- 主鍵`id`；`UNIQUE(return_number)`；`UNIQUE(id, shipment_id)`（供明細複合外鍵）；`KEY(shipment_id, status, id)`（出貨沖銷的檢查及按出貨查詢）；`KEY(customer_id, return_date, id)`。
+- 主鍵`id`；`UNIQUE(id, shipment_id)`（供明細複合外鍵）；`KEY(shipment_id, status, id)`（出貨沖銷的檢查及按出貨查詢）；`KEY(customer_id, return_date, id)`。
 - 外鍵：`shipment_id`→`shipments(id)`、`customer_id`→`customers(id)` `RESTRICT`；人員→`users` `SET NULL`。
 - `CHECK`：`status`取值；`POSTED`時`posted_at`不為NULL；`version >= 1`。
 
@@ -72,7 +73,6 @@
 | 欄位 | 型別 | NULL | 預設 | 用途 |
 | --- | --- | --- | --- | --- |
 | `id` | BIGINT UNSIGNED AUTO_INCREMENT | 否 | 自動 | 主鍵 |
-| `return_number` | VARCHAR(24) ascii | 否 | 無 | 建立時在同一交易寫入`SRT-`加ID（同上） |
 | `status` | VARCHAR(20) ascii | 否 | `DRAFT` | `DRAFT`、`POSTED`、`CANCELLED` |
 | `goods_receipt_id` | BIGINT UNSIGNED | 否 | 無 | 原收貨 |
 | `purchase_order_id` | BIGINT UNSIGNED | 否 | 無 | 原採購單（鎖序及查詢） |
@@ -93,7 +93,7 @@
 | `cancelled_at` | BIGINT UNSIGNED | 是 | NULL | 取消時間 |
 | `updated_at` | BIGINT UNSIGNED | 否 | 無 | 時間 |
 
-- 主鍵`id`；`UNIQUE(return_number)`；`UNIQUE(id, goods_receipt_id)`；`KEY(goods_receipt_id, status, id)`；`KEY(supplier_id, return_date, id)`。
+- 主鍵`id`；`UNIQUE(id, goods_receipt_id)`；`KEY(goods_receipt_id, status, id)`；`KEY(supplier_id, return_date, id)`。
 - 外鍵：`goods_receipt_id`→`goods_receipts(id)`、`purchase_order_id`→`purchase_orders(id)`、`supplier_id`→`suppliers(id)` `RESTRICT`；人員`SET NULL`。
 - `CHECK`：`status`取值；`POSTED`時`posted_at`不為NULL；`version >= 1`。
 
@@ -118,6 +118,6 @@
 
 ## 影響
 
-- 現有資料不變。新權限：`returns.view`、`returns.customer.mgmt`、`returns.supplier.mgmt`（名稱待returns-01核定；現有`returns.operation`是Inventory的過帳權限，沿用）。
+- 現有資料不變。新權限（隨退貨片seed並授予系統管理員）：`returns.view`、`returns.customer.mgmt`、`returns.supplier.mgmt`。Inventory的兩個退貨批次provider以呼叫方上下文驗後兩者之一（`SCOPE.md`第10節）；現有只有消費者、沒有目錄及seed的`returns.operation`不用於新流程。
 - 現有表的`RESTRICT`：有退貨的出貨、收貨、客戶及供應商不可實體刪除；Supplier的永久刪除已把外鍵拒絕對應為409（S1評審時已核）。客戶模組若有實體刪除，須同樣處理（未核）。
 - 回滾：空表可刪。
