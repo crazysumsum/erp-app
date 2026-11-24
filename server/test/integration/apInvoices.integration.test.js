@@ -3,37 +3,32 @@ import { randomUUID } from "node:crypto";
 import test, { after } from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { ADMIN, runRunner, scratchDatabase } from "./supplierScratchDatabase.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const base = "/api/v1/ap-invoices";
 const invoiceDate = "2026-11-24";
-let shared, application;
-const identities = [];
+let shared, application, cleanupScratch;
 
 after(async () => {
-  if (!application) return;
-  const db = application.services.require("mysqldatabase");
   try {
-    for (const { userId, roleId } of identities) {
-      if (userId) {
-        await db.query("DELETE FROM user_roles WHERE user_id = ?", [userId]);
-        await db.query("DELETE FROM fr_token_versions WHERE subject = ?", [String(userId)]);
-        await db.query("DELETE FROM users WHERE id = ?", [userId]);
-      }
-      await db.query("DELETE FROM role_permissions WHERE role_id = ?", [roleId]);
-      await db.query("DELETE FROM roles WHERE id = ?", [roleId]);
-    }
+    await application?.shutdown("ap_invoice_tests_complete");
   } finally {
-    await application.shutdown("ap_invoice_tests_complete");
+    await cleanupScratch?.();
   }
 });
 
 function fixture() { return shared ??= setup(); }
 
 async function setup() {
+  // Confirmed receipts and AP audits are immutable. Keep their retained records and
+  // the fixture payment term out of the shard's shared schema.
+  const { name } = await scratchDatabase({ after: (callback) => { cleanupScratch = callback; } });
+  await runRunner(name);
   const source = defaultConfigurationSource();
   application = await createApplication({ configurationSource: {
     ...source, application: { ...source.application, port: 0 },
+    database: { ...source.database, ...ADMIN, socketPath: undefined, database: name },
     requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100 }
   } });
   const db = application.services.require("mysqldatabase"), time = application.services.require("time");
@@ -43,13 +38,10 @@ async function setup() {
   async function person(label, permissions) {
     const name = `ap_invoice_${label}_${tag}`;
     const roleId = await insert("roles", { name, created_at: now });
-    const identity = { roleId };
-    identities.push(identity);
     for (const permission of permissions) {
       await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = ?", [roleId, permission]);
     }
     const userId = await insert("users", { username: name, password_hash: "synthetic", display_name: name, ...timestamps });
-    identity.userId = userId;
     await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
     const version = await application.services.require("tokenRevocation").currentVersion(String(userId));
     const token = await application.services.require("jwt").issue({ roles: [name], permissions }, {
