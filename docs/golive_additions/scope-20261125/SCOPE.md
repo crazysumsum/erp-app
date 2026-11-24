@@ -1,6 +1,6 @@
 # 上線前新增功能：範圍、跨模組契約及分片
 
-日期：2026-11-25（r5，2026-11-24晚起草）。作者：`claude-erp-app-tl-01`（Claude側TL）。應PM `0b7ba8c4`。
+日期：2026-11-25（r6，2026-11-24晚起草）。作者：`claude-erp-app-tl-01`（Claude側TL）。應PM `0b7ba8c4`。
 **草稿，待非作者評審（`codex-erp-app-tl-01`）。** 沒有寫程式、沒有開實作分支、沒有執行測試。來源只讀`origin/main` `e9156999d4378ac38b395fcfea0430ea3bf4d1d5`（正式驗收候選）、應付待合併整合版`62fd35f7`、應付設計`c5ee54ea`，及各負責人的盤點頁（`.worktrees/ci-pm-handoffs/feature-scoping-20261124/`：`codex-tl.md`、`inventory.md`、`apar.md`、`fulfillment.md`、`sales.md`、`purchasing.md`、`returns.md`、`ci.md`；`supplier.md`寫作時未交）。凡引用盤點頁的事實，除標明「已核」者外，是該負責人的說法，作者沒有逐一核對。
 
 同目錄：`DECISIONS.md`（Sam的決定、被取代的舊決定、仍待決的事）；資料表按可分開批准的片各一檔：`TABLES-COST.md`、`TABLES-RECEIPT-REVERSAL.md`、`TABLES-RETURNS.md`、`TABLES-AR-CREDIT.md`、`TABLES-AP-CREDIT.md`。出貨沖銷及報表不需新表。
@@ -70,7 +70,7 @@ r2的「未計價數量」引出四個問題（Inventory `1b4b330e`、Codex TL `
 
 ### 6.1 出貨沖銷（片SR）
 
-TL裁定已發（`993fb7da`）：只做「一律拒絕」版本。出貨的任一出貨行在未取消、未作廢的應收發票上（草稿或已確認：`ar_invoice_lines.active_shipment_line_id`不為NULL），或該出貨有任何未取消的客戶退貨單，即拒絕；任一方無法判定即拒絕。在Phase A持有`shipments`列`FOR UPDATE`之後查。現行`ShipmentReversalService.js`在Recovery（`:110`）及Phase B（`:278`）也呼叫下游檢查（Codex TL `22dd5f7e`）；改為不再重查佔用（REVERSING狀態已令應收開票及退貨建立被拒），其餘復原核驗保留。契約（r3，按Fulfillment分支`b9923152`的實作，`e7f7f9bf`）：跨程序的Recovery在已鎖的操作列下驗證Phase A持久記錄的provider登記版本；一般Phase B只接受同一服務實例由已提交的Phase A產生的私有綁定；Recovery接管後的Phase B接受Recovery確立的綁定。一般Phase B不另讀持久版本。Fulfillment的Phase A在READ COMMITTED下執行，持出貨鎖後的普通讀取已足夠；為與收貨一側一致，兩個provider仍對命中的佔用列做`FOR SHARE`（只鎖應收發票行及退貨行），結果不完整即拒絕。應收及退貨各提供一個在呼叫方交易內執行的只讀provider（`findShipmentInvoiceClaimsInTransaction`、`findShipmentReturnsInTransaction`）；應收建立及確認、退貨單建立都先鎖同一出貨列，應收取消及作廢只會減少佔用，所以普通讀取已足夠。公開route在兩個provider都註冊前不註冊；`NO_PROVIDER_REQUIRED`在應收已上線的部署不再成立。11-19裁定仍適用：沿用已合併的兩階段核心，**Recovery Job必須註冊**（這是背景工作；先前首期「不做背景工作」的原則對沖銷不適用）。成本由Inventory在其現有沖銷過帳內按原值回沖，Fulfillment不傳也不讀成本。這取代了應收SCOPE §3.1「首期不開放公開出貨沖銷」的前提；應收開票的鎖序不變。
+TL裁定已發（`993fb7da`）：只做「一律拒絕」版本。出貨的任一出貨行在未取消、未作廢的應收發票上（草稿或已確認：`ar_invoice_lines.active_shipment_line_id`不為NULL），或該出貨有任何未取消的客戶退貨單，即拒絕；任一方無法判定即拒絕。在Phase A持有`shipments`列`FOR UPDATE`之後查。現行`ShipmentReversalService.js`在Recovery（`:110`）及Phase B（`:278`）也呼叫下游檢查（Codex TL `22dd5f7e`）；改為不再重查佔用（REVERSING狀態已令應收開票及退貨建立被拒），其餘復原核驗保留。契約（r3，按Fulfillment分支`b9923152`的實作，`e7f7f9bf`）：跨程序的Recovery在已鎖的操作列下驗證Phase A持久記錄的provider登記版本；一般Phase B只接受同一服務實例由已提交的Phase A產生的私有綁定；Recovery接管後的Phase B接受Recovery確立的綁定。一般Phase B不另讀持久版本。成本啟用後Phase A在before摘要記錄所驗原`ISSUE`異動ID及成本啟用狀態（5.1）；因現行Recovery reader對before摘要的五個欄位做完全相等判定（`shipmentReversalRecoverySource.js:29`，Codex TL `61767dc8`已核），摘要格式須顯式加版本，writer及Recovery reader在同一切片更新：新格式的原`ISSUE`集合取自被鎖出貨單的完整已保存發出明細，Recovery接管前對照同一組明細；舊格式照現行處理及終局重播；兩種格式都要有回歸（r6，Fulfillment `29834b67`）。Fulfillment的Phase A在READ COMMITTED下執行，持出貨鎖後的普通讀取已足夠；為與收貨一側一致，兩個provider仍對命中的佔用列做`FOR SHARE`（只鎖應收發票行及退貨行），結果不完整即拒絕。應收及退貨各提供一個在呼叫方交易內執行的只讀provider（`findShipmentInvoiceClaimsInTransaction`、`findShipmentReturnsInTransaction`）；應收建立及確認、退貨單建立都先鎖同一出貨列，應收取消及作廢只會減少佔用，所以普通讀取已足夠。公開route在兩個provider都註冊前不註冊；`NO_PROVIDER_REQUIRED`在應收已上線的部署不再成立。11-19裁定仍適用：沿用已合併的兩階段核心，**Recovery Job必須註冊**（這是背景工作；先前首期「不做背景工作」的原則對沖銷不適用）。成本由Inventory在其現有沖銷過帳內按原值回沖，Fulfillment不傳也不讀成本。這取代了應收SCOPE §3.1「首期不開放公開出貨沖銷」的前提；應收開票的鎖序不變。
 
 ### 6.2 收貨沖銷（片GR）
 
