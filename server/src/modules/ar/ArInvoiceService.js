@@ -1,4 +1,4 @@
-import { eventId, formatUnits, localDate, nextDocumentNumber, onlyFields, positiveId, reason as validReason, storedUnits, text } from "./arCommand.js";
+import { amountUnits, eventId, formatUnits, localDate, nextDocumentNumber, onlyFields, positiveId, reason as validReason, storedUnits, text } from "./arCommand.js";
 import { arError } from "./arErrors.js";
 
 export const MAX_INVOICE_SHIPMENTS = 20; // 一張發票最多 20 張出貨（TL 裁定的技術預設，亦是 reader 的上限）。
@@ -126,6 +126,53 @@ export class ArInvoiceService {
       });
   }
 
+  /** 期初發票只有截數餘額，在同一交易登記、確認和取號。 */
+  registerOpening({ claims, input, context }) {
+    const body = onlyFields(input, ["eventId", "customerId", "currencyCode", "openingReference", "invoiceDate", "dueDate", "amount", "notes"]);
+    if (typeof body.currencyCode !== "string" || !/^[A-Z]{3}$/u.test(body.currencyCode)) throw invalid("currencyCode");
+    if (typeof body.openingReference !== "string") throw invalid("openingReference");
+    const openingReference = text(body.openingReference.trim(), "openingReference", { minimum: 1, maximum: 50 });
+    const invoiceDate = localDate(body.invoiceDate, "invoiceDate"), dueDate = localDate(body.dueDate, "dueDate");
+    if (dueDate < invoiceDate) throw invalid("dueDate");
+    const request = {
+      customerId: positiveId(body.customerId, "customerId"), currencyCode: body.currencyCode, openingReference, invoiceDate, dueDate,
+      amount: formatUnits(amountUnits(body.amount, "amount")), notes: text(body.notes ?? "", "notes", { maximum: 2000, multiline: true })
+    };
+    return this.commands.run({ claims, permission: "ar.opening.mgmt", commandType: "REGISTER_OPENING_INVOICE",
+      targetType: "INVOICE", eventId: eventId(body.eventId), payload: request, context },
+    async (tx, { actor, nowMs }) => {
+      if (invoiceDate > this.time.fileDate(this.time.at(nowMs))) throw arError("AR_DATE_IN_FUTURE", { field: "invoiceDate" });
+      const customer = await this.customers(tx).findById(request.customerId, { purpose: "ar_existing_document" });
+      if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
+      const currency = await this.businessMaster.assertCurrencyUsableInTransaction(tx, { code: request.currencyCode, purpose: "history" });
+      if (amountUnits(request.amount, "amount", currency.decimalPlaces) <= 0n) throw invalid("amount");
+      const number = await nextDocumentNumber(tx, { documentType: "INVOICE", time: this.time, nowMs });
+      let id;
+      try {
+        const [result] = await tx.query("INSERT INTO ar_invoices SET ?", [{
+          invoice_number: number, status: "CONFIRMED", customer_id: customer.customerId, customer_code_snapshot: customer.customerCode,
+          customer_name_snapshot: customer.legalName, currency_code: currency.code, currency_decimal_places: currency.decimalPlaces,
+          opening_reference: openingReference, active_opening_reference: openingReference, invoice_date: invoiceDate, due_date: dueDate,
+          total_amount: request.amount, outstanding_amount: request.amount, notes: request.notes,
+          created_by: actor.id, created_by_label: actor.username, confirmed_by: actor.id, confirmed_by_label: actor.username,
+          confirmed_at: nowMs, created_at: nowMs, updated_at: nowMs
+        }]);
+        id = Number(result.insertId);
+      } catch (error) {
+        const cause = error.cause ?? error;
+        if (cause.code === "ER_DUP_ENTRY" && cause.message.includes("uq_ar_invoice_active_opening_reference")) {
+          throw arError("AR_OPENING_REFERENCE_EXISTS", { field: "openingReference" });
+        }
+        throw error;
+      }
+      return {
+        summary: { id, number, status: "CONFIRMED", version: 1, totalAmount: request.amount, customerCode: customer.customerCode, customerName: customer.legalName },
+        audit: { action: "invoice.opening_registered", targetType: "INVOICE", targetId: id, customerId: customer.customerId,
+          label: number, detail: { openingReference, amount: request.amount, currencyCode: currency.code } }
+      };
+    });
+  }
+
   /** 確認：取號，形成應收。 */
   confirm(command) {
     return this.#transition(command, { commandType: "CONFIRM_INVOICE", from: "DRAFT", action: "invoice.confirmed", checkShipmentDate: true }, async (tx, invoice, { actor, nowMs }) => {
@@ -143,7 +190,7 @@ export class ArInvoiceService {
   void(command) {
     return this.#transition(command, { commandType: "VOID_INVOICE", from: "CONFIRMED", action: "invoice.voided", needsReason: true, release: true }, async (tx, invoice, { actor, nowMs }, request) => {
       if (storedUnits(invoice.allocated_amount) !== 0n) throw arError("AR_INVOICE_HAS_ALLOCATIONS");
-      return { changes: { status: "VOID", void_reason: request.reason, voided_by: actor.id, voided_by_label: actor.username, voided_at: nowMs } };
+      return { changes: { status: "VOID", active_opening_reference: null, void_reason: request.reason, voided_by: actor.id, voided_by_label: actor.username, voided_at: nowMs } };
     });
   }
 
