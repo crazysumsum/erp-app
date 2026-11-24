@@ -18,6 +18,15 @@ export default {
       .filter(([, value]) => value !== undefined && value !== null && value !== ""));
     return httpClient.get("/api/v1/purchase-orders", { params, signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
+  exportPurchaseOrders({ signal, ...query } = {}) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      for (const item of [value].flat()) {
+        if (item !== undefined && item !== null && item !== "") params.append(key, item);
+      }
+    }
+    return httpClient.getBlob(`/api/v1/purchase-orders/export?${params}`, { signal });
+  },
   getPurchaseOrder(id, { signal } = {}) { return httpClient.get(`/api/v1/purchase-orders/${id}`, { signal }); },
   createPurchaseOrder(payload) { return write("/api/v1/purchase-orders/create", payload); },
   updatePurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/update`, payload); },
