@@ -3,6 +3,7 @@
  * 表結構正本是 TL 的 TABLES.md（sha256 2ffa6b0b…8aca）及 TABLES-ADDENDUM-1.md（45f24a54…bcd9），均經 Sam 2026-11-19 批准；這裡把欄位、鍵、外鍵及 CHECK 的名單釘住，
  * 任何增減都會紅。
  * 期初兩欄、唯一鍵及權限依 TL 的 OPENING-AR-SCOPE.md r3（a3dbcaea…72ff）及 DECISIONS.md（949296ef…0275）。
+ * 0127 的帳單地址快照依 BILLING-SNAPSHOT.md r3（024e4ec0…39cb），Sam 2026-11-23 批准。
  *
  * 資料：每個約束案例在自己的 transaction 內寫最多 3 列，完結即 ROLLBACK；該連線關掉外鍵檢查，所以不需要客戶、
  * 出貨或訂單 fixture（外鍵本身由 information_schema 驗證）。1 條連線，無並發，每案 1 次。
@@ -17,6 +18,7 @@ import { up as seedPermissions } from "../../database/migrations/0122_seed_ar_pe
 import { up as createTables } from "../../database/migrations/0123_create_ar_tables.js";
 import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { up as addOpeningInvoices } from "../../database/migrations/0126_add_ar_opening_invoices.js";
+import { up as addBillingSnapshot } from "../../database/migrations/0127_add_ar_invoice_billing_snapshot.js";
 import { ArBusinessMasterImpactChecker } from "../../src/modules/ar/ArBusinessMasterImpactChecker.js";
 import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
 
@@ -32,7 +34,7 @@ const COLUMNS = {
   ar_invoices: ["id", "invoice_number", "status", ...PARTY, "invoice_date", "due_date", "payment_term_code_snapshot", "payment_term_name_snapshot",
     "due_date_overridden", "due_date_reason", "total_amount", "allocated_amount", "outstanding_amount", "notes", "void_reason", "version",
     "created_by", "created_by_label", "confirmed_by", "confirmed_by_label", "confirmed_at", "voided_by", "voided_by_label", "voided_at",
-    "created_at", "updated_at", "opening_reference", "active_opening_reference"],
+    "created_at", "updated_at", "opening_reference", "active_opening_reference", "billing_address_snapshot"],
   ar_invoice_lines: ["id", "invoice_id", "line_no", "shipment_id", "shipment_line_id", "sales_order_id", "sales_order_line_id",
     "active_shipment_line_id", "sku_code_snapshot", "sku_name_snapshot", "base_uom_code_snapshot",
     "sales_uom_code_snapshot", "to_base_factor_snapshot", // 這兩欄由 0124 加上（TABLES-ADDENDUM-1，Sam 2026-11-19「批准加兩欄」）。
@@ -132,12 +134,17 @@ test("0122 lists exactly the three AR permissions with the catalogue description
   assert.doesNotMatch(source, /role_permissions/iu);
 });
 
-integrationTest("0122, 0123, 0124 and 0126 rerun: the permissions and seven AR tables match the approved schema", async (t) => {
+integrationTest("AR migrations rerun: permissions and the seven AR tables match the approved schema", async (t) => {
   const db = await connect(t);
   await seedPermissions(db);
   await createTables(db);
   await addInvoiceLineSalesUom(db);
   await addOpeningInvoices(db);
+  await addBillingSnapshot(db);
+  await addBillingSnapshot(db);
+  const [[billing]] = await db.query(`SELECT column_type AS type, is_nullable AS nullable, column_default AS fallback FROM information_schema.columns
+    WHERE table_schema = DATABASE() AND table_name = 'ar_invoices' AND column_name = 'billing_address_snapshot'`);
+  assert.deepEqual([billing.type, billing.nullable, billing.fallback], ["varchar(1200)", "NO", ""]);
 
   const [permissions] = await db.query("SELECT name, description FROM permissions WHERE name LIKE 'ar.%' ORDER BY id");
   assert.deepEqual(permissions.map((row) => row.name), PERMISSIONS);
