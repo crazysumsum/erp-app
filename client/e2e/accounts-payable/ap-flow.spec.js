@@ -44,6 +44,9 @@ test.beforeAll(async () => {
   await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)",
     [role, ["ap.view", "ap.invoice.mgmt", "ap.invoice.price.override", "ap.payment.mgmt", "purchasing.view"]]);
   await db.query("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username IN (?, ?)", [role, actor.username, peer.username]);
+  const supplierRole = await insert("roles", { name: `ap-supplier-browser-${tag}`, created_at: now });
+  await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = 'supplier.view'", [supplierRole]);
+  await db.query("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username = ?", [supplierRole, peer.username]);
   const [actors] = await db.query("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = ?", [user]);
   expect(actors.map(({ name }) => name)).toEqual([`ap-browser-${tag}`]);
 
@@ -51,6 +54,7 @@ test.beforeAll(async () => {
   const vendor = { supplier_code_snapshot: code, supplier_name_snapshot: "Browser Test Supplier" };
   supplierId = await insert("suppliers", { supplier_code: code, supplier_code_key: code.toLowerCase(), supplier_name: vendor.supplier_name_snapshot,
     supplier_name_key: vendor.supplier_name_snapshot.toLowerCase(), default_currency_code: "HKD", status: "active", ...dates });
+  await insert("currencies", { code: "XAP", name: "AP test currency", decimal_places: 2, status: "ACTIVE", version: 1, ...dates });
   const item = await insert("items", { name: `Browser item ${tag}`, status: "active", ...dates });
   const sku = await insert("item_skus", { item_id: item, sku_code: `APSKU-${tag}`, sku_name: "Browser test SKU",
     status: "active", tracking_policy: "none", purchasable: 1, inventory_tracked: 1, ...dates });
@@ -117,15 +121,24 @@ async function logout(page, account) {
 test("AP browser flow confirms a receipt-backed invoice, pays it and clears aging", async ({ page }) => {
   const errors = [];
   const paymentEndpoint = "**/api/v1/ap-payments";
-  let discardedRequest;
+  let discardedRequest, rejectedEvent;
+  const prepaymentReference = `PREPAY-${tag}`;
+  const supplierCalls = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "warning" || (message.type() === "error" && !message.text().startsWith("Failed to load resource"))) {
       errors.push(message.text());
     }
   });
-  const isApApi = (url) => /^\/api\/v1\/(?:ap-|goods-receipts)/u.test(new URL(url).pathname);
+  const isSupplierApi = (url) => /^\/api\/v1\/(?:suppliers|supplier-lookups)(?:\/|$)/u.test(new URL(url).pathname);
+  const isApApi = (url) => /^\/api\/v1\/(?:ap-|goods-receipts)/u.test(new URL(url).pathname) || isSupplierApi(url);
+  page.on("request", (request) => { if (isSupplierApi(request.url())) supplierCalls.push(request.url()); });
   page.on("response", (response) => {
+    if (response.request().method() === "POST" && new URL(response.url()).pathname === "/api/v1/ap-payments") {
+      const body = response.request().postDataJSON();
+      if (response.status() === 400 && body?.eventId === rejectedEvent) return;
+      if (response.status() === 409 && body?.reference === prepaymentReference) return;
+    }
     if (isApApi(response.url()) && response.status() >= 400) errors.push(`${response.status()} ${new URL(response.url()).pathname}`);
   });
   page.on("requestfailed", (request) => {
@@ -138,7 +151,10 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   await expect(page.getByRole("heading", { name: receiptNumber })).toBeVisible();
   await page.goto("/ap/invoices");
   await page.getByRole("link", { name: "登記應付發票", exact: true }).click();
-  await page.getByLabel("篩選供應商 ID", { exact: true }).fill(String(supplierId));
+  await expect(page.getByText("依供應商篩選需要「查看供應商」權限。")).toBeVisible();
+  await page.getByLabel("無採購單發票").check();
+  await expect(page.getByText("登記無採購單發票需要「查看供應商」權限。")).toBeVisible();
+  await page.getByLabel("由收貨開票").check();
   await page.getByRole("button", { name: "搜尋已確認收貨" }).click();
   await page.getByRole("checkbox", { name: `選擇 ${receiptNumber}` }).click();
   await page.getByLabel("供應商發票號碼", { exact: true }).fill(invoiceNumber);
@@ -157,21 +173,60 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   await expect(invoiceHeading).toBeVisible();
   const confirmedInvoice = await invoiceHeading.textContent();
   const invoicePath = new URL(page.url()).pathname;
+  const paymentForm = `/ap/payments/new?supplierId=${supplierId}&currencyCode=HKD`;
+  await page.goto(`/ap/invoices?q=${invoiceNumber}`);
+  await expect(page.getByRole("row").filter({ hasText: invoiceNumber }).getByRole("link", { name: "登記付款", exact: true })).toHaveAttribute("href", paymentForm);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`/ap/aging?supplierId=${supplierId}&currencyCode=HKD`);
   const agingTable = page.getByRole("region", { name: "應付帳齡表" });
   await expect(agingTable.getByRole("rowheader", { name: /Browser Test Supplier/u })).toBeVisible();
   await expect(agingTable.getByTestId("ap-aging-total")).toContainText("325.00");
+  await expect(agingTable.getByTestId("ap-aging-row").getByRole("link", { name: "登記付款", exact: true })).toHaveAttribute("href", paymentForm);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/ap/payments/new?supplierId=${supplierId}&currencyCode=XAP`);
+  await expect(page.getByRole("status").filter({ hasText: "搜尋供應商需要" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "登記付款草稿" })).toHaveCount(0);
   await page.goto(invoicePath);
   await page.getByRole("link", { name: "登記付款", exact: true }).click();
-  await expect(page.getByLabel("供應商 ID", { exact: true })).toHaveValue(String(supplierId));
-  await expect(page.getByLabel("貨幣代碼", { exact: true })).toHaveValue("HKD");
+  const partyInput = page.getByLabel("供應商", { exact: true }), currencyInput = page.getByLabel("幣別", { exact: true });
+  await expect(partyInput).toHaveValue(`AP-${tag} — Browser Test Supplier`);
+  await expect(partyInput).toHaveAttribute("readonly", "");
+  await expect(currencyInput).toHaveValue("HKD");
+  await expect(currencyInput).toHaveAttribute("readonly", "");
   await page.getByLabel("付款金額", { exact: true }).fill("325.00");
   await page.getByRole("button", { name: "登記付款草稿" }).click();
   await expect(page.getByLabel("轉帳參考", { exact: true })).toBeFocused();
   await page.getByLabel("轉帳參考", { exact: true }).fill(`TEST-${tag}`);
+  const retry = page.getByRole("button", { name: "重試原操作", exact: true });
+  const countDrafts = async () => Number((await db.query(
+    "SELECT COUNT(*) AS total FROM ap_payments WHERE supplier_id = ? AND reference = ?", [supplierId, `TEST-${tag}`]
+  ))[0][0].total);
+  const loseRejection = async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    const response = await route.fetch();
+    expect(response.status()).toBe(400);
+    expect((await response.json()).error.code).toBe("AP_INPUT_INVALID");
+    discardedRequest = route.request();
+    rejectedEvent = discardedRequest.postDataJSON().eventId;
+    await route.abort("failed");
+  };
+  await page.getByLabel("付款金額", { exact: true }).fill("12.345");
+  await page.route(paymentEndpoint, loseRejection);
+  await page.getByRole("button", { name: "登記付款草稿" }).click();
+  await expect(retry).toBeVisible();
+  await page.unroute(paymentEndpoint, loseRejection);
+  await page.reload();
+  const rejectResponse = page.waitForResponse((response) => response.status() === 400 &&
+    response.request().method() === "POST" && new URL(response.url()).pathname === "/api/v1/ap-payments");
+  await retry.click();
+  expect((await rejectResponse).request().postDataJSON().eventId).toBe(rejectedEvent);
+  await expect(page.getByRole("alert").filter({ hasText: "應付資料不正確" })).toBeVisible();
+  await expect(retry).toHaveCount(0);
+  await expect(page.getByLabel("付款金額", { exact: true })).toBeEditable();
+  expect(await countDrafts()).toBe(0);
+  await page.getByLabel("付款金額", { exact: true }).fill("325.00");
+  await db.query("UPDATE suppliers SET status = 'archived' WHERE id = ?", [supplierId]);
   const loseResponse = async (route) => {
     if (route.request().method() !== "POST") return route.continue();
     const response = await route.fetch();
@@ -181,23 +236,57 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   };
   await page.route(paymentEndpoint, loseResponse);
   await page.getByRole("button", { name: "登記付款草稿" }).click();
-  const retry = page.getByRole("button", { name: "重試原操作", exact: true });
   await expect(retry).toBeVisible();
   await page.unroute(paymentEndpoint, loseResponse);
-  const countDrafts = async () => Number((await db.query(
-    "SELECT COUNT(*) AS total FROM ap_payments WHERE supplier_id = ? AND reference = ?", [supplierId, `TEST-${tag}`]
-  ))[0][0].total);
   expect(await countDrafts()).toBe(1);
   await page.reload();
   await expect(retry).toBeVisible();
   await expect(page.getByLabel("付款金額", { exact: true })).toHaveValue("325.00");
   const expectedEvent = discardedRequest.postDataJSON().eventId;
+  expect(expectedEvent).not.toBe(rejectedEvent);
+  expect(supplierCalls).toEqual([]);
   await logout(page, actor);
   await login(page, peer, true);
   await page.goto("/ap/payments/new");
   await expect(page.getByRole("button", { name: "登記付款草稿" })).toBeEnabled();
   await expect(retry).toHaveCount(0);
   await expect(page.getByLabel("付款金額", { exact: true })).toHaveValue("");
+  await partyInput.fill(`AP-${tag}`);
+  await page.getByRole("option", { name: `AP-${tag} — Browser Test Supplier` }).click();
+  await expect(page.getByText(/^HKD —/u)).toBeVisible();
+  await page.getByLabel("幣別", { exact: true }).click();
+  await page.getByRole("option", { name: "XAP — AP test currency" }).click();
+  await expect(page.locator("form").getByText("XAP — AP test currency", { exact: true })).toBeVisible();
+  await page.getByLabel("付款金額", { exact: true }).fill("10.00");
+  await page.getByLabel("轉帳參考", { exact: true }).fill(prepaymentReference);
+  const prepaymentResponse = page.waitForResponse((response) => response.status() === 409 &&
+    response.request().method() === "POST" && new URL(response.url()).pathname === "/api/v1/ap-payments");
+  await page.getByRole("button", { name: "登記付款草稿" }).click();
+  expect((await (await prepaymentResponse).json()).error.code).toBe("AP_PREPAYMENT_REQUIRES_ACTIVE_SUPPLIER");
+  await expect(page.getByRole("alert").filter({ hasText: "只有啟用中的供應商可登記預付款" })).toBeVisible();
+  await expect(page.getByLabel("付款金額", { exact: true })).toBeEditable();
+  await page.goto("/ap/invoices/new");
+  await page.getByLabel("篩選供應商", { exact: true }).fill(`AP-${tag}`);
+  await page.getByRole("option", { name: `AP-${tag} — Browser Test Supplier` }).click();
+  const filteredReceipts = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/v1/goods-receipts" &&
+    new URL(request.url()).searchParams.get("supplierId") === String(supplierId));
+  await page.getByRole("button", { name: "搜尋已確認收貨" }).click();
+  await filteredReceipts;
+  await db.query("UPDATE suppliers SET status = 'active' WHERE id = ?", [supplierId]);
+  await page.getByLabel("無採購單發票").check();
+  await partyInput.fill(`AP-${tag}`);
+  await page.getByRole("option", { name: `AP-${tag} — Browser Test Supplier` }).click();
+  await expect(page.getByText(/^HKD —/u)).toBeVisible();
+  await page.getByLabel("無採購單原因", { exact: true }).fill("Browser test expense");
+  const expenseInvoice = `EXPENSE-${tag}`;
+  await page.getByLabel("供應商發票號碼", { exact: true }).fill(expenseInvoice);
+  await page.getByLabel("到期日", { exact: true }).fill(today);
+  await page.getByRole("button", { name: "新增費用行" }).click();
+  await page.getByLabel("費用 1 說明", { exact: true }).fill("Browser test");
+  await page.getByLabel("費用 1 金額", { exact: true }).fill("10.00");
+  await page.getByRole("button", { name: "建立應付發票草稿" }).click();
+  await expect(page.getByText(expenseInvoice, { exact: true })).toBeVisible();
+  await db.query("UPDATE suppliers SET status = 'archived' WHERE id = ?", [supplierId]);
   await logout(page, peer);
   await login(page, actor, false);
   await page.goto("/ap/payments/new");
@@ -210,7 +299,8 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   const paymentPath = new URL(page.url()).pathname;
   await page.goto("/ap/payments/new");
   await expect(retry).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "登記付款草稿" })).toBeEnabled();
+  await expect(page.getByText(/搜尋供應商需要/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "登記付款草稿" })).toHaveCount(0);
   await page.goto(paymentPath);
   await page.getByRole("button", { name: "確認付款", exact: true }).click();
   await page.getByRole("dialog", { name: "確認付款" }).getByRole("button", { name: "確認付款", exact: true }).click();

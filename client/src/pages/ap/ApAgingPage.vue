@@ -2,13 +2,15 @@
 export const page = { name: "ap-aging", path: "/ap/aging", title: "應付帳齡", requires: { permissions: ["ap.view"] }, menu: { group: "accountsPayable", icon: "hourglass_bottom", order: 30 } };
 </script>
 <script setup>
-import { onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { money } from "@/components/ap/apPresentation.js";
+import { useSessionStore } from "@/stores/session.js";
 import ap from "@/services/ap.js";
 
-const route = useRoute(), router = useRouter();
+const route = useRoute(), router = useRouter(), session = useSessionStore();
+const canPay = computed(() => session.permissions.includes("ap.payment.mgmt"));
 const filters = reactive({ supplierId: "", currencyCode: "" });
 const report = ref(null), loading = ref(false), error = ref("");
 const BUCKETS = [["notDue", "未到期"], ["days1To30", "逾期 1–30 日"], ["days31To60", "逾期 31–60 日"], ["days61To90", "逾期 61–90 日"], ["over90", "逾期 90 日以上"], ["total", "合計"]];
@@ -54,17 +56,19 @@ function reset() { router.replace({ query: {} }); }
         <p v-if="!report.items.length" role="status">沒有未付的應付發票。</p>
         <div v-else role="region" aria-label="應付帳齡表" tabindex="0" class="aging-table q-mb-md">
         <q-markup-table flat bordered separator="cell">
-          <thead><tr><th scope="col" class="text-left">供應商</th><th scope="col" class="text-left">幣別</th><th scope="col" class="text-right">發票數</th><th v-for="[key, label] in BUCKETS" :key="key" scope="col" class="text-right">{{ label }}</th></tr></thead>
+          <thead><tr><th scope="col" class="text-left">供應商</th><th scope="col" class="text-left">幣別</th><th scope="col" class="text-right">發票數</th><th v-for="[key, label] in BUCKETS" :key="key" scope="col" class="text-right">{{ label }}</th><th v-if="canPay" scope="col">操作</th></tr></thead>
           <tbody>
             <tr v-for="row in report.items" :key="`${row.supplierId}:${row.currencyCode}`" data-testid="ap-aging-row">
               <th scope="row" class="text-left">{{ row.supplierCode }} — {{ row.supplierName }}</th><td>{{ row.currencyCode }}</td><td class="text-right">{{ row.invoiceCount }}</td>
               <td v-for="[key] in BUCKETS" :key="key" class="text-right">{{ money(row[key], row.currencyDecimalPlaces) }}</td>
+              <td v-if="canPay"><q-btn flat dense label="登記付款" :to="{ name: 'ap-payment-create', query: { supplierId: row.supplierId, currencyCode: row.currencyCode } }" /></td>
             </tr>
           </tbody>
           <tfoot>
             <tr v-for="total in report.totals" :key="total.currencyCode" data-testid="ap-aging-total">
               <th class="text-left" colspan="2">{{ total.currencyCode }} 合計</th><th class="text-right">{{ total.invoiceCount }}</th>
               <th v-for="[key] in BUCKETS" :key="key" class="text-right">{{ money(total[key], report.items.find((row) => row.currencyCode === total.currencyCode)?.currencyDecimalPlaces ?? 4) }}</th>
+              <td v-if="canPay" />
             </tr>
           </tfoot>
         </q-markup-table>
