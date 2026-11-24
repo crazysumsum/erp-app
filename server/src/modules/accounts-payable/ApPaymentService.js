@@ -14,11 +14,13 @@ function requireMethodEvidence(method, reference, notes) {
 
 /**
  * 付款登記、核銷及解除（SCOPE §1、§3；TABLES §5、§6）。每個命令一個交易，流程在 ApCommandRunner。
- * 取鎖次序固定：操作列 → 付款 → 發票（ID 升序）→ 核銷 → 編號。未核銷的餘額留在付款的 available_amount 上。
+ * 取鎖次序：操作列 → 供應商（僅預付款）→ 付款 → 發票（ID 升序）→ 核銷 → 編號。
+ * 未核銷的餘額留在付款的 available_amount 上。
  */
 export class ApPaymentService {
   constructor({ commands, suppliers, businessMaster, time }) {
-    if (!commands || typeof suppliers?.findByIdInTransaction !== "function" || !businessMaster || !time) throw new TypeError("ApPaymentService requires all of its dependencies");
+    if (!commands || typeof suppliers?.findByIdInTransaction !== "function" || typeof suppliers.assertUsableInTransaction !== "function" ||
+        !businessMaster || !time) throw new TypeError("ApPaymentService requires all of its dependencies");
     Object.assign(this, { commands, suppliers, businessMaster, time });
   }
 
@@ -36,9 +38,7 @@ export class ApPaymentService {
     return this.commands.run({ claims, permission: PERMISSION, commandType: "CREATE_PAYMENT", targetType: "PAYMENT", eventId: eventId(body.eventId), payload: request, context },
       async (tx, { actor, nowMs }) => {
         this.#notInFuture(request.paymentDate, nowMs);
-        // 既有債務可以付給已停用的供應商，查快照時只要求存在。
-        const supplier = await this.suppliers.findByIdInTransaction(tx, request.supplierId, { purpose: "history" });
-        if (!supplier) throw apError("AP_SUPPLIER_NOT_FOUND");
+        const supplier = await this.#checkSupplier(tx, request.supplierId, request.currencyCode);
         const currency = await this.businessMaster.assertCurrencyUsableInTransaction(tx, { code: request.currencyCode, purpose: "history" });
         const amount = amountUnits(request.amount, "amount", currency.decimalPlaces);
         if (amount <= 0n) throw invalid("amount");
@@ -151,15 +151,34 @@ export class ApPaymentService {
     if (paymentDate > this.time.fileDate(this.time.at(nowMs))) throw apError("AP_DATE_IN_FUTURE", { field: "paymentDate" });
   }
 
-  /** 鎖付款並驗版本及狀態。 */
-  async #lock(tx, id, version, status) {
+  async #checkSupplier(tx, supplierId, currencyCode) {
+    const supplier = await this.suppliers.findByIdInTransaction(tx, supplierId, { purpose: "history" });
+    if (!supplier) throw apError("AP_SUPPLIER_NOT_FOUND");
+    const [[debt]] = await tx.query(`SELECT 1 FROM ap_invoices
+      WHERE supplier_id = ? AND currency_code = ? AND status = 'CONFIRMED' AND outstanding_amount > 0 LIMIT 1`, [supplierId, currencyCode]);
+    if (debt) return supplier;
+    try {
+      return await this.suppliers.assertUsableInTransaction(tx, supplierId, { purpose: "purchase" });
+    } catch (error) {
+      if (error.code === "SUPPLIER_NOT_USABLE") throw apError("AP_PREPAYMENT_REQUIRES_ACTIVE_SUPPLIER");
+      if (error.code === "SUPPLIER_NOT_FOUND") throw apError("AP_SUPPLIER_NOT_FOUND");
+      throw error;
+    }
+  }
+
+  /** 驗付款版本及狀態。確認預付款須在鎖付款之前先鎖供應商。 */
+  async #readPayment(tx, id, version, status, { lock = true } = {}) {
     const [[payment]] = await tx.query(`SELECT id, payment_number, status, version, supplier_id, currency_code, currency_decimal_places, allocated_amount, available_amount,
       payment_method, reference, notes,
-      DATE_FORMAT(payment_date, '%Y-%m-%d') AS payment_date FROM ap_payments WHERE id = ? FOR UPDATE`, [id]);
+      DATE_FORMAT(payment_date, '%Y-%m-%d') AS payment_date FROM ap_payments WHERE id = ?${lock ? " FOR UPDATE" : ""}`, [id]);
     if (!payment) throw apError("AP_PAYMENT_NOT_FOUND");
     if (Number(payment.version) !== version) throw apError("VERSION_CONFLICT", { currentVersion: Number(payment.version) });
     if (payment.status !== status) throw apError("AP_STATE_CONFLICT");
     return payment;
+  }
+
+  #lock(tx, id, version, status) {
+    return this.#readPayment(tx, id, version, status);
   }
 
   /** 把 `delta` 由可核銷額移到已核銷額（負數為移回），版本加一。 */
@@ -176,6 +195,10 @@ export class ApPaymentService {
     const request = { version: positiveId(body.version, "version"), ...(needsReason ? { reason: validReason(body.reason) } : {}) };
     return this.commands.run({ claims, permission: PERMISSION, commandType, targetType: "PAYMENT", targetId: id, eventId: eventId(body.eventId), payload: request, context },
       async (tx, command) => {
+        if (commandType === "CONFIRM_PAYMENT") {
+          const draft = await this.#readPayment(tx, id, request.version, from, { lock: false });
+          await this.#checkSupplier(tx, draft.supplier_id, draft.currency_code);
+        }
         const payment = await this.#lock(tx, id, request.version, from);
         const { changes, number = payment.payment_number } = await changesFor(tx, payment, command, request);
         const version = request.version + 1;
