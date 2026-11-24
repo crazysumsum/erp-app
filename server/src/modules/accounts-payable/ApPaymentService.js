@@ -7,6 +7,11 @@ const PERMISSION = "ap.payment.mgmt";
 const invalid = (field) => apError("AP_INPUT_INVALID", { field });
 const placeholders = (values) => values.map(() => "?").join(",");
 
+function requireMethodEvidence(method, reference, notes) {
+  if ((method === "BANK_TRANSFER" || method === "CHEQUE") && !reference.trim()) throw invalid("reference");
+  if (method === "OTHER" && !notes.trim()) throw invalid("notes");
+}
+
 /**
  * 付款登記、核銷及解除（SCOPE §1、§3；TABLES §5、§6）。每個命令一個交易，流程在 ApCommandRunner。
  * 取鎖次序固定：操作列 → 付款 → 發票（ID 升序）→ 核銷 → 編號。未核銷的餘額留在付款的 available_amount 上。
@@ -27,6 +32,7 @@ export class ApPaymentService {
       amount: formatUnits(amountUnits(body.amount, "amount")), paymentMethod: body.paymentMethod,
       reference: text(body.reference ?? "", "reference", { maximum: 190 }), notes: text(body.notes ?? "", "notes", { maximum: 2000, multiline: true })
     };
+    requireMethodEvidence(request.paymentMethod, request.reference, request.notes);
     return this.commands.run({ claims, permission: PERMISSION, commandType: "CREATE_PAYMENT", targetType: "PAYMENT", eventId: eventId(body.eventId), payload: request, context },
       async (tx, { actor, nowMs }) => {
         this.#notInFuture(request.paymentDate, nowMs);
@@ -52,6 +58,7 @@ export class ApPaymentService {
   confirm(command) {
     return this.#transition(command, { commandType: "CONFIRM_PAYMENT", from: "DRAFT", action: "payment.confirmed" }, async (tx, payment, { actor, nowMs }) => {
       this.#notInFuture(payment.payment_date, nowMs);
+      requireMethodEvidence(payment.payment_method, payment.reference, payment.notes);
       const number = await nextDocumentNumber(tx, { documentType: "PAYMENT", time: this.time, nowMs });
       return { number, changes: { status: "CONFIRMED", payment_number: number, confirmed_by: actor.id, confirmed_by_label: actor.username, confirmed_at: nowMs } };
     });
@@ -147,6 +154,7 @@ export class ApPaymentService {
   /** 鎖付款並驗版本及狀態。 */
   async #lock(tx, id, version, status) {
     const [[payment]] = await tx.query(`SELECT id, payment_number, status, version, supplier_id, currency_code, currency_decimal_places, allocated_amount, available_amount,
+      payment_method, reference, notes,
       DATE_FORMAT(payment_date, '%Y-%m-%d') AS payment_date FROM ap_payments WHERE id = ? FOR UPDATE`, [id]);
     if (!payment) throw apError("AP_PAYMENT_NOT_FOUND");
     if (Number(payment.version) !== version) throw apError("VERSION_CONFLICT", { currentVersion: Number(payment.version) });
