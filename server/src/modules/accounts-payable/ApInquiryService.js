@@ -57,24 +57,26 @@ export class ApInquiryService {
 
   /** 付款詳情連同其核銷（含已解除的記錄）及每張發票目前的未付額。 */
   async getPayment({ claims, id }) {
-    const [[row]] = await this.database.query(`SELECT ${PAYMENT}, notes, void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at
-      FROM ap_payments WHERE id = ?`, [id]);
-    if (!row) throw apError("AP_PAYMENT_NOT_FOUND");
-    const [allocations] = await this.database.query(`SELECT a.id, a.invoice_id, a.amount, a.status, a.created_by_label, a.created_at, a.unapplied_by_label, a.unapplied_at,
-        i.invoice_number, ${date("i.invoice_date", "invoice_date")}, ${date("i.due_date", "due_date")}, i.total_amount, i.outstanding_amount
-      FROM ap_payment_allocations a JOIN ap_invoices i ON i.id = a.invoice_id WHERE a.payment_id = ? ORDER BY a.id`, [id]);
-    const canUnapply = row.status === "CONFIRMED" && (claims?.permissions ?? []).includes("ap.payment.mgmt");
-    return {
-      ...paymentSummary(row, claims?.permissions ?? []), notes: row.notes, voidReason: row.void_reason, createdByLabel: row.created_by_label,
-      confirmedByLabel: row.confirmed_by_label, confirmedAt: row.confirmed_at === null ? null : Number(row.confirmed_at),
-      voidedByLabel: row.voided_by_label, voidedAt: row.voided_at === null ? null : Number(row.voided_at),
-      allocations: allocations.map((item) => ({
-        id: Number(item.id), invoiceId: Number(item.invoice_id), invoiceNumber: item.invoice_number, invoiceDate: item.invoice_date, dueDate: item.due_date,
-        invoiceTotalAmount: item.total_amount, invoiceOutstandingAmount: item.outstanding_amount, amount: item.amount, status: item.status,
-        createdByLabel: item.created_by_label, createdAt: Number(item.created_at), unappliedByLabel: item.unapplied_by_label,
-        unappliedAt: item.unapplied_at === null ? null : Number(item.unapplied_at), allowedActions: canUnapply && item.status === "ACTIVE" ? ["unapply"] : []
-      }))
-    };
+    return this.database.withTransaction(async (tx) => {
+      const [[row]] = await tx.query(`SELECT ${PAYMENT}, notes, void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at
+        FROM ap_payments WHERE id = ?`, [id]);
+      if (!row) throw apError("AP_PAYMENT_NOT_FOUND");
+      const [allocations] = await tx.query(`SELECT a.id, a.invoice_id, a.amount, a.status, a.created_by_label, a.created_at, a.unapplied_by_label, a.unapplied_at,
+          i.invoice_number, ${date("i.invoice_date", "invoice_date")}, ${date("i.due_date", "due_date")}, i.total_amount, i.outstanding_amount
+        FROM ap_payment_allocations a JOIN ap_invoices i ON i.id = a.invoice_id WHERE a.payment_id = ? ORDER BY a.id`, [id]);
+      const canUnapply = row.status === "CONFIRMED" && (claims?.permissions ?? []).includes("ap.payment.mgmt");
+      return {
+        ...paymentSummary(row, claims?.permissions ?? []), notes: row.notes, voidReason: row.void_reason, createdByLabel: row.created_by_label,
+        confirmedByLabel: row.confirmed_by_label, confirmedAt: row.confirmed_at === null ? null : Number(row.confirmed_at),
+        voidedByLabel: row.voided_by_label, voidedAt: row.voided_at === null ? null : Number(row.voided_at),
+        allocations: allocations.map((item) => ({
+          id: Number(item.id), invoiceId: Number(item.invoice_id), invoiceNumber: item.invoice_number, invoiceDate: item.invoice_date, dueDate: item.due_date,
+          invoiceTotalAmount: item.total_amount, invoiceOutstandingAmount: item.outstanding_amount, amount: item.amount, status: item.status,
+          createdByLabel: item.created_by_label, createdAt: Number(item.created_at), unappliedByLabel: item.unapplied_by_label,
+          unappliedAt: item.unapplied_at === null ? null : Number(item.unapplied_at), allowedActions: canUnapply && item.status === "ACTIVE" ? ["unapply"] : []
+        }))
+      };
+    }, { isolationLevel: "REPEATABLE READ" });
   }
 
   /**

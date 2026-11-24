@@ -98,7 +98,7 @@ async function setup() {
     });
   };
   const draft = (party, amount, fields = {}, options) => post("", {
-    supplierId: party.id, currencyCode: "HKD", paymentDate: today, amount, paymentMethod: "BANK_TRANSFER", ...fields
+    supplierId: party.id, currencyCode: "HKD", paymentDate: today, amount, paymentMethod: "BANK_TRANSFER", reference: "AP-test-transfer", ...fields
   }, options);
   const read = (id, options) => request(`${base}/${id}`, options);
   const aging = (party) => request(`/api/v1/ap-aging?supplierId=${party.id}`);
@@ -206,4 +206,59 @@ integrationTest("AP payment permissions, currency precision and aging totals abo
   assert.deepEqual(report.items.map((row) => [row.days61To90, row.over90, row.total]),
     [["999999999999999.9900", "999999999999999.9900", "1999999999999999.9800"]]);
   assert.equal(report.totals[0].total, "1999999999999999.9800");
+});
+
+integrationTest("AP requires method evidence for new payments and blocks legacy drafts from taking a number without it", async () => {
+  const f = await fixture();
+  const party = await f.supplier();
+  for (const method of ["BANK_TRANSFER", "CHEQUE"]) {
+    const result = await f.draft(party, "20.00", { paymentMethod: method, reference: "   " });
+    error(result, 400, "AP_INPUT_INVALID");
+    assert.equal(result.body.error.details.field, "reference");
+  }
+  const missingOther = await f.draft(party, "20.00", { paymentMethod: "OTHER", notes: " \n " });
+  error(missingOther, 400, "AP_INPUT_INVALID");
+  assert.equal(missingOther.body.error.details.field, "notes");
+
+  const old = ok(await f.draft(party, "20.00"));
+  await f.db.query("UPDATE ap_payments SET reference = '' WHERE id = ?", [old.id]);
+  error(await f.post(`/${old.id}/confirm`, { version: 1 }), 400, "AP_INPUT_INVALID");
+  assert.deepEqual(ok(await f.read(old.id)).number, null);
+  ok(await f.post(`/${old.id}/cancel`, { version: 1 }));
+  const cash = ok(await f.draft(party, "20.00", { paymentMethod: "CASH", reference: "" }));
+  assert.match(ok(await f.post(`/${cash.id}/confirm`, { version: 1 })).number, /^PMT-/u);
+  const other = ok(await f.draft(party, "20.00", { paymentMethod: "OTHER", reference: "", notes: "Supplier credit transfer" }));
+  assert.match(ok(await f.post(`/${other.id}/confirm`, { version: 1 })).number, /^PMT-/u);
+});
+
+integrationTest("AP payment detail keeps one read snapshot across a concurrent allocation commit", async () => {
+  const f = await fixture();
+  const party = await f.supplier();
+  const invoiceId = await f.invoice(party, "25.0000");
+  const { id } = ok(await f.draft(party, "25.00"));
+  ok(await f.post(`/${id}/confirm`, { version: 1 }));
+  const { ApInquiryService } = await import("../../src/modules/accounts-payable/ApInquiryService.js");
+  const context = application.services.require("context");
+  let committed = false;
+  const interleave = (connection) => ({
+    async query(sql, args) {
+      const result = await connection.query(sql, args);
+      if (!committed && sql.includes("FROM ap_payments")) {
+        ok(await f.post(`/${id}/allocations`, { version: 2, allocations: [{ invoiceId, amount: "25.00" }] }));
+        committed = true;
+      }
+      return result;
+    }
+  });
+  const database = {
+    ...interleave(f.db),
+    withTransaction: (work, options) => context.storage.run({ databaseTransaction: null },
+      () => f.db.withTransaction((tx) => work(interleave(tx)), options))
+  };
+  const inquiry = new ApInquiryService({ database, time: application.services.require("time") });
+  const before = await inquiry.getPayment({ claims: f.payer.claims, id });
+  assert.equal(committed, true);
+  assert.deepEqual([before.allocatedAmount, before.allocations.length, before.allowedActions.includes("void")], ["0.0000", 0, true]);
+  const after = ok(await f.read(id));
+  assert.deepEqual([after.allocatedAmount, after.allocations.length, after.allowedActions.includes("void")], ["25.0000", 1, false]);
 });
