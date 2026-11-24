@@ -2,28 +2,57 @@
 export const page = { name: "ap-payment-create", path: "/ap/payments/new", title: "登記付款", requires: { permissions: ["ap.view", "ap.payment.mgmt"] } };
 </script>
 <script setup>
-import { computed, nextTick, reactive, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { amountInputValid, paymentMethodLabels, today } from "@/components/ap/apPresentation.js";
-import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import ap from "@/services/ap.js";
 
 const route = useRoute(), router = useRouter(), session = useSessionStore();
-const command = useCommandEvent();
-const key = computed(() => `${session.user?.id}:ap-payment-create`);
-const form = reactive({
+const key = computed(() => session.user ? `erp.ap.payment-create.${session.user.id}` : null);
+const emptyForm = () => ({
   supplierId: String(route.query.supplierId ?? ""), currencyCode: String(route.query.currencyCode ?? ""), paymentDate: today(),
   amount: "", paymentMethod: "BANK_TRANSFER", reference: "", notes: ""
 });
+const form = reactive(emptyForm());
 const error = ref(""), alert = ref(null);
 const methods = Object.entries(paymentMethodLabels).map(([value, label]) => ({ value, label }));
-const uncertain = computed(() => command.isUncertain(key.value));
-const busy = computed(() => command.isBusy(key.value));
-const locked = computed(() => uncertain.value || busy.value);
+const pending = ref(null), busy = ref(false), storageBlocked = ref(false);
+const uncertain = computed(() => pending.value !== null && !busy.value);
+const locked = computed(() => !key.value || storageBlocked.value || pending.value !== null || busy.value);
 const referenceRequired = computed(() => ["BANK_TRANSFER", "CHEQUE"].includes(form.paymentMethod));
+const uncertainErrors = new Set(["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "IDEMPOTENCY_IN_PROGRESS"]);
+const storageError = "此分頁無法保留付款操作，請恢復分頁儲存後重開頁面再試。";
+let visible = true;
+onBeforeUnmount(() => { visible = false; });
+
+watch(key, (ownerKey) => {
+  pending.value = null;
+  busy.value = false;
+  storageBlocked.value = false;
+  error.value = "";
+  Object.assign(form, emptyForm());
+  if (!ownerKey) return;
+  try {
+    const body = JSON.parse(sessionStorage.getItem(ownerKey));
+    if (body === null) return;
+    if (typeof body.eventId !== "string" || !/^[0-9a-f-]{36}$/u.test(body.eventId)) throw new Error(storageError);
+    const { eventId: _eventId, supplierId, ...fields } = body;
+    pending.value = body;
+    Object.assign(form, fields, { supplierId: String(supplierId) });
+  } catch {
+    storageBlocked.value = true;
+    error.value = storageError;
+  }
+}, { immediate: true });
+
+function clearRecord(ownerKey, body) {
+  const current = JSON.parse(sessionStorage.getItem(ownerKey));
+  if (current?.eventId === body.eventId) sessionStorage.removeItem(ownerKey);
+  if (visible && key.value === ownerKey) pending.value = null;
+}
 
 async function showError(message) {
   error.value = message;
@@ -32,23 +61,43 @@ async function showError(message) {
 }
 
 async function submit() {
-  const pending = command.pending(key.value);
-  const supplierId = Number(form.supplierId), currencyCode = form.currencyCode.trim().toUpperCase();
+  const ownerKey = key.value;
+  if (!ownerKey || busy.value || storageBlocked.value) return;
+  const previous = pending.value;
+  let body = previous;
   error.value = "";
-  if (!pending) {
+  if (!previous) {
+    const supplierId = Number(form.supplierId), currencyCode = form.currencyCode.trim().toUpperCase();
     if (!Number.isSafeInteger(supplierId) || supplierId < 1) return showError("請輸入有效的供應商 ID。");
     if (!/^[A-Z]{3}$/u.test(currencyCode)) return showError("請輸入三個英文字母的貨幣代碼。");
     if (!amountInputValid(form.amount, 4)) return showError("請輸入大於零的十進制金額。");
     if (referenceRequired.value && !form.reference.trim()) return showError("請輸入轉帳參考或支票號。");
     if (form.paymentMethod === "OTHER" && !form.notes.trim()) return showError("請在備註說明付款方式。");
+    body = { ...form, supplierId, currencyCode, reference: form.reference.trim(), notes: form.notes.trim(), eventId: crypto.randomUUID() };
   }
-  const payload = pending?.payload ?? { ...form, supplierId, currencyCode, reference: form.reference.trim(), notes: form.notes.trim() };
+  // Store before sending so reload during the request still reuses the same event.
   try {
-    const result = await command.run(payload, (body) => ap.createPayment(body), key.value, { action: "create" });
-    notifySuccess("已登記付款草稿。");
-    await router.push(`/ap/payments/${result.id}`);
+    sessionStorage.setItem(ownerKey, JSON.stringify(body));
+  } catch {
+    storageBlocked.value = true;
+    return showError(storageError);
+  }
+  pending.value = body;
+  busy.value = true;
+  try {
+    const result = await ap.createPayment(body);
+    clearRecord(ownerKey, body);
+    if (visible && key.value === ownerKey) {
+      notifySuccess("已登記付款草稿。");
+      await router.push(`/ap/payments/${result.id}`);
+    }
   } catch (failure) {
-    if (!command.isUncertain(key.value)) await showError(failure.message || "登記付款失敗。");
+    if (!previous && failure.status >= 400 && failure.status < 500 && !uncertainErrors.has(failure.code)) {
+      try { clearRecord(ownerKey, body); } catch { /* Keep the original operation if browser storage cannot clear it. */ }
+    }
+    if (visible && key.value === ownerKey && (previous || !pending.value)) await showError(failure.message || "登記付款失敗。");
+  } finally {
+    if (visible && key.value === ownerKey) busy.value = false;
   }
 }
 </script>
