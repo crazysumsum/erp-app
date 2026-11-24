@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test, { after } from "node:test";
+import { parse } from "csv-parse/sync";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 
@@ -102,7 +103,7 @@ async function setup() {
   }, options);
   const read = (id, options) => request(`${base}/${id}`, options);
   const aging = (party) => request(`/api/v1/ap-aging?supplierId=${party.id}`);
-  return { db, request, post, payer, viewer: viewer.token, invoiceManager: invoiceManager.token, today, day, supplier, invoice, draft, read, aging };
+  return { db, url, request, post, payer, viewer: viewer.token, invoiceManager: invoiceManager.token, today, day, supplier, invoice, draft, read, aging };
 }
 
 function ok(result) {
@@ -261,4 +262,37 @@ integrationTest("AP payment detail keeps one read snapshot across a concurrent a
   assert.deepEqual([before.allocatedAmount, before.allocations.length, before.allowedActions.includes("void")], ["0.0000", 0, true]);
   const after = ok(await f.read(id));
   assert.deepEqual([after.allocatedAmount, after.allocations.length, after.allowedActions.includes("void")], ["25.0000", 1, false]);
+});
+
+
+integrationTest("AP aging CSV matches the two filters and protects supplier names from formula interpretation", async () => {
+  const f = await fixture(), party = await f.supplier();
+  const other = await f.supplier();
+  const invoice = await f.invoice(party, "100.0000", { due: -45 });
+  await f.db.query("UPDATE ap_invoices SET supplier_name_snapshot = ? WHERE id = ?", ["@TEST(1,2)", invoice]);
+  await f.db.query("INSERT IGNORE INTO currencies (code, name, decimal_places, status, created_at, updated_at) VALUES ('XAP', 'AP synthetic FX', 2, 'ACTIVE', 1, 1)");
+  await f.invoice(party, "15.0000", { currency: "XAP" });
+  await f.invoice(other, "325.0000");
+  const exportCsv = (query, token) => fetch(f.url + "/api/v1/ap-aging/export" + query, {
+    headers: token ? { Authorization: "Bearer " + token } : {}
+  });
+  const query = `?supplierId=${party.id}&currencyCode=HKD`;
+  const response = await exportCsv(query, f.viewer);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /^text\/csv/u);
+  assert.match(response.headers.get("content-disposition"), /ap-aging-\d{4}-\d{2}-\d{2}\.csv/u);
+  assert.match(response.headers.get("cache-control"), /no-store/u);
+  assert.deepEqual(parse(await response.text(), { bom: true }), [
+    ["asOfDate", "rowType", "supplierCode", "supplierName", "currencyCode", "invoiceCount", "notDue", "days1To30", "days31To60", "days61To90", "over90", "total"],
+    [f.today, "detail", party.code, "'@TEST(1,2)", "HKD", "1", "0.0000", "0.0000", "100.0000", "0.0000", "0.0000", "100.0000"],
+    [f.today, "currencyTotal", "", "", "HKD", "1", "0.0000", "0.0000", "100.0000", "0.0000", "0.0000", "100.0000"]
+  ]);
+  for (const [token, status] of [[f.invoiceManager, 403], [undefined, 401]]) {
+    const denied = await exportCsv(query, token);
+    assert.equal(denied.status, status);
+    await denied.arrayBuffer();
+  }
+  const empty = await exportCsv(`?supplierId=${party.id}&currencyCode=ZZZ`, f.viewer);
+  assert.equal(empty.status, 200);
+  assert.equal(parse(await empty.text(), { bom: true }).length, 1);
 });
