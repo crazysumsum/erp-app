@@ -1,6 +1,6 @@
 # 應付與付款最小版本：資料表說明（供Sam批准）
 
-日期：2026-11-24（r3）。作者：`claude-erp-app-tl-01`。對應同目錄的`SCOPE.md`及`DECISIONS.md`。
+日期：2026-11-24（r4）。作者：`claude-erp-app-tl-01`。對應同目錄的`SCOPE.md`及`DECISIONS.md`。
 **草稿；未獲Sam批准前不寫migration。** 來源：`origin/main` `80b54298`（只讀）；以已在main上的應收七張表（`server/database/migrations/0123_create_ar_tables.js`）為藍本，下面逐欄列出，不以「同應收」代替。
 
 本文件按`DECISIONS.md`決定一、二、三的建議（都是A）寫成。Sam若選其他選項，受影響的欄位在各節末以「**隨決定而變**」標明；決定五送批的是按他所選版本定稿的完整欄位。決定三若保留貸項或關帳日，需要的表不在這七張之內，要另行說明及批准。
@@ -60,7 +60,7 @@
 | `due_date_overridden` | TINYINT(1) | 否 | 0 | 到期日是否與按條款算出的預設值不同 |
 | `due_date_reason` | VARCHAR(500) | 否 | `''` | 改動預設到期日的原因 |
 | `supplier_total_amount` | DECIMAL(19,4) | 是 | NULL | 使用者照供應商發票輸入的總額；確認時必須已輸入並等於`total_amount` |
-| `no_po_reason` | VARCHAR(500) | 否 | `''` | 無採購單發票（只有費用行）的原因 |
+| `no_po_reason` | VARCHAR(500) | 否 | `''` | 整張發票沒有採購單的原因；只有無採購單發票（沒有任何收貨行）才填，而且必填。與費用行各自的`description`不同：後者說明該行是什麼收費 |
 | `total_amount` | DECIMAL(19,4) | 否 | 無 | 系統算出的發票總額 |
 | `allocated_amount` | DECIMAL(19,4) | 否 | 0 | 已核銷額 |
 | `outstanding_amount` | DECIMAL(19,4) | 否 | 無 | 未付額；帳齡表讀這一欄 |
@@ -109,16 +109,17 @@
 | `quantity` | BIGINT UNSIGNED | 否 | 0 | 開票數量（基本單位），等於收貨行的收貨數量；費用行為0 |
 | `po_unit_price_snapshot` | DECIMAL(19,4) | 否 | 0 | 採購行的單價（每採購單位） |
 | `po_line_amount` | DECIMAL(19,4) | 否 | 0 | 按採購單價算出的本行金額（數量 × 單價 ÷ 換算因子，half-up四位小數）；費用行為0 |
-| `line_amount` | DECIMAL(19,4) | 否 | 無 | 本行的發票金額；沒有改動時等於`po_line_amount`，費用行為輸入的金額 |
-| `amount_override_reason` | VARCHAR(500) | 否 | `''` | `line_amount`與`po_line_amount`不同時的原因 |
-| `description` | VARCHAR(500) | 否 | `''` | 費用行的描述 |
+| `line_amount` | DECIMAL(19,4) | 否 | 無 | 本行的發票金額。收貨行：沒有改動時等於`po_line_amount`。費用行：使用者輸入的金額 |
+| `amount_override_reason` | VARCHAR(500) | 否 | `''` | **只用於收貨行**：`line_amount`與`po_line_amount`不同時的原因。費用行恆為空 |
+| `description` | VARCHAR(500) | 否 | `''` | **只用於費用行**：這一行是什麼收費（例如運費）。收貨行為空 |
 
 - 主鍵`id`。`UNIQUE(active_goods_receipt_line_id)`：**一個收貨行同一時間只可在一張有效發票上**，由資料庫保證，兩人同時為同一張收貨開票時只有一個成功。
 - 「整張收貨只屬於一張發票」由兩件事合起來保證：這個按收貨行的唯一鍵，加上程式在同一交易為收貨的全部行各建一行、取消或作廢時一併釋放。資料庫本身只保證到行。
 - `UNIQUE(invoice_id,line_no)`：同一發票內行號不重複。`KEY(goods_receipt_id,id)`：按收貨查其發票。
 - 外鍵：`invoice_id`→`ap_invoices(id)`；`goods_receipt_id`→`goods_receipts(id)`；（`goods_receipt_line_id`,`goods_receipt_id`）→`goods_receipt_lines(id,goods_receipt_id)`（現有唯一鍵`uq_gr_lines_id_gr`），由資料庫保證該行確實屬於該收貨（Purchasing負責人`9e2fd7ab`的建議）。均`ON DELETE RESTRICT`。對採購單及採購行不設外鍵：收貨對採購單已有`RESTRICT`外鍵。
-- `CHECK`：`line_type`取值；收貨行的`goods_receipt_id`、`goods_receipt_line_id`不為NULL而且`quantity > 0`；費用行的這兩欄及`active_goods_receipt_line_id`為NULL、`quantity = 0`、`po_line_amount = 0`、`line_amount > 0`；`po_unit_price_snapshot`、`po_line_amount`、`line_amount`不為負。
-- 由程式檢查、不在表結構內的規則：`line_amount`與`po_line_amount`不同時須`ap.invoice.price.override`及原因；費用行描述不可空白。
+- `CHECK`：`line_type`取值；收貨行的`goods_receipt_id`、`goods_receipt_line_id`不為NULL而且`quantity > 0`；費用行的這兩欄及`active_goods_receipt_line_id`為NULL、`quantity = 0`、`po_line_amount = 0`、`line_amount > 0`、`amount_override_reason = ''`；`po_unit_price_snapshot`、`po_line_amount`、`line_amount`不為負。
+- 由程式檢查、不在表結構內的規則：**收貨行**的`line_amount`與`po_line_amount`不同時須`ap.invoice.price.override`及原因；這項權限及原因**不適用於費用行**——加一行正常的運費，或登記整張無採購單發票，只需要`ap.invoice.mgmt`。費用行的`description`不可空白。
+- 這張表不獨立保存「發票單價」：收貨行保存採購單價、按採購單價算出的金額及發票金額，畫面上的發票單價由發票金額除以數量折算，只供顯示。
 - **隨決定而變**：決定一採B時不設`line_type`、`po_line_amount`、`amount_override_reason`、`description`，兩個收貨ID改為`NOT NULL`。採C時不設`line_type`及`description`，兩個收貨ID改為`NOT NULL`，其餘與A相同。決定二採B（按數量部分開票）時，這張表的唯一鍵不適用，要另加一張按收貨行記錄已佔用數量的表，共八張。
 
 ## 5. `ap_payments` — 付款
