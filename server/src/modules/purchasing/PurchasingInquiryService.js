@@ -1,5 +1,6 @@
 import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { PurchasingOperationService } from "./PurchasingOperationService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { storedAmount } from "./moneyMath.js";
 import { purchasingError } from "./purchasingErrors.js";
@@ -14,6 +15,8 @@ const OUTSTANDING = `(po.has_outstanding = 1 AND po.status IN (${RECEIVING_SQL})
 // BIGINT UNSIGNED 相減會 overflow，要先轉 SIGNED。
 const LINE_OUTSTANDING = `GREATEST(CAST(l.ordered_base_quantity AS SIGNED) - CAST(l.net_received_base_quantity AS SIGNED)
   - CAST(l.closed_remaining_base_quantity AS SIGNED), 0)`;
+const LINE_DELIVERY_DATE = "COALESCE(l.expected_delivery_date, po.expected_delivery_date)";
+const LINE_OVERDUE = `${LINE_OUTSTANDING} > 0 AND ${LINE_DELIVERY_DATE} < ?`;
 const PO_NUMBER = /^PO-\d{6}-\d{6}$/u;
 const MAX_SEARCH_IDS = 100; // 設計 §8.9：名稱搜尋最多 100 個 ID。
 const date = (column) => `DATE_FORMAT(${column}, '%Y-%m-%d') AS ${column}`;
@@ -25,6 +28,7 @@ const DETAIL = `${SUMMARY}, ordering_address_id, ordering_address_snapshot, curr
   updated_by_label, confirmed_at, closed_at, cancelled_at`;
 const LINE = `id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, tracking_policy_snapshot, inventory_tracked_snapshot,
   minimum_receipt_life_days_snapshot, base_uom_id, base_uom_code_snapshot, purchase_sku_uom_id, purchase_uom_code_snapshot, uom_to_base_factor_snapshot,
+  (SELECT su.uom_id FROM item_sku_uoms su WHERE su.id = purchase_sku_uom_id) AS purchase_uom_id,
   supplier_item_code_snapshot, ordered_quantity, ordered_base_quantity, unit_price, line_amount, zero_price_reason, ${date("expected_delivery_date")}, line_note,
   gross_received_base_quantity, reversed_base_quantity, net_received_base_quantity, closed_remaining_base_quantity, close_reason, version`;
 
@@ -66,7 +70,7 @@ function listQuery(input) {
   return { ...query, q };
 }
 
-function listWhere(query, search, scope = null) {
+function listWhere(query, search, scope = null, outstandingOnly = false) {
   const clauses = [], values = [];
   const add = (clause, ...params) => { clauses.push(clause); values.push(...params); };
   if (scope) add(...scope);
@@ -75,10 +79,25 @@ function listWhere(query, search, scope = null) {
   if (query.buyerId !== undefined) add("po.buyer_id = ?", query.buyerId);
   if (query.currencyCode !== undefined) add("po.currency_code = ?", query.currencyCode);
   if (query.skuId !== undefined) add("EXISTS (SELECT 1 FROM purchase_order_lines l WHERE l.purchase_order_id = po.id AND l.sku_id = ?)", query.skuId);
-  if (query.hasOutstanding !== undefined) add(query.hasOutstanding ? OUTSTANDING : `NOT ${OUTSTANDING}`);
-  for (const [field, column] of [["orderDate", "po.order_date"], ["expectedDeliveryDate", "po.expected_delivery_date"]]) {
-    if (query[`${field}From`] !== undefined) add(`${column} >= ?`, query[`${field}From`]);
-    if (query[`${field}To`] !== undefined) add(`${column} <= ?`, query[`${field}To`]);
+  if (outstandingOnly) add(OUTSTANDING);
+  else if (query.hasOutstanding !== undefined) add(query.hasOutstanding ? OUTSTANDING : `NOT ${OUTSTANDING}`);
+  if (query.orderDateFrom !== undefined) add("po.order_date >= ?", query.orderDateFrom);
+  if (query.orderDateTo !== undefined) add("po.order_date <= ?", query.orderDateTo);
+  const deliveryColumn = outstandingOnly ? LINE_DELIVERY_DATE : "po.expected_delivery_date";
+  const deliveryClauses = [], deliveryValues = [];
+  if (query.expectedDeliveryDateFrom !== undefined) {
+    deliveryClauses.push(`${deliveryColumn} >= ?`);
+    deliveryValues.push(query.expectedDeliveryDateFrom);
+  }
+  if (query.expectedDeliveryDateTo !== undefined) {
+    deliveryClauses.push(`${deliveryColumn} <= ?`);
+    deliveryValues.push(query.expectedDeliveryDateTo);
+  }
+  if (deliveryClauses.length) {
+    const bounds = deliveryClauses.join(" AND ");
+    add(outstandingOnly
+      ? `EXISTS (SELECT 1 FROM purchase_order_lines l WHERE l.purchase_order_id = po.id AND ${LINE_OUTSTANDING} > 0 AND ${bounds})`
+      : bounds, ...deliveryValues);
   }
   if (search) {
     const matches = ["po.supplier_reference = ?"], params = [search.reference];
@@ -120,7 +139,8 @@ function toPurchaseOrderLine(row, receiving, places) {
     id: Number(row.id), lineNumber: Number(row.line_number), skuId: Number(row.sku_id), skuCode: row.sku_code_snapshot, skuName: row.sku_name_snapshot,
     trackingPolicy: row.tracking_policy_snapshot, inventoryTracked: Boolean(row.inventory_tracked_snapshot),
     minimumReceiptLifeDays: nullableId(row.minimum_receipt_life_days_snapshot), baseUomId: Number(row.base_uom_id), baseUomCode: row.base_uom_code_snapshot,
-    purchaseSkuUomId: Number(row.purchase_sku_uom_id), purchaseUomCode: row.purchase_uom_code_snapshot, uomToBaseFactor: Number(row.uom_to_base_factor_snapshot),
+    // GR detail 嘅 inputUomId 係 item_uoms id：Purchase UOM 用呢個，Base UOM 用 baseUomId（TASK-030）。
+    purchaseSkuUomId: Number(row.purchase_sku_uom_id), purchaseUomId: Number(row.purchase_uom_id), purchaseUomCode: row.purchase_uom_code_snapshot, uomToBaseFactor: Number(row.uom_to_base_factor_snapshot),
     supplierItemCode: row.supplier_item_code_snapshot, orderedQuantity: String(row.ordered_quantity), orderedBaseQuantity: String(ordered),
     unitPrice: String(row.unit_price), lineAmount: storedAmount(row.line_amount, places), zeroPriceReason: row.zero_price_reason, expectedDeliveryDate: row.expected_delivery_date,
     lineNote: row.line_note, grossReceivedBaseQuantity: String(row.gross_received_base_quantity), reversedBaseQuantity: String(row.reversed_base_quantity),
@@ -171,11 +191,14 @@ export class PurchasingInquiryService {
     Object.assign(this, { database, logger, time, suppliers });
   }
 
-  async list({ claims, input = {} }) {
+  async list({ claims, input = {}, outstandingOnly = false }) {
     const query = listQuery(input), today = this.time.fileDate(this.time.at(this.time.nowMs()));
     return this.database.withTransaction(async (tx) => {
       const { permissions } = await this.#actor(tx, claims);
-      const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null);
+      const overdueScope = !outstandingOnly || query.overdue === undefined ? null : [
+        `${query.overdue ? "" : "NOT "}EXISTS (SELECT 1 FROM purchase_order_lines l WHERE l.purchase_order_id = po.id AND ${LINE_OVERDUE})`, today
+      ];
+      const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null, overdueScope, outstandingOnly);
       const [[{ total }]] = await tx.query(`SELECT COUNT(*) AS total FROM purchase_orders po${where}`, values);
       const direction = query.descending ? "DESC" : "ASC";
       const [page] = await tx.query(`SELECT po.id FROM purchase_orders po${where} ORDER BY po.${SORT[query.sortBy]} ${direction}, po.id ${direction} LIMIT ? OFFSET ?`,
@@ -188,7 +211,7 @@ export class PurchasingInquiryService {
       const [progress] = await tx.query(`SELECT l.purchase_order_id, COUNT(*) AS line_count, SUM(l.ordered_base_quantity) AS ordered,
           SUM(l.net_received_base_quantity) AS net_received, SUM(l.closed_remaining_base_quantity) AS closed_remaining, SUM(${LINE_OUTSTANDING}) AS outstanding,
           MAX(l.net_received_base_quantity > l.ordered_base_quantity) AS over_received, MAX(l.unit_price = 0) AS zero_price,
-          MAX(${LINE_OUTSTANDING} > 0 AND COALESCE(l.expected_delivery_date, po.expected_delivery_date) < ?) AS overdue
+          MAX(${LINE_OVERDUE}) AS overdue
         FROM purchase_order_lines l JOIN purchase_orders po ON po.id = l.purchase_order_id
         WHERE l.purchase_order_id IN (${marks}) GROUP BY l.purchase_order_id`, [today, ...ids]);
       const [inactive] = await tx.query(`SELECT po.id FROM purchase_orders po JOIN suppliers s ON s.id = po.supplier_id WHERE po.id IN (${marks}) AND s.status <> 'active'
@@ -235,6 +258,14 @@ export class PurchasingInquiryService {
       return toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, snapshot: stored?.approval_snapshot, history, actorId });
     });
     return { ...detail, currentMasterDifferences: await this.#differences(detail) };
+  }
+
+  /** §5.4（TASK-033）：COMMIT 結果不明時按原 eventId 查本人結果；權限按原命令，喺 PurchasingOperationService.lookup 驗。 */
+  operation({ claims, eventId }) {
+    return this.database.withTransaction(async (tx) => {
+      const fresh = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
+      return new PurchasingOperationService().lookup(tx, { eventId, actorId: fresh.id, permissions: fresh.permissions });
+    });
   }
 
   /** Read path 都要 token 同 DB 權限一致（同 Sales 一樣）；allowedActions 用呢度讀到嘅權限，唔信 JWT。 */

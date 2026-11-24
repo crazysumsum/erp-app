@@ -11,22 +11,24 @@ const session = (permissions) => ({ isAuthenticated: true, roles: [], permission
 const group = (permissions) => buildMenu(pages, session(permissions)).find(({ name }) => name === "purchasingReceiving");
 
 describe("TASK-021 採購導航", () => {
-  it("有 purchasing.view 先見到群組，入面只有採購單", () => {
+  it("有 purchasing.view 先見到群組，入面有採購單及收貨單（TASK-031）", () => {
     const shown = group(["purchasing.view"]);
     expect(shown).toMatchObject({ label: "採購與收貨" });
-    expect(shown.items.map(({ name, path, title }) => ({ name, path, title }))).toEqual([{ name: "purchase-orders", path: "/purchasing/purchase-orders", title: "採購單" }]);
+    expect(shown.items.map(({ name, path, title }) => ({ name, path, title }))).toEqual([{ name: "purchase-orders", path: "/purchasing/purchase-orders", title: "採購單" },
+      { name: "goods-receipts", path: "/purchasing/goods-receipts", title: "收貨單" }]);
   });
   it.each([[[]], [["purchasing.mgmt"]], [["sales.view"]]])("權限 %j 唔見群組", (permissions) => {
     expect(group(permissions)).toBeUndefined();
   });
-  it("TASK-024：待我審批要 view＋approval、採購設定要 settings 先入選單；收貨頁未有入口；詳情、新增、編輯、列印唔入選單", () => {
+  it("TASK-024：待我審批要 view＋approval、採購設定要 settings 先入選單；收貨單列表要 view（TASK-031）；詳情、新增、編輯、列印唔入選單", () => {
     const full = group(["purchasing.view", "purchasing.mgmt", "purchasing.approval", "purchasing.settings", "receiving.operation"]);
-    expect(full.items.map(({ name }) => name)).toEqual(["purchase-orders", "my-purchase-order-approvals", "purchasing-settings"]);
-    expect(group(["purchasing.view", "purchasing.mgmt"]).items.map(({ name }) => name)).toEqual(["purchase-orders"]);
+    expect(full.items.map(({ name }) => name)).toEqual(["purchase-orders", "my-purchase-order-approvals", "goods-receipts", "purchasing-settings"]);
+    expect(group(["purchasing.view", "purchasing.mgmt"]).items.map(({ name }) => name)).toEqual(["purchase-orders", "goods-receipts"]);
     expect(group(["purchasing.approval"])).toBeUndefined();
     expect(group(["purchasing.settings"]).items.map(({ name }) => name)).toEqual(["purchasing-settings"]);
-    expect(pages.filter(({ page }) => page.menu).map(({ page }) => page.name).sort()).toEqual(["my-purchase-order-approvals", "purchase-orders", "purchasing-settings"]);
-    expect(pages.map(({ page }) => page.name).sort()).toEqual(["my-purchase-order-approvals", "purchase-order-create", "purchase-order-detail", "purchase-order-edit", "purchase-order-print", "purchase-orders", "purchasing-settings"]);
+    expect(pages.filter(({ page }) => page.menu).map(({ page }) => page.name).sort()).toEqual(["goods-receipts", "my-purchase-order-approvals", "purchase-orders", "purchasing-settings"]);
+    expect(pages.map(({ page }) => page.name).sort()).toEqual(["goods-receipt-create", "goods-receipt-detail", "goods-receipt-edit", "goods-receipts", "my-purchase-order-approvals", "purchase-order-create", "purchase-order-detail",
+      "purchase-order-edit", "purchase-order-print", "purchase-orders", "purchasing-settings"]);
   });
   it("群組已登記，排喺供應商同客戶之間，頁面通過啟動驗證", () => {
     const names = [...menuConfig.groups].sort((a, b) => a.order - b.order).map(({ name }) => name);

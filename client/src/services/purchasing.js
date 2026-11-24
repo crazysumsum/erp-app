@@ -2,6 +2,7 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 
 export const service = { name: "purchasing" };
 const write = (path, body, options = {}) => httpClient.post(path, { idempotent: true, idempotencyKey: body.eventId, body, ...options });
+const receiving = (path, params, signal) => httpClient.get(`/api/v1/receiving-lookups/${path}`, { params, signal }).then(({ items }) => items);
 const lookup = (kind, { signal, ...params } = {}) => httpClient.get(`/api/v1/purchasing-lookups/${kind}`, { params, signal }).then(({ items }) => items);
 
 export default {
@@ -33,5 +34,20 @@ export default {
   withdrawPurchaseOrderApproval(id, payload) { return write(`/api/v1/purchase-orders/${id}/approval/withdraw`, payload); },
   getSettings({ signal } = {}) { return httpClient.get("/api/v1/purchasing-settings", { signal }); },
   // jwt-device-password：要裝置簽章（§6.2）。
-  updateSettings(payload) { return write("/api/v1/purchasing-settings/update", payload, { signed: true }); }
+  updateSettings(payload) { return write("/api/v1/purchasing-settings/update", payload, { signed: true }); },
+  // 收貨（TASK-029／032／033）：寫入用 eventId 做 Idempotency-Key；結果不明時用 getOperationByEvent 查，唔好換 eventId。
+  listGoodsReceipts({ rowsPerPage, signal, ...query } = {}) {
+    const params = Object.fromEntries(Object.entries({ ...query, pageSize: rowsPerPage ?? query.pageSize })
+      .filter(([, value]) => value !== undefined && value !== null && value !== ""));
+    return httpClient.get("/api/v1/goods-receipts", { params, signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+  getGoodsReceipt(id, { signal } = {}) { return httpClient.get(`/api/v1/goods-receipts/${id}`, { signal }); },
+  createGoodsReceipt(payload) { return write("/api/v1/goods-receipts/create", payload); },
+  updateGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/update`, payload); },
+  cancelGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/cancel`, payload); },
+  confirmGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/confirm`, payload); },
+  getOperationByEvent(eventId, { signal } = {}) { return httpClient.get(`/api/v1/purchasing-operations/by-event/${eventId}`, { signal }); },
+  lookupReceivablePurchaseOrders({ signal, ...params } = {}) { return receiving("purchase-orders", params, signal); },
+  lookupReceivingWarehouses({ signal } = {}) { return receiving("warehouses", {}, signal); },
+  lookupReceivingBins(warehouseId, { signal } = {}) { return receiving(`warehouses/${warehouseId}/bins`, {}, signal); }
 };

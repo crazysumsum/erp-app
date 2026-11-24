@@ -160,6 +160,10 @@ export const PURCHASE_ORDER_LIST_QUERY = Object.freeze({
 const queryValidator = new RequestValidator({ config: { enabled: true, allErrors: false, coerceTypes: true, useDefaults: false,
   removeAdditional: false, maxErrors: 1, includeErrorDetailsInResponse: false } });
 const validateList = queryValidator.compile({ query: PURCHASE_ORDER_LIST_QUERY }, "Purchase Order list query");
+const { page, pageSize, sortBy, descending, supplierId, buyerId, skuId, expectedDeliveryDateFrom, expectedDeliveryDateTo } = PURCHASE_ORDER_LIST_QUERY.properties;
+const validateOutstanding = queryValidator.compile({ query: { type: "object", additionalProperties: false,
+  properties: { page, pageSize, sortBy, descending, supplierId, buyerId, skuId, expectedDeliveryDateFrom, expectedDeliveryDateTo, overdue: { type: "boolean" } }
+} }, "Outstanding Purchase Order list query");
 const validateMyApprovals = queryValidator.compile({ query: { type: "object", additionalProperties: false,
   properties: { page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 }, q: { type: "string", maxLength: 190 }, supplierId: ID } } }, "My Purchase Order approvals query");
 
@@ -169,10 +173,12 @@ export function myApprovalsRequest(req) {
   return { claims: req.auth.claims, input: request.input.query };
 }
 
-export function purchaseOrderListRequest(req) {
+export function purchaseOrderListRequest(req, { outstandingOnly = false } = {}) {
   const request = { query: structuredClone(req.input.query) };
-  validated(validateList, request, "query");
-  return { claims: req.auth.claims, input: request.input.query };
+  validated(outstandingOnly ? validateOutstanding : validateList, request, "query");
+  const args = { claims: req.auth.claims, input: request.input.query };
+  if (outstandingOnly) args.outstandingOnly = true;
+  return args;
 }
 
 const object = (properties) => ({ type: "object", required: Object.keys(properties), additionalProperties: false, properties });
@@ -201,7 +207,7 @@ const ADDRESS = object(Object.fromEntries(["addressLine1", "addressLine2", "addr
 const PAYMENT_TERM = object({ code: TEXT, name: TEXT, calculationType: TEXT, dueDays: { type: ["integer", "null"] } });
 const PO_LINE = object({
   id: ID, lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, trackingPolicy: TEXT, inventoryTracked: { type: "boolean" },
-  minimumReceiptLifeDays: { type: ["integer", "null"] }, baseUomId: ID, baseUomCode: TEXT, purchaseSkuUomId: ID, purchaseUomCode: TEXT, uomToBaseFactor: ID,
+  minimumReceiptLifeDays: { type: ["integer", "null"] }, baseUomId: ID, baseUomCode: TEXT, purchaseSkuUomId: ID, purchaseUomId: ID, purchaseUomCode: TEXT, uomToBaseFactor: ID,
   supplierItemCode: TEXT, orderedQuantity: TEXT, orderedBaseQuantity: BASE_QUANTITY, unitPrice: TEXT, lineAmount: AMOUNT, zeroPriceReason: TEXT,
   expectedDeliveryDate: NULLABLE_DATE, lineNote: TEXT, grossReceivedBaseQuantity: BASE_QUANTITY, reversedBaseQuantity: BASE_QUANTITY,
   netReceivedBaseQuantity: BASE_QUANTITY, outstandingBaseQuantity: BASE_QUANTITY, overReceivedBaseQuantity: BASE_QUANTITY,

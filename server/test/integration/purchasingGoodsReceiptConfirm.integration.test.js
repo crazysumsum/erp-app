@@ -45,10 +45,12 @@ async function setup() {
         () => db.query("DELETE FROM user_roles WHERE user_id = ?", [id]));
       await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [id, role]);
       const version = await application.services.require("tokenRevocation").currentVersion(String(id));
-      return { id, token: await jwt.issue({ roles: [name], permissions }, { subject: String(id), version, authTime: Math.floor(now / 1000) }) };
+      const issue = async (granted) => jwt.issue({ roles: [name], permissions: granted }, { subject: String(id), version, authTime: Math.floor(Date.now() / 1000) });
+      return { id, role, issue, token: await issue(permissions) };
     };
     const receiver = await person("receiver", ["purchasing.view", "receiving.operation"]), viewer = await person("viewer", ["purchasing.view"]);
     const overrider = await person("overrider", ["purchasing.view", "receiving.operation", "receiving.expiry.override"]);
+    const other = await person("other", ["purchasing.view", "receiving.operation"]);
     const supplier = await insert("suppliers", { supplier_code: `GRC-${tag}`, supplier_code_key: `grc-${tag}`, supplier_name: "Confirm Supplier",
       supplier_name_key: "confirm supplier", default_currency_code: "HKD", status: "active", created_at: now, updated_at: now });
     const item = await insert("items", { name: `GR confirm ${tag}`, status: "active", created_at: now, updated_at: now });
@@ -89,6 +91,14 @@ async function setup() {
         "Content-Type": "application/json" }, body: JSON.stringify(body) });
       return { status: response.status, body: await response.json() };
     };
+    const read = async (path, token = receiver.token) => {
+      const response = await fetch(`${url}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+      return { status: response.status, body: await response.json() };
+    };
+    const lookup = async (eventId, token = receiver.token) => {
+      const response = await fetch(`${url}/api/v1/purchasing-operations/by-event/${eventId}`, { headers: { Authorization: `Bearer ${token}` } });
+      return { status: response.status, body: await response.json() };
+    };
     const draft = async (purchaseOrderId) => (await send("/api/v1/goods-receipts/create",
       { body: { eventId: randomUUID(), purchaseOrderId, businessReceiptDate: RECEIPT_DATE } })).body.data.id;
     const confirm = (id, version, lines, { token, eventId = randomUUID(), ...fields } = {}) => send(`/api/v1/goods-receipts/${id}/confirm`,
@@ -110,7 +120,7 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { db, cleanups, order, draft, confirm, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
+    return { db, cleanups, order, draft, confirm, lookup, read, other, person, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Goods receipt confirm fixture setup failed and its cleanup also failed") : error;
@@ -311,4 +321,65 @@ integrationTest("TASK-032 C10 剩餘效期不足：冇放行權限拒絕、有�
   assert.equal(Number((await f.header(id)).has_expiry_override), 1);
   const [[row]] = await f.db.query("SELECT minimum_life_days_applied, actual_remaining_life_days, expiry_override_by FROM goods_receipt_details WHERE goods_receipt_id = ?", [id]);
   assert.deepEqual([Number(row.minimum_life_days_applied), Number(row.actual_remaining_life_days), Number(row.expiry_override_by)], [30, 10, f.overrider.id]);
+});
+
+integrationTest("TASK-033 C8 按原 eventId 查確認結果：本人回 COMPLETED 及摘要；其他用戶、冇原命令權限、唔存在都係 404；格式錯 400（§2.7、§5.4）", async () => {
+  const f = await fixture();
+  const poRow = await f.order(), id = await f.draft(poRow.id), eventId = randomUUID();
+  const done = await f.confirm(id, 1, twoLines(f, poRow), { eventId });
+  assert.equal(done.status, 200, JSON.stringify(done.body));
+  const found = await f.lookup(eventId);
+  assert.equal(found.status, 200, JSON.stringify(found.body));
+  const { completedAt, ...rest } = found.body.data;
+  assert.ok(Number.isSafeInteger(completedAt) && completedAt > 0);
+  assert.deepEqual(rest, { status: "COMPLETED", resultType: "GR", resultId: String(id),
+    resultSummary: { id, number: done.body.data.number, status: "CONFIRMED", version: 2 } });
+  for (const token of [f.other.token, f.viewer.token]) assert.deepEqual(failure(await f.lookup(eventId, token)).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
+  assert.deepEqual(failure(await f.lookup(randomUUID())).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
+  assert.equal((await f.lookup("not-a-uuid")).status, 400);
+
+  // 同一個用戶之後失去原命令權限（receiving.operation）：用新 token 查自己嘅結果都係 404。
+  const lapsed = await f.person(`lapsed${randomUUID().slice(0, 4)}`, ["purchasing.view", "receiving.operation"]);
+  const ownPo = await f.order(), own = await f.draft(ownPo.id), ownEvent = randomUUID();
+  assert.equal((await f.confirm(own, 1, twoLines(f, ownPo), { eventId: ownEvent, token: lapsed.token })).status, 200);
+  assert.equal((await f.lookup(ownEvent, lapsed.token)).status, 200);
+  await f.db.query("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id = rp.permission_id WHERE rp.role_id = ? AND p.name = 'receiving.operation'", [lapsed.role]);
+  assert.deepEqual(failure(await f.lookup(ownEvent, await lapsed.issue(["purchasing.view"]))).slice(0, 2), [404, "PURCHASING_OPERATION_NOT_FOUND"]);
+});
+
+integrationTest("收貨單最小 list／detail GET：Draft 有編輯動作、確認後冇；detail 帶 lines／details 及 Inventory movement；list 按 PO 及狀態篩；錯 status 400、唔存在 404", async () => {
+  const f = await fixture();
+  const poRow = await f.order(), id = await f.draft(poRow.id);
+  const before = await f.read(`/api/v1/goods-receipts/${id}`);
+  assert.equal(before.status, 200, JSON.stringify(before.body));
+  assert.deepEqual([before.body.data.status, before.body.data.allowedActions, before.body.data.lines], ["DRAFT", ["update", "cancel", "confirm"], []]);
+  assert.equal((await f.confirm(id, 1, twoLines(f, poRow))).status, 200);
+  const after = (await f.read(`/api/v1/goods-receipts/${id}`)).body.data;
+  assert.deepEqual([after.status, after.version, after.allowedActions, after.purchaseOrderId, after.businessReceiptDate], ["CONFIRMED", 2, [], poRow.id, "2098-12-02"]);
+  assert.deepEqual(after.lines.map((line) => [line.purchaseOrderLineId, line.receivedBaseQuantity, line.details.length]), [[poRow.lineA, "12", 1], [poRow.lineB, "10", 1]]);
+  const [a, b] = after.lines.map((line) => line.details[0]);
+  assert.deepEqual([a.inputUomId, a.receivedQuantity, a.binId, b.lotNumber, b.stockStatus], [f.box, "1.000000", f.b1, "L1", "AVAILABLE"]);
+  assert.ok(Number.isSafeInteger(a.inventoryMovementId) && Number.isSafeInteger(b.inventoryMovementId));
+  const list = (await f.read(`/api/v1/goods-receipts?purchaseOrderId=${poRow.id}&status=CONFIRMED`)).body.data;
+  assert.deepEqual([list.total, list.items.map((item) => [item.id, item.status, item.purchaseOrderNumber.startsWith("PO-")])], [1, [[id, "CONFIRMED", true]]]);
+  assert.equal((await f.read(`/api/v1/goods-receipts?purchaseOrderId=${poRow.id}&status=DRAFT`)).body.data.total, 0);
+  assert.equal((await f.read("/api/v1/goods-receipts?status=NOPE")).status, 400);
+  assert.equal((await f.read(`/api/v1/goods-receipts/${Number.MAX_SAFE_INTEGER}`)).status, 404);
+  assert.equal((await f.read(`/api/v1/goods-receipts/${id}`, f.overrider.token)).status, 200);
+});
+
+integrationTest("收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403", async () => {
+  const f = await fixture();
+  const open = await f.order(), draftPo = await f.order("DRAFT");
+  const pos = (await f.read("/api/v1/receiving-lookups/purchase-orders")).body.data.items.map((item) => item.id);
+  assert.ok(pos.includes(open.id) && !pos.includes(draftPo.id));
+  const [[{ po_number: number }]] = await f.db.query("SELECT po_number FROM purchase_orders WHERE id = ?", [open.id]);
+  assert.deepEqual((await f.read(`/api/v1/receiving-lookups/purchase-orders?q=${number}`)).body.data.items.map((item) => item.id), [open.id]);
+  assert.ok((await f.read("/api/v1/receiving-lookups/warehouses")).body.data.items.some((item) => item.id === f.w1));
+  await f.db.query("UPDATE inventory_bins SET status = 'INACTIVE' WHERE id = ?", [f.b3]);
+  try {
+    const bins = (await f.read(`/api/v1/receiving-lookups/warehouses/${f.w1}/bins`)).body.data.items.map((item) => item.id);
+    assert.ok(bins.includes(f.b1) && !bins.includes(f.b3) && !bins.includes(f.b2));
+  } finally { await f.db.query("UPDATE inventory_bins SET status = 'ACTIVE' WHERE id = ?", [f.b3]); }
+  assert.equal((await f.read("/api/v1/receiving-lookups/warehouses", f.viewer.token)).status, 403);
 });
