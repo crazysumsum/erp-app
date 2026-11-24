@@ -1,6 +1,6 @@
 # 應付與付款最小版本：資料表說明（供Sam批准）
 
-日期：2026-11-24（r4）。作者：`claude-erp-app-tl-01`。對應同目錄的`SCOPE.md`及`DECISIONS.md`。
+日期：2026-11-24（r5）。作者：`claude-erp-app-tl-01`。對應同目錄的`SCOPE.md`及`DECISIONS.md`。
 **草稿；未獲Sam批准前不寫migration。** 來源：`origin/main` `80b54298`（只讀）；以已在main上的應收七張表（`server/database/migrations/0123_create_ar_tables.js`）為藍本，下面逐欄列出，不以「同應收」代替。
 
 本文件按`DECISIONS.md`決定一、二、三的建議（都是A）寫成。Sam若選其他選項，受影響的欄位在各節末以「**隨決定而變**」標明；決定五送批的是按他所選版本定稿的完整欄位。決定三若保留貸項或關帳日，需要的表不在這七張之內，要另行說明及批准。
