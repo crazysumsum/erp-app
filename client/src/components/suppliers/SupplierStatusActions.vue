@@ -90,7 +90,7 @@ async function submit() {
       notifySuccess(`供應商 ${props.supplier.supplierCode} 已永久刪除`);
     } else {
       emit("updated", result);
-      notifySuccess(submitted ? `供應商 ${props.supplier.supplierCode} 已提交審批` : `供應商 ${props.supplier.supplierCode} 已${action.target}`);
+      notifySuccess(submitted ? `供應商 ${props.supplier.supplierCode} 已提交審批` : `供應商 ${props.supplier.supplierCode} ${action.target.startsWith("已") ? action.target : `已${action.target}`}`);
     }
   } catch (error) {
     form.password = "";

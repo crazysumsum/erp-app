@@ -23,6 +23,9 @@ export default {
   updatePurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/update`, payload); },
   submitPurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/submit`, payload); },
   copyPurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/copy`, payload); },
+  withdrawPurchaseOrderConfirmation(id, payload) { return write(`/api/v1/purchase-orders/${id}/confirmation/withdraw`, payload); },
+  cancelPurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/cancel`, payload); },
+  closePurchaseOrderRemaining(id, payload) { return write(`/api/v1/purchase-orders/${id}/close-remaining`, payload); },
   // 回 { requireApproval, items }：提交對話框要知審批開唔開（HD-022 a）。
   lookupApprovers({ signal, ...params } = {}) { return httpClient.get("/api/v1/purchasing-lookups/approvers", { params, signal }); },
   listMyApprovals({ rowsPerPage, filter, signal, page, supplierId } = {}) {
