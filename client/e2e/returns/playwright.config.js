@@ -16,7 +16,9 @@ const clientOrigin = `http://127.0.0.1:${clientPort}`;
 
 export default defineConfig({
   testDir: ".",
+  testMatch: "return-posting.spec.js",
   workers: 1,
+  retries: 0,
   timeout: 90_000,
   expect: { timeout: 10_000 },
   outputDir: path.join(output, "playwright-artifacts"),
