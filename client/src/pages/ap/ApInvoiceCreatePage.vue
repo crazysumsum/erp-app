@@ -9,6 +9,7 @@ import ApCurrencyPicker from "@/components/ap/ApCurrencyPicker.vue";
 import ApExpenseRows from "@/components/ap/ApExpenseRows.vue";
 import ApSupplierPicker from "@/components/ap/ApSupplierPicker.vue";
 import { amountInputValid, today } from "@/components/ap/apPresentation.js";
+import { receiptStatusLabels } from "@/components/purchasing/goodsReceiptPresentation.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
@@ -22,7 +23,8 @@ const canSearchSuppliers = computed(() => session.permissions.includes("supplier
 const mode = ref(canReadReceipts.value ? "receipt" : "expense");
 const key = computed(() => `${session.user?.id}:ap-invoice-create`);
 const receiptSupplier = ref(null), expenseSupplier = ref(null);
-const filter = reactive({ purchaseOrderId: "" });
+const receiptStatuses = ["CONFIRMED", "PARTIALLY_REVERSED"];
+const filter = reactive({ purchaseOrderId: "", status: "CONFIRMED" });
 const form = reactive({ currencyCode: "", supplierInvoiceNumber: "", invoiceDate: today(), dueDate: "",
   dueDateReason: "", supplierTotalAmount: "", noPoReason: "", notes: "" });
 const expenses = ref([]);
@@ -47,7 +49,7 @@ async function find(page = 1, fromForm = false) {
   loading.value = true; lookupError.value = ""; searched.value = true;
   if (fromForm) loadedFilters.value = { ...filter, supplierId: canSearchSuppliers.value ? receiptSupplier.value?.id : undefined };
   try {
-    const { rows, rowsNumber } = await purchasing.listGoodsReceipts({ ...loadedFilters.value, page, rowsPerPage: pageSize, status: "CONFIRMED", signal });
+    const { rows, rowsNumber } = await purchasing.listGoodsReceipts({ ...loadedFilters.value, page, rowsPerPage: pageSize, signal });
     const hits = await ap.listInvoicedReceipts(rows.map(({ id }) => id), { signal });
     if (signal.aborted) return;
     receipts.value = rows;
@@ -56,7 +58,7 @@ async function find(page = 1, fromForm = false) {
     invoiced.value = new Map(hits.map((row) => [row.goodsReceiptId, row]));
     for (const row of hits) selected.delete(row.goodsReceiptId);
   } catch (failure) {
-    if (!signal.aborted) lookupError.value = failure.message || "載入已確認收貨失敗。";
+    if (!signal.aborted) lookupError.value = failure.message || "載入收貨失敗。";
   } finally {
     if (!signal.aborted) loading.value = false;
   }
@@ -88,7 +90,7 @@ async function submit() {
   const supplierId = expenseSupplier.value?.id, currencyCode = form.currencyCode;
   error.value = "";
   if (!pending) {
-    if (fromReceipts && !selected.size) return showError("請選至少一張同供應商、同幣別的已確認收貨。");
+    if (fromReceipts && !selected.size) return showError("請選至少一張同供應商、同幣別的收貨。");
     if (!fromReceipts && !canSearchSuppliers.value) return showError("登記無採購單發票需要「查看供應商」權限。");
     if (!fromReceipts && (!supplierId || !currencyCode)) return showError("請選擇供應商和幣別。");
     if (!fromReceipts && (!form.noPoReason.trim() || !expenses.value.length)) return showError("無採購單發票須填原因，並至少有一個費用行。");
@@ -134,13 +136,19 @@ async function submit() {
         <form role="search" method="get" class="row items-start q-gutter-md q-mb-md" @submit.prevent="find(1, true)">
             <ApSupplierPicker v-if="canSearchSuppliers" v-model="receiptSupplier" label="篩選供應商" :disable="locked" class="col-12 col-sm-4" />
             <q-input v-model="filter.purchaseOrderId" name="purchaseOrderId" label="篩選採購單 ID" inputmode="numeric" pattern="[1-9][0-9]*" :disable="locked" outlined dense />
-            <q-btn type="submit" label="搜尋已確認收貨" flat :loading="loading" :disable="locked" />
+            <fieldset class="q-pa-none no-border" :disabled="locked">
+              <legend>收貨狀態</legend>
+              <label v-for="status in receiptStatuses" :key="status" class="q-mr-md">
+                <input v-model="filter.status" type="radio" name="receiptStatus" :value="status" /> {{ receiptStatusLabels[status] }}
+              </label>
+            </fieldset>
+            <q-btn type="submit" label="搜尋收貨" flat :loading="loading" :disable="locked" />
         </form>
         <p v-if="!canSearchSuppliers" class="text-grey-8">依供應商篩選需要「查看供應商」權限。</p>
         <div aria-live="polite" class="q-mb-md">
           <p v-if="loading" role="status">載入收貨中…</p>
           <q-banner v-else-if="lookupError" role="alert" class="bg-negative text-white">{{ lookupError }}<template #action><q-btn flat label="重試" @click="find(pageNumber)" /></template></q-banner>
-          <p v-else-if="searched && !receipts.length" role="status">沒有符合條件的已確認收貨。</p>
+          <p v-else-if="searched && !receipts.length" role="status">沒有符合條件的收貨。</p>
           <q-list v-else-if="receipts.length" bordered separator>
             <q-item v-for="row in receipts" :key="row.id" tag="label">
               <q-item-section side><q-checkbox :model-value="selected.has(String(row.id))" :aria-label="`選擇 ${row.number}`" :disable="locked || Boolean(blocked(row))" @update:model-value="toggle(row, $event)" /></q-item-section>

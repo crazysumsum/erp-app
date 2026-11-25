@@ -12,7 +12,7 @@ const tag = randomUUID().replaceAll("-", "").slice(0, 12);
 const actor = { username: `ap-browser-${tag}`, password: `Ap-test-${tag}-1!`, name: "AP Browser Test" };
 const peer = { username: `ap-peer-${tag}`, password: `Ap-peer-${tag}-1!`, name: "AP Browser Peer" };
 const invoiceNumber = `BROWSER-${tag}`;
-let db, app, supplierId, receiptId, receiptNumber, today;
+let db, app, supplierId, receiptId, receiptNumber, partiallyReversedReceiptNumber, today;
 
 test.beforeAll(async () => {
   const source = defaultConfigurationSource();
@@ -85,6 +85,16 @@ test.beforeAll(async () => {
     line_number: 1, sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU", received_base_quantity: 1, ...dates });
   await db.query("UPDATE goods_receipts SET status = 'CONFIRMED', confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
     [now, user, randomUUID(), receiptId]);
+  // A separate partly reversed receipt is visible and selectable in the search.
+  const partialSequence = Number(number) + 1;
+  partiallyReversedReceiptNumber = "GR-" + month + "-" + String(partialSequence).padStart(6, "0");
+  const partialReceipt = await insert("goods_receipts", { ...vendor, gr_number: partiallyReversedReceiptNumber,
+    document_year_month: month, sequence_no: partialSequence, purchase_order_id: po, supplier_id: supplierId,
+    business_receipt_date: today, total_received_base_quantity: 2, created_by_label: "AP Browser Test", updated_by_label: "AP Browser Test", ...dates });
+  await insert("goods_receipt_lines", { goods_receipt_id: partialReceipt, purchase_order_id: po, purchase_order_line_id: line,
+    line_number: 1, sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU", received_base_quantity: 2, ...dates });
+  await db.query("UPDATE goods_receipts SET status = 'PARTIALLY_REVERSED', total_reversed_base_quantity = 1, confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
+    [now, user, randomUUID(), partialReceipt]);
   await app.start();
 });
 
@@ -155,7 +165,26 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   await page.getByLabel("無採購單發票").check();
   await expect(page.getByText("登記無採購單發票需要「查看供應商」權限。")).toBeVisible();
   await page.getByLabel("由收貨開票").check();
-  await page.getByRole("button", { name: "搜尋已確認收貨" }).click();
+  await page.getByRole("radio", { name: "部分沖銷", exact: true }).check();
+  const orderFilter = page.getByLabel("篩選採購單 ID", { exact: true });
+  await orderFilter.fill("999999");
+  const partialSearch = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === "/api/v1/goods-receipts" && url.searchParams.get("status") === "PARTIALLY_REVERSED";
+  });
+  await page.getByRole("button", { name: "搜尋收貨", exact: true }).click();
+  await partialSearch;
+  await expect(page.getByText("沒有符合條件的收貨。", { exact: true })).toBeVisible();
+  await orderFilter.clear();
+  await page.getByRole("button", { name: "搜尋收貨", exact: true }).click();
+  const partial = page.getByRole("checkbox", { name: `選擇 ${partiallyReversedReceiptNumber}` });
+  await expect(partial).toBeEnabled();
+  await expect(page.getByRole("checkbox", { name: `選擇 ${receiptNumber}` })).toHaveCount(0);
+  await partial.click();
+  await page.getByRole("button", { name: `移除已選的 ${partiallyReversedReceiptNumber}` }).click();
+  await expect(partial).not.toBeChecked();
+  await page.getByRole("radio", { name: "已確認", exact: true }).check();
+  await page.getByRole("button", { name: "搜尋收貨" }).click();
   await page.getByRole("checkbox", { name: `選擇 ${receiptNumber}` }).click();
   await page.getByLabel("供應商發票號碼", { exact: true }).fill(invoiceNumber);
   await page.getByLabel("供應商發票總額", { exact: true }).fill("325.00");
@@ -270,7 +299,7 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   await page.getByRole("option", { name: `AP-${tag} — Browser Test Supplier` }).click();
   const filteredReceipts = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/v1/goods-receipts" &&
     new URL(request.url()).searchParams.get("supplierId") === String(supplierId));
-  await page.getByRole("button", { name: "搜尋已確認收貨" }).click();
+  await page.getByRole("button", { name: "搜尋收貨" }).click();
   await filteredReceipts;
   await db.query("UPDATE suppliers SET status = 'active' WHERE id = ?", [supplierId]);
   await page.getByLabel("無採購單發票").check();
