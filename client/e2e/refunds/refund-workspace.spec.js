@@ -8,7 +8,7 @@ import { createApplication } from "../../../server/src/framework/application/cre
 import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
 import { customerCredit, supplierCredit } from "../../../server/test/refunds/refundCreditFixture.js";
 
-let app, token, viewerToken, customer, supplier;
+let app, token, viewerToken, customer, supplier, newSupplierCredit, post, today;
 const permissions = ["ar.view", "ap.view", "ar.credit.mgmt", "ap.credit.mgmt", "ar.refund.mgmt", "ap.refund.mgmt"];
 
 async function issueUser(db, granted) {
@@ -44,11 +44,13 @@ test.beforeAll(async () => {
     });
     return { status: response.status, body: await response.json() };
   }
-  const f = { db, today: time.fileDate(time.at(time.nowMs())), other: "HKD",
+  today = time.fileDate(time.at(time.nowMs()));
+  const f = { db, today, other: "HKD",
     ok(result) { assert.equal(result.status, 200, JSON.stringify(result.body)); return result.body.data; } };
-  const post = (endpoint, data) => request(endpoint, { eventId: randomUUID(), ...data });
+  post = (endpoint, data) => request(endpoint, { eventId: randomUUID(), ...data });
+  newSupplierCredit = () => supplierCredit(f, post, request);
   customer = await customerCredit(f, post, request);
-  supplier = await supplierCredit(f, post, request);
+  supplier = await newSupplierCredit();
 });
 
 test.afterAll(async () => app?.shutdown("refund_browser_complete"));
@@ -157,4 +159,55 @@ test("supplier can cancel a draft and confirm another refund", async ({ page }) 
   await expect(page).toHaveURL(/\/ap\/credit-notes\/\d+$/u);
   await expect(page.getByRole("heading", { name: supplier.number, exact: true })).toBeVisible();
   expect(failures).toEqual([]);
+});
+
+test("a lost rejection can be resolved by replay, then the amount can be corrected", async ({ page }) => {
+  const source = await newSupplierCredit(), creditNoteId = (await source.credit()).body.data.id;
+  const endpoint = "/api/v1/ap-supplier-refunds";
+  const eventIds = [];
+  const routePattern = "**" + endpoint;
+  const path = request => new URL(request.url()).pathname;
+
+  await signIn(page, token);
+  await page.goto("/ap/refunds/new");
+  await page.getByLabel(/來源貸項單/u).click();
+  await page.getByRole("option", { name: new RegExp(source.number, "u") }).click();
+  const amount = page.getByLabel(/退款金額/u);
+  await amount.fill("7.50");
+  await page.getByLabel(/退款方式/u).click();
+  await page.getByRole("option", { name: "支票", exact: true }).click();
+
+  // Another operator spends credit after this browser loaded the source balance.
+  const competing = await post(endpoint, { creditNoteId, refundDate: today, amount: "5", paymentMethod: "CHEQUE" });
+  expect(competing.status).toBe(200);
+  expect((await post(`${endpoint}/${competing.body.data.id}/confirm`, { version: 1 })).status).toBe(200);
+  const assertDefinitive = async (response) => {
+    expect(response.status()).toBe(409);
+    expect((await response.json()).error.code).toBe("REFUND_EXCEEDS_CREDIT");
+  };
+  page.on("request", request => {
+    if (request.method() === "POST" && path(request) === endpoint) eventIds.push(request.postDataJSON().eventId);
+  });
+  await page.route(routePattern, async route => {
+    await assertDefinitive(await route.fetch());
+    await route.abort("failed");
+  }, { times: 1 });
+
+  await page.getByRole("button", { name: "建立草稿", exact: true }).click();
+  await expect(page.getByText("建立結果尚未確認。", { exact: true })).toBeVisible();
+  await expect(amount).toBeDisabled();
+  const replay = page.waitForResponse(response => response.request().method() === "POST" && path(response) === endpoint);
+  await page.getByRole("button", { name: "重試原操作", exact: true }).click();
+  await assertDefinitive(await replay);
+
+  await expect(page.getByText("建立結果尚未確認。", { exact: true })).toHaveCount(0);
+  await expect(amount).toBeEditable();
+  await expect(page.getByText("可退款金額 HKD 5.00", { exact: true })).toBeVisible();
+  await amount.fill("5.00");
+  await page.getByRole("button", { name: "建立草稿", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /^草稿 #\d+$/u })).toBeVisible();
+  expect(eventIds).toHaveLength(3);
+  expect(eventIds[0]).toBe(eventIds[1]);
+  expect(eventIds[2]).not.toBe(eventIds[1]);
+  expect((await source.credit()).body.data.availableAmount).toBe("5.0000");
 });

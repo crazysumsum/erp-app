@@ -7,11 +7,11 @@ const UNCERTAIN = ["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "I
  * Key 由 owner 綁 actor、PO 同目標（審批要連 approval ID）；`meta.action` 係呢個 record 嘅動作，同一 key 唔准換動作。
  * - 一個 key 同一時間只得一個 in-flight，亦唔准換動作：違反就 COMMAND_PENDING，唔發 HTTP。
  * - 從未未確定：成功或者明確拒絕都結算走 record，下次係新意圖。
- * - 一旦未確定：只有同一 record 成功（server replay 原結果）先解除；之後任何錯誤都證明唔到原交易失敗，保留原 eventId、payload 同 meta。
+ * - 一旦未確定：同一 record 成功，或重送得到 caller 明確列出、且只會在事件查核後回傳的拒絕，先解除。
  * - 只結算自己 call 開始時嘅同一個 record，睇結算當下嘅未確定狀態。
  * 冇自動重試，冇 reset。ponytail: record 只喺 owner 嘅 memory；owner 卸載或者整頁重新整理就冇，要等 TASK-033 嘅 eventId 查詢。
  */
-export function useCommandEvent() {
+export function useCommandEvent({ definitiveRejections = [] } = {}) {
   // Plain Map：record 要 structuredClone，reactive proxy clone 唔到；讀取者先讀 `changes` 建立依賴，record 一變就跟住更新。
   // meta 用 JSON 複製，因為 owner 可能傳 reactive 嘅畫面快照。
   const records = new Map(), changes = ref(0);
@@ -32,9 +32,13 @@ export function useCommandEvent() {
       if (records.get(key) === record) records.delete(key);
       return result;
     } catch (error) {
-      if (records.get(key) === record && !record.uncertain) {
-        if (UNCERTAIN.includes(error.code) || error.status >= 500) record.uncertain = true;
-        else records.delete(key);
+      if (records.get(key) === record) {
+        const rejected = error.status === 409 && definitiveRejections.includes(error.code);
+        if (rejected) records.delete(key);
+        else if (!record.uncertain) {
+          if (UNCERTAIN.includes(error.code) || error.status >= 500) record.uncertain = true;
+          else records.delete(key);
+        }
       }
       throw error;
     } finally {

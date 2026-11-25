@@ -6,7 +6,7 @@ import { can } from "@/framework/authorization/can.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { confirm, promptReason } from "@/framework/ui/confirm.js";
 import DataTable from "@/framework/ui/DataTable.vue";
-import refunds from "@/services/refunds.js";
+import refunds, { REFUND_REJECTIONS } from "@/services/refunds.js";
 import { useSessionStore } from "@/stores/session.js";
 import RefundDraftForm from "./RefundDraftForm.vue";
 
@@ -16,7 +16,7 @@ const base = `/${props.area}/refunds`;
 const title = isCustomer ? "客戶退款" : "供應商退款";
 const party = isCustomer ? "客戶" : "供應商";
 const creating = props.id === "new";
-const session = useSessionStore(), command = useCommandEvent(), controller = new AbortController();
+const session = useSessionStore(), command = useCommandEvent({ definitiveRejections: REFUND_REJECTIONS }), controller = new AbortController();
 onBeforeUnmount(() => controller.abort());
 const manage = computed(() => can(session, { permissions: [`${props.area}.refund.mgmt`] }));
 const detail = ref(null), loading = ref(false), error = ref("");

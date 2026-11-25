@@ -3,10 +3,10 @@ import { computed, onBeforeUnmount, onMounted, ref, useId } from "vue";
 import { useRouter } from "vue-router";
 import { money, paymentMethodLabels, today, toUnits } from "@/components/ar/arPresentation.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
-import refunds from "@/services/refunds.js";
+import refunds, { REFUND_REJECTIONS } from "@/services/refunds.js";
 
 const props = defineProps({ area: { type: String, required: true }, base: { type: String, required: true } });
-const router = useRouter(), command = useCommandEvent(), controller = new AbortController();
+const router = useRouter(), command = useCommandEvent({ definitiveRejections: REFUND_REJECTIONS }), controller = new AbortController();
 const amountHint = useId();
 onBeforeUnmount(() => controller.abort());
 const credit = ref(null), credits = ref([]), creditPage = ref(1), pages = ref(1), loading = ref(false), error = ref("");
@@ -42,6 +42,22 @@ async function loadCredits(page = creditPage.value) {
   }
 }
 
+async function refreshCredit(id) {
+  loading.value = true;
+  try {
+    const row = await refunds.credit(props.area, id, controller.signal);
+    const available = row.status === "CONFIRMED" && toUnits(row.availableAmount) > 0n;
+    credit.value = available ? row : null;
+    credits.value = credits.value.flatMap(choice => choice.id !== id ? [choice] : available ? [row] : []);
+  } catch {
+    // The failed command's message still applies. A new source page request can be retried.
+    credit.value = null;
+    credits.value = credits.value.filter(choice => choice.id !== id);
+  } finally {
+    loading.value = false;
+  }
+}
+
 async function save() {
   error.value = "";
   const body = pending.value?.payload ?? {
@@ -52,7 +68,11 @@ async function save() {
     const result = await command.run(body, data => refunds.create(props.area, data), "", { action: "create" });
     if (!controller.signal.aborted) await router.replace(`${props.base}/${result.id}`);
   } catch (failure) {
-    if (!controller.signal.aborted) error.value = failure.message || "未能建立退款草稿";
+    if (controller.signal.aborted) return;
+    if (!pending.value && ["REFUND_EXCEEDS_CREDIT", "REFUND_CREDIT_STATE_CONFLICT"].includes(failure.code)) {
+      await refreshCredit(body.creditNoteId);
+    }
+    error.value = failure.message || "未能建立退款草稿";
   }
 }
 
@@ -72,7 +92,7 @@ onMounted(() => loadCredits());
   </q-banner>
   <q-form method="post" aria-label="建立退款草稿" class="refund-form" @submit="save">
     <q-select v-model="credit" outlined label="來源貸項單 *" name="creditNoteId" aria-required="true" :options="credits" option-value="id" :option-label="formatCredit"
-      :loading="loading" :disable="busy || !!pending" :rules="[value => !!value || '請選擇來源貸項單']" lazy-rules="ondemand">
+      :loading="loading" :disable="loading || busy || !!pending" :rules="[value => !!value || '請選擇來源貸項單']" lazy-rules="ondemand">
       <template #no-option>
         <q-item><q-item-section>{{ loading ? "載入貸項單…" : "本頁沒有可退款的貸項單" }}</q-item-section></q-item>
       </template>
