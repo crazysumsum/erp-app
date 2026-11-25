@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
+import { parse } from "csv-parse/sync";
 
 import { arReceiptService } from "../../src/handlers/ar/arSchemas.js";
 import { arHttpFixture as fixture, failure } from "../ar/arHttpFixture.js";
@@ -306,4 +307,34 @@ integrationTest("同一 eventId 重送：回原結果而且只生效一次；同
     ["receipt.allocated", "SUCCEEDED", "RECEIPT", rcpt.id, rcpt.number, f.clerk.username]]);
   const detail = typeof audit[2].detail === "string" ? JSON.parse(audit[2].detail) : audit[2].detail;
   assert.deepEqual(detail, { version: 3, allocations: [{ allocationId: first.allocationIds[0], invoiceId: target, amount: "30.0000" }] });
+});
+
+
+integrationTest("應收帳齡 CSV 沿用查閱權限、篩選及幣別小計，試算表欄位不執行公式", async () => {
+  const f = await fixture(), party = await f.customer();
+  await f.invoice({ ...party, name: '=SUM(1,2) "示例"' }, "225.0000", { dueOffset: -5 });
+  await f.invoice(party, "100.0000", { currency: f.other });
+  const exportCsv = (query, token) => fetch(f.url + "/api/v1/ar-aging/export" + query, {
+    headers: token ? { Authorization: "Bearer " + token } : {}
+  });
+  const query = `?customerId=${party.id}&currencyCode=HKD`;
+  const response = await exportCsv(query, f.viewer.token);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /^text\/csv/u);
+  assert.match(response.headers.get("content-disposition"), /ar-aging-\d{4}-\d{2}-\d{2}\.csv/u);
+  assert.match(response.headers.get("cache-control"), /no-store/u);
+  const csv = await response.text();
+  assert.deepEqual(parse(csv, { bom: true }), [
+    ["asOfDate", "rowType", "customerCode", "customerName", "currencyCode", "invoiceCount", "notDue", "days1To30", "days31To60", "days61To90", "over90", "total"],
+    [f.today, "detail", party.code, `'=SUM(1,2) "示例"`, "HKD", "1", "0.0000", "225.0000", "0.0000", "0.0000", "0.0000", "225.0000"],
+    [f.today, "currencyTotal", "", "", "HKD", "1", "0.0000", "225.0000", "0.0000", "0.0000", "0.0000", "225.0000"]
+  ]);
+  for (const [token, status] of [[f.outsider.token, 403], [undefined, 401]]) {
+    const denied = await exportCsv(query, token);
+    assert.equal(denied.status, status);
+    await denied.arrayBuffer();
+  }
+  const empty = await exportCsv(`?customerId=${party.id}&currencyCode=ZZZ`, f.viewer.token);
+  assert.equal(empty.status, 200);
+  assert.equal(parse(await empty.text(), { bom: true }).length, 1);
 });
