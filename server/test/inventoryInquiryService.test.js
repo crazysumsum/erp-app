@@ -383,3 +383,54 @@ test("TASK-016 exact operation source lookup delegates without enumeration", asy
   assert.equal(received.executor, database);
   assert.deepEqual(received.input, { source });
 });
+
+function reportService(...rows) {
+  const database = databaseWith([rows]);
+  database.withTransaction = (work) => work(database);
+  return { database, service: new InventoryInquiryService({ database, time }) };
+}
+
+test("Stock report shares inquiry filters, ignores paging, and reads at most 5001 rows", async () => {
+  const { database, service } = reportService(stockRow());
+  let checks = 0;
+  const results = await service.readStockReport({ warehouseId: 1, lot: "LOT", page: 4 }, {
+    authorize: async () => { checks++; }
+  });
+  assert.equal(checks, 2);
+  assert.equal(database.calls.length, 1);
+  assert.match(database.calls[0].sql, /b\.warehouse_id = \?.*l\.normalized_lot_number LIKE \?/su);
+  assert.deepEqual(database.calls[0].params, [1, "%LOT%", 5001, 0]);
+  assert.equal(results[0].onHand, 10);
+  assert.equal(results[0].baseUom.uomCode, "EA");
+  assert.equal(Object.hasOwn(results[0], "internal_cost"), false);
+});
+
+test("Movement report shares source and time filters without a total query", async () => {
+  const { database, service } = reportService(movementRow(), movementRow({ id: "20", lot_id: null }));
+  const results = await service.readMovementReport({ postedFrom: 1670000000000, sourceDocumentId: "GR-42" }, {
+    authorize: async () => {}
+  });
+  assert.equal(database.calls.length, 1);
+  assert.match(database.calls[0].sql, /ORDER BY m\.posted_at DESC, m\.id DESC/u);
+  assert.deepEqual(database.calls[0].params, [1670000000000, "GR-42", 5001, 0]);
+  assert.deepEqual(results.map(({ movementId, lot }) => [movementId, lot?.expiryDate ?? null]), [[21, "2026-10-31"], [20, null]]);
+});
+
+test("Reports reject an oversized result and never project partial data", async () => {
+  const { service } = reportService(...Array(5001).fill(null));
+  await assert.rejects(service.readStockReport({}, { authorize: async () => {} }), { code: "INVENTORY_REPORT_TOO_LARGE" });
+});
+
+test("Stock reports suppress data on an abort or a permission change after reading", async () => {
+  const { database, service } = reportService(stockRow());
+  let checks = 0;
+  const denied = new Error("Permission changed");
+  await assert.rejects(service.readStockReport({}, {
+    authorize: async () => { if (++checks === 2) throw denied; }
+  }), denied);
+  assert.equal(database.calls.length, 1);
+  const controller = new AbortController();
+  controller.abort(denied);
+  await assert.rejects(service.readStockReport({}, { authorize: async () => {}, signal: controller.signal }), denied);
+  assert.equal(database.calls.length, 1);
+});
