@@ -69,7 +69,10 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "ap.view", description: "查看應付發票、付款、核銷及帳齡表" }),
   Object.freeze({ name: "ap.invoice.mgmt", description: "建立、修改、確認、取消及作廢應付發票" }),
   Object.freeze({ name: "ap.payment.mgmt", description: "登記、確認、取消及作廢付款，核銷及解除核銷" }),
-  Object.freeze({ name: "ap.invoice.price.override", description: "以原因調整應付發票收貨行金額" })
+  Object.freeze({ name: "ap.invoice.price.override", description: "以原因調整應付發票收貨行金額" }),
+  Object.freeze({ name: "returns.view", description: "查看客戶退貨及退回供應商單據" }),
+  Object.freeze({ name: "returns.customer.mgmt", description: "建立、取消及過帳客戶退貨" }),
+  Object.freeze({ name: "returns.supplier.mgmt", description: "建立、取消及過帳退回供應商" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */
