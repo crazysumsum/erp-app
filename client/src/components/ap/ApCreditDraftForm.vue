@@ -2,14 +2,16 @@
 import { nextTick, reactive, ref, useId } from "vue";
 import { amountInputValid, today } from "./apPresentation.js";
 
-const props = defineProps({ invoice: { type: Object, required: true }, credit: { type: Object, default: null }, locked: Boolean });
+const props = defineProps({ invoice: { type: Object, required: true }, credit: { type: Object, default: null },
+  initialDraft: { type: Object, default: null }, locked: Boolean });
 const emit = defineEmits(["save", "cancel"]);
 const blankLine = () => ({ key: crypto.randomUUID(), invoiceLineId: null, supplierReturnLineId: "", baseQuantity: "", amount: "", description: "" });
+const draft = props.initialDraft ?? props.credit;
 const form = reactive({
-  creditDate: props.credit?.creditDate ?? today(), reason: props.credit?.reason ?? "", notes: props.credit?.notes ?? "",
-  supplierCreditReference: props.credit?.supplierCreditReference ?? "", supplierReturnId: props.credit?.supplierReturnId ?? ""
+  creditDate: draft?.creditDate ?? today(), reason: draft?.reason ?? "", notes: draft?.notes ?? "",
+  supplierCreditReference: draft?.supplierCreditReference ?? "", supplierReturnId: draft?.supplierReturnId ?? ""
 });
-const lines = ref(props.credit ? props.credit.lines.map((line) => ({
+const lines = ref(draft ? draft.lines.map((line) => ({
   ...blankLine(), invoiceLineId: line.invoiceLineId, amount: line.amount, description: line.description,
   supplierReturnLineId: line.supplierReturnLineId ?? "", baseQuantity: line.baseQuantity ?? ""
 })) : [blankLine()]);

@@ -32,6 +32,12 @@ const send = {
   unapply: (creditId, body, allocationId) => ap.unapplyCreditNote(creditId, allocationId, body)
 };
 const uncertainCodes = new Set(["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "IDEMPOTENCY_IN_PROGRESS", "AP_EVENT_CONFLICT"]);
+// These 409s are raised after ApCommandRunner checks for a committed result for the same event.
+const definitiveRejections = new Set([
+  "AP_CREDIT_EXCEEDS_INVOICE", "AP_CREDIT_EXCEEDS_AVAILABLE", "AP_ALLOCATION_EXCEEDS_OUTSTANDING",
+  "AP_CREDIT_RETURN_MISMATCH", "AP_CREDIT_PARTY_MISMATCH", "AP_CREDIT_HAS_ACTIVITY",
+  "AP_CREDIT_ORIGIN_ALLOCATION", "AP_STATE_CONFLICT", "VERSION_CONFLICT", "DOCUMENT_SEQUENCE_EXHAUSTED"
+]);
 let active = true, controller, targetsController;
 onBeforeUnmount(() => { active = false; controller?.abort(); targetsController?.abort(); });
 
@@ -117,7 +123,8 @@ async function run(action, payload, allocationId) {
     if (record.action === "create") await router.replace(`/ap/credit-notes/${result.id}`);
     else await load();
   } catch (failure) {
-    if (!previous && failure.status >= 400 && failure.status < 500 && !uncertainCodes.has(failure.code)) settle();
+    const rejectedAfterReplayCheck = failure.status === 409 && definitiveRejections.has(failure.code);
+    if (rejectedAfterReplayCheck || (!previous && failure.status >= 400 && failure.status < 500 && !uncertainCodes.has(failure.code))) settle();
     if (!stillHere()) return;
     await showError(failure.message || "貸項操作未能完成。");
     if (failure.code === "VERSION_CONFLICT" && !pending.value) {
@@ -207,7 +214,7 @@ function allocate() {
       </q-banner>
       <template v-else-if="creating && origin">
         <p>原發票 <router-link :to="`/ap/invoices/${origin.id}`">{{ origin.number }}</router-link> · {{ origin.supplierName }} · {{ origin.currencyCode }}</p>
-        <ApCreditDraftForm :invoice="origin" :locked="locked" @save="save" />
+        <ApCreditDraftForm :invoice="origin" :initial-draft="pending?.body" :locked="locked" @save="save" />
       </template>
       <template v-else-if="credit">
         <div class="row items-center q-gutter-sm q-mb-md">
