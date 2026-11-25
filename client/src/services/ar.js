@@ -12,6 +12,7 @@ export default {
     return httpClient.get("/api/v1/ar-invoices", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getInvoice(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-invoices/${id}`, { signal }); },
+  getInvoicePrint(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-invoices/${id}/print`, { signal }); },
   createInvoice(payload) { return write("/api/v1/ar-invoices", payload); },
   findOpeningCustomer(code, { signal } = {}) {
     return httpClient.get("/api/v1/ar-opening-invoices/customer", { params: { code }, signal });

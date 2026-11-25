@@ -16,6 +16,7 @@ import { up as seedArPermissions } from "../../database/migrations/0122_seed_ar_
 import { up as createArTables } from "../../database/migrations/0123_create_ar_tables.js";
 import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { up as addOpeningInvoices } from "../../database/migrations/0126_add_ar_opening_invoices.js";
+import { up as addBillingSnapshot } from "../../database/migrations/0127_add_ar_invoice_billing_snapshot.js";
 import { ArCommandRunner } from "../../src/modules/ar/arCommand.js";
 import { ArInquiryService } from "../../src/modules/ar/ArInquiryService.js";
 import { ArInvoiceService } from "../../src/modules/ar/ArInvoiceService.js";
@@ -40,6 +41,9 @@ async function arFixture(t, { lineAmount, unitPrice }) {
   await createArTables(f.db);
   await addInvoiceLineSalesUom(f.db);
   await addOpeningInvoices(f.db);
+  await addBillingSnapshot(f.db);
+  await f.s.insert("customer_address_purposes", { address_id: f.s.addressId, customer_id: f.s.customerId, purpose_code: "billing", is_default: 1,
+    created_at: f.s.now, updated_at: f.s.now });
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。
   const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.receipt.mgmt", "ar.view"];
   const userId = await f.s.insert("users", { username: label, password_hash: "synthetic-only", display_name: "AR synthetic", created_at: f.s.now, updated_at: f.s.now });

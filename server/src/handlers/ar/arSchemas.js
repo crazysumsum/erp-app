@@ -62,12 +62,23 @@ const INVOICE_SUMMARY = {
 export const INVOICE_LIST_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100, items: object(INVOICE_SUMMARY) },
   total: { type: "integer", minimum: 0 }, ...PAGE }));
 export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
-  ...INVOICE_SUMMARY, paymentTermCode: TEXT, paymentTermName: TEXT, dueDateOverridden: { type: "boolean" }, dueDateReason: TEXT, notes: TEXT, voidReason: TEXT,
+  ...INVOICE_SUMMARY, paymentTermCode: TEXT, paymentTermName: TEXT, hasBillingAddressSnapshot: { type: "boolean" },
+  dueDateOverridden: { type: "boolean" }, dueDateReason: TEXT, notes: TEXT, voidReason: TEXT,
   createdByLabel: TEXT, confirmedByLabel: TEXT, confirmedAt: NULLABLE_TIME, voidedByLabel: TEXT, voidedAt: NULLABLE_TIME,
   lines: { type: "array", items: object({ id: ID, lineNo: ID, shipmentId: ID, shipmentLineId: ID, salesOrderId: ID, salesOrderLineId: ID, skuCode: TEXT, skuName: TEXT,
     baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID, quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT }) },
   allocations: { type: "array", items: object({ id: ID, receiptId: ID, receiptNumber: NULLABLE_TEXT, receiptDate: TEXT, amount: AMOUNT,
     status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) }
+}));
+export const INVOICE_PRINT_RESPONSE = Object.freeze(object({
+  number: TEXT, customerName: TEXT, billingAddress: { type: "array", items: TEXT },
+  currencyCode: CURRENCY, currencyDecimalPlaces: { type: "integer", minimum: 0, maximum: 4 },
+  invoiceDate: TEXT, dueDate: TEXT, paymentTermCode: TEXT, paymentTermName: TEXT, totalAmount: AMOUNT,
+  issuerName: TEXT, issuerHeader: TEXT, paymentInstructions: TEXT, footer: TEXT,
+  lines: { type: "array", items: object({
+    lineNo: ID, skuCode: TEXT, skuName: TEXT, baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID,
+    quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT, shipmentNumber: TEXT, salesOrderNumber: TEXT
+  }) }
 }));
 export const INVOICE_COMMAND_RESPONSE = Object.freeze(object({ id: ID, number: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, totalAmount: AMOUNT,
   replayed: { type: "boolean" } }, ["id", "number", "status", "version", "replayed"]));
