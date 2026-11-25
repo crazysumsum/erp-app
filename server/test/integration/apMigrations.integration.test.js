@@ -4,7 +4,9 @@ import test from "node:test";
 import mysql from "mysql2/promise";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
-const permissions = ["ap.invoice.mgmt", "ap.invoice.price.override", "ap.payment.mgmt", "ap.view"];
+const permissions = [
+  "ap.credit.mgmt", "ap.invoice.mgmt", "ap.invoice.price.override", "ap.payment.mgmt", "ap.refund.mgmt", "ap.view"
+];
 
 async function connect(t) {
   const db = await mysql.createConnection({
@@ -16,14 +18,15 @@ async function connect(t) {
   return db;
 }
 
-integrationTest("AP installs exactly seven tables and grants the four permissions only to system-admin", async (t) => {
+integrationTest("AP installs exactly eleven tables and grants the six permissions only to system-admin", async (t) => {
   const db = await connect(t);
   const [tables] = await db.query(
     "SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LEFT(TABLE_NAME, 3) = 'ap_' ORDER BY TABLE_NAME"
   );
   assert.deepEqual(tables.map(({ TABLE_NAME }) => TABLE_NAME), [
-    "ap_audit_logs", "ap_document_sequences", "ap_invoice_lines", "ap_invoices",
-    "ap_operation_requests", "ap_payment_allocations", "ap_payments"
+    "ap_audit_logs", "ap_credit_applications", "ap_credit_note_lines", "ap_credit_notes",
+    "ap_document_sequences", "ap_invoice_lines", "ap_invoices", "ap_operation_requests",
+    "ap_payment_allocations", "ap_payments", "ap_supplier_refunds"
   ]);
   for (const table of tables) {
     assert.equal(table.ENGINE, "InnoDB");
@@ -42,6 +45,20 @@ integrationTest("AP installs exactly seven tables and grants the four permission
     ["goods_receipt_line_id", "goods_receipt_lines", "id"],
     ["goods_receipt_id", "goods_receipt_lines", "goods_receipt_id"],
     ["goods_receipt_id", "goods_receipts", "id"]
+  ]);
+
+  const [creditLineKeys] = await db.query(`
+    SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+      FROM information_schema.KEY_COLUMN_USAGE
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ap_credit_note_lines'
+       AND REFERENCED_TABLE_NAME IS NOT NULL
+     ORDER BY REFERENCED_TABLE_NAME, ORDINAL_POSITION
+  `);
+  assert.deepEqual(creditLineKeys.map((row) => Object.values(row)), [
+    ["credit_note_id", "ap_credit_notes", "id"],
+    ["invoice_id", "ap_credit_notes", "invoice_id"],
+    ["invoice_line_id", "ap_invoice_lines", "id"],
+    ["supplier_return_line_id", "supplier_return_lines", "id"]
   ]);
 });
 
@@ -97,6 +114,67 @@ integrationTest("AP balances, invoice reservations, and audit immutability survi
     );
     await assert.rejects(db.execute("UPDATE ap_audit_logs SET reason = 'changed' WHERE id = ?", [audit.insertId]), { sqlState: "45000" });
     await assert.rejects(db.execute("DELETE FROM ap_audit_logs WHERE id = ?", [audit.insertId]), { sqlState: "45000" });
+  } finally {
+    await db.rollback();
+  }
+});
+
+integrationTest("AP credit and refund tables enforce amounts and accept their sequence and audit types", async (t) => {
+  const db = await connect(t);
+  // Use synthetic AP references; the AP credit-line foreign keys are checked above.
+  await db.query("SET SESSION FOREIGN_KEY_CHECKS = 0");
+  await db.beginTransaction();
+  try {
+    const insertCredit = (status, applied, refunded, available) => db.execute(`
+      INSERT INTO ap_credit_notes (status, invoice_id, supplier_id, supplier_code_snapshot,
+        supplier_name_snapshot, currency_code, currency_decimal_places, credit_date, reason,
+        total_amount, applied_amount, refunded_amount, available_amount, created_by_label, created_at, updated_at)
+      VALUES (?, 1, 1, 'TEST', 'Test supplier', 'ZZZ', 2, '2026-11-25', 'Test', 10, ?, ?, ?, 'test', 1, 1)
+    `, [status, applied, refunded, available]);
+    const invalidCheck = { code: "ER_CHECK_CONSTRAINT_VIOLATED" };
+    const [credit] = await insertCredit("CONFIRMED", 3, 2, 5);
+    await insertCredit("VOID", 0, 0, 0);
+    await assert.rejects(insertCredit("CONFIRMED", 3, 2, 6), invalidCheck);
+    await assert.rejects(insertCredit("CONFIRMED", -1, 0, 11), invalidCheck);
+    await assert.rejects(insertCredit("VOID", 0, 1, 0), invalidCheck);
+
+    const insertLine = (quantity, amount) => db.execute(`
+      INSERT INTO ap_credit_note_lines (credit_note_id, invoice_id, line_no, invoice_line_id, base_quantity, amount)
+      VALUES (?, 1, 1, 1, ?, ?)
+    `, [credit.insertId, quantity, amount]);
+    await assert.rejects(insertLine(null, 0), invalidCheck);
+    await assert.rejects(insertLine(0, 10), invalidCheck);
+    await insertLine(null, 10);
+    const insertApplication = (isOrigin, amount) => db.execute(`
+      INSERT INTO ap_credit_applications (credit_note_id, invoice_id, is_origin, amount, created_by_label, created_at)
+      VALUES (?, 1, ?, ?, 'test', 1)
+    `, [credit.insertId, isOrigin, amount]);
+    await assert.rejects(insertApplication(2, 3), invalidCheck);
+    await assert.rejects(insertApplication(1, 0), invalidCheck);
+    await insertApplication(1, 3);
+
+    const insertRefund = (method, amount) => db.execute(`
+      INSERT INTO ap_supplier_refunds (credit_note_id, supplier_id, currency_code, refund_date,
+        amount, payment_method, created_by_label, created_at, updated_at)
+      VALUES (?, 1, 'ZZZ', '2026-11-25', ?, ?, 'test', 1, 1)
+    `, [credit.insertId, amount, method]);
+    await assert.rejects(insertRefund("CASH", 0), invalidCheck);
+    await assert.rejects(insertRefund("INVALID", 2), invalidCheck);
+    await insertRefund("CASH", 2);
+
+    const insertSequence = (type) => db.execute(
+      "INSERT INTO ap_document_sequences (document_type, business_year, updated_at) VALUES (?, 9999, 1)", [type]
+    );
+    for (const type of ["INVOICE", "PAYMENT", "CREDIT_NOTE", "REFUND"]) await insertSequence(type);
+    await assert.rejects(insertSequence("INVALID"), invalidCheck);
+
+    const insertAudit = (type) => db.execute(
+      "INSERT INTO ap_audit_logs (occurred_at, actor_label, action, outcome, target_type) VALUES (1, 'test', 'test', 'SUCCEEDED', ?)", [type]
+    );
+    for (const type of ["INVOICE", "PAYMENT", "ALLOCATION", "CREDIT_NOTE", "CREDIT_APPLICATION", "REFUND"]) {
+      await insertAudit(type);
+    }
+    await assert.rejects(insertAudit("INVALID"), invalidCheck);
   } finally {
     await db.rollback();
   }
