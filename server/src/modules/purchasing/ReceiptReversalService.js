@@ -10,6 +10,12 @@ const action = "goods_receipt.reversed";
 const unavailable = () => purchasingError("PURCHASING_DEPENDENCY_UNAVAILABLE");
 const invalid = field => purchasingError("PURCHASING_INPUT_INVALID", { field });
 
+async function authorize(tx, claims) {
+  const actor = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
+  if (!["purchasing.view", "inventory.adjust"].every(permission => actor.permissions.includes(permission))) throw permissionStaleError();
+  return actor;
+}
+
 function normalize(input) {
   const body = onlyFields(input, ["eventId", "version", "reason", "details"], "body");
   const details = Array.from(requireItems(body.details, 200, "details"), (item, index) => {
@@ -40,7 +46,7 @@ async function lockReceipt(tx, id, expectedVersion) {
     total_received_base_quantity, total_reversed_base_quantity FROM goods_receipts WHERE id = ? FOR UPDATE`, [id]);
   if (!receipt || Number(receipt.purchase_order_id) !== orderId) throw purchasingError("GOODS_RECEIPT_NOT_FOUND");
   const version = Number(receipt.version);
-  if (version !== expectedVersion) throw purchasingError("VERSION_CONFLICT", { currentVersion: version });
+  if (expectedVersion !== undefined && version !== expectedVersion) throw purchasingError("VERSION_CONFLICT", { currentVersion: version });
   if (!["CONFIRMED", "PARTIALLY_REVERSED"].includes(receipt.status)) throw purchasingError("GR_STATE_CONFLICT");
   const [receiptLines] = await tx.query(`SELECT id, purchase_order_line_id, sku_id
     FROM goods_receipt_lines WHERE goods_receipt_id = ? ORDER BY id FOR UPDATE`, [id]);
@@ -70,14 +76,41 @@ export class ReceiptReversalService {
     Object.assign(this, { database, logger, time, operations, audit, hasActiveInvoice, readReturnedQuantities, postInventory });
   }
 
+  async #verifiedReturns(tx, goodsReceiptId, goodsReceiptDetailIds) {
+    const occupied = await this.hasActiveInvoice(tx, { goodsReceiptId });
+    if (typeof occupied !== "boolean") throw unavailable();
+    if (occupied) throw purchasingError("GR_REVERSAL_INVOICED");
+    const result = await this.readReturnedQuantities(tx, { goodsReceiptId, goodsReceiptDetailIds });
+    if (!(result instanceof Map) || result.size !== goodsReceiptDetailIds.length || goodsReceiptDetailIds.some(id =>
+      typeof result.get(id) !== "string" || !/^(0|[1-9][0-9]*)$/u.test(result.get(id)))) throw unavailable();
+    return result;
+  }
+
+  async preview({ id, claims }) {
+    positiveId(id, "id");
+    return this.operations.run(this.database, async tx => {
+      await authorize(tx, claims);
+      const { receipt, details } = await lockReceipt(tx, id);
+      if (!details.length) throw unavailable();
+      const returned = await this.#verifiedReturns(tx, String(id), details.map(detail => String(detail.id)));
+      return {
+        version: Number(receipt.version),
+        details: details.map(detail => {
+          const remaining = BigInt(detail.received_base_quantity) - BigInt(detail.reversed_base_quantity) - BigInt(returned.get(String(detail.id)));
+          if (remaining < 0n) throw unavailable();
+          return { id: Number(detail.id), remainingBaseQuantity: String(remaining) };
+        })
+      };
+    });
+  }
+
   async create({ id, claims, input, req, context = {} }) {
     try {
       positiveId(id, "id");
       const request = normalize(input);
       return await this.operations.run(this.database, async tx => {
         const nowMs = this.time.nowMs();
-        const actor = await assertActorFresh(tx, { actorId: Number(claims?.sub), claimedRoles: claims?.roles, claimedPermissions: claims?.permissions });
-        if (!["purchasing.view", "inventory.adjust"].every(permission => actor.permissions.includes(permission))) throw permissionStaleError();
+        const actor = await authorize(tx, claims);
         const { operationId, replay } = await this.operations.claim(tx, {
           commandType: "REVERSE_GOODS_RECEIPT", sourceDocumentId: String(id), eventId: request.eventId,
           payload: request, actor, nowMs, requestId: context.requestId, correlationId: context.correlationId
@@ -88,12 +121,7 @@ export class ReceiptReversalService {
         const ownedDetailIds = new Set(locked.details.map(detail => Number(detail.id)));
         if (request.details.some(detail => !ownedDetailIds.has(detail.goodsReceiptDetailId))) throw purchasingError("GOODS_RECEIPT_NOT_FOUND");
         const goodsReceiptId = String(id);
-        const occupied = await this.hasActiveInvoice(tx, { goodsReceiptId });
-        if (typeof occupied !== "boolean") throw unavailable();
-        if (occupied) throw purchasingError("GR_REVERSAL_INVOICED");
-        const returned = await this.readReturnedQuantities(tx, {
-          goodsReceiptId, goodsReceiptDetailIds: request.details.map(detail => String(detail.goodsReceiptDetailId))
-        });
+        const returned = await this.#verifiedReturns(tx, goodsReceiptId, request.details.map(detail => String(detail.goodsReceiptDetailId)));
         const plan = planReceiptReversal(locked, request.details, returned);
         const [[last]] = await tx.query(`SELECT reversal_sequence FROM goods_receipt_reversals WHERE goods_receipt_id = ?
           ORDER BY reversal_sequence DESC LIMIT 1 FOR SHARE`, [id]);
