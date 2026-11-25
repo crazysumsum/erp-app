@@ -1,4 +1,6 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { issueInventoryReturnContext } from "../../modules/inventory/InventoryReturnContext.js";
+import { InventoryReturnPostingService } from "../../modules/inventory/InventoryReturnPostingService.js";
 import { ReturnInquiryService } from "../../modules/returns/ReturnInquiryService.js";
 import { ReturnService } from "../../modules/returns/ReturnService.js";
 import { returnError } from "../../modules/returns/returnErrors.js";
@@ -91,7 +93,19 @@ class InquiryHandler extends BaseRequestHandler {
 class CommandHandler extends BaseRequestHandler {
   constructor(services) {
     super(services);
-    this.returns = new ReturnService({ database: services.require("mysqldatabase"), time: services.require("time") });
+    const database = services.require("mysqldatabase");
+    const time = services.require("time");
+    const jwt = services.require("jwt");
+    const inventory = new InventoryReturnPostingService({ database, time, logger: this.logger });
+    const postInventory = (tx, { req, kind, command, lockedFacts }) => {
+      const proof = issueInventoryReturnContext(req, tx, command, lockedFacts, {
+        kind, database, time, sessionMaxAgeSeconds: jwt.sessionMaxAgeSeconds, clockToleranceSeconds: jwt.config.jwt.clockToleranceSeconds
+      });
+      return kind === "customer"
+        ? inventory.postCustomerReturnReceiptBatchInTransaction(tx, command, proof)
+        : inventory.postSupplierReturnIssueBatchInTransaction(tx, command, proof);
+    };
+    this.returns = new ReturnService({ database, time, postInventory });
   }
 
   async execute(req) {
@@ -132,6 +146,12 @@ export class CreateCustomerReturnHandler extends CommandHandler {
   static kind = "customer";
   static action = "create";
 }
+export class PostCustomerReturnHandler extends CommandHandler {
+  static handlerName = "postCustomerReturn";
+  static api = write(`${CUSTOMER}/:id/post`, CUSTOMER_WRITE, "Receive a customer return into quarantine");
+  static kind = "customer";
+  static action = "post";
+}
 export class CancelCustomerReturnHandler extends CommandHandler {
   static handlerName = "cancelCustomerReturn";
   static api = write(`${CUSTOMER}/:id/cancel`, CUSTOMER_WRITE, "Cancel a customer return draft");
@@ -168,4 +188,11 @@ export class CancelSupplierReturnHandler extends CommandHandler {
   static api = write(`${SUPPLIER}/:id/cancel`, SUPPLIER_WRITE, "Cancel a supplier return draft");
   static kind = "supplier";
   static action = "cancel";
+}
+
+export class PostSupplierReturnHandler extends CommandHandler {
+  static handlerName = "postSupplierReturn";
+  static api = write(`${SUPPLIER}/:id/post`, SUPPLIER_WRITE, "Post a supplier return issue");
+  static kind = "supplier";
+  static action = "post";
 }

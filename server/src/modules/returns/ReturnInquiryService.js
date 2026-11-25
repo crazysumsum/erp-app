@@ -70,7 +70,7 @@ export class ReturnInquiryService {
       return {
         ...summary(type, party, row), reason: row.reason, createdBy: row.created_by_label,
         postedBy: row.posted_by_label, postedAt: row.posted_at === null ? null : Number(row.posted_at),
-        allowedActions: row.status === "DRAFT" && permissions.includes(type.permission) ? ["cancel"] : [],
+        allowedActions: row.status === "DRAFT" && permissions.includes(type.permission) ? ["post", "cancel"] : [],
         lines: lines.map(line => ({
           id: String(line.id), lineNo: Number(line.line_no), sourceDetailId: String(line.source_detail_id),
           baseQuantity: String(line.base_quantity), binId: String(line.bin_id), binCode: line.bin_code, warehouseCode: line.warehouse_code,
