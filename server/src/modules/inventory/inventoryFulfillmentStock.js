@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { inventoryError } from "./inventoryErrors.js";
 import { meetsMinimumRemainingLife } from "./inventoryValidation.js";
 import { readFulfillmentInventoryBatch,readOriginalFulfillmentIssueBatch } from "./inventoryFulfillmentReceipts.js";
+import { lockInventoryCostPools,lockOriginalInventoryCosts,persistInventoryCostBatch,readInventoryCostInstallation } from "./inventoryCostLedger.js";
+import { inboundCost,originalCostShare,outboundCost } from "./inventoryCostMath.js";
 
 const fail=(code="ALLOCATION_STATE_CONFLICT")=>{throw inventoryError(code);};
 const placeholders=values=>values.map(()=>"?").join(",");
@@ -174,19 +176,58 @@ async function lockStock(service,tx,batch) {
   return locked;
 }
 
+async function checkOriginalNotReversed(tx,leg) {
+  const [[exists]]=await tx.query("SELECT id FROM inventory_movements WHERE reversal_of_movement_id=? LIMIT 1 FOR SHARE",[leg.input.originalMovementId]);
+  if (exists) fail("REVERSAL_NOT_ALLOWED");
+}
+
+async function prepareFulfillmentCosts(tx, members, reverse, at) {
+  const legs = members.flatMap(member => member.legs);
+  let basis;
+  if (reverse) {
+    const ids = legs.map(leg => leg.input.originalMovementId);
+    const [rows] = await tx.query(`SELECT id,sku_id,quantity,direction FROM inventory_movements
+      WHERE id IN (${placeholders(ids)}) AND movement_type='ISSUE' AND direction='OUT'
+      ORDER BY id FOR SHARE`, ids);
+    if (rows.length !== ids.length) fail("REVERSAL_NOT_ALLOWED");
+    for (const leg of legs) await checkOriginalNotReversed(tx,leg);
+    basis = await lockOriginalInventoryCosts(tx, rows.map(row => ({ ...row,kind:"ISSUE" })));
+  }
+  const pools = await lockInventoryCostPools(tx, legs.map(leg => leg.balance.sku_id), at);
+  const working = new Map(), byLeg = new Map();
+  for (const leg of legs) {
+    const skuId = String(leg.balance.sku_id), quantity = BigInt(leg.input.baseQuantity);
+    const pool = working.get(skuId) ?? pools.get(skuId);
+    let cost;
+    if (reverse) {
+      const original = basis.get(leg.input.originalMovementId);
+      if (original.skuId !== skuId || original.quantity !== quantity || original.used !== 0n) fail("REVERSAL_NOT_ALLOWED");
+      const share = originalCostShare(original.value, original.quantity, original.used, quantity);
+      cost = { ...inboundCost(pool, quantity, share),kind:"ISSUE_REVERSAL",source:"ORIGINAL",
+        originalEntryId:original.id,originalValue:share };
+    } else {
+      if (quantity > pool.quantity) fail("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      cost = { ...outboundCost(pool, quantity),kind:"ISSUE",source:"POOL" };
+    }
+    working.set(skuId,cost);
+    byLeg.set(leg,{ ...cost,skuId });
+  }
+  return { pools,byLeg };
+}
+
 export async function postFulfillmentStockBatch(service,tx,batch,context) {
   if (batch.action==="REVERSE") await originalIssue(tx,batch);
   await lockStock(service,tx,batch);
-  for (const member of [...batch.members].sort(memberOrder)) {
-    const movementGroupId=randomUUID(),reverse=batch.action==="REVERSE";
+  const members = [...batch.members].sort(memberOrder), reverse = batch.action==="REVERSE";
+  const costs = await readInventoryCostInstallation(tx) ? await prepareFulfillmentCosts(tx,members,reverse,batch.timestamp) : null;
+  const entries = [];
+  for (const member of members) {
+    const movementGroupId=randomUUID();
     for (const leg of member.legs) {
       const balance=leg.balance,allocation=leg.allocation,q=number(leg.input.baseQuantity),before=number(balance.on_hand_quantity),allocated=number(balance.allocated_quantity);
       const after=reverse?before+q:before-q,nextAllocated=reverse?allocated:allocated-q;
       if (!Number.isSafeInteger(after)||after<0||nextAllocated<0||after<nextAllocated) fail("ALLOCATION_INSUFFICIENT");
-      if (reverse) {
-        const [[exists]]=await tx.query("SELECT id FROM inventory_movements WHERE reversal_of_movement_id=? LIMIT 1 FOR SHARE",[leg.input.originalMovementId]);
-        if (exists) fail("REVERSAL_NOT_ALLOWED");
-      }
+      if (reverse && !costs) await checkOriginalNotReversed(tx,leg);
       await cas(tx,`UPDATE inventory_stock_balances SET on_hand_quantity=?,allocated_quantity=?,
         fifo_anchor_date=CASE WHEN ?=0 THEN NULL WHEN ?=0 THEN ? ELSE fifo_anchor_date END,
         version=version+1,updated_at=? WHERE id=? AND version=?`,[after,nextAllocated,after,before,service.time.fileDate(),batch.timestamp,balance.id,balance.version]);
@@ -203,6 +244,7 @@ export async function postFulfillmentStockBatch(service,tx,batch,context) {
         VALUES(?,?,?,'BIN',?,?,?,?,?,?,?,?,?,?,?,?,?,'','',?,?,?,?,?,?,?,?,?)`,
       [movementGroupId,member.operationId,reverse?"REVERSAL":"ISSUE",balance.warehouse_id,balance.bin_id,balance.sku_id,balance.lot_id,balance.stock_status,reverse?"IN":"OUT",q,before,after,number(balance.version)+1,member.reservation.id,allocation.id,reverse?leg.input.originalMovementId:null,
         bucket.skuCode,bucket.skuName,bucket.warehouseCode,bucket.binCode,bucket.lotNumber??"",bucket.expiryDate,batch.timestamp,context.actor.userId,context.actorLabel]);
+      if (costs) entries.push({ ...costs.byLeg.get(leg),movementId:movement.insertId });
       leg.result={inventoryAllocationId:String(allocation.id),inventoryBalanceId:String(balance.id),movementId:String(movement.insertId),baseQuantity:leg.input.baseQuantity,allocationVersion,balanceVersion:number(balance.version)+1,
         baseUomId:bucket.baseUomId,baseUomCode:bucket.baseUomCode,...(reverse?{shipmentIssueId:leg.input.shipmentIssueId,originalMovementId:leg.input.originalMovementId}:{})};
       Object.assign(balance,{on_hand_quantity:after,allocated_quantity:nextAllocated,version:number(balance.version)+1});
@@ -218,4 +260,5 @@ export async function postFulfillmentStockBatch(service,tx,batch,context) {
       beforeSummary:{consumedQuantity:number(reservation.consumed_quantity),outstandingQuantity:number(reservation.outstanding_quantity)},afterSummary:{consumedQuantity:consumed,outstandingQuantity:outstanding,quantity:q,version:member.version,rowCount:member.legs.length},
       operationRequestId:member.operationId,requestId:context.correlationId,correlationId:context.correlationId,ip:""});
   }
+  if (costs) await persistInventoryCostBatch(tx,costs.pools,entries,batch.timestamp);
 }
