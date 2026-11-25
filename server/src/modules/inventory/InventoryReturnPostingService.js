@@ -4,7 +4,7 @@ import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
 import { InventoryOperationService, inventoryOperationHash } from "./InventoryOperationService.js";
 import { consumeInventoryReturnContext } from "./InventoryReturnContext.js";
-import { lockInventoryCostPools, lockOriginalInventoryCosts, persistInventoryCostBatch, readInventoryCostInstallation } from "./inventoryCostLedger.js";
+import { lockInventoryCorrectionCosts, persistInventoryCostBatch, readInventoryCostInstallation } from "./inventoryCostLedger.js";
 import { inboundCost, originalCostShare, outboundCost } from "./inventoryCostMath.js";
 import { inventoryError } from "./inventoryErrors.js";
 import { meetsMinimumRemainingLife } from "./inventoryValidation.js";
@@ -100,14 +100,14 @@ export class InventoryReturnPostingService {
     const day = this.time.fileDate();
     if (kind === "supplier") await this.#protectReservations(tx, scopes, locked.stockControls, plan.final, day);
     actor = await guard.check({ locking: true });
-    const basisByMovement = await lockOriginalInventoryCosts(tx, originals.map(row => ({ ...row, kind: variant.from })));
+    const { basis: basisByMovement, pools: costPools } = await lockInventoryCorrectionCosts(
+      tx, originals.map(row => ({ ...row, kind: variant.from })));
     for (const line of lines) {
       const basis = basisByMovement.get(line.originalMovementId), quantity = BigInt(line.baseQuantity);
       if (basis.used + quantity > basis.quantity) throw inventoryError("REVERSAL_NOT_ALLOWED");
       line.basis = { id: basis.id, share: originalCostShare(basis.value, basis.quantity, basis.used, quantity) };
       basis.used += quantity;
     }
-    const costPools = await lockInventoryCostPools(tx, scopes.map(scope => scope.skuId), at);
     const workingCosts = new Map(), byOriginal = new Map(originals.map(row => [String(row.id), row]));
     const entries = [], results = [];
     for (const line of lines) {

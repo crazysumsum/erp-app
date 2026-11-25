@@ -75,18 +75,16 @@ export async function readIssueCostAvailability(tx, input) {
   return { state: missing ? "MISSING" : "AVAILABLE", costingEnabled: true };
 }
 
-// Callers hold the original Movement and its business source locks. Use current
-// reads under RR so a competing return committed before those locks is visible.
-export async function lockOriginalInventoryCosts(tx, originals) {
+async function readOriginalInventoryCosts(tx, originals) {
   const byMovement = new Map(originals.map(row => [String(row.id), row]));
   const byEntry = new Map(), result = new Map();
   const movementIds = [...byMovement.keys()].sort(compareIds);
   for (let offset = 0; offset < movementIds.length; offset += READ_BATCH_SIZE) {
     const batch = movementIds.slice(offset, offset + READ_BATCH_SIZE);
-    const [rows] = await tx.query(`SELECT CAST(id AS CHAR) AS id, CAST(movement_id AS CHAR) AS movement_id,
-      CAST(sku_id AS CHAR) AS sku_id, entry_kind, CAST(quantity_delta AS CHAR) AS quantity_delta, value_delta_hkd
-      FROM inventory_cost_entries WHERE movement_id IN (${batch.map(() => "?").join(",")})
-      ORDER BY movement_id FOR SHARE`, batch);
+    const [rows] = await tx.query(`SELECT CAST(e.id AS CHAR) AS id, CAST(e.movement_id AS CHAR) AS movement_id,
+      CAST(e.sku_id AS CHAR) AS sku_id, e.entry_kind, CAST(e.quantity_delta AS CHAR) AS quantity_delta, e.value_delta_hkd
+      FROM inventory_cost_entries e WHERE e.movement_id IN (${batch.map(() => "?").join(",")})
+      ORDER BY e.movement_id`, batch);
     if (rows.length !== batch.length) throw inventoryError("INVENTORY_COST_SOURCE_MISSING");
     for (const [index, row] of rows.entries()) {
       const original = byMovement.get(batch[index]), direction = original.direction === "IN" ? 1n : -1n;
@@ -102,10 +100,10 @@ export async function lockOriginalInventoryCosts(tx, originals) {
   const entryIds = [...byEntry.keys()].sort(compareIds);
   for (let offset = 0; offset < entryIds.length; offset += READ_BATCH_SIZE) {
     const batch = entryIds.slice(offset, offset + READ_BATCH_SIZE);
-    const [rows] = await tx.query(`SELECT CAST(original_entry_id AS CHAR) AS original_entry_id,
-      CAST(sku_id AS CHAR) AS sku_id, entry_kind, CAST(quantity_delta AS CHAR) AS quantity_delta
-      FROM inventory_cost_entries WHERE original_entry_id IN (${batch.map(() => "?").join(",")})
-      ORDER BY original_entry_id, id FOR SHARE`, batch);
+    const [rows] = await tx.query(`SELECT CAST(e.original_entry_id AS CHAR) AS original_entry_id,
+      CAST(e.sku_id AS CHAR) AS sku_id, e.entry_kind, CAST(e.quantity_delta AS CHAR) AS quantity_delta
+      FROM inventory_cost_entries e WHERE e.original_entry_id IN (${batch.map(() => "?").join(",")})
+      ORDER BY e.original_entry_id, e.id`, batch);
     for (const row of rows) {
       const parent = byEntry.get(row.original_entry_id);
       if (!parent || row.sku_id !== parent.basis.skuId || !parent.allowed.includes(row.entry_kind)) throw unavailable();
@@ -115,6 +113,44 @@ export async function lockOriginalInventoryCosts(tx, originals) {
     }
   }
   return result;
+}
+
+async function readLockedPoolChunk(tx, chunk, pools) {
+  const [rows] = await tx.query(`
+    SELECT CAST(p.sku_id AS CHAR) AS sku_id, CAST(p.costed_quantity AS CHAR) AS costed_quantity,
+           p.value_hkd, p.version
+      FROM inventory_cost_pools p WHERE p.sku_id IN (${chunk.map(() => "?").join(",")})
+     ORDER BY p.sku_id FOR UPDATE`, chunk);
+  for (const row of rows) {
+    if (!chunk.includes(row.sku_id) || pools.has(row.sku_id) || !/^(0|[1-9]\d*)$/u.test(row.costed_quantity) ||
+        !Number.isInteger(row.version) || row.version < 1 || row.version >= MAX_VERSION) throw unavailable();
+    const quantity = BigInt(row.costed_quantity), value = parseInventoryCost(row.value_hkd);
+    if (value < 0n || (quantity === 0n && value !== 0n)) throw unavailable();
+    pools.set(row.sku_id, { quantity, value, version: row.version });
+  }
+}
+
+// Call after the original Movement and business locks, before any cost writes.
+// Every cost append advances the locked SKU pool version in the same transaction.
+// Matching versions therefore fence the RR snapshot without locking ledger gaps.
+export async function lockInventoryCorrectionCosts(tx, originals) {
+  const ids = [...new Set(originals.map(row => String(row.sku_id)))].sort(compareIds);
+  const pools = new Map();
+  for (let offset = 0; offset < ids.length; offset += WRITE_BATCH_SIZE) {
+    await readLockedPoolChunk(tx, ids.slice(offset, offset + WRITE_BATCH_SIZE), pools);
+  }
+  for (let offset = 0; offset < ids.length; offset += WRITE_BATCH_SIZE) {
+    const chunk = ids.slice(offset, offset + WRITE_BATCH_SIZE);
+    const [rows] = await tx.query(`SELECT CAST(sku_id AS CHAR) AS sku_id, version
+      FROM inventory_cost_pools WHERE sku_id IN (${chunk.map(() => "?").join(",")})`, chunk);
+    const snapshot = new Map(rows.map(row => [row.sku_id, row.version]));
+    if (chunk.some(id => snapshot.get(id) !== pools.get(id)?.version)) throw inventoryError("CONCURRENT_OPERATION");
+  }
+  const basis = await readOriginalInventoryCosts(tx, originals);
+  // A pre-cost movement can legitimately have neither a pool nor an original
+  // entry. The read above reports that as a missing source, even for zero stock.
+  if (pools.size !== ids.length) throw unavailable();
+  return { basis, pools };
 }
 
 export async function lockInventoryCostPools(tx, skuIds, at) {
@@ -127,19 +163,8 @@ export async function lockInventoryCostPools(tx, skuIds, at) {
       VALUES ${chunk.map(() => "(?,?)").join(",")}
       ON DUPLICATE KEY UPDATE sku_id=inventory_cost_pools.sku_id`,
     chunk.flatMap(skuId => [skuId, at]));
-    const [rows] = await tx.query(`
-      SELECT CAST(p.sku_id AS CHAR) AS sku_id, CAST(p.costed_quantity AS CHAR) AS costed_quantity,
-             p.value_hkd, p.version
-        FROM inventory_cost_pools p WHERE p.sku_id IN (${chunk.map(() => "?").join(",")})
-       ORDER BY p.sku_id FOR UPDATE`, chunk);
-    if (rows.length !== chunk.length) throw unavailable();
-    for (const [index, row] of rows.entries()) {
-      if (row.sku_id !== chunk[index] || !/^(0|[1-9]\d*)$/u.test(row.costed_quantity) ||
-          !Number.isInteger(row.version) || row.version < 1 || row.version >= MAX_VERSION) throw unavailable();
-      const quantity = BigInt(row.costed_quantity), value = parseInventoryCost(row.value_hkd);
-      if (value < 0n || (quantity === 0n && value !== 0n)) throw unavailable();
-      pools.set(row.sku_id, { quantity, value, version: row.version });
-    }
+    await readLockedPoolChunk(tx, chunk, pools);
+    if (pools.size !== offset + chunk.length) throw unavailable();
   }
   return pools;
 }

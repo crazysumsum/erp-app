@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { inventoryError } from "./inventoryErrors.js";
 import { meetsMinimumRemainingLife } from "./inventoryValidation.js";
 import { readFulfillmentInventoryBatch,readOriginalFulfillmentIssueBatch } from "./inventoryFulfillmentReceipts.js";
-import { lockInventoryCostPools,lockOriginalInventoryCosts,persistInventoryCostBatch,readInventoryCostInstallation } from "./inventoryCostLedger.js";
+import { lockInventoryCorrectionCosts,lockInventoryCostPools,persistInventoryCostBatch,readInventoryCostInstallation } from "./inventoryCostLedger.js";
 import { inboundCost,originalCostShare,outboundCost } from "./inventoryCostMath.js";
 
 const fail=(code="ALLOCATION_STATE_CONFLICT")=>{throw inventoryError(code);};
@@ -183,7 +183,7 @@ async function checkOriginalNotReversed(tx,leg) {
 
 async function prepareFulfillmentCosts(tx, members, reverse, at) {
   const legs = members.flatMap(member => member.legs);
-  let basis;
+  let basis,pools;
   if (reverse) {
     const ids = legs.map(leg => leg.input.originalMovementId);
     const [rows] = await tx.query(`SELECT id,sku_id,quantity,direction FROM inventory_movements
@@ -191,9 +191,8 @@ async function prepareFulfillmentCosts(tx, members, reverse, at) {
       ORDER BY id FOR SHARE`, ids);
     if (rows.length !== ids.length) fail("REVERSAL_NOT_ALLOWED");
     for (const leg of legs) await checkOriginalNotReversed(tx,leg);
-    basis = await lockOriginalInventoryCosts(tx, rows.map(row => ({ ...row,kind:"ISSUE" })));
-  }
-  const pools = await lockInventoryCostPools(tx, legs.map(leg => leg.balance.sku_id), at);
+    ({basis,pools}=await lockInventoryCorrectionCosts(tx, rows.map(row => ({ ...row,kind:"ISSUE" }))));
+  } else pools=await lockInventoryCostPools(tx, legs.map(leg => leg.balance.sku_id), at);
   const working = new Map(), byLeg = new Map();
   for (const leg of legs) {
     const skuId = String(leg.balance.sku_id), quantity = BigInt(leg.input.baseQuantity);
