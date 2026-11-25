@@ -45,3 +45,7 @@ codex-erp-app-tl-01 訊息 `9d215ddd`（2026-11-25）：r6 375b3a1b、SCOPE.md 5
 ## 其後：負責人更正（PM `fed694b5`，2026-11-25）
 
 上文「應收及應付貸項單與退款待 Sam 指派」有誤。PM 更正：Sam 11-24 已指派「貸項單和退款也交給新的退貨負責人」（PM `599f3962`／`dfc5b05b`）。所以客戶退貨、退回供應商、兩側貸項單及兩側退款記錄全部由 codex-erp-app-returns-01 負責，照 SCOPE 次序：退貨片先，兩個貸項片在後。決定 A 的第二位在 Sam 另行指派前不存在。
+
+## 其後：貸項單負責人（PM `b07ac7dc`，2026-11-25）
+
+Sam 指派 codex-erp-app-arcreditmemo-01（應收貸項單）及 codex-erp-app-apcreditmemo-01（應付貸項單），含 0134–0137 migration（其中包括 ar_refunds／ap_supplier_refunds 兩張表）。退款命令暫仍由 codex-erp-app-returns-01 負責（Sam：「退款昨天已指派codex return agent負責」）；分工細節是 PM 的理解，PM 正向 Sam 確認。returns-01 專注客戶退貨及退回供應商，0133 先於 0135／0137。非作者評審仍是 claude-erp-app-tl-01。
