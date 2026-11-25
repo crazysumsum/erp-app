@@ -130,11 +130,12 @@ onBeforeUnmount(clearPassword);
     <p v-if="preview && !available.length">這張收貨單沒有可沖銷的數量。</p>
     <q-form v-if="!loading && available.length" @submit="submit">
       <p>請填寫要沖銷的基本數量。留空的明細會略過。</p>
-      <q-input v-for="line in available" :key="line.id" v-model="quantities[line.id]" outlined dense
-        :label="`沖銷數量 · ${line.label}`" :aria-describedby="`${titleId}-limit-${line.id}`" inputmode="numeric" maxlength="16"
-        :readonly="busy || uncertain" class="q-mb-sm">
-        <template #hint><span :id="`${titleId}-limit-${line.id}`">最多 {{ line.remaining }}</span></template>
-      </q-input>
+      <div v-for="line in available" :key="line.id" class="q-mb-sm">
+        <q-input v-model="quantities[line.id]" outlined dense hide-bottom-space
+          :label="`沖銷數量 · ${line.label}`" :aria-describedby="`${titleId}-limit-${line.id}`" inputmode="numeric" maxlength="16"
+          :readonly="busy || uncertain" />
+        <span :id="`${titleId}-limit-${line.id}`" class="text-caption">最多 {{ line.remaining }}</span>
+      </div>
       <q-input v-model="reason" outlined dense label="沖銷原因" maxlength="500" required
         :readonly="busy || uncertain" class="q-mb-md" />
       <q-input v-model="password" outlined dense label="登入密碼" type="password" autocomplete="current-password"

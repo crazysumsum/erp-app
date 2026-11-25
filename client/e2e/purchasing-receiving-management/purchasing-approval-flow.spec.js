@@ -389,6 +389,7 @@ test("PO approval and receipt: settings, submit, withdraw/resubmit, approve thro
   const postReversal = correction.getByRole("button", { name: "確認沖銷" });
   const reversePath = `/api/v1/goods-receipts/${receipt.id}/reversals/create`;
   await expect(correction.getByText("最多 1", { exact: true })).toBeVisible();
+  await expect(reversalQuantity).toHaveAccessibleDescription("最多 1");
   await reversalQuantity.fill("2");
   await reversalReason.fill("E2E 更正錯誤收貨");
   await reversalPassword.fill(users.U1.password);
