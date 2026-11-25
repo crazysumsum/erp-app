@@ -4,6 +4,8 @@ import { normalizePurchaseReversal } from "./inventoryPurchaseValidation.js";
 import { claimPurchaseReversal, completePurchaseReversal, readPurchaseReceipt } from "./inventoryPurchaseReceipts.js";
 import { parseInventorySummary } from "./inventorySafeJson.js";
 import { inventoryError } from "./inventoryErrors.js";
+import { lockInventoryCostPools, lockOriginalInventoryCosts, persistInventoryCostBatch, readInventoryCostInstallation } from "./inventoryCostLedger.js";
+import { originalCostShare, outboundCost } from "./inventoryCostMath.js";
 import { calculateInventoryAvailability, meetsMinimumRemainingLife, validateInventoryLotInput } from "./inventoryValidation.js";
 
 const denied = () => inventoryError("REVERSAL_NOT_ALLOWED");
@@ -157,6 +159,29 @@ export async function reversePurchaseReceiptBatchInTransaction(service, tx, inpu
   }
   actor = await guard.check({ locking: true }); guard.assertTime();
   if (date !== service.time.fileDate()) throw inventoryError("CONCURRENT_OPERATION");
+  let costPools;
+  if (await readInventoryCostInstallation(tx)) {
+    const basisByMovement = await lockOriginalInventoryCosts(tx, originals.map(row => ({ ...row, kind: "RECEIPT" })));
+    for (const write of writes) {
+      const basis = basisByMovement.get(String(write.original.id));
+      const quantity = BigInt(write.member.line.baseQuantity);
+      if (basis.used + quantity > basis.quantity) throw denied();
+      write.costBasis = { ...basis, share: originalCostShare(basis.value, basis.quantity, basis.used, quantity) };
+      basis.used += quantity;
+    }
+    costPools = await lockInventoryCostPools(tx, scopes.map(scope => scope.skuId), batch.timestamp);
+    const workingCosts = new Map();
+    for (const write of writes) {
+      const { id: originalEntryId, skuId, share } = write.costBasis;
+      const pool = workingCosts.get(skuId) ?? costPools.get(skuId);
+      const quantity = BigInt(write.member.line.baseQuantity);
+      if (pool.quantity < quantity) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      const change = outboundCost(pool, quantity, share);
+      workingCosts.set(skuId, change);
+      write.cost = { ...change, skuId, originalEntryId, originalValue: share, kind: "RECEIPT_REVERSAL", source: "ORIGINAL" };
+    }
+  }
+  const entries = [];
   const results = [];
   for (const write of writes) {
     guard.assertTime(); const { original, policy, balance, member, before, after, version } = write;
@@ -176,6 +201,7 @@ export async function reversePurchaseReceiptBatchInTransaction(service, tx, inpu
       original.warehouse_code_snapshot, original.bin_code_snapshot, original.lot_number_snapshot, original.expiry_date_snapshot,
       batch.timestamp, actor.id, actor.username]);
     const movementId = number(movement.insertId, 1);
+    if (write.cost) entries.push({ ...write.cost, movementId });
     await tx.execute(`INSERT INTO inventory_purchase_reversal_links
       (original_movement_id,reversal_movement_id,operation_request_id,quantity,created_at) VALUES(?,?,?,?,?)`,
     [member.line.originalMovementId, movementId, member.operationId, member.line.baseQuantity, batch.timestamp]);
@@ -191,6 +217,7 @@ export async function reversePurchaseReceiptBatchInTransaction(service, tx, inpu
     results.push({ sourceLineId: member.sourceLineId, operationId: member.operationId, movementId, movementGroupId,
       baseQuantity: member.line.baseQuantity, originalMovementId: member.line.originalMovementId });
   }
+  if (costPools) await persistInventoryCostBatch(tx, costPools, entries, batch.timestamp);
   await completePurchaseReversal(tx, batch, results); guard.assertTime();
   const response = await result(tx, command, batch); guard.assertTime(); return response;
 }

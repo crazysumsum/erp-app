@@ -72,8 +72,8 @@ function lotIssue(error, row) {
 }
 
 // This is an advisory read. Confirm must revalidate current facts under the writer's locks.
-export async function precheckInventoryOpeningCsv(bytes, { reader, itemLookup }) {
-  const result = parseInventoryOpeningCsv(bytes);
+export async function precheckInventoryOpeningCsv(bytes, { reader, itemLookup, costingEnabled }) {
+  const result = parseInventoryOpeningCsv(bytes, { costingEnabled });
   if (result.errors.length) return result;
 
   const locations = new Map(), skus = new Map(), lots = new Map(), positions = new Map();
