@@ -12,6 +12,12 @@ const params = { type: "object", additionalProperties: false, required: ["id"],
   properties: { id: { type: "string", pattern: "^[1-9][0-9]{0,15}$" } } };
 const controlSchema = { type: "object", additionalProperties: false, required: ["status", "version"],
   properties: { status: { enum: ["PRE_GO_LIVE", "LIVE"] }, version: integer } };
+const writeSchema = { type: "object", additionalProperties: false, required: ["eventId", "expectedVersion", "reason", "password"],
+  properties: {
+    eventId: { type: "string", pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$" },
+    expectedVersion: integer, reason: { type: "string", minLength: 5, maxLength: 500 },
+    password: { type: "string", minLength: 1, maxLength: 1024 }
+  } };
 const jobSchema = { type: "object", additionalProperties: false,
   required: ["id", "status", "version", "control", "sourceFileHash", "readyRows", "errors", "skippedRows", "completedAt", "operationId"],
   properties: {
@@ -89,23 +95,20 @@ export class GetInventoryOpeningHandler extends OpeningHandler {
   }
 }
 
-export class ConfirmInventoryOpeningHandler extends OpeningHandler {
-  static handlerName = "confirmInventoryOpening";
+export class GetInventoryOpeningControlHandler extends OpeningHandler {
+  static handlerName = "getInventoryOpeningControl";
   static api = {
-    method: "POST", path: ROOT + "/jobs/:id/confirm", authType: "jwt-device-password", authorizationPolicies: MGMT_POLICY,
-    description: "確認將同一份期初庫存預檢結果整批入帳。",
-    inputCoercion: false,
-    requestSchema: { params, query: EMPTY, body: {
-      type: "object", additionalProperties: false, required: ["eventId", "expectedVersion", "reason", "password"],
-      properties: {
-        eventId: { type: "string", pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$" },
-        expectedVersion: integer, reason: { type: "string", minLength: 5, maxLength: 500 },
-        password: { type: "string", minLength: 1, maxLength: 1024 }
-      }
-    } },
-    responseSchema: { 200: jobSchema }
+    method: "GET", path: ROOT + "/control", authType: "jwt", authorizationPolicies: MGMT_POLICY,
+    description: "讀取期初結案狀態及對帳版本。",
+    requestSchema: { params: EMPTY, query: EMPTY, body: EMPTY }, responseSchema: { 200: controlSchema }
   };
 
+  async execute(req) {
+    return this.response(await this.opening.getControl(this.requestOptions(req)));
+  }
+}
+
+class OpeningHighRiskHandler extends OpeningHandler {
   constructor(services = {}) {
     super(services);
     const jwt = services.require("jwt"), device = services.require("deviceBinding");
@@ -114,20 +117,56 @@ export class ConfirmInventoryOpeningHandler extends OpeningHandler {
       signatureMaxSkewSeconds: device.config.deviceBinding.signatureMaxSkewSeconds };
   }
 
-  async execute(req) {
+  issue(req, { purpose, documentType, documentId, scope = {} }) {
     const { eventId, expectedVersion, reason } = req.input.body;
-    const jobId = Number(req.input.params.id), normalizedReason = reason.trim();
+    const normalizedReason = reason.trim();
     const actorId = Number(req.auth?.claims?.sub);
-    if (!Number.isSafeInteger(jobId) || jobId <= 0 || [...normalizedReason].length < 5 || /\p{Cc}/u.test(reason)) {
+    if ([...normalizedReason].length < 5 || /\p{Cc}/u.test(reason)) {
       throw inventoryError("INVENTORY_INPUT_INVALID");
     }
     const command = deepFreeze({
-      authorization: { purpose: "opening.post", requiredCallerPermission: "inventory.mgmt" },
+      authorization: { purpose, requiredCallerPermission: "inventory.mgmt" },
       actor: { userId: actorId, claimedRoles: [...req.auth.claims.roles], claimedPermissions: [...req.auth.claims.permissions] },
-      source: { module: "INVENTORY", documentType: "OPENING", documentId: String(jobId), eventId },
-      payload: { jobId, expectedVersion, reason: normalizedReason }, correlationId: req.requestId ?? ""
+      source: { module: "INVENTORY", documentType, documentId: String(documentId), eventId },
+      payload: { ...scope, expectedVersion, reason: normalizedReason }, correlationId: req.requestId ?? ""
     });
-    const proof = issueInventoryHighRiskContext(req, command, this.authOptions);
+    return { command, proof: issueInventoryHighRiskContext(req, command, this.authOptions) };
+  }
+}
+
+export class ConfirmInventoryOpeningHandler extends OpeningHighRiskHandler {
+  static handlerName = "confirmInventoryOpening";
+  static api = {
+    method: "POST", path: ROOT + "/jobs/:id/confirm", authType: "jwt-device-password", authorizationPolicies: MGMT_POLICY,
+    description: "確認將同一份期初庫存預檢結果整批入帳。",
+    inputCoercion: false,
+    requestSchema: { params, query: EMPTY, body: writeSchema },
+    responseSchema: { 200: jobSchema }
+  };
+
+  async execute(req) {
+    const jobId = Number(req.input.params.id);
+    if (!Number.isSafeInteger(jobId) || jobId <= 0) throw inventoryError("INVENTORY_INPUT_INVALID");
+    const { command, proof } = this.issue(req, {
+      purpose: "opening.post", documentType: "OPENING", documentId: jobId, scope: { jobId }
+    });
     return this.response(await this.opening.confirm(command, proof, { signal: req.requestTimeout?.signal }));
+  }
+}
+
+export class GoLiveInventoryHandler extends OpeningHighRiskHandler {
+  static handlerName = "goLiveInventory";
+  static api = {
+    method: "POST", path: "/api/v1/inventory/go-live", authType: "jwt-device-password", authorizationPolicies: MGMT_POLICY,
+    description: "核對已簽核的期初版本，永久關閉期初匯入。",
+    inputCoercion: false,
+    requestSchema: { params: EMPTY, query: EMPTY, body: writeSchema },
+    responseSchema: { 200: { type: "object", additionalProperties: false, required: ["status", "version", "operationId", "postedAt"],
+      properties: { status: { const: "LIVE" }, version: integer, operationId: integer, postedAt: integer } } }
+  };
+
+  async execute(req) {
+    const { command, proof } = this.issue(req, { purpose: "inventory.go_live", documentType: "INVENTORY_CONTROL", documentId: 1 });
+    return this.response(await this.opening.goLive(command, proof, { signal: req.requestTimeout?.signal }));
   }
 }

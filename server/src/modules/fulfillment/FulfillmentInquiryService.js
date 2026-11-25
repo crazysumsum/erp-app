@@ -51,7 +51,7 @@ export class FulfillmentInquiryService {
     const [lines]=await tx.query("SELECT * FROM fulfillment_lines WHERE fulfillment_id=? ORDER BY line_no",[id]);
     if(lines.length!==Number(header.line_count)||!lines.length||lines.length>100)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
     const [claims]=await tx.query("SELECT fulfillment_line_id,SUM(active_claimed_quantity) AS active,SUM(released_quantity) AS released,SUM(consumed_quantity) AS consumed FROM fulfillment_line_reservation_claims WHERE fulfillment_id=? GROUP BY fulfillment_line_id",[id]);
-    const [allocations]=await tx.query("SELECT * FROM fulfillment_allocations WHERE fulfillment_id=? AND id>? ORDER BY id LIMIT 101",[id,allocationAfterId]);
+    const [allocations]=await tx.query("SELECT *,DATE_FORMAT(expiry_date_snapshot,'%Y-%m-%d') AS expiry_date_snapshot FROM fulfillment_allocations WHERE fulfillment_id=? AND id>? ORDER BY id LIMIT 101",[id,allocationAfterId]);
     const [history]=await tx.query("SELECT * FROM fulfillment_status_history WHERE fulfillment_id=? AND sequence_no<? ORDER BY sequence_no DESC LIMIT 101",[id,historyBeforeSequence]);
     const [[pending]]=await tx.query("SELECT EXISTS(SELECT 1 FROM fulfillment_operation_requests WHERE target_type='FULFILLMENT' AND target_id=? AND status='IN_PROGRESS') AS active",[id]);
     const [[order]]=await tx.query("SELECT id,status,version,line_count FROM sales_orders WHERE id=?",[header.sales_order_id]);
