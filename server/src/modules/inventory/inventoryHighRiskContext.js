@@ -14,11 +14,12 @@ const ROUTES = Object.freeze({
   "status_transfer.post": "/api/v1/inventory/status-transfers",
   "movement.reverse": "/api/v1/inventory/movements/:id/reverse",
   "stocktake.post": "/api/v1/inventory/stocktakes/:id/post",
-  "opening.post": "/api/v1/inventory/opening/jobs/:id/confirm"
+  "opening.post": "/api/v1/inventory/opening/jobs/:id/confirm",
+  "inventory.go_live": "/api/v1/inventory/go-live"
 });
 
 function permissionFor(action) {
-  return action === "opening.post" ? "inventory.mgmt" : "inventory.adjust";
+  return action === "opening.post" || action === "inventory.go_live" ? "inventory.mgmt" : "inventory.adjust";
 }
 
 function intent(command) {
@@ -27,7 +28,8 @@ function intent(command) {
     throw permissionStaleError();
   }
   const commandType = action === "adjustment.post" ? "ADJUSTMENT_POST"
-    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : action === "stocktake.post" ? "STOCKTAKE_POST" : action === "opening.post" ? "OPENING_POST" : "MOVEMENT_REVERSE";
+    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : action === "stocktake.post" ? "STOCKTAKE_POST"
+      : action === "opening.post" ? "OPENING_POST" : action === "inventory.go_live" ? "INVENTORY_GO_LIVE" : "MOVEMENT_REVERSE";
   const source = action === "stocktake.post" ? { ...command.source, lineId: command.source.lineId ?? "" } : command.source;
   const payload = action === "stocktake.post" ? { ...command.payload,
     ...(typeof command.payload.reason === "string" ? { reason: command.payload.reason.trim() } : {}) } : command.payload;

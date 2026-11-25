@@ -1,7 +1,8 @@
 /**
- * 開票與應收首期：migration 0122（三個權限）、0123（七張表）及 0124（發票行兩欄）對一個真、已 migrate 的 MySQL 驗收。
+ * 開票與應收：在真 MySQL 核對首期七張表、發票行兩欄，以及 0126 的期初欄位、唯一鍵及權限。
  * 表結構正本是 TL 的 TABLES.md（sha256 2ffa6b0b…8aca）及 TABLES-ADDENDUM-1.md（45f24a54…bcd9），均經 Sam 2026-11-19 批准；這裡把欄位、鍵、外鍵及 CHECK 的名單釘住，
  * 任何增減都會紅。
+ * 期初兩欄、唯一鍵及權限依 TL 的期初應收規格 r3（a3dbcaea…72ff）及 DECISIONS.md（949296ef…0275）。
  * 0127 的帳單地址快照依 BILLING-SNAPSHOT.md r3（024e4ec0…39cb），Sam 2026-11-23 批准。
  *
  * 資料：每個約束案例在自己的 transaction 內寫最多 3 列，完結即 ROLLBACK；該連線關掉外鍵檢查，所以不需要客戶、
@@ -16,12 +17,14 @@ import mysql from "mysql2/promise";
 import { up as seedPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
 import { up as createTables } from "../../database/migrations/0123_create_ar_tables.js";
 import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
+import { up as addOpeningInvoices } from "../../database/migrations/0126_add_ar_opening_invoices.js";
 import { up as addBillingSnapshot } from "../../database/migrations/0127_add_ar_invoice_billing_snapshot.js";
 import { ArBusinessMasterImpactChecker } from "../../src/modules/ar/ArBusinessMasterImpactChecker.js";
 import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
-const PERMISSIONS = ["ar.view", "ar.invoice.mgmt", "ar.receipt.mgmt"];
+const FIRST_PHASE_PERMISSIONS = ["ar.view", "ar.invoice.mgmt", "ar.receipt.mgmt"];
+const PERMISSIONS = [...FIRST_PHASE_PERMISSIONS, "ar.opening.mgmt"];
 
 const PARTY = ["customer_id", "customer_code_snapshot", "customer_name_snapshot", "currency_code", "currency_decimal_places"];
 const COLUMNS = {
@@ -31,7 +34,7 @@ const COLUMNS = {
   ar_invoices: ["id", "invoice_number", "status", ...PARTY, "invoice_date", "due_date", "payment_term_code_snapshot", "payment_term_name_snapshot",
     "due_date_overridden", "due_date_reason", "total_amount", "allocated_amount", "outstanding_amount", "notes", "void_reason", "version",
     "created_by", "created_by_label", "confirmed_by", "confirmed_by_label", "confirmed_at", "voided_by", "voided_by_label", "voided_at",
-    "created_at", "updated_at", "billing_address_snapshot"],
+    "created_at", "updated_at", "opening_reference", "active_opening_reference", "billing_address_snapshot"],
   ar_invoice_lines: ["id", "invoice_id", "line_no", "shipment_id", "shipment_line_id", "sales_order_id", "sales_order_line_id",
     "active_shipment_line_id", "sku_code_snapshot", "sku_name_snapshot", "base_uom_code_snapshot",
     "sales_uom_code_snapshot", "to_base_factor_snapshot", // 這兩欄由 0124 加上（TABLES-ADDENDUM-1，Sam 2026-11-19「批准加兩欄」）。
@@ -50,6 +53,7 @@ const INDEXES = {
   ar_operation_requests: { PRIMARY: [true, "id"], uq_ar_operation_event: [true, "event_id"], idx_ar_operation_target: [false, "target_type,target_id,id"],
     fk_ar_operation_actor: [false, "actor_user_id"] },
   ar_invoices: { PRIMARY: [true, "id"], uq_ar_invoice_number: [true, "invoice_number"],
+    uq_ar_invoice_active_opening_reference: [true, "active_opening_reference"],
     idx_ar_invoice_customer: [false, "customer_id,currency_code,status,due_date,id"], idx_ar_invoice_list: [false, "status,invoice_date,id"],
     fk_ar_invoice_currency: [false, "currency_code"], fk_ar_invoice_created_by: [false, "created_by"],
     fk_ar_invoice_confirmed_by: [false, "confirmed_by"], fk_ar_invoice_voided_by: [false, "voided_by"] },
@@ -125,16 +129,17 @@ const audit = (extra = {}) => ({ occurred_at: now, actor_label: "probe", action:
 
 test("0122 lists exactly the three AR permissions with the catalogue descriptions and grants no role", async () => {
   const source = await readFile(new URL("../../database/migrations/0122_seed_ar_permissions.js", import.meta.url), "utf8");
-  assert.deepEqual([...source.matchAll(/name:\s*"([a-z.]+)"/gu)].map((match) => match[1]), PERMISSIONS);
-  for (const name of PERMISSIONS) assert.ok(source.includes(PERMISSION_CATALOGUE.find((entry) => entry.name === name).description), name);
+  assert.deepEqual([...source.matchAll(/name:\s*"([a-z.]+)"/gu)].map((match) => match[1]), FIRST_PHASE_PERMISSIONS);
+  for (const name of FIRST_PHASE_PERMISSIONS) assert.ok(source.includes(PERMISSION_CATALOGUE.find((entry) => entry.name === name).description), name);
   assert.doesNotMatch(source, /role_permissions/iu);
 });
 
-integrationTest("AR migrations rerun: permissions and the seven AR tables retain the approved columns", async (t) => {
+integrationTest("AR migrations rerun: permissions and the seven AR tables match the approved schema", async (t) => {
   const db = await connect(t);
   await seedPermissions(db);
   await createTables(db);
   await addInvoiceLineSalesUom(db);
+  await addOpeningInvoices(db);
   await addBillingSnapshot(db);
   await addBillingSnapshot(db);
   const [[billing]] = await db.query(`SELECT column_type AS type, is_nullable AS nullable, column_default AS fallback FROM information_schema.columns
@@ -150,9 +155,17 @@ integrationTest("AR migrations rerun: permissions and the seven AR tables retain
   const found = Object.groupBy(columns, (row) => row.t);
   assert.deepEqual(Object.keys(found).sort(), Object.keys(COLUMNS).sort());
   for (const [table, expected] of Object.entries(COLUMNS)) assert.deepEqual(found[table].map((row) => row.c), expected, table);
+
+  const [openingColumns] = await db.query(`SELECT column_type AS type, is_nullable AS nullable, column_default AS fallback
+    FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ar_invoices'
+      AND column_name IN ('opening_reference', 'active_opening_reference') ORDER BY ordinal_position`);
+  assert.deepEqual(openingColumns, Array.from({ length: 2 }, () => ({ type: "varchar(50)", nullable: "YES", fallback: null })));
+  const [grants] = await db.query(`SELECT r.name FROM role_permissions rp JOIN roles r ON r.id = rp.role_id
+    JOIN permissions p ON p.id = rp.permission_id WHERE p.name = 'ar.opening.mgmt' AND r.name = 'system-admin'`);
+  assert.deepEqual(grants.map(({ name }) => name), ["system-admin"]);
 });
 
-integrationTest("0123 creates exactly the approved keys, foreign keys, CHECK constraints and audit triggers", async (t) => {
+integrationTest("the AR schema retains exactly the approved keys, foreign keys, CHECK constraints and audit triggers", async (t) => {
   const db = await connect(t);
   const [statistics] = await db.query(`SELECT table_name AS t, index_name AS i, MAX(non_unique) AS n,
       GROUP_CONCAT(column_name ORDER BY seq_in_index) AS c
