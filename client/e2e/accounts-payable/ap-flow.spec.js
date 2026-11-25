@@ -12,7 +12,7 @@ const tag = randomUUID().replaceAll("-", "").slice(0, 12);
 const actor = { username: `ap-browser-${tag}`, password: `Ap-test-${tag}-1!`, name: "AP Browser Test" };
 const peer = { username: `ap-peer-${tag}`, password: `Ap-peer-${tag}-1!`, name: "AP Browser Peer" };
 const invoiceNumber = `BROWSER-${tag}`;
-let db, app, supplierId, receiptId, receiptNumber, partiallyReversedReceiptNumber, today;
+let db, app, supplierId, receiptId, receiptNumber, partiallyReversedReceiptNumber, partiallyReversedLine, today;
 
 test.beforeAll(async () => {
   const source = defaultConfigurationSource();
@@ -70,12 +70,13 @@ test.beforeAll(async () => {
     order_date: today, buyer_id: user, buyer_label: "AP Browser Test", total_amount: "325.0000", subtotal_amount: "325.0000",
     has_outstanding: 1, created_by_label: "AP Browser Test", updated_by_label: "AP Browser Test", ...dates
   });
-  const line = await insert("purchase_order_lines", {
-    purchase_order_id: po, line_number: 1, sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU",
+  const orderLine = (lineNumber) => insert("purchase_order_lines", {
+    purchase_order_id: po, line_number: lineNumber, sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU",
     inventory_tracked_snapshot: 1, tracking_policy_snapshot: "none", base_uom_id: uom, base_uom_code_snapshot: unitCode,
     purchase_sku_uom_id: skuUom, purchase_uom_code_snapshot: unitCode, uom_to_base_factor_snapshot: 1,
     ordered_quantity: "1", ordered_base_quantity: 1, unit_price: "325.0000", line_amount: "325.0000", has_outstanding: 1, ...dates
   });
+  const line = await orderLine(1), zeroNetOrderLine = await orderLine(2);
   await db.query("UPDATE purchase_orders SET status = 'CONFIRMED', confirmed_at = ? WHERE id = ?", [now, po]);
   receiptNumber = `GR-${month}-${suffix}`;
   receiptId = await insert("goods_receipts", { ...vendor, gr_number: receiptNumber, document_year_month: month,
@@ -85,15 +86,26 @@ test.beforeAll(async () => {
     line_number: 1, sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU", received_base_quantity: 1, ...dates });
   await db.query("UPDATE goods_receipts SET status = 'CONFIRMED', confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
     [now, user, randomUUID(), receiptId]);
-  // A separate partly reversed receipt is visible and selectable in the search.
+  // Use the quantities recorded by Purchasing after a correction: one partly
+  // reversed line and one wholly reversed line in the same receipt.
   const partialSequence = Number(number) + 1;
   partiallyReversedReceiptNumber = "GR-" + month + "-" + String(partialSequence).padStart(6, "0");
   const partialReceipt = await insert("goods_receipts", { ...vendor, gr_number: partiallyReversedReceiptNumber,
     document_year_month: month, sequence_no: partialSequence, purchase_order_id: po, supplier_id: supplierId,
-    business_receipt_date: today, total_received_base_quantity: 2, created_by_label: "AP Browser Test", updated_by_label: "AP Browser Test", ...dates });
-  await insert("goods_receipt_lines", { goods_receipt_id: partialReceipt, purchase_order_id: po, purchase_order_line_id: line,
-    line_number: 1, sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU", received_base_quantity: 2, ...dates });
-  await db.query("UPDATE goods_receipts SET status = 'PARTIALLY_REVERSED', total_reversed_base_quantity = 1, confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
+    business_receipt_date: today, total_received_base_quantity: 3, created_by_label: "AP Browser Test", updated_by_label: "AP Browser Test", ...dates });
+  const warehouse = await insert("inventory_warehouses", { warehouse_code: code, normalized_code: code.toLowerCase(), warehouse_name: code, ...dates });
+  const bin = await insert("inventory_bins", { warehouse_id: warehouse, bin_code: code, normalized_code: code.toLowerCase(), ...dates });
+  for (const [lineNo, poLine, received] of [[1, line, 2], [2, zeroNetOrderLine, 1]]) {
+    const source = { goods_receipt_id: partialReceipt, purchase_order_id: po, purchase_order_line_id: poLine,
+      sku_id: sku, sku_code_snapshot: `APSKU-${tag}`, sku_name_snapshot: "Browser test SKU", received_base_quantity: received, ...dates };
+    const grLine = await insert("goods_receipt_lines", { ...source, line_number: lineNo });
+    if (lineNo === 1) partiallyReversedLine = String(grLine);
+    await insert("goods_receipt_details", { ...source, goods_receipt_line_id: grLine, detail_number: lineNo,
+      input_uom_id: uom, input_uom_code_snapshot: unitCode, uom_to_base_factor_snapshot: 1, received_quantity: received,
+      warehouse_id: warehouse, bin_id: bin, warehouse_code_snapshot: code, bin_code_snapshot: code,
+      tracking_policy_applied: "none", stock_status: "AVAILABLE", reversed_base_quantity: 1 });
+  }
+  await db.query("UPDATE goods_receipts SET status = 'PARTIALLY_REVERSED', total_reversed_base_quantity = 2, confirmed_at = ?, confirmed_by = ?, confirm_event_id = ? WHERE id = ?",
     [now, user, randomUUID(), partialReceipt]);
   await app.start();
 });
@@ -183,6 +195,36 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
   await partial.click();
   await page.getByRole("button", { name: `移除已選的 ${partiallyReversedReceiptNumber}` }).click();
   await expect(partial).not.toBeChecked();
+  await partial.click();
+  const partialInvoiceNumber = `PARTIAL-${tag}`;
+  await page.getByLabel("供應商發票號碼", { exact: true }).fill(partialInvoiceNumber);
+  await page.getByLabel("供應商發票總額", { exact: true }).fill("325.00");
+  await page.getByLabel("到期日", { exact: true }).fill(today);
+  await page.getByRole("button", { name: "建立應付發票草稿" }).click();
+  await expect(page.getByText(partialInvoiceNumber, { exact: true })).toBeVisible();
+  const partialInvoicePath = new URL(page.url()).pathname;
+  const [netLines] = await db.query(`SELECT CAST(l.goods_receipt_line_id AS CHAR) AS receiptLine,
+    CAST(l.active_goods_receipt_line_id AS CHAR) AS claim, CAST(l.quantity AS CHAR) AS quantity, l.line_amount AS amount
+    FROM ap_invoice_lines l JOIN ap_invoices i ON i.id = l.invoice_id WHERE i.supplier_invoice_number = ?`, [partialInvoiceNumber]);
+  expect(netLines).toEqual([{ receiptLine: partiallyReversedLine, claim: partiallyReversedLine, quantity: "1", amount: "325.0000" }]);
+  await page.getByRole("button", { name: "確認發票", exact: true }).click();
+  await page.getByRole("dialog", { name: "確認發票" }).getByRole("button", { name: "確認發票", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /^APV-\d{4}-\d{6}$/u })).toBeVisible();
+  await page.goto("/ap/invoices/new");
+  await page.getByRole("radio", { name: "部分沖銷", exact: true }).check();
+  await page.getByRole("button", { name: "搜尋收貨", exact: true }).click();
+  await expect(partial).toBeDisabled();
+  await expect(page.getByText("已在有效發票上")).toBeVisible();
+  await page.goto(partialInvoicePath);
+  await page.getByRole("button", { name: "作廢發票", exact: true }).click();
+  const voidDialog = page.getByRole("dialog", { name: "作廢發票" });
+  await voidDialog.getByLabel("原因").fill("Synthetic corrected receipt");
+  await voidDialog.getByRole("button", { name: "作廢發票", exact: true }).click();
+  await expect(page.getByText("已作廢", { exact: true })).toBeVisible();
+  await page.goto("/ap/invoices/new");
+  await page.getByRole("radio", { name: "部分沖銷", exact: true }).check();
+  await page.getByRole("button", { name: "搜尋收貨", exact: true }).click();
+  await expect(partial).toBeEnabled();
   await page.getByRole("radio", { name: "已確認", exact: true }).check();
   await page.getByRole("button", { name: "搜尋收貨" }).click();
   await page.getByRole("checkbox", { name: `選擇 ${receiptNumber}` }).click();
