@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { lockInventoryCostPools, lockOriginalInventoryCosts, persistInventoryCostBatch,
+import { lockInventoryCorrectionCosts, lockInventoryCostPools, persistInventoryCostBatch,
   readIssueCostAvailability, readInventoryCostInstallation } from "../src/modules/inventory/inventoryCostLedger.js";
 
 const tables = [
@@ -63,19 +63,27 @@ test("Inventory shipment preflight rejects duplicate, unsafe, and nondecimal mov
   assert.equal(calls.length, 0);
 });
 
-test("Inventory cost basis uses current immutable original and correction facts across return kinds", async () => {
+test("Inventory cost basis uses a version-checked snapshot across correction kinds", async () => {
   const original = { id: "80", movement_id: "42", sku_id: "15", entry_kind: "RECEIPT", quantity_delta: "5", value_delta_hkd: "1.0200" };
   const request = [{ id: 42, sku_id: 15, direction: "IN", quantity: 5, kind: "RECEIPT" }];
-  const { tx, calls } = fixture([original], [
+  const pool = [{ sku_id: "15", costed_quantity: "2", value_hkd: "0.4080", version: 4 }];
+  const snapshot = [{ sku_id: "15", version: 4 }];
+  const { tx, calls } = fixture(pool, snapshot, [original], [
     { original_entry_id: "80", sku_id: "15", entry_kind: "RECEIPT_REVERSAL", quantity_delta: "-2" },
     { original_entry_id: "80", sku_id: "15", entry_kind: "SUPPLIER_RETURN", quantity_delta: "-1" }
   ]);
-  assert.deepEqual((await lockOriginalInventoryCosts(tx, request)).get("42"),
-    { id: "80", skuId: "15", quantity: 5n, value: 10200n, used: 3n });
-  assert.ok(calls.every(call => /FOR SHARE/u.test(call.sql)));
-  await assert.rejects(lockOriginalInventoryCosts(fixture([]).tx, request), { code: "INVENTORY_COST_SOURCE_MISSING" });
-  await assert.rejects(lockOriginalInventoryCosts(fixture([{ ...original, sku_id: "51" }]).tx, request), unavailable);
-  await assert.rejects(lockOriginalInventoryCosts(fixture([original], [
+  const actual = await lockInventoryCorrectionCosts(tx, request);
+  assert.deepEqual(actual.basis.get("42"), { id: "80", skuId: "15", quantity: 5n, value: 10200n, used: 3n });
+  assert.deepEqual(actual.pools.get("15"), { quantity: 2n, value: 4080n, version: 4 });
+  assert.match(calls[0].sql, /inventory_cost_pools.*[\s\S]*FOR UPDATE/u);
+  assert.ok(calls.slice(1).every(call => !/FOR (UPDATE|SHARE)/u.test(call.sql)));
+  assert.match(calls[2].sql, /ORDER BY e\.movement_id/u);
+  assert.match(calls[3].sql, /ORDER BY e\.original_entry_id, e\.id/u);
+  await assert.rejects(lockInventoryCorrectionCosts(fixture(pool, [{ sku_id: "15", version: 3 }]).tx, request),
+    { code: "CONCURRENT_OPERATION" });
+  await assert.rejects(lockInventoryCorrectionCosts(fixture([], [], []).tx, request), { code: "INVENTORY_COST_SOURCE_MISSING" });
+  await assert.rejects(lockInventoryCorrectionCosts(fixture(pool, snapshot, [{ ...original, sku_id: "51" }]).tx, request), unavailable);
+  await assert.rejects(lockInventoryCorrectionCosts(fixture(pool, snapshot, [original], [
     { original_entry_id: "80", sku_id: "15", entry_kind: "SUPPLIER_RETURN", quantity_delta: "-6" }
   ]).tx, request), unavailable);
 });

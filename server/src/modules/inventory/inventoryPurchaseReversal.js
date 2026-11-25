@@ -4,7 +4,7 @@ import { normalizePurchaseReversal } from "./inventoryPurchaseValidation.js";
 import { claimPurchaseReversal, completePurchaseReversal, readPurchaseReceipt } from "./inventoryPurchaseReceipts.js";
 import { parseInventorySummary } from "./inventorySafeJson.js";
 import { inventoryError } from "./inventoryErrors.js";
-import { lockInventoryCostPools, lockOriginalInventoryCosts, persistInventoryCostBatch, readInventoryCostInstallation } from "./inventoryCostLedger.js";
+import { lockInventoryCorrectionCosts, persistInventoryCostBatch, readInventoryCostInstallation } from "./inventoryCostLedger.js";
 import { originalCostShare, outboundCost } from "./inventoryCostMath.js";
 import { calculateInventoryAvailability, meetsMinimumRemainingLife, validateInventoryLotInput } from "./inventoryValidation.js";
 
@@ -161,7 +161,8 @@ export async function reversePurchaseReceiptBatchInTransaction(service, tx, inpu
   if (date !== service.time.fileDate()) throw inventoryError("CONCURRENT_OPERATION");
   let costPools;
   if (await readInventoryCostInstallation(tx)) {
-    const basisByMovement = await lockOriginalInventoryCosts(tx, originals.map(row => ({ ...row, kind: "RECEIPT" })));
+    const { basis: basisByMovement, pools } = await lockInventoryCorrectionCosts(tx, originals.map(row => ({ ...row, kind: "RECEIPT" })));
+    costPools = pools;
     for (const write of writes) {
       const basis = basisByMovement.get(String(write.original.id));
       const quantity = BigInt(write.member.line.baseQuantity);
@@ -169,7 +170,6 @@ export async function reversePurchaseReceiptBatchInTransaction(service, tx, inpu
       write.costBasis = { ...basis, share: originalCostShare(basis.value, basis.quantity, basis.used, quantity) };
       basis.used += quantity;
     }
-    costPools = await lockInventoryCostPools(tx, scopes.map(scope => scope.skuId), batch.timestamp);
     const workingCosts = new Map();
     for (const write of writes) {
       const { id: originalEntryId, skuId, share } = write.costBasis;

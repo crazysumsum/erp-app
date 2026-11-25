@@ -132,7 +132,7 @@ native("Parallel customer returns observe the shared original cap after a real W
   assert.equal(waited, true);
   assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
   const index = results.findIndex(result => result.status === "rejected");
-  assert.equal(results[index].reason.code, "REVERSAL_NOT_ALLOWED");
+  assert.equal(results[index].reason.code, "CONCURRENT_OPERATION");
   const before = await snapshot(f);
   await assert.rejects(f.submit(commands[index]), { code: "REVERSAL_NOT_ALLOWED" });
   assert.deepEqual(await snapshot(f), before);
