@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt.",
-  "purpose": "AR first phase, PR 2 of 3: receipts (draft, confirm, cancel, void), allocation and unapply, the receipt list and detail, and the aging report. Proves on real MySQL through real HTTP and JWT that amounts move correctly between receipt and invoices, that non-compliant allocations write nothing, that a void needs a reason and no active allocation, that aging buckets are exact at their boundary days, that the three permissions do not inherit, and that the same event_id returns the original result once.",
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt. G5 functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator codex-erp-app-ci-01 confirmed exact candidate fdef6ce2e28ea7152e43d164f8bcade778fdb59d, the active receipt ownership and the seven-case delta (agentmsg 2591579c). Codex TL independently reviewed that exact functional candidate (agentmsg f06e4b9a). The CI administrator registers the updated digests.",
+  "purpose": "AR first phase, PR 2 of 3: receipts (draft, confirm, cancel, void), allocation and unapply, the receipt list and detail, and the aging report. Proves on real MySQL through real HTTP and JWT that amounts move correctly between receipt and invoices, that non-compliant allocations write nothing, that a void needs a reason and no active allocation, that aging buckets are exact at their boundary days, that the three permissions do not inherit, and that the same event_id returns the original result once. G5 updates the shared HTTP fixture to supply a default bill-to purpose in the shipment helper and accept synthetic issuer configuration. Existing receipt and aging cases and their data are unchanged.",
   "data": "Integration file, 10 cases sharing one fixture (server/test/ar/arHttpFixture.js): 4 users, about 10 customers, 1 extra currency, about 40 ar_invoices rows written by SQL as fixtures and about 20 receipts created through the API. Unit file, 4 cases with inline values and fake connections.",
   "concurrency": "Serial, except one case that sends 2 concurrent allocation requests for the same receipt to show only one succeeds.",
   "repetitions": "1",
@@ -42,7 +42,7 @@
     {
       "path": "server/test/ar/arHttpFixture.js",
       "mode": "100644",
-      "blob": "d8364ef5aea4f0cd8d03c46a54c266f980724ecd",
+      "blob": "e9d4a5132b3f00d8405ce53f5485d2cc868c75e7",
       "kind": "functional",
       "cases": [
         "Shared HTTP fixture for the AR integration files: 4 synthetic users, 1 extra currency, SQL helpers for customers and invoices; registers no case of its own"

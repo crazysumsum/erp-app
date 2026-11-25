@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-19 temporary ordinary functional admission through Taipei day-end 2026-11-26. PM d35896f4 assigned the blocking UAT-004 fix and date/null functional regression. Codex TL independent review c751fe92 PASS with no required items on 0c7b6d277549920b83785e4cc63618063e2ea845. The CI administrator verifies and registers this exact receipt.",
+  "purpose": "Prevent UAT-004: an allocation commits, but its non-null MySQL DATE prevents the Allocate and Fulfillment detail responses from passing their existing schema.",
+  "data": "One disposable native MySQL schema. One SO, two SKUs, two lot-tracked balances (one dated and one undated), one warehouse, two units per line, and one Shipment. Existing p1Fixture and native application HTTP helper are reused unchanged.",
+  "concurrency": "One sequential case; no change to scheduler policy, CI jobs, runners or shard count.",
+  "repetitions": "One case per routine run. Existing regression coverage and performance/capacity routing remain unchanged.",
+  "thresholds": "Allocate, fresh Fulfillment detail, Pick, Pick List, Shipment confirm/detail and print data pass existing API schemas with the exact calendar date and null. The same allocated work is picked after a fresh read without resubmitting Allocate. Final on-hand is 3 of 5 units for both balances, with zero allocated. Existing 20-second transaction limit and coverage floors remain.",
+  "trigger": "Ordinary functional server integration discovery. No workflow or capacity catalog changes. Private Chromium verification stays outside routine discovery.",
+  "cost": "About 3 seconds on isolated local MySQL at both tested time zones. One new functional case and helper, with no new CI job. CI wall-clock impact is unmeasured.",
+  "files": [
+    {
+      "path": "server/test/fulfillment/expiryShipmentFixture.js",
+      "mode": "100644",
+      "blob": "0a979a8ec99d7eea668806c242d843a9ce6ea6ca",
+      "kind": "functional",
+      "cases": [
+        "UAT-004 keeps dated and undated batches readable through allocation, picking and shipment"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentExpiryShipment.integration.test.js",
+      "mode": "100644",
+      "blob": "6c5bfee64788aa5269c61fd8408929402b18033d",
+      "kind": "functional",
+      "cases": [
+        "UAT-004 keeps dated and undated batches readable through allocation, picking and shipment"
+      ]
+    }
+  ]
+}
