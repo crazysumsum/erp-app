@@ -12,23 +12,37 @@ const tag = randomUUID().replaceAll("-", "").slice(0, 12);
 const actor = { username: `ap-browser-${tag}`, password: `Ap-test-${tag}-1!`, name: "AP Browser Test" };
 const peer = { username: `ap-peer-${tag}`, password: `Ap-peer-${tag}-1!`, name: "AP Browser Peer" };
 const invoiceNumber = `BROWSER-${tag}`;
-let db, app, supplierId, receiptId, receiptNumber, today;
+const schema = `ap_browser_${randomUUID().replaceAll("-", "")}`;
+const owner = { socketPath: process.env.DB_SOCKET_PATH, user: process.env.DB_ADMIN_USER, password: process.env.DB_ADMIN_PASSWORD ?? "" };
+let admin, ownsSchema = false, db, app, supplierId, receiptId, receiptNumber, today;
+
+function runServerScript(name, args = [], input) {
+  execFileSync(process.execPath, [`scripts/${name}.js`, ...args], {
+    cwd: serverDir, input, stdio: [input === undefined ? "ignore" : "pipe", "ignore", "inherit"],
+    env: { ...process.env, DB_NAME: schema, DB_SOCKET_PATH: owner.socketPath, DB_USER: owner.user,
+      DB_PASSWORD: owner.password, DB_SSL_ENABLED: "false" }
+  });
+}
 
 test.beforeAll(async () => {
+  if (!owner.socketPath || !owner.user) throw new Error("AP browser tests require DB_SOCKET_PATH and DB_ADMIN_USER");
+  admin = await mysql.createConnection(owner);
+  await admin.query(`CREATE DATABASE \`${schema}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  ownsSchema = true;
+  runServerScript("migrate");
+  db = await mysql.createConnection({ ...owner, database: schema });
+
   const source = defaultConfigurationSource();
   const port = Number(process.env.AP_TEST_API_PORT);
   app = await createApplication({ configurationSource: { ...source,
     application: { ...source.application, host: "127.0.0.1", port },
+    database: { ...source.database, ...owner, database: schema, ssl: { enabled: false } },
     security: { ...source.security, cors: { ...source.security.cors, allowedOrigins: `http://127.0.0.1:${process.env.AP_TEST_CLIENT_PORT}` } },
     requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 160 },
     scheduler: { ...source.scheduler, jobs: Object.fromEntries(Object.entries(source.scheduler.jobs).map(([id, job]) => [id, { ...job, enabled: false }])) }
   } });
-  db = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME, socketPath: process.env.DB_SOCKET_PATH });
   function createUser({ username, password, name }) {
-    execFileSync(process.execPath, ["scripts/createUser.js", username, "--name", name], {
-      cwd: serverDir, input: `${password}\n`, stdio: ["pipe", "ignore", "inherit"]
-    });
+    runServerScript("createUser", [username, "--name", name], `${password}\n`);
   }
   const bootstrap = `ap-bootstrap-${tag}`;
   createUser({ username: bootstrap, password: `Ap-boot-${tag}-1!`, name: "AP Bootstrap" });
@@ -89,8 +103,16 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await app?.shutdown("ap_browser_complete");
-  await db?.end();
+  const failures = [];
+  for (const clean of [
+    () => app?.shutdown("ap_browser_complete"),
+    () => db?.end(),
+    () => ownsSchema && admin.query(`DROP DATABASE \`${schema}\``),
+    () => admin?.end()
+  ]) {
+    try { await clean(); } catch (error) { failures.push(error); }
+  }
+  if (failures.length) throw new AggregateError(failures, "AP browser fixture cleanup failed");
 });
 
 async function login(page, account, freshDevice) {
@@ -104,7 +126,7 @@ async function login(page, account, freshDevice) {
   if (freshDevice) {
     await page.waitForURL("**/device/pending");
     const [[{ id }]] = await db.query("SELECT d.id FROM user_devices d JOIN users u ON u.id = d.user_id WHERE u.username = ? AND d.status = 'pending'", [account.username]);
-    execFileSync(process.execPath, ["scripts/approveDevice.js", String(id)], { cwd: serverDir, stdio: ["ignore", "ignore", "inherit"] });
+    runServerScript("approveDevice", [String(id)]);
     await page.getByRole("button", { name: "返回登入", exact: true }).click();
     await page.waitForURL("**/login");
     await signIn();
