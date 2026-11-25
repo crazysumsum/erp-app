@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { lockInventoryCostPools, persistInventoryCostBatch, readIssueCostAvailability, readInventoryCostInstallation } from "../src/modules/inventory/inventoryCostLedger.js";
+import { lockInventoryCostPools, lockOriginalInventoryCosts, persistInventoryCostBatch,
+  readIssueCostAvailability, readInventoryCostInstallation } from "../src/modules/inventory/inventoryCostLedger.js";
 
 const tables = [
   { table_name: "inventory_cost_entries", engine: "InnoDB" },
@@ -60,6 +61,23 @@ test("Inventory shipment preflight rejects duplicate, unsafe, and nondecimal mov
     await assert.rejects(readIssueCostAvailability(tx, { movementIds }), { code: "INVENTORY_INPUT_INVALID" });
   }
   assert.equal(calls.length, 0);
+});
+
+test("Inventory cost basis uses current immutable original and correction facts across return kinds", async () => {
+  const original = { id: "80", movement_id: "42", sku_id: "15", entry_kind: "RECEIPT", quantity_delta: "5", value_delta_hkd: "1.0200" };
+  const request = [{ id: 42, sku_id: 15, direction: "IN", quantity: 5, kind: "RECEIPT" }];
+  const { tx, calls } = fixture([original], [
+    { original_entry_id: "80", sku_id: "15", entry_kind: "RECEIPT_REVERSAL", quantity_delta: "-2" },
+    { original_entry_id: "80", sku_id: "15", entry_kind: "SUPPLIER_RETURN", quantity_delta: "-1" }
+  ]);
+  assert.deepEqual((await lockOriginalInventoryCosts(tx, request)).get("42"),
+    { id: "80", skuId: "15", quantity: 5n, value: 10200n, used: 3n });
+  assert.ok(calls.every(call => /FOR SHARE/u.test(call.sql)));
+  await assert.rejects(lockOriginalInventoryCosts(fixture([]).tx, request), { code: "INVENTORY_COST_SOURCE_MISSING" });
+  await assert.rejects(lockOriginalInventoryCosts(fixture([{ ...original, sku_id: "51" }]).tx, request), unavailable);
+  await assert.rejects(lockOriginalInventoryCosts(fixture([original], [
+    { original_entry_id: "80", sku_id: "15", entry_kind: "SUPPLIER_RETURN", quantity_delta: "-6" }
+  ]).tx, request), unavailable);
 });
 
 test("Inventory cost pools are upserted and locked in one ascending SKU sequence", async () => {

@@ -7,6 +7,12 @@ const MAX_ID = 2n ** 64n - 1n;
 const READ_BATCH_SIZE = 500;
 const WRITE_BATCH_SIZE = 100;
 const MAX_VERSION = 4294967295;
+const CORRECTIONS = {
+  RECEIPT: ["RECEIPT_REVERSAL", "SUPPLIER_RETURN"],
+  ISSUE: ["ISSUE_REVERSAL", "CUSTOMER_RETURN"],
+  ADJUSTMENT_IN: ["ADJUSTMENT_IN_REVERSAL"],
+  ADJUSTMENT_OUT: ["ADJUSTMENT_OUT_REVERSAL"]
+};
 
 function unavailable() { return inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE"); }
 
@@ -67,6 +73,48 @@ export async function readIssueCostAvailability(tx, input) {
     }
   }
   return { state: missing ? "MISSING" : "AVAILABLE", costingEnabled: true };
+}
+
+// Callers hold the original Movement and its business source locks. Use current
+// reads under RR so a competing return committed before those locks is visible.
+export async function lockOriginalInventoryCosts(tx, originals) {
+  const byMovement = new Map(originals.map(row => [String(row.id), row]));
+  const byEntry = new Map(), result = new Map();
+  const movementIds = [...byMovement.keys()].sort(compareIds);
+  for (let offset = 0; offset < movementIds.length; offset += READ_BATCH_SIZE) {
+    const batch = movementIds.slice(offset, offset + READ_BATCH_SIZE);
+    const [rows] = await tx.query(`SELECT CAST(id AS CHAR) AS id, CAST(movement_id AS CHAR) AS movement_id,
+      CAST(sku_id AS CHAR) AS sku_id, entry_kind, CAST(quantity_delta AS CHAR) AS quantity_delta, value_delta_hkd
+      FROM inventory_cost_entries WHERE movement_id IN (${batch.map(() => "?").join(",")})
+      ORDER BY movement_id FOR SHARE`, batch);
+    if (rows.length !== batch.length) throw inventoryError("INVENTORY_COST_SOURCE_MISSING");
+    for (const [index, row] of rows.entries()) {
+      const original = byMovement.get(batch[index]), direction = original.direction === "IN" ? 1n : -1n;
+      const quantity = BigInt(original.quantity), value = parseInventoryCost(row.value_delta_hkd) * direction;
+      if (!Object.hasOwn(CORRECTIONS, original.kind) || row.movement_id !== batch[index] ||
+          row.sku_id !== String(original.sku_id) || row.entry_kind !== original.kind ||
+          row.quantity_delta !== String(quantity * direction) || value < 0n) throw unavailable();
+      const basis = { id: row.id, skuId: row.sku_id, quantity, value, used: 0n };
+      byEntry.set(row.id, { basis, direction, allowed: CORRECTIONS[original.kind] });
+      result.set(row.movement_id, basis);
+    }
+  }
+  const entryIds = [...byEntry.keys()].sort(compareIds);
+  for (let offset = 0; offset < entryIds.length; offset += READ_BATCH_SIZE) {
+    const batch = entryIds.slice(offset, offset + READ_BATCH_SIZE);
+    const [rows] = await tx.query(`SELECT CAST(original_entry_id AS CHAR) AS original_entry_id,
+      CAST(sku_id AS CHAR) AS sku_id, entry_kind, CAST(quantity_delta AS CHAR) AS quantity_delta
+      FROM inventory_cost_entries WHERE original_entry_id IN (${batch.map(() => "?").join(",")})
+      ORDER BY original_entry_id, id FOR SHARE`, batch);
+    for (const row of rows) {
+      const parent = byEntry.get(row.original_entry_id);
+      if (!parent || row.sku_id !== parent.basis.skuId || !parent.allowed.includes(row.entry_kind)) throw unavailable();
+      const used = BigInt(row.quantity_delta) * -parent.direction;
+      if (used <= 0n || parent.basis.used + used > parent.basis.quantity) throw unavailable();
+      parent.basis.used += used;
+    }
+  }
+  return result;
 }
 
 export async function lockInventoryCostPools(tx, skuIds, at) {
