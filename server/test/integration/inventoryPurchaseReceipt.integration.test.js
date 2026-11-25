@@ -7,11 +7,58 @@ import { InventoryLookupService } from "../../src/modules/inventory/InventoryLoo
 
 const native = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_PURCHASE_TESTS === "1" ? test : test.skip;
 const service = f => new InventoryPostingService(f);
-const post = (f, command, after, provider = service(f)) => f.withRequest(command, async (tx, req) => {
-  command.context = issuePurchaseReceiptContext(req, tx, command, purchaseConfirmedLines(command), f.options);
+const post = (f, command, after, provider = service(f), costInputs) => f.withRequest(command, async (tx, req) => {
+  command.context = issuePurchaseReceiptContext(req, tx, command, purchaseConfirmedLines(command), { ...f.options, costInputs });
   const result = await provider.postPurchaseReceiptBatchInTransaction(tx, command);
   await after?.(tx, result);
   return result;
+});
+
+const prices = (command, currencyCode = "HKD") => command.lines.map(({ sourceLineId }) =>
+  ({ sourceLineId, currencyCode, unitPrice: "7.5001", toBaseFactor: 3 }));
+
+async function costState(f) {
+  const [pools] = await f.db.query("SELECT * FROM inventory_cost_pools ORDER BY sku_id");
+  const [ledger] = await f.db.query("SELECT * FROM inventory_cost_entries ORDER BY id");
+  return { pools, ledger };
+}
+
+native("Purchase batch costs the sealed PO price and replays without repricing", async t => {
+  const f = await purchaseNativeFixture(t, { fullSchema: true });
+  const command = twoLines(f.command()), provider = service(f);
+  command.lines[1].baseQuantity = 1;
+  const result = await post(f, command, undefined, provider, prices(command));
+  const before = await costState(f);
+  assert.deepEqual(before.pools.map(row => [Number(row.costed_quantity), row.value_hkd]), [[4, "10.0001"]]);
+  assert.deepEqual(before.ledger.map(row => [row.entry_kind, row.unit_cost_source, Number(row.movement_id),
+    Number(row.quantity_delta), row.value_delta_hkd, row.pool_value_after_hkd]), [
+    ["RECEIPT", "PURCHASE_PRICE", result.lines[0].movementId, 3, "7.5001", "7.5001"],
+    ["RECEIPT", "PURCHASE_PRICE", result.lines[1].movementId, 1, "2.5000", "10.0001"]
+  ]);
+  assert.deepEqual(await post(f, command, undefined, provider, prices(command, "USD")), result);
+  assert.deepEqual(await costState(f), before);
+});
+
+native("Purchase batch rejects missing or non-HKD locked price without inventory effects", async t => {
+  const f = await purchaseNativeFixture(t, { fullSchema: true }), command = twoLines(f.command());
+  const provider = service(f), before = await effects(f), costs = await costState(f);
+  await assert.rejects(post(f, command), error => errorCode(error) === "INVENTORY_COST_SOURCE_MISSING");
+  await assert.rejects(post(f, command, undefined, provider, prices(command, "USD")),
+    error => errorCode(error) === "INVENTORY_RECEIPT_CURRENCY_UNSUPPORTED");
+  assert.deepEqual(await effects(f), before);
+  assert.deepEqual(await costState(f), costs);
+});
+
+native("Purchase cost journal failure rolls back both receipt details and the claimed event", async t => {
+  const f = await purchaseNativeFixture(t, { fullSchema: true }), command = twoLines(f.command());
+  const before = await effects(f), costs = await costState(f);
+  await f.db.query(`CREATE TRIGGER test_purchase_cost_failure BEFORE INSERT ON inventory_cost_entries
+    FOR EACH ROW BEGIN IF NEW.pool_quantity_after > 3 THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Synthetic second purchase cost failure'; END IF; END`);
+  await assert.rejects(post(f, command, undefined, service(f), prices(command)),
+    error => error.cause?.code === "ER_SIGNAL_EXCEPTION" || error.cause?.cause?.code === "ER_SIGNAL_EXCEPTION");
+  assert.deepEqual(await effects(f), before);
+  assert.deepEqual(await costState(f), costs);
 });
 
 const errorCode = error => error.code ?? error.publicCode ?? error.cause?.code;

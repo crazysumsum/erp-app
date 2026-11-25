@@ -23,6 +23,8 @@ const definitions = [
   ["VERSION_CONFLICT", 409, "資料已被修改，請重新載入後再試"],
   ["CONCURRENT_OPERATION", 409, "同一庫存正在處理其他操作，請重試"],
   ["INVENTORY_SOURCE_CONFLICT", 409, "相同來源已用於不同庫存操作"],
+  ["INVENTORY_COST_SOURCE_MISSING", 409, "此異動缺少原始成本，無法過帳"],
+  ["INVENTORY_RECEIPT_CURRENCY_UNSUPPORTED", 409, "目前只可確認港幣收貨單"],
   ["IDEMPOTENCY_CONFLICT", 409, "相同請求識別碼已用於不同內容"],
   ["PICK_SEQUENCE_REASON_REQUIRED", 409, "偏離建議揀貨次序時必須提供原因"],
   ["FEFO_OVERRIDE_REQUIRED", 409, "偏離先到期先出需要專門權限及原因"],
