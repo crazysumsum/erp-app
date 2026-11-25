@@ -106,6 +106,44 @@ describe("useCommandEvent", () => {
       expect(bodies[0].notes).toBe("原");
     });
 
+  it("未確定後，明列的 409 解除原操作，改值後用新 eventId", async () => {
+    const command = useCommandEvent({ definitiveRejections: ["REFUND_EXCEEDS_CREDIT"] });
+    const send = vi.fn()
+      .mockRejectedValueOnce(failure({ code: "TIMEOUT" }))
+      .mockRejectedValueOnce(failure({ status: 409, code: "REFUND_EXCEEDS_CREDIT" }))
+      .mockResolvedValue("done");
+    const meta = { action: "create" };
+
+    await expect(command.run({ amount: "7.50" }, send, "refund", meta)).rejects.toMatchObject({ code: "TIMEOUT" });
+    expect(command.isUncertain("refund")).toBe(true);
+    await expect(command.run({ amount: "5.00" }, send, "refund", meta)).rejects.toMatchObject({ code: "REFUND_EXCEEDS_CREDIT" });
+    expect(command.current("refund")).toBeNull();
+    await expect(command.run({ amount: "5.00" }, send, "refund", meta)).resolves.toBe("done");
+
+    const [first, replay, corrected] = send.mock.calls.map(([body]) => body);
+    expect(replay).toEqual(first);
+    expect(corrected.amount).toBe("5.00");
+    expect(corrected.eventId).not.toBe(first.eventId);
+  });
+
+  it("未確定後，未列明的 409 即使有設定，也要保留原 eventId 和金額", async () => {
+    const command = useCommandEvent({ definitiveRejections: ["REFUND_EXCEEDS_CREDIT"] });
+    const send = vi.fn()
+      .mockRejectedValueOnce(failure({ code: "TIMEOUT" }))
+      .mockRejectedValueOnce(failure({ status: 409, code: "CONCURRENT_OPERATION" }))
+      .mockResolvedValue("done");
+    const meta = { action: "create" };
+
+    await expect(command.run({ amount: "7.50" }, send, "refund", meta)).rejects.toMatchObject({ code: "TIMEOUT" });
+    await expect(command.run({ amount: "5.00" }, send, "refund", meta)).rejects.toMatchObject({ code: "CONCURRENT_OPERATION" });
+    expect(command.pending("refund")?.payload).toEqual({ amount: "7.50" });
+    await expect(command.run({ amount: "5.00" }, send, "refund", meta)).resolves.toBe("done");
+
+    const [first, replay, recovered] = send.mock.calls.map(([body]) => body);
+    expect(replay).toEqual(first);
+    expect(recovered).toEqual(first);
+  });
+
   it("同一 key 只准一個 in-flight，亦唔准換動作：本地 COMMAND_PENDING 唔發 HTTP；未確定 record 由空開始都睇得到", async () => {
     const command = useCommandEvent();
     expect(command.uncertainRecords.value).toEqual([]);
