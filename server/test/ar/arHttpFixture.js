@@ -25,11 +25,12 @@ async function runCleanups(cleanups) {
 
 let shared = null;
 
-async function setup(database = {}) {
+async function setup(database = {}, company) {
   const cleanups = [];
   const source = defaultConfigurationSource();
   // 這個檔案的請求數超過預設的每 IP 流量上限；同 supplierHttpHarness 一樣只放寬這一項。
   const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 },
+    ...(company ? { company } : {}),
     database: { ...source.database, ...database },
     requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100_000 } } });
   cleanups.push(() => application.shutdown("ar_integration_complete"));
@@ -102,13 +103,17 @@ async function setup(database = {}) {
   }
 }
 /** 發票確認案例使用真實出貨，application 與 Fulfillment 共用隔離庫。 */
-export async function arHttpShipmentFixture(t, { includeSecond = false } = {}) {
+export async function arHttpShipmentFixture(t, { includeSecond = false, withBillingAddress = true, company } = {}) {
   const cleanups = [];
   t.after(async () => {
     const errors = await runCleanups(cleanups);
     if (errors.length) throw new AggregateError(errors, "AR shipment fixture cleanup failed");
   });
   const shipment = await shipmentDraftFixture({ after: (cleanup) => cleanups.push(cleanup) });
+  if (withBillingAddress) {
+    await shipment.s.insert("customer_address_purposes", { address_id: shipment.s.addressId, customer_id: shipment.s.customerId,
+      purpose_code: "billing", is_default: 1, created_at: shipment.s.now, updated_at: shipment.s.now });
+  }
   const directory = new URL("../../database/migrations/", import.meta.url);
   const installed = new Set([92, 93, 95, 96, 98]);
   const migrations = (await readdir(directory))
@@ -127,7 +132,7 @@ export async function arHttpShipmentFixture(t, { includeSecond = false } = {}) {
   }
   const [[party]] = await shipment.db.query("SELECT id, customer_code AS code, legal_name AS name FROM customers WHERE id = ?", [shipment.s.customerId]);
   const [[{ currency_code: currencyCode }]] = await shipment.db.query("SELECT currency_code FROM sales_orders WHERE id = ?", [shipment.s.orderId]);
-  const http = await setup({ ...shipment.f.connectionOptions, database: shipment.f.name });
+  const http = await setup({ ...shipment.f.connectionOptions, database: shipment.f.name }, company);
   cleanups.push(...http.cleanups);
   return { ...http, party, currencyCode, shipmentIds: shipmentIds.map(Number) };
 }
