@@ -36,9 +36,11 @@ export default {
     return httpClient.post("/api/v1/inventory/opening/upload", { body, signal });
   },
   getOpening(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/opening/jobs/${id}`, { signal }); },
+  getOpeningControl({ signal } = {}) { return httpClient.get("/api/v1/inventory/opening/control", { signal }); },
   confirmOpening(id, body, { signal } = {}) {
     return httpClient.post(`/api/v1/inventory/opening/jobs/${id}/confirm`, { body, signed: true, signal });
   },
+  goLive(body, { signal } = {}) { return httpClient.post("/api/v1/inventory/go-live", { body, signed: true, signal }); },
   listStocktakes(options) { return stocktakeList("/api/v1/inventory/stocktakes", options); },
   getStocktake(id, { signal, scopePage, scopePageSize } = {}) {
     return httpClient.get(`/api/v1/inventory/stocktakes/${id}`, { params: { scopePage, scopePageSize }, signal });
