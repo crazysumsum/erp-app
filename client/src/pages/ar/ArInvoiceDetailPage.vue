@@ -45,6 +45,7 @@ onBeforeUnmount(() => { generation += 1; controller?.abort(); });
 
 // allowedActions 只係提示（server 已按 ar.invoice.mgmt 過濾）；命令 server 會再驗。
 const canViewShipments = computed(() => session.permissions.includes("fulfillment.view"));
+const canCreateCredit = computed(() => session.permissions.includes("ar.credit.mgmt") && invoice.value?.status === "CONFIRMED");
 const actions = computed(() => (session.permissions.includes("ar.invoice.mgmt") ? invoice.value?.allowedActions ?? [] : []));
 const dp = computed(() => invoice.value?.currencyDecimalPlaces ?? 2);
 const amount = (value) => `${invoice.value.currencyCode} ${money(value, dp.value)}`;
@@ -74,6 +75,12 @@ const allocationColumns = [
   { name: "amount", label: "核銷金額", field: "amount", align: "right" },
   { name: "status", label: "狀態", field: "status", align: "left" },
   { name: "createdAt", label: "核銷時間", field: "createdAt", align: "left" }
+];
+const creditColumns = [
+  { name: "creditNoteNumber", label: "貸項單", field: "creditNoteNumber", align: "left" },
+  { name: "creditDate", label: "貸項日期", field: "creditDate", align: "left" },
+  { name: "amount", label: "核銷金額", field: (row) => amount(row.amount), align: "right" },
+  { name: "status", label: "狀態", field: (row) => allocationStatusLabels[row.status] ?? row.status, align: "left" }
 ];
 
 const ACTIONS = Object.freeze({
@@ -129,6 +136,7 @@ async function ask(action) {
           <span>版本 {{ invoice.version }}</span>
           <q-btn v-for="action in actions.filter((name) => ACTIONS[name])" :key="action" :label="ACTIONS[action].label" :color="action === 'confirm' ? 'primary' : undefined"
             :loading="command.isBusy(commandKey(action))" :disable="busy || uncertain.length > 0" @click="ask(action)" />
+          <q-btn v-if="canCreateCredit" flat label="開立貸項單" :to="{ name: 'ar-credit-note-draft', query: { invoiceId } }" />
           <q-btn flat label="返回發票列表" to="/ar/invoices" />
         </div>
         <q-card flat bordered class="q-mb-md">
@@ -147,13 +155,21 @@ async function ask(action) {
           <template #body-cell-lineAmount="{ row }"><q-td class="text-right">{{ money(row.lineAmount, dp) }}</q-td></template>
           <template #body-cell-shipmentId="{ row }"><q-td><router-link v-if="canViewShipments" :to="`/shipments/${row.shipmentId}`">出貨單 {{ row.shipmentId }}</router-link><template v-else>{{ row.shipmentId }}</template></q-td></template>
         </DataTable>
-        <h2 class="text-h6 q-mt-lg q-mb-md">核銷記錄</h2>
+        <h2 class="text-h6 q-mt-lg q-mb-md">收款核銷記錄</h2>
         <DataTable :rows="invoice.allocations" :columns="allocationColumns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
           <template #body-cell-amount="{ row }"><q-td class="text-right">{{ amount(row.amount) }}</q-td></template>
           <template #body-cell-status="{ row }"><q-td>{{ allocationStatusLabels[row.status] ?? row.status }}</q-td></template>
           <template #body-cell-createdAt="{ row }"><q-td>{{ timestamp(row.createdAt) }}</q-td></template>
           <template #no-data><p role="status" class="q-ma-none">未有核銷。</p></template>
         </DataTable>
+        <template v-if="invoice.creditAllocations?.length">
+          <h2 class="text-h6 q-mt-lg q-mb-md">貸項核銷記錄</h2>
+          <DataTable :rows="invoice.creditAllocations" :columns="creditColumns">
+            <template #body-cell-creditNoteNumber="{ row }"><q-td>
+              <router-link :to="`/ar/credit-notes/${row.creditNoteId}`">{{ row.creditNoteNumber }}</router-link>
+            </q-td></template>
+          </DataTable>
+        </template>
       </template>
     </div>
   </div>

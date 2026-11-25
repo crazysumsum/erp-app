@@ -39,7 +39,7 @@ export function timestamp(value) {
 
 /** 金額輸入：只收該幣別小數位內嘅非負十進制字串（契約：唔可以送 number，"10.005" 會被拒）。 */
 export function amountInputValid(value, decimalPlaces) {
-  const pattern = decimalPlaces > 0 ? new RegExp(`^(0|[1-9]\\d{0,13})(\\.\\d{1,${decimalPlaces}})?$`, "u") : /^(0|[1-9]\d{0,13})$/u;
+  const pattern = decimalPlaces > 0 ? new RegExp(`^(0|[1-9]\\d{0,14})(\\.\\d{1,${decimalPlaces}})?$`, "u") : /^(0|[1-9]\d{0,14})$/u;
   return pattern.test(value) && /[1-9]/u.test(value);
 }
 

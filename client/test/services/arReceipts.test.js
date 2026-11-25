@@ -33,6 +33,8 @@ describe("AR 金額輸入", () => {
     expect(["10.005", "0", "0.00", "01", "-1", "1e3", " 1", ""].some((value) => amountInputValid(value, 2))).toBe(false);
     expect(amountInputValid("10", 0)).toBe(true);
     expect(amountInputValid("10.5", 0)).toBe(false);
+    expect(amountInputValid("999999999999999.99", 2)).toBe(true);
+    expect(amountInputValid("1000000000000000.00", 2)).toBe(false);
   });
   it("萬分位 BigInt 換算冇浮點誤差", () => {
     expect(toUnits("0.1") + toUnits("0.2")).toBe(toUnits("0.3"));
