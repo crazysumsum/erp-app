@@ -1,3 +1,4 @@
+import { applyLegacyFulfillmentMigrations } from "../fulfillment/applyLegacyFulfillmentMigrations.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fixture, document } from "../fulfillment/aggregateFixture.js";
@@ -119,9 +120,7 @@ nativeTest("P1 Queue actual discovered HTTP endpoint enforces authentication, vi
   const { createApplication } = await import("../../src/framework/application/createApplication.js");
   const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
   // The focused aggregate fixture stops at Sales foundation; real application startup uses the complete current migration catalogue.
-  const { readdir } = await import("node:fs/promises");
-  const directory = new URL("../../database/migrations/", import.meta.url);
-  for (const name of (await readdir(directory)).filter(name => /^[0-9]{4}_.*\.js$/u.test(name) && Number(name.slice(0, 4)) > 88).sort()) await (await import(new URL(name, directory).href)).up(f.db);
+  await applyLegacyFulfillmentMigrations(f.db);
   const source = defaultConfigurationSource();
   const app = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 }, scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs, "sales.backorderAllocate": { enabled: false }, "sales.importWorker": { enabled: false }, "sales.quotationExpire": { enabled: false } } }, database: { ...source.database, host: f.f.connectionOptions.host, port: f.f.connectionOptions.port, socketPath: f.f.connectionOptions.socketPath, user: f.f.connectionOptions.user, password: f.f.connectionOptions.password, database: f.f.name } } });
   t.after(() => app.shutdown("fulfillment_p1_queue_http_complete"));

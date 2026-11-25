@@ -18,7 +18,7 @@ import {normalizeAdjustmentCommand} from '../../src/modules/inventory/inventoryA
 import {issueInventoryHighRiskContext} from '../../src/modules/inventory/inventoryHighRiskContext.js';
 import {startP1Http} from '../../test/fulfillment/p1Fixture.js';
 import {ShipmentShippingLookupService} from '../../src/modules/fulfillment/ShipmentShippingLookupService.js';
-import {readdir} from 'node:fs/promises';
+import { applyLegacyFulfillmentMigrations } from '../fulfillment/applyLegacyFulfillmentMigrations.js';
 import {cancellationFixture} from '../../test/fulfillment/p1CancellationFixture.js';
 import {ShipmentService} from '../../src/modules/fulfillment/ShipmentService.js';
 import {createApplication} from '../../src/framework/application/createApplication.js';
@@ -497,8 +497,7 @@ const httpSuccess=(()=>{
 
 
 async function startHttp(f,serviceOptions={}){
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const source=defaultConfigurationSource(),connection=f.f.connectionOptions,app=await createApplication({serviceOptions,configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,'sales.backorderAllocate':{enabled:false},'sales.importWorker':{enabled:false},'sales.quotationExpire':{enabled:false},'sales.confirmationRecovery':{enabled:false},'fulfillment.confirmationRecovery':{enabled:false}}},database:{...source.database,host:connection.host,port:connection.port,socketPath:connection.socketPath,user:connection.user,password:connection.password,database:f.f.name}}});
  const previous=f.f.cleanup.shutdown;f.f.cleanup.shutdown=async()=>{try{await app.shutdown('private_confirm_http_complete');}finally{await previous?.();}};
  const {url}=await app.start(),subject=String(f.userId),version=await app.services.require('tokenRevocation').currentVersion(subject),token=await app.services.require('jwt').issue({roles:f.claims.roles,permissions:f.claims.permissions},{subject,version,authTime:Math.floor(Date.now()/1000)});
@@ -529,8 +528,7 @@ const httpPending=(()=>{
 
 
 async function startHttp(f,serviceOptions={}){
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const source=defaultConfigurationSource(),connection=f.f.connectionOptions,app=await createApplication({serviceOptions,configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,'sales.backorderAllocate':{enabled:false},'sales.importWorker':{enabled:false},'sales.quotationExpire':{enabled:false},'sales.confirmationRecovery':{enabled:false},'fulfillment.confirmationRecovery':{enabled:false}}},database:{...source.database,host:connection.host,port:connection.port,socketPath:connection.socketPath,user:connection.user,password:connection.password,database:f.f.name}}});
  const previous=f.f.cleanup.shutdown;f.f.cleanup.shutdown=async()=>{try{await app.shutdown('private_confirm_http_complete');}finally{await previous?.();}};
  const {url}=await app.start(),subject=String(f.userId),version=await app.services.require('tokenRevocation').currentVersion(subject),token=await app.services.require('jwt').issue({roles:f.claims.roles,permissions:f.claims.permissions},{subject,version,authTime:Math.floor(Date.now()/1000)});
@@ -565,8 +563,7 @@ const operationVisibility=(()=>{
 // One approved OPERATION-HTTP-VISIBILITY scenario: one five-unit fixture, six status GETs.
 
 async function startHttp(f,serviceOptions={}){
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const source=defaultConfigurationSource(),connection=f.f.connectionOptions,app=await createApplication({serviceOptions,configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,'sales.backorderAllocate':{enabled:false},'sales.importWorker':{enabled:false},'sales.quotationExpire':{enabled:false},'sales.confirmationRecovery':{enabled:false},'fulfillment.confirmationRecovery':{enabled:false}}},database:{...source.database,host:connection.host,port:connection.port,socketPath:connection.socketPath,user:connection.user,password:connection.password,database:f.f.name}}});
  const previous=f.f.cleanup.shutdown;f.f.cleanup.shutdown=async()=>{try{await app.shutdown('private_confirm_http_complete');}finally{await previous?.();}};
  const {url}=await app.start(),subject=String(f.userId),version=await app.services.require('tokenRevocation').currentVersion(subject),token=await app.services.require('jwt').issue({roles:f.claims.roles,permissions:f.claims.permissions},{subject,version,authTime:Math.floor(Date.now()/1000)});
