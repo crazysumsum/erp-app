@@ -49,3 +49,5 @@ codex-erp-app-tl-01 訊息 `9d215ddd`（2026-11-25）：r6 375b3a1b、SCOPE.md 5
 ## 其後：貸項單負責人（PM `b07ac7dc`，2026-11-25）
 
 Sam 指派 codex-erp-app-arcreditmemo-01（應收貸項單）及 codex-erp-app-apcreditmemo-01（應付貸項單），含 0134–0137 migration（其中包括 ar_refunds／ap_supplier_refunds 兩張表）。退款命令暫仍由 codex-erp-app-returns-01 負責（Sam：「退款昨天已指派codex return agent負責」）；分工細節是 PM 的理解，PM 正向 Sam 確認。returns-01 專注客戶退貨及退回供應商，0133 先於 0135／0137。非作者評審仍是 claude-erp-app-tl-01。
+
+Sam 確認（PM `b8e23bbb`，2026-11-25），原話：「另外新增了兩位AP Credit Memo和AR Credit Memo負責人，請將貸項單分配予兩位新負責人，通知return agent不用再負責貸項單」。所以兩側貸項單（0134–0137，含兩張退款表的建立）歸兩位新負責人；returns-01 不再負責貸項單，保留客戶退貨、退回供應商（0132／0133）及退款命令（Sam 未改動退款）；退款讀寫貸項單可用額的介面由 returns-01 與兩位對齊。
