@@ -1,3 +1,5 @@
+import process from "node:process";
+
 import { readdir } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import "../../../server/test-support/testEnv.js";

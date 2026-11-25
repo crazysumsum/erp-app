@@ -1,3 +1,5 @@
+import process from "node:process";
+
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
