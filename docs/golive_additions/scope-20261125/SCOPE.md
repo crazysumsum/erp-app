@@ -1,6 +1,6 @@
 # 上線前新增功能：範圍、跨模組契約及分片
 
-日期：2026-11-25（r7，2026-11-24晚起草）。作者：`claude-erp-app-tl-01`（Claude側TL）。應PM `0b7ba8c4`。
+日期：2026-11-25（r8，2026-11-24晚起草）。作者：`claude-erp-app-tl-01`（Claude側TL）。應PM `0b7ba8c4`。
 **草稿，待非作者評審（`codex-erp-app-tl-01`）。** 沒有寫程式、沒有開實作分支、沒有執行測試。來源只讀`origin/main` `e9156999d4378ac38b395fcfea0430ea3bf4d1d5`（正式驗收候選）、應付待合併整合版`62fd35f7`、應付設計`c5ee54ea`，及各負責人的盤點頁（`.worktrees/ci-pm-handoffs/feature-scoping-20261124/`：`codex-tl.md`、`inventory.md`、`apar.md`、`fulfillment.md`、`sales.md`、`purchasing.md`、`returns.md`、`ci.md`；`supplier.md`寫作時未交）。凡引用盤點頁的事實，除標明「已核」者外，是該負責人的說法，作者沒有逐一核對。
 
 同目錄：`DECISIONS.md`（Sam的決定、被取代的舊決定、仍待決的事）；資料表按可分開批准的片各一檔：`TABLES-COST.md`、`TABLES-RECEIPT-REVERSAL.md`、`TABLES-RETURNS.md`、`TABLES-AR-CREDIT.md`、`TABLES-AP-CREDIT.md`。出貨沖銷及報表不需新表。
@@ -113,7 +113,7 @@ TL裁定已發（`993fb7da`）：只做「一律拒絕」版本。出貨的任�
 - **發票表不加欄**（TL裁定，與`returns.md`建議的`credit_applied_amount`不同）：貸項的核銷與收款／付款的核銷同樣計入發票現有的`allocated_amount`，所以`outstanding_amount = total_amount − allocated_amount`的`CHECK`、帳齡、Business Master及Supplier的未付檢查、發票作廢「須先解除全部核銷」的規則都不變，已合併的收款／付款程式不用改。代價：發票的`allocated_amount`不再只代表現金；發票詳情及報表須分別列出兩種核銷（各有自己的表，可分辨）。已核：main的應收發票詳情及應付發票詳情（`62fd35f7`）都把這一欄標為「已核銷」而不是「已收／已付」，發票列印（G5）不顯示它；`codex-erp-app-apar-01`須確認沒有其他地方把它當作現金。
 - 鎖序：建立草稿：操作列 → 原發票（`FOR UPDATE`，驗累計上限）→ 插入。確認：操作列 → 貸項單 → 原發票 → 核銷 → 編號。核銷到其他發票：貸項單 → 發票（ID升序）→ 核銷。（r2更正，apar-01 `a96ceec8`：現金核銷的次序兩側不同——應收是事件 → 發票（ID升序）→ 收款 → 核銷（`ArReceiptService.js:88–94,126–128`），應付是事件 → 付款 → 發票（ID升序）→ 核銷（`62fd35f7`的`ApPaymentService.js:93–96,130–134`）。）貸項的命令不取收款或付款的鎖，現金的命令不取貸項單的鎖，所以兩族之間沒有共同的第二把鎖，不會互相等待；也沒有任何命令先鎖發票再鎖貸項單。確認時讀同一原發票行的其他已確認貸項，用普通讀取：所有確認都先鎖同一原發票，已經序列化，不另用鎖定讀取以免造成倒序。作廢貸項單：須沒有對其他發票的有效核銷及有效退款；鎖貸項單 → 原發票，撤銷對原發票的核銷。原發票作廢：除現行的`allocated_amount`須為0外，**另須沒有已確認的貸項單以它為原發票**（r3，Returns `ab5923ea`：原發票已由現金收清時，貸項對原發票的沖減為0，解除現金核銷後`allocated_amount`回到0，但貸項及其退款仍然有效）。在原發票鎖下以普通讀取查（所有貸項確認都先鎖原發票，已序列化），沿用原錯誤碼。
 - 查詢：發票詳情API現有的`allocations`維持只列現金核銷，另加`creditAllocations`，兩者在同一讀取內回傳（apar-01 `a96ceec8`）。發票作廢被拒時，現有錯誤碼`AR_INVOICE_HAS_ALLOCATIONS`／應付對應碼不變，訊息須同時提示「先解除收款／付款核銷，或先作廢貸項單」。
-- 幣別影響檢查：兩側`BusinessMasterImpactChecker`把草稿貸項、可用額大於0的已確認貸項及草稿退款算作「進行中」，令該幣別不可停用。
+- 幣別影響檢查：兩側`BusinessMasterImpactChecker`把草稿貸項、可用額大於0的已確認貸項及草稿退款算作「進行中」，在影響預覽中列出；停用照現行流程由使用者確認，不另加阻擋（r8更正：r7寫「令該幣別不可停用」，前提錯了——現行`changeCurrencyStatus`只核對預覽，未付發票也不擋，AR Credit `e2b6e7da`）。貸項及退款的各命令是清償既有債務，照收款用`purpose: history`，容許已停用的幣別。
 - 供應商或客戶被停用、封存後，既有貸項照樣可核銷、退款或作廢（與應付r10「清償既有債務不受往來方狀態影響」同一原則）；不新建貸項的限制只按原發票，不另驗往來方狀態。
 - 現有表須改的只有兩類`CHECK`：應收／應付編號表的文件種類加`CREDIT_NOTE`、`REFUND`；操作記錄表的對象類型加`CREDIT_NOTE`、`CREDIT_APPLICATION`、`REFUND`（已核`0123:34,225`；應付`62fd35f7`的`0129:31,240`）。不改資料，不加欄。
 - 這實現了應付D5及應收r3的「依原發票行沖減、超額成同幣別貸項餘額」；不做r3的出貨來源分配及沖銷證明。
