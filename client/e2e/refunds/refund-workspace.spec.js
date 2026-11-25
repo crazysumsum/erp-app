@@ -1,14 +1,19 @@
-import process from "node:process";
-
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { test, expect } from "@playwright/test";
+import mysql from "mysql2/promise";
 import "../../../server/test-support/testEnv.js";
 import { createApplication } from "../../../server/src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
 import { customerCredit, supplierCredit } from "../../../server/test/refunds/refundCreditFixture.js";
 
-let app, token, viewerToken, customer, supplier, newSupplierCredit, post, today;
+const run = promisify(execFile);
+const migrate = fileURLToPath(new URL("../../../server/scripts/migrate.js", import.meta.url));
+let app, admin, ownedSchema, token, viewerToken, customer, supplier, newSupplierCredit, post, today;
 const permissions = ["ar.view", "ap.view", "ar.credit.mgmt", "ap.credit.mgmt", "ar.refund.mgmt", "ap.refund.mgmt"];
 
 async function issueUser(db, granted) {
@@ -24,15 +29,29 @@ async function issueUser(db, granted) {
 }
 
 test.beforeAll(async () => {
-  if (process.env.DB_INTEGRATION_TESTS !== "1") throw new Error("Refund Playwright requires a migrated, isolated MySQL test database");
+  if (process.env.DB_INTEGRATION_TESTS !== "1") throw new Error("Refund Playwright requires an isolated MySQL test server");
   const defaults = defaultConfigurationSource();
+  const { host, port, socketPath, user, password } = defaults.database;
+  const connection = { host, port, socketPath,
+    user: process.env.DB_ADMIN_USER ?? user, password: process.env.DB_ADMIN_PASSWORD ?? password };
+  admin = await mysql.createConnection(connection);
+  const schema = `erp_refunds_browser_${randomUUID().replaceAll("-", "")}`;
+  await admin.query("CREATE DATABASE ?? CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci", [schema]);
+  ownedSchema = schema;
+  await run(process.execPath, [migrate], {
+    env: { ...process.env, DB_NAME: schema, DB_USER: connection.user, DB_PASSWORD: connection.password },
+    timeout: 60_000
+  });
   app = await createApplication({ configurationSource: {
     ...defaults, application: { ...defaults.application, host: "127.0.0.1", port: Number(process.env.REFUNDS_TEST_API_PORT) },
+    database: { ...defaults.database, ...connection, database: schema },
     security: { ...defaults.security, cors: { ...defaults.security.cors, allowedOrigins: `http://127.0.0.1:${process.env.REFUNDS_TEST_CLIENT_PORT}` } },
     scheduler: { ...defaults.scheduler, jobs: {} }
   } });
   const { url } = await app.start();
   const time = app.services.require("time"), db = app.services.require("mysqldatabase");
+  const [[{ name }]] = await db.query("SELECT DATABASE() AS name");
+  assert.equal(name, schema);
   token = await issueUser(db, permissions);
   viewerToken = await issueUser(db, ["ar.view", "ap.view"]);
 
@@ -53,7 +72,14 @@ test.beforeAll(async () => {
   supplier = await newSupplierCredit();
 });
 
-test.afterAll(async () => app?.shutdown("refund_browser_complete"));
+test.afterAll(async () => {
+  try {
+    await app?.shutdown("refund_browser_complete");
+    if (ownedSchema) await admin.query("DROP DATABASE ??", [ownedSchema]);
+  } finally {
+    await admin?.end();
+  }
+});
 
 async function signIn(page, jwt) {
   await page.addInitScript(jwt => {

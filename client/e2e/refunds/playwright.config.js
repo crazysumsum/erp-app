@@ -15,7 +15,9 @@ const output = process.env.HARNESS_RUN_DIR || path.join(os.tmpdir(), "refunds-pl
 
 export default defineConfig({
   testDir: ".",
+  testMatch: "refund-workspace.spec.js",
   workers: 1,
+  retries: 0,
   timeout: 90_000,
   expect: { timeout: 10_000 },
   outputDir: path.join(output, "playwright-artifacts"),
