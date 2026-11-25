@@ -1,6 +1,7 @@
 import path from "node:path";
 import { getHeapStatistics } from "node:v8";
 import applicationConfig from "../../../config/application.js";
+import companyConfig from "../../../config/company.js";
 import salesConfig from "../../../config/sales.js";
 import customerConfig from "../../../config/customer.js";
 import apiConfig from "../../../config/api.js";
@@ -39,12 +40,14 @@ import { normalizeRequestConfig } from "./normalizeRequestConfig.js";
 import { normalizeRequestLimiterConfig } from "../../services/requestLimiter/normalizeRequestLimiterConfig.js";
 import { normalizeSchedulerConfig } from "../../services/scheduler/normalizeSchedulerConfig.js";
 import { normalizeSupplierConfig } from "../../modules/supplier/normalizeSupplierConfig.js";
+import { normalizeInvoiceCompanyConfig } from "../../modules/ar/normalizeInvoiceCompanyConfig.js";
 import { normalizeTokenRevocationConfig } from "../../services/tokenRevocation/normalizeTokenRevocationConfig.js";
 import { JOB_NAME as REVOCATION_REFRESH_JOB } from "../../services/tokenRevocation/jobs/TokenRevocationRefreshJob.js";
 
 export function defaultConfigurationSource() {
   return {
     application: applicationConfig,
+    company: companyConfig,
     customer: customerConfig,
     sales: salesConfig,
     api: apiConfig,
@@ -102,6 +105,7 @@ export function validateApplicationConfiguration(
   validateSection("application", () =>
     normalizeApplicationConfig(source?.application)
   );
+  validateSection("company", () => normalizeInvoiceCompanyConfig(source?.company));
   validateSection("sales", () => normalizeSalesConfig(source?.sales ?? salesConfig, { requestTimeoutMs: normalized.application?.requestTimeoutMs }));
   validateSection("customer", () => normalizeCustomerConfig(source?.customer));
   validateSection("api", () => normalizeApiConfig(source?.api));

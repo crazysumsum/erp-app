@@ -16,6 +16,7 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
+import InventoryReportDownload from "@/components/inventory/InventoryReportDownload.vue";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -89,6 +90,9 @@ function filters() {
     lotId: positive(lotId.value) ?? undefined, actorId: positive(actorId.value) ?? undefined
   };
 }
+function exportMovements(signal) {
+  return inventoryService.exportMovements({ ...filters(), signal });
+}
 function syncUrl() {
   router.replace({ query: {
     postedFrom: postedFrom.value || undefined, postedTo: postedTo.value || undefined,
@@ -140,7 +144,7 @@ onUnmounted(() => { detailGeneration++; listController?.abort(); detailControlle
 <template>
   <div>
     <PageHeader subtitle="依固定時間順序追溯不可變 Movement、來源、同組 legs 與沖銷關聯。">
-      <template #actions><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
+      <template #actions><InventoryReportDownload label="匯出異動明細 CSV" filename="inventory-movements.csv" :load="exportMovements" /><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
       <q-input class="col-6 col-sm-3 col-md-2" v-model="postedFrom" dense outlined type="date" label="異動日期從" />
