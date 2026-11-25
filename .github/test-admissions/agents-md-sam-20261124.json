@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "decision": "Sam, PM session on 2026-11-24: answered 「延續到上線」 to the PM's question 「逐案測試准入的暫停（11-26 日終到期）是否延續到正式上線？」. The PM's Decision Required stated that under every option capacity and performance tests still need Sam's prior approval, tests may not be deleted or skipped, thresholds may not be lowered, and the CI administrator's pre-merge release stays. Sam's 2026-11-19 answer 「暫停 7 天」 is kept in the text unchanged.",
+  "purpose": "Governance text only: extend Sam's 2026-11-19 suspension of per-case admission for functional tests from the end of 2026-11-26 to production go-live (estimated for mid-December 2026). The suspension ends at production go-live.",
+  "data": "No test, fixture, dataset or application file. AGENTS.md: one heading and one paragraph reworded, 7 lines added and 5 removed.",
+  "concurrency": "None; no workload is added or changed.",
+  "repetitions": "None.",
+  "thresholds": "Unchanged. The paragraph listing what stays unchanged (capacity and performance approval, no capacity workload in routine CI, no deleted or skipped tests, no relaxed thresholds or coverage floors, only the CI administrator changes the gate) is not edited.",
+  "trigger": "No trigger change. This receipt does not alter the admission gate, its policy hashes or Actions variables.",
+  "cost": "Zero added routine test time; one ordinary functional CI run for the PR.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "blob": "e9d4bd7c945351e74cdfc2bc57b935a5dc1539b4",
+      "kind": "support"
+    }
+  ]
+}
