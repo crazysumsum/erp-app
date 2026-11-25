@@ -96,7 +96,7 @@ async function setup(database = {}, company) {
     const read = async (id, token = clerk.token) => ok(await send(`/api/v1/ar-receipts/${id}`, { token }));
     const invoiceRow = async (id) => (await db.query("SELECT status, total_amount, allocated_amount, outstanding_amount, version FROM ar_invoices WHERE id = ?", [id]))[0][0];
     const count = async (sql, values) => Number((await db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total);
-    return { application, db, cleanups, send, post, invoicePost, ok, draft, receipt, read, invoice, invoiceRow, customer, count, clerk, biller, viewer, outsider, other, today, day };
+    return { application, db, cleanups, url, send, post, invoicePost, ok, draft, receipt, read, invoice, invoiceRow, customer, count, clerk, biller, viewer, outsider, other, today, day };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "AR fixture setup failed and its cleanup also failed") : error;
