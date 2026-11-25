@@ -2,7 +2,7 @@
  * 開票與應收：在真 MySQL 核對首期七張表、發票行兩欄，以及 0126 的期初欄位、唯一鍵及權限。
  * 表結構正本是 TL 的 TABLES.md（sha256 2ffa6b0b…8aca）及 TABLES-ADDENDUM-1.md（45f24a54…bcd9），均經 Sam 2026-11-19 批准；這裡把欄位、鍵、外鍵及 CHECK 的名單釘住，
  * 任何增減都會紅。
- * 期初兩欄、唯一鍵及權限依 TL 的 OPENING-AR-SCOPE.md r3（a3dbcaea…72ff）及 DECISIONS.md（949296ef…0275）。
+ * 期初兩欄、唯一鍵及權限依 TL 的期初應收規格 r3（a3dbcaea…72ff）及 DECISIONS.md（949296ef…0275）。
  *
  * 資料：每個約束案例在自己的 transaction 內寫最多 3 列，完結即 ROLLBACK；該連線關掉外鍵檢查，所以不需要客戶、
  * 出貨或訂單 fixture（外鍵本身由 information_schema 驗證）。1 條連線，無並發，每案 1 次。

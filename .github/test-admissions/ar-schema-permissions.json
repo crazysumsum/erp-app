@@ -12,7 +12,7 @@
     {
       "path": "server/test/integration/arMigrations.integration.test.js",
       "mode": "100644",
-      "blob": "653e438fe2f04dab0139e9d5e7f3dd9ebd80c59f",
+      "blob": "74d6cd7b9fe3e2e709c720e37fcbf7c040f71fe4",
       "kind": "functional",
       "cases": [
         "0122 lists exactly the three AR permissions with the catalogue descriptions and grants no role",
