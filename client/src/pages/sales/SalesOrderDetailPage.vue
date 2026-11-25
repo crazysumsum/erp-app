@@ -13,6 +13,7 @@ import sales from "@/services/sales.js";
 import { useSessionStore } from "@/stores/session.js";
 import { useSalesCommandEvent } from "@/composables/sales/useSalesCommandEvent.js";
 import BackorderAllocationDialog from "@/components/sales/BackorderAllocationDialog.vue";
+import SalesOrderReturns from "@/components/sales/SalesOrderReturns.vue";
 const route=useRoute(),session=useSessionStore(),document=ref(null),loading=ref(false),error=ref(""),showAudit=ref(false);let controller,creditController;
 const dialog=ref(false),credit=ref(null),creditLoading=ref(false),creditError=ref(""),notice=ref(""),failed=ref(false);
 const warningLabels={PARTIAL_BACKORDER:"部分數量轉為 Backorder。",CREDIT_LIMIT_ADVISORY:"信用額度只供參考。",MASTER_DATA_CHANGED:"主檔已變更，已保存確認時的最新快照。"};
@@ -81,6 +82,7 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
   </DataTable>
   <q-card flat bordered class="q-my-md"><q-card-section><h2 class="text-h6 q-ma-none q-mb-md">來源</h2><p>{{ sourceLabels[document.sourceType] }}</p><q-btn v-if="document.sourceQuotationId" flat label="返回來源報價" :to="`/sales/quotations/${document.sourceQuotationId}`" /><p v-if="document.externalOrderId" class="break-word">{{ document.channelCode }}／{{ document.externalOrderId }}</p></q-card-section></q-card>
   <h2 class="text-h6 q-ma-none q-mb-md">狀態歷史</h2><p v-if="document.historyTruncated" role="status">只顯示最近 100 項狀態歷史。</p><ol><li v-for="event in document.history" :key="event.id" class="q-mb-sm break-word">{{ timestamp(event.occurredAt) }} — {{ event.actorLabel }}：{{ event.fromStatus?`${statusLabels[event.fromStatus]} → `:'' }}{{ statusLabels[event.toStatus] }}；{{ event.action }}；版本 {{ event.version }}<span v-if="event.reason">；{{ event.reason }}</span></li></ol>
+  <SalesOrderReturns v-if="session.permissions.includes('returns.view')" :key="document.id" :order-id="document.id" />
   <section class="q-my-md" aria-labelledby="sales-audit-title"><h2 id="sales-audit-title" class="text-h6 q-ma-none q-mb-md">審計紀錄</h2><q-btn v-if="!showAudit" flat label="查看審計紀錄" @click="showAudit=true" />
    <DataTable v-if="showAudit" :key="document.id" :fetch="fetchAudit" :columns="auditColumns" :initial-pagination="{page:1,rowsPerPage:appConfig.defaultPageSize,sortBy:'occurredAt',descending:true}">
     <template #body-cell-occurredAt="{row}"><q-td>{{ timestamp(row.occurredAt) }}</q-td></template>
