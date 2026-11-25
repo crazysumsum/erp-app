@@ -55,10 +55,14 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
     { subject: String(userResult.insertId), version, authTime: Math.floor(nowMs / 1000) }
   );
   let termId = null;
+  let customerId = null, invoiceId = null, creditId = null;
   const currencyCode = "NZD";
   t.after(async () => {
     await db.execute("DELETE FROM business_master_audit_logs WHERE actor_user_id = ?", [userResult.insertId]);
     if (termId !== null) await db.execute("DELETE FROM payment_terms WHERE id = ?", [termId]);
+    if (creditId !== null) await db.execute("DELETE FROM ar_credit_notes WHERE id = ?", [creditId]);
+    if (invoiceId !== null) await db.execute("DELETE FROM ar_invoices WHERE id = ?", [invoiceId]);
+    if (customerId !== null) await db.execute("DELETE FROM customers WHERE id = ?", [customerId]);
     await db.execute("DELETE FROM currencies WHERE code = ?", [currencyCode]);
     await db.execute("DELETE FROM user_roles WHERE user_id = ?", [userResult.insertId]);
     await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [roleResult.insertId]);
@@ -109,8 +113,36 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   });
   assert.equal(rejected.status, 409);
   assert.equal(rejected.body.error.code, "IMPACT_TOKEN_INVALID");
+
+  const code = `BM-${suffix}`, name = `Credit reference ${suffix}`;
+  const [{ insertId: customer }] = await db.query("INSERT INTO customers SET ?", [{
+    customer_code: code, customer_code_key: code.toLowerCase(), legal_name: name, legal_name_key: name.toLowerCase(),
+    default_currency_code: "HKD", status: "active", version: 1, created_at: nowMs, updated_at: nowMs
+  }]);
+  customerId = customer;
+  const party = { customer_id: customerId, customer_code_snapshot: code, customer_name_snapshot: name, currency_code: currencyCode,
+    currency_decimal_places: 2, created_by_label: "fixture", created_at: nowMs, updated_at: nowMs };
+  const [{ insertId: invoice }] = await db.query("INSERT INTO ar_invoices SET ?", [{
+    ...party, status: "CONFIRMED", invoice_date: "2026-01-01", due_date: "2026-01-01",
+    total_amount: "10.0000", allocated_amount: "10.0000", outstanding_amount: "0.0000"
+  }]);
+  invoiceId = invoice;
+  const [{ insertId: credit }] = await db.query("INSERT INTO ar_credit_notes SET ?", [{
+    ...party, invoice_id: invoiceId, credit_date: "2026-01-01", reason: "Impact preview fixture", total_amount: "5.0000", available_amount: "5.0000"
+  }]);
+  creditId = credit;
+  const changed = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {
+    method: "POST", token, key: randomUUID(), body: { version: 1, reason: "credit added since preview", impactToken: preview.body.data.impactToken }
+  });
+  assert.equal(changed.body.error.code, "IMPACT_CHANGED");
+  const currentPreview = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/impact-preview`, {
+    method: "POST", token, key: randomUUID(), body: { operation: "DEACTIVATE", version: 1, proposedChange: {} }
+  });
+  assert.equal(currentPreview.status, 200, JSON.stringify(currentPreview.body));
+  const ar = currentPreview.body.data.results.find(({ checkerId }) => checkerId === "ar");
+  assert.deepEqual([ar.openUseCount, ar.historicalCount], [1, 1]);
   const deactivated = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {
-    method: "POST", token, key: randomUUID(), body: { version: 1, reason: "integration test", impactToken: preview.body.data.impactToken }
+    method: "POST", token, key: randomUUID(), body: { version: 1, reason: "integration test", impactToken: currentPreview.body.data.impactToken }
   });
   assert.equal(deactivated.status, 200);
   assert.equal(deactivated.body.data.status, "INACTIVE");

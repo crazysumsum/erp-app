@@ -2,7 +2,7 @@
  * 開票與應收首期：由真實的 SHIPPED 出貨開票（SCOPE §1、§3），來源只經 Fulfillment 的 readInvoiceSourcesInTransaction。
  *
  * 每案用 Fulfillment 既有的 shipmentDraftFixture 在自己的隔離資料庫建立 1 張訂單（1 行，訂 5 件）及最多 2 張出貨
- * （3 件及 2 件），再在該資料庫跑 AR 的 0122、0123。全檔 2 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
+ * （3 件及 2 件），再於隔離庫套用 AR 與其相依 migrations。全檔 2 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
  * 只會上一張發票，另一次 2 個並發的收款建立驗交易內不另佔連線。服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
  * 沒有容量或效能斷言。資料庫隨 fixture 丟棄。
  */
@@ -11,10 +11,6 @@ import { randomUUID } from "node:crypto";
 import process from "node:process";
 import test from "node:test";
 
-import { up as issueSchema } from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
-import { up as seedArPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
-import { up as createArTables } from "../../database/migrations/0123_create_ar_tables.js";
-import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { ArCommandRunner } from "../../src/modules/ar/arCommand.js";
 import { ArInquiryService } from "../../src/modules/ar/ArInquiryService.js";
 import { ArInvoiceService } from "../../src/modules/ar/ArInvoiceService.js";
@@ -24,7 +20,7 @@ import { BusinessMasterRepository } from "../../src/modules/businessMaster/Busin
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
 import { readInvoiceSourcesInTransaction } from "../../src/modules/fulfillment/readInvoiceSourcesInTransaction.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
-import { secondShipment } from "../ar/arShipmentFixture.js";
+import { migrateArShipmentFixture, secondShipment } from "../ar/arShipmentFixture.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
 
 const nativeTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -34,10 +30,7 @@ const code = (expected) => (error) => { assert.equal(error.code, expected, error
 /** 一張訂單（1 行，訂 5 件，行金額由呼叫方設定）及其第一張出貨草稿（3 件）；AR 表及權限已建立，操作者持有三個 ar.* 權限。 */
 async function arFixture(t, { lineAmount, unitPrice }) {
   const f = await shipmentDraftFixture(t);
-  await issueSchema(f.db);
-  await seedArPermissions(f.db);
-  await createArTables(f.db);
-  await addInvoiceLineSalesUom(f.db);
+  await migrateArShipmentFixture(f.db);
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。
   const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.receipt.mgmt", "ar.view"];
   const userId = await f.s.insert("users", { username: label, password_hash: "synthetic-only", display_name: "AR synthetic", created_at: f.s.now, updated_at: f.s.now });

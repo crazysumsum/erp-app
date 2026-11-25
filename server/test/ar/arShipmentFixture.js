@@ -1,4 +1,14 @@
 import { randomUUID } from "node:crypto";
+import { readdir } from "node:fs/promises";
+
+export async function migrateArShipmentFixture(db) {
+  const directory = new URL("../../database/migrations/", import.meta.url);
+  const installed = new Set([92, 93, 95, 96, 98]);
+  const migrations = (await readdir(directory))
+    .filter((name) => /^[0-9]{4}_.*\.js$/u.test(name) && Number(name.slice(0, 4)) > 88 && !installed.has(Number(name.slice(0, 4))))
+    .sort();
+  for (const name of migrations) await (await import(new URL(name, directory).href)).up(db);
+}
 
 /** 同一訂單行餘下的 2 件：另一張履約、揀貨及出貨草稿（與 Fulfillment reader 的測試同一做法）。 */
 export async function secondShipment(f) {

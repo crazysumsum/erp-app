@@ -6,14 +6,13 @@
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { readdir } from "node:fs/promises";
 import { after } from "node:test";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
-import { secondShipment } from "./arShipmentFixture.js";
+import { migrateArShipmentFixture, secondShipment } from "./arShipmentFixture.js";
 
 async function runCleanups(cleanups) {
   const errors = [];
@@ -109,12 +108,7 @@ export async function arHttpShipmentFixture(t, { includeSecond = false } = {}) {
     if (errors.length) throw new AggregateError(errors, "AR shipment fixture cleanup failed");
   });
   const shipment = await shipmentDraftFixture({ after: (cleanup) => cleanups.push(cleanup) });
-  const directory = new URL("../../database/migrations/", import.meta.url);
-  const installed = new Set([92, 93, 95, 96, 98]);
-  const migrations = (await readdir(directory))
-    .filter((name) => /^[0-9]{4}_.*\.js$/u.test(name) && Number(name.slice(0, 4)) > 88 && !installed.has(Number(name.slice(0, 4))))
-    .sort();
-  for (const name of migrations) await (await import(new URL(name, directory).href)).up(shipment.db);
+  await migrateArShipmentFixture(shipment.db);
   await shipment.db.query("UPDATE sales_order_lines SET unit_selling_price = 40, line_amount = 200 WHERE id = ?", [shipment.s.lineId]);
   const first = (await shipment.create(shipment.body())).outcome.id;
   const shipmentIds = [first];

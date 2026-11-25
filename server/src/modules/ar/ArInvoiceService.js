@@ -143,6 +143,9 @@ export class ArInvoiceService {
   void(command) {
     return this.#transition(command, { commandType: "VOID_INVOICE", from: "CONFIRMED", action: "invoice.voided", needsReason: true, release: true }, async (tx, invoice, { actor, nowMs }, request) => {
       if (storedUnits(invoice.allocated_amount) !== 0n) throw arError("AR_INVOICE_HAS_ALLOCATIONS");
+      // Confirmation also holds this invoice lock, including a credit that applied zero against it.
+      const [[credit]] = await tx.query("SELECT id FROM ar_credit_notes WHERE invoice_id = ? AND status = 'CONFIRMED' LIMIT 1", [invoice.id]);
+      if (credit) throw arError("AR_INVOICE_HAS_ALLOCATIONS");
       return { changes: { status: "VOID", void_reason: request.reason, voided_by: actor.id, voided_by_label: actor.username, voided_at: nowMs } };
     });
   }
