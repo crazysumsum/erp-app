@@ -2,7 +2,7 @@
 import {test,expect} from '@playwright/test';
 import {randomUUID} from 'node:crypto';
 import process from 'node:process';
-import {readdir} from 'node:fs/promises';
+import { applyLegacyFulfillmentMigrations } from '../../../server/test/fulfillment/applyLegacyFulfillmentMigrations.js';
 import {shipmentDraftFixture,shipmentTwoLineFixture} from '../../../server/test/fulfillment/p1CancellationFixture.js';
 import {hashPassword} from '../../../server/src/modules/user/passwordHash.js';
 import {createApplication} from '../../../server/src/framework/application/createApplication.js';
@@ -13,8 +13,7 @@ async function setup(twoLines=false,serviceOptions={}){
  const cleanup=[],t={after:fn=>cleanup.push(fn)};let app;
  try{
   const f=twoLines?await shipmentTwoLineFixture(t):await shipmentDraftFixture(t),draft=twoLines?f.draft:await f.create({...f.body(),notes:'Retained synthetic browser input'});
-  const directory=new URL('../../../server/database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98,...(twoLines?[97]:[])]);
-  for(const name of(await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+  await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98,...(twoLines?[97]:[])]);
   const password='Synthetic-'+randomUUID()+'-Aa1!';await f.db.execute('UPDATE users SET password_hash=? WHERE id=?',[await hashPassword(password),f.userId]);
   const source=defaultConfigurationSource(),connection=f.f.connectionOptions;
   app=await createApplication({serviceOptions,configurationSource:{...source,application:{...source.application,host:'127.0.0.1',port:Number(process.env.FULFILLMENT_TEST_API_PORT)},security:{...source.security,cors:{...source.security.cors,allowedOrigins:`http://127.0.0.1:${process.env.FULFILLMENT_TEST_CLIENT_PORT}`}},database:{...source.database,host:connection.host,port:connection.port,socketPath:connection.socketPath,user:connection.user,password:connection.password,database:f.f.name},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,'sales.backorderAllocate':{enabled:false},'sales.importWorker':{enabled:false},'sales.quotationExpire':{enabled:false},'sales.confirmationRecovery':{enabled:false},'fulfillment.confirmationRecovery':{enabled:false}}}}});
