@@ -97,15 +97,22 @@ nativeTest("Shipment Reverse checks every stored ISSUE and rolls back Phase A on
     const [[shipment]] = await tx.query("SELECT status FROM shipments WHERE id=?", [f.shipmentId]);
     assert.equal(shipment.status, "SHIPPED");
     calls++;
+    if (answer instanceof Error) throw answer;
     return answer;
   } };
   const reversal = new ShipmentReversalService({ ...f.options, downstreamProviders: clearDownstream(), issueCostProvider });
   const start = () => f.execute(() => reversal.startReversal(f.shipmentId, f.command));
   await assert.rejects(start, { code: "SHIPMENT_ISSUE_COST_UNAVAILABLE", statusCode: 409 });
   assert.deepEqual(await facts(f), before);
-  answer = { state: "AVAILABLE", costingEnabled: false };
-  await assert.rejects(start, { code: "FULFILLMENT_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
-  assert.deepEqual(await facts(f), before);
+  for (const unavailable of [
+    { state: "AVAILABLE", costingEnabled: false },
+    { state: "UNKNOWN", costingEnabled: true },
+    new Error("Synthetic cost provider failure")
+  ]) {
+    answer = unavailable;
+    await assert.rejects(start, { code: "FULFILLMENT_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
+    assert.deepEqual(await facts(f), before);
+  }
   answer = { state: "AVAILABLE", costingEnabled: true };
   const pending = await start();
   assert.equal(pending.outcome, "REVERSING");
@@ -114,7 +121,34 @@ nativeTest("Shipment Reverse checks every stored ISSUE and rolls back Phase A on
   const summary = typeof row.before_summary === "string" ? JSON.parse(row.before_summary) : row.before_summary;
   assert.deepEqual(summary.issueCost, { enabled: true, movementIds });
   assert.equal(summary.summaryVersion, 2);
-  assert.equal(calls, 3);
+  assert.equal(calls, 5);
+});
+
+nativeTest("Shipment Reverse cost-enabled Recovery preserves expired provider-mode v1 attempts", async t => {
+  const f = await reversalFixture(t, { archives: true });
+  const signal = new AbortController().signal;
+  const options = { ...f.options, downstreamProviders: clearDownstream(), recoveryVerifier: async () => signal };
+  const previous = new ShipmentReversalService(options);
+  await f.execute(() => previous.startReversal(f.shipmentId, f.command));
+  await f.db.execute("UPDATE fulfillment_operation_requests SET lease_expires_at=1 WHERE event_id=?", [f.command.eventId]);
+  const before = await facts(f);
+  let costReads = 0;
+  const afterCutover = new ShipmentReversalService({
+    ...options,
+    issueCostProvider: { async assertIssueCostAvailableInTransaction() {
+      costReads++;
+      return { state: "AVAILABLE", costingEnabled: true };
+    } }
+  });
+  const recover = service => f.execute(() => service.recoverExpiredReversal(f.command.eventId, {}, { signal }));
+
+  assert.deepEqual(await recover(afterCutover), { state: "UNKNOWN" });
+  assert.deepEqual(await facts(f), before);
+  const completed = await recover(previous);
+  assert.equal(completed.state, "SUCCEEDED");
+  assert.equal(completed.result.outcome, "REVERSED");
+  assert.deepEqual(await recover(afterCutover), completed);
+  assert.equal(costReads, 0);
 });
 
 nativeTest("Shipment Reverse Recovery verifies the versioned cost witness against stored ISSUEs after restart", async t => {
