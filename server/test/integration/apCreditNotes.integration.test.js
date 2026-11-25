@@ -65,7 +65,7 @@ async function fixture(t) {
     return [row.allocated_amount, row.outstanding_amount];
   };
   const draft = (invoiceId, lines) => ({ invoiceId, creditDate: today, reason: why, lines });
-  return { invoice, line, draft, balances, today };
+  return { invoice, line, draft, balances, today, supplierId };
 }
 
 integrationTest("AP credits apply the original cap and reverse only their own invoice effects", async (t) => {
@@ -144,6 +144,16 @@ integrationTest("AP invoice void also detects confirmed credits without an origi
   const credit = await service.create(command(f.draft(invoiceId, [{ invoiceLineId: lineId, amount: "1.00" }])));
   assert.equal((await service.confirm(command({ version: credit.version }, credit.id))).appliedAmount, "0.0000");
   await h.db.execute("UPDATE ap_invoices SET allocated_amount = 0, outstanding_amount = total_amount WHERE id = ?", [invoiceId]);
+  const get = async (path) => {
+    const response = await fetch(h.url + path, { headers: { Authorization: `Bearer ${manager.token}` } });
+    const body = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(body));
+    return body.data;
+  };
+  const detail = await get(`/api/v1/ap-invoices/${invoiceId}`);
+  const list = await get(`/api/v1/ap-invoices?supplierId=${f.supplierId}`);
+  assert.deepEqual(list.items.find(({ id }) => id === invoiceId).allowedActions, detail.allowedActions);
+  assert.deepEqual(detail.allowedActions, []);
   await assert.rejects(apInvoiceService(h.application.services).void(command({ version: 1, reason: why }, credit.id, { invoiceId })),
     { code: "AP_INVOICE_HAS_ALLOCATIONS" });
 });
