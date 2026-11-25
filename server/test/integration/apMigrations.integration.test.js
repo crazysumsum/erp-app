@@ -133,6 +133,12 @@ integrationTest("AP credit and refund tables enforce amounts and accept their se
     `, [status, applied, refunded, available]);
     const invalidCheck = { code: "ER_CHECK_CONSTRAINT_VIOLATED" };
     const [credit] = await insertCredit("CONFIRMED", 3, 2, 5);
+    const { lockCreditNote } = await import("../../src/modules/accounts-payable/apCreditFunds.js");
+    const locked = await lockCreditNote(db, credit.insertId);
+    assert.equal(locked.status, "CONFIRMED");
+    assert.equal(locked.available_amount, "5.0000");
+    assert.equal(locked.refunded_amount, "2.0000");
+    assert.equal(await lockCreditNote(db, 0), null);
     await insertCredit("VOID", 0, 0, 0);
     await assert.rejects(insertCredit("CONFIRMED", 3, 2, 6), invalidCheck);
     await assert.rejects(insertCredit("CONFIRMED", -1, 0, 11), invalidCheck);
@@ -167,6 +173,14 @@ integrationTest("AP credit and refund tables enforce amounts and accept their se
     );
     for (const type of ["INVOICE", "PAYMENT", "CREDIT_NOTE", "REFUND"]) await insertSequence(type);
     await assert.rejects(insertSequence("INVALID"), invalidCheck);
+    const { nextDocumentNumber } = await import("../../src/modules/accounts-payable/apCommand.js");
+    const time = { at: (nowMs) => nowMs, fileDate: () => "9999-12-31" };
+    const number = (documentType) => nextDocumentNumber(db, { documentType, time, nowMs: 1 });
+    assert.equal(await number("CREDIT_NOTE"), "SCN-9999-000001");
+    assert.equal(await number("REFUND"), "SRF-9999-000001");
+    assert.equal(await number("REFUND"), "SRF-9999-000002");
+    assert.equal(await number("INVOICE"), "APV-9999-000001");
+    assert.equal(await number("PAYMENT"), "PMT-9999-000001");
 
     const insertAudit = (type) => db.execute(
       "INSERT INTO ap_audit_logs (occurred_at, actor_label, action, outcome, target_type) VALUES (1, 'test', 'test', 'SUCCEEDED', ?)", [type]
