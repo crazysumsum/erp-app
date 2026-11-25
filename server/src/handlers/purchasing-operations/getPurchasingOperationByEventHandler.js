@@ -6,7 +6,7 @@ const SUMMARY = { type: "object", additionalProperties: false, properties: {
   id: { type: "integer", minimum: 1 }, number: { type: "string" }, status: { type: "string" }, version: { type: "integer", minimum: 1 },
   requirePoApproval: { type: "boolean" } } };
 const RESPONSE = { type: "object", required: ["status", "resultType", "resultId", "resultSummary", "completedAt"], additionalProperties: false,
-  properties: { status: { const: "COMPLETED" }, resultType: { enum: ["PO", "GR", "SETTING"] }, resultId: { type: "string" }, resultSummary: SUMMARY,
+  properties: { status: { const: "COMPLETED" }, resultType: { enum: ["PO", "GR", "SETTING", "REVERSAL"] }, resultId: { type: "string" }, resultSummary: SUMMARY,
     completedAt: { type: "integer", minimum: 0 } } };
 
 /**
