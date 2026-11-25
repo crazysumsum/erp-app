@@ -138,7 +138,8 @@ const PERMISSION_SEED_MIGRATIONS = [
   "../database/migrations/0132_seed_returns_permissions.js",
   "../database/migrations/0134_seed_ar_credit_permissions.js",
   "../database/migrations/0128_seed_ap_permissions.js",
-  "../database/migrations/0136_seed_ap_credit_permissions.js"
+  "../database/migrations/0136_seed_ap_credit_permissions.js",
+  "../database/migrations/0126_add_ar_opening_invoices.js"
 ];
 
 test("P2 downstream permissions are catalogued and seeded in 0063", async () => {
