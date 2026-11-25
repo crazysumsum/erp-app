@@ -7,7 +7,7 @@ import { up as seedReturnsPermissions } from "../../database/migrations/0132_see
 import { reversalFixture } from "../fulfillment/shipmentReversalFixture.js";
 import { startP1Http } from "../fulfillment/p1Fixture.js";
 import { findShipmentReturnsInTransaction } from "../../src/modules/returns/findShipmentReturnsInTransaction.js";
-import { installShipmentCostFixture } from "../returns/returnShipmentCostFixture.js";
+import { installOpeningCost } from "../returns/returnShipmentCostFixture.js";
 import { confirmedSupplierReceipt } from "../returns/supplierReturnFixture.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -20,7 +20,7 @@ async function stockFacts(f, kind) {
 }
 
 async function returnPostingFixture(t) {
-  const f = await reversalFixture(t);
+  const f = await reversalFixture(t, { beforeConfirm: installOpeningCost });
   const permissions = ["returns.view", "returns.customer.mgmt", "returns.supplier.mgmt", "purchasing.view", "receiving.operation"];
   const role = f.claims.roles[0];
   // startP1Http installs the registered migrations into this fixture's private schema.
@@ -31,7 +31,6 @@ async function returnPostingFixture(t) {
        SELECT r.id, p.id FROM roles r JOIN permissions p ON p.name IN (?, ?, ?, ?, ?) WHERE r.name = ?`, [...permissions, role]);
   f.claims.permissions.push(...permissions);
   const [[issue]] = await f.db.query("SELECT * FROM shipment_issue_details WHERE shipment_id = ? ORDER BY id LIMIT 1", [f.shipmentId]);
-  await installShipmentCostFixture(f, issue);
   const api = await startP1Http(t, f);
   const otherWarehouse = await f.s.insert("inventory_warehouses", {
     warehouse_code: "RT-OTHER", normalized_code: "rt-other", warehouse_name: "Other", status: "ACTIVE", created_at: f.s.now, updated_at: f.s.now
@@ -127,8 +126,15 @@ integrationTest("customer returns link every movement before posting and roll ba
   assert.equal(postedCustomer.body.data.status, "POSTED");
   assert.deepEqual((await post(customerPath, customerCommand)).body, postedCustomer.body);
   const customerFacts = await stockFacts(f, "CUSTOMER_RETURN");
+  const [[issueCost]] = await f.db.query(
+    "SELECT id, quantity_delta, value_delta_hkd FROM inventory_cost_entries WHERE movement_id = ? AND entry_kind = 'ISSUE'",
+    [issue.inventory_movement_id]
+  );
+  assert.equal(Number(issueCost.quantity_delta), -Number(issue.issued_base_quantity));
+  assert.equal(issueCost.value_delta_hkd, (Number(issueCost.quantity_delta) * 1.25).toFixed(4));
+  assert.ok(customerFacts.every(row => String(row.original_entry_id) === String(issueCost.id)));
   assert.deepEqual(customerFacts.map(row => [row.direction, Number(row.quantity), row.stock_status, row.value_delta_hkd]),
-    [["IN", 1, "QUARANTINED", "1.0000"], ["IN", 1, "QUARANTINED", "1.0000"]]);
+    [["IN", 1, "QUARANTINED", "1.2500"], ["IN", 1, "QUARANTINED", "1.2500"]]);
   const customerDetail = await api("GET", `/api/v1/customer-returns/${twoLines}`);
   assert.deepEqual(customerDetail.body.data.lines.map(line => line.inventoryMovementId), customerFacts.map(row => row.id));
   assert.equal(await occupancy(), 1);

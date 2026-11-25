@@ -26,7 +26,7 @@ export async function supportFacts(f){
 }
 export const nativeActor=(f,work)=>f.context.storage.run({databaseTransaction:null,signal:null,auth:{claims:{sub:String(f.actor.userId),roles:f.actor.claimedRoles,permissions:f.actor.claimedPermissions}}},work);
 
-export async function reversalFixture(t,{twoLines=false,archives=false,noDownstream=false,preflightConfiguration=false}={}){
+export async function reversalFixture(t,{twoLines=false,archives=false,noDownstream=false,preflightConfiguration=false,beforeConfirm}={}){
  const f=twoLines?await p1Fixture(t,5,{preflightConfiguration}):await shipmentDraftFixture(t,{preflightConfiguration});
  const second=twoLines?await addSourceLine(f,5):null;
  await issueUp(f.db);
@@ -47,6 +47,7 @@ export async function reversalFixture(t,{twoLines=false,archives=false,noDownstr
   await f.s.insert("customer_address_purposes",{address_id:f.s.addressId,customer_id:f.s.customerId,purpose_code:"shipping",is_default:1,created_at:f.s.now,updated_at:f.s.now});
   draft=await f.execute(()=>new ShipmentService(options).createDraft(root.outcome.id,{eventId:randomUUID(),shippingAddressId:f.s.addressId,shippingAddressVersion:1,totalWeight:"1.25",weightUom:"KG"}));
  }else draft=await f.create(f.body());
+ if(beforeConfirm)await beforeConfirm(f);
  const confirmation=new ShipmentConfirmationService(options),originalEventId=randomUUID();
  const confirming=await f.execute(()=>confirmation.startConfirmation(draft.outcome.id,{eventId:originalEventId,version:1}));
  const shipped=await f.execute(()=>confirmation.completeConfirmation(confirming));assert.equal(shipped.outcome,"SHIPPED");

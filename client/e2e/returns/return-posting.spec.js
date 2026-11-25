@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import "../../../server/test-support/testEnv.js";
 import { reversalFixture } from "../../../server/test/fulfillment/shipmentReversalFixture.js";
 import { confirmedSupplierReceipt } from "../../../server/test/returns/supplierReturnFixture.js";
-import { installShipmentCostFixture } from "../../../server/test/returns/returnShipmentCostFixture.js";
+import { installOpeningCost } from "../../../server/test/returns/returnShipmentCostFixture.js";
 import { createApplication } from "../../../server/src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
 
@@ -14,9 +14,8 @@ let token, shipment, receipt;
 test.beforeAll(async () => {
   if (process.env.DB_INTEGRATION_TESTS !== "1") throw new Error("Returns Playwright requires an isolated MySQL test server");
 
-  const f = await reversalFixture({ after: close => cleanup.push(close) });
+  const f = await reversalFixture({ after: close => cleanup.push(close) }, { beforeConfirm: installOpeningCost });
   const [[issue]] = await f.db.query("SELECT * FROM shipment_issue_details WHERE shipment_id = ? ORDER BY id LIMIT 1", [f.shipmentId]);
-  await installShipmentCostFixture(f, issue);
   const otherWarehouseId = await f.s.insert("inventory_warehouses", {
     warehouse_code: "RT-OTHER", normalized_code: "rt-other", warehouse_name: "Other returns warehouse",
     status: "ACTIVE", created_at: f.s.now, updated_at: f.s.now
