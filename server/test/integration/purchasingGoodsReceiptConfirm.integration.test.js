@@ -11,6 +11,7 @@ import mysql from "mysql2/promise";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { createTestDevice } from "../../test-support/testDevice.js";
 import { hasActiveGoodsReceiptInvoiceInTransaction } from "../../src/modules/accounts-payable/hasActiveGoodsReceiptInvoiceInTransaction.js";
 import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
 import { issuePurchaseReversalContext } from "../../src/modules/inventory/InventoryPurchaseContext.js";
@@ -18,6 +19,7 @@ import { PurchasingAuditService } from "../../src/modules/purchasing/PurchasingA
 import { PurchasingOperationService } from "../../src/modules/purchasing/PurchasingOperationService.js";
 import { ReceiptReversalService } from "../../src/modules/purchasing/ReceiptReversalService.js";
 import { readPostedSupplierReturnQuantitiesInTransaction } from "../../src/modules/returns/readPostedSupplierReturnQuantitiesInTransaction.js";
+import { hashPassword } from "../../src/modules/user/passwordHash.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const MONTH = "209812", RECEIPT_DATE = "2098-12-02";
@@ -41,16 +43,18 @@ async function setup() {
     const db = application.services.require("mysqldatabase"), jwt = application.services.require("jwt");
     const tag = randomUUID().replaceAll("-", "").slice(0, 12), now = Date.now();
     const insert = async (table, row) => Number((await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId);
-    const person = async (suffix, permissions) => {
+    const person = async (suffix, permissions, password) => {
       const name = `gr_confirm_${suffix}_${tag}`, role = await insert("roles", { name, created_at: now });
       cleanups.push(() => db.query("DELETE FROM roles WHERE id = ?", [role]), () => db.query("DELETE FROM role_permissions WHERE role_id = ?", [role]));
       for (const permission of permissions) await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = ?", [role, permission]);
-      const id = await insert("users", { username: name, password_hash: "synthetic", display_name: `User ${suffix}`, created_at: now, updated_at: now });
+      const id = await insert("users", { username: name, password_hash: password ? await hashPassword(password) : "synthetic",
+        display_name: `User ${suffix}`, created_at: now, updated_at: now });
       cleanups.push(() => db.query("DELETE FROM users WHERE id = ?", [id]), () => db.query("DELETE FROM fr_token_versions WHERE subject = ?", [String(id)]),
         () => db.query("DELETE FROM user_roles WHERE user_id = ?", [id]));
       await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [id, role]);
       const version = await application.services.require("tokenRevocation").currentVersion(String(id));
-      const issue = async (granted) => jwt.issue({ roles: [name], permissions: granted }, { subject: String(id), version, authTime: Math.floor(Date.now() / 1000) });
+      const issue = async (granted, extraClaims) => jwt.issue({ roles: [name], permissions: granted, ...extraClaims },
+        { subject: String(id), version, authTime: Math.floor(Date.now() / 1000) });
       return { id, role, name, version, issue, token: await issue(permissions) };
     };
     const receiver = await person("receiver", ["purchasing.view", "receiving.operation"]), viewer = await person("viewer", ["purchasing.view"]);
@@ -91,9 +95,9 @@ async function setup() {
       return { id, lineA, lineB };
     };
     const { url } = await application.start();
-    const send = async (path, { token = receiver.token, body, key = body?.eventId }) => {
+    const send = async (path, { token = receiver.token, body, key = body?.eventId, headers }) => {
       const response = await fetch(`${url}${path}`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Idempotency-Key": key,
-        "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
       return { status: response.status, body: await response.json() };
     };
     const read = async (path, token = receiver.token) => {
@@ -125,7 +129,7 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { application, db, cleanups, order, draft, confirm, lookup, read, other, person, overrider, today, skuA, header, details, progress, po, audits,
+    return { application, db, cleanups, order, draft, confirm, lookup, read, send, other, person, overrider, today, skuA, header, details, progress, po, audits,
       stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3, insert };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
@@ -255,6 +259,108 @@ integrationTest("沖銷等採購單鎖期間提交退供已過帳行時，以真
   assert.deepEqual(result, { version: 2, details: [{ id: Number(source.id), remainingBaseQuantity: "1" }] });
   assert.equal((await f.read(`/api/v1/goods-receipts/${id}/reversals/preview`, f.viewer.token)).status, 403);
 });
+
+// Pause the HTTP request that acquired the PO lock until the other sends its own
+// locking query. Both queries still go to MySQL through the production services.
+async function postInLockOrder(f, orderId, first, second) {
+  const statements = {
+    reversal: "SELECT id, status, version FROM purchase_orders WHERE id = ? FOR UPDATE",
+    supplier: "SELECT id, supplier_id FROM purchase_orders WHERE id = ? FOR UPDATE"
+  };
+  const firstLocked = Promise.withResolvers(), secondWaiting = Promise.withResolvers();
+  let sawSecondLock = false;
+  const transact = f.db.withTransaction;
+  f.db.withTransaction = (work, options) => transact.call(f.db, async (tx, context) => {
+    const query = tx.query.bind(tx);
+    tx.query = async (sql, params) => {
+      const pending = query(sql, params);
+      if (Number(params?.[0]) !== orderId) return pending;
+      if (sql === statements[first.kind]) {
+        const rows = await pending;
+        firstLocked.resolve();
+        await secondWaiting.promise;
+        return rows;
+      }
+      if (sql === statements[second.kind]) {
+        sawSecondLock = true;
+        secondWaiting.resolve();
+      }
+      return pending;
+    };
+    try { return await work(tx, context); }
+    finally { delete tx.query; }
+  }, options);
+  const winner = first.post().finally(firstLocked.resolve);
+  const contender = firstLocked.promise.then(second.post).finally(secondWaiting.resolve);
+  try {
+    const results = await Promise.all([winner, contender]);
+    assert.ok(sawSecondLock, JSON.stringify(results));
+    return results;
+  } finally {
+    await Promise.allSettled([winner, contender]);
+    f.db.withTransaction = transact;
+  }
+}
+
+for (const winnerKind of ["reversal", "supplier"]) {
+  integrationTest(`真 HTTP 收貨沖銷與退供競爭，${winnerKind} 先鎖單時合計仍不超實收`, async () => {
+    const f = await fixture(), order = await f.order(), id = await f.draft(order.id);
+    const confirmed = await f.confirm(id, 1, [{ purchaseOrderLineId: order.lineA, details: [detail(f, { inputUomId: f.box })] }]);
+    assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+    const [[source]] = await f.db.query("SELECT id, inventory_movement_id FROM goods_receipt_details WHERE goods_receipt_id = ?", [id]);
+    const before = await f.stock();
+
+    const password = `Synthetic-${randomUUID()}-A1!`;
+    const adjust = ["purchasing.view", "inventory.adjust"];
+    const actor = await f.person(`race_reversal_${id}`, adjust, password), device = await createTestDevice();
+    const deviceRow = await f.insert("user_devices", { user_id: actor.id, device_id: device.deviceId, public_key: device.publicKeyDer,
+      status: "approved", requested_at: Date.now() });
+    f.cleanups.push(() => f.db.query("DELETE FROM user_devices WHERE id = ?", [deviceRow]));
+    const token = await actor.issue(adjust, { did: device.deviceId });
+    const supplier = await f.person(`race_returns_${id}`, ["returns.view", "returns.supplier.mgmt"]);
+    const draftReturn = async amount => {
+      const response = await f.send("/api/v1/supplier-returns", { token: supplier.token, body: {
+        eventId: randomUUID(), sourceId: String(id), returnDate: RECEIPT_DATE, reason: "私人整合測試退供",
+        lines: [{ sourceDetailId: String(source.id), baseQuantity: String(amount), binId: String(f.b1), stockStatus: "AVAILABLE" }]
+      } });
+      assert.equal(response.status, 200, JSON.stringify(response.body));
+      return response.body.data.id;
+    };
+    const supplierDraft = await draftReturn(8);
+    const postReturn = returnId => f.send(`/api/v1/supplier-returns/${returnId}/post`, { token: supplier.token,
+      body: { eventId: randomUUID(), version: 1 } });
+    const postReversal = async amount => {
+      const path = `/api/v1/goods-receipts/${id}/reversals/create`;
+      const body = { eventId: randomUUID(), version: 2, reason: "更正重複入庫記錄", password,
+        details: [{ goodsReceiptDetailId: Number(source.id), baseQuantity: amount }] };
+      const headers = await device.headers({ method: "POST", path, body: JSON.stringify(body), token });
+      return f.send(path, { token, body, headers });
+    };
+    const commands = [{ kind: "reversal", post: () => postReversal(8) }, { kind: "supplier", post: () => postReturn(supplierDraft) }];
+    if (winnerKind === "supplier") commands.reverse();
+
+    const [posted, blocked] = await postInLockOrder(f, order.id, ...commands);
+    assert.equal(posted.status, 200, JSON.stringify(posted.body));
+    assert.equal(blocked.status, 409, JSON.stringify(blocked.body));
+    assert.equal(blocked.body.error.code, winnerKind === "reversal" ? "RETURN_QUANTITY_EXCEEDED" : "GR_REVERSAL_QUANTITY_EXCEEDED");
+    assert.deepEqual(await f.stock(), [before[0] + 1, before[1] - 8]);
+    const remainder = winnerKind === "reversal" ? await postReturn(await draftReturn(4)) : await postReversal(4);
+    assert.equal(remainder.status, 200, JSON.stringify(remainder.body));
+    assert.deepEqual(await f.stock(), [before[0] + 2, before[1] - 12]);
+
+    const [[receipt]] = await f.db.query("SELECT status, total_received_base_quantity, total_reversed_base_quantity FROM goods_receipts WHERE id = ?", [id]);
+    const [[returned]] = await f.db.query(`SELECT SUM(l.base_quantity) AS quantity FROM supplier_return_lines l
+      JOIN supplier_returns r ON r.id = l.return_id WHERE l.goods_receipt_detail_id = ? AND r.status = 'POSTED' AND l.inventory_movement_id IS NOT NULL`, [source.id]);
+    assert.deepEqual([receipt.status, Number(receipt.total_received_base_quantity), Number(receipt.total_reversed_base_quantity), Number(returned.quantity)],
+      ["PARTIALLY_REVERSED", 12, winnerKind === "reversal" ? 8 : 4, winnerKind === "reversal" ? 4 : 8]);
+    const [costs] = await f.db.query(`SELECT m.direction, m.quantity, e.entry_kind, e.value_delta_hkd
+      FROM inventory_cost_entries e JOIN inventory_movements m ON e.movement_id = m.id
+      WHERE e.original_entry_id = (SELECT id FROM inventory_cost_entries WHERE movement_id = ?) ORDER BY m.id`, [source.inventory_movement_id]);
+    const kinds = winnerKind === "reversal" ? ["RECEIPT_REVERSAL", "SUPPLIER_RETURN"] : ["SUPPLIER_RETURN", "RECEIPT_REVERSAL"];
+    assert.deepEqual(costs.map(row => [row.direction, Number(row.quantity), row.entry_kind, row.value_delta_hkd]),
+      [["OUT", 8, kinds[0], "-0.6667"], ["OUT", 4, kinds[1], "-0.3333"]]);
+  });
+}
 
 integrationTest("收貨沖銷部分與全部過帳可重送，已開票或退回超限時拒絕，稽核失敗整筆回滾", async () => {
   const f = await fixture();
