@@ -95,6 +95,21 @@ test("TC-039 (STATE-010): purchase marks non-Active Suppliers unusable while his
   assert.equal(history.status, "archived");
 });
 
+test("history lookup in a caller transaction reads archived Suppliers without locking or exposing Bank data", async () => {
+  const database = fakeDatabase([[supplierRow({ status: "archived", bankAccounts: ["must not be projected"] })], []]);
+  const service = serviceFor(database);
+
+  const found = await service.findByIdInTransaction(database.connection, 7, { purpose: "history" });
+  assert.deepEqual(found, {
+    supplierId: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen",
+    defaultCurrencyCode: "HKD", defaultPaymentTermId: 3, status: "archived", version: 4, usable: true, reasons: []
+  });
+  assert.equal(await service.findByIdInTransaction(database.connection, 999, { purpose: "history" }), null);
+  assert.deepEqual(database.transactions, []);
+  assert.deepEqual(database.calls.map(({ params }) => params), [[7], [999]]);
+  assert.ok(database.calls.every(({ sql }) => !/FOR UPDATE|FOR SHARE/u.test(sql)));
+});
+
 test("findByCode normalizes the manually entered Code and missing Suppliers return null", async () => {
   const database = fakeDatabase([[supplierRow()], []]);
   const service = serviceFor(database);
