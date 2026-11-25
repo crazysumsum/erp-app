@@ -93,6 +93,9 @@ export async function purchaseNativeFixture(t, { fullSchema = false } = {}) {
   if (fullSchema) await promisify(execFile)(process.execPath, ["server/scripts/migrate.js"], {
     env: { ...process.env, DB_NAME: name }, timeout: 60000, maxBuffer: 1024 * 1024
   });
+  else await db.query(`CREATE TABLE fr_schema_migrations (
+    name VARCHAR(190) NOT NULL PRIMARY KEY, applied_at BIGINT UNSIGNED NOT NULL
+  )`);
   for (const migration of fullSchema ? [] : ["0003_add_auth_tables", "0011_create_item_categories", "0012_create_item_brands", "0013_create_item_uoms",
     "0014_create_items", "0015_create_item_skus", "0016_create_item_sku_uoms", "0055_seed_inventory_permissions",
     "0056_create_inventory_operations", "0057_create_inventory_audit", "0058_create_inventory_master", "0059_create_inventory_stock",

@@ -87,6 +87,22 @@ async function checkCurrent(record, { locking = false } = {}) {
   return { id: record.actorId, username: users[0].username, roles: roleNames, permissions };
 }
 
+function receiptCostInputs(lines, input) {
+  const byLine = new Map();
+  if (input === undefined) return byLine;
+  if (!Array.isArray(input) || input.length !== lines.length) throw permissionStaleError();
+  const ids = new Set(lines.map(line => line.sourceLineId));
+  for (const row of input) {
+    strictProjection(row, ["sourceLineId", "currencyCode", "unitPrice", "toBaseFactor"]);
+    const { sourceLineId, currencyCode, unitPrice, toBaseFactor } = row;
+    if (!ids.delete(sourceLineId) || typeof currencyCode !== "string" || !/^[A-Z]{3}$/u.test(currencyCode) ||
+        typeof unitPrice !== "string" || !/^\d{1,15}(?:\.\d{1,4})?$/u.test(unitPrice) ||
+        !Number.isSafeInteger(toBaseFactor) || toBaseFactor < 1 || toBaseFactor > 1000000) throw permissionStaleError();
+    byLine.set(sourceLineId, Object.freeze({ currencyCode, unitPrice, toBaseFactor }));
+  }
+  return byLine;
+}
+
 export function issuePurchaseReceiptContext(req, tx, command, confirmedLines, options) {
   const normalized = normalizePurchaseReceipt(command), current = assertPurchaseTransaction(options?.database, tx);
   if (!req || issuedRequests.has(req) || req.context !== current || req.auth !== current.auth || req.apiRoute !== current.apiRoute ||
@@ -112,7 +128,8 @@ export function issuePurchaseReceiptContext(req, tx, command, confirmedLines, op
     sessionMaxAgeSeconds: options.sessionMaxAgeSeconds, clockToleranceSeconds: options.clockToleranceSeconds,
     requestContext: current, auth: req.auth, apiRoute: req.apiRoute, actorId: normalized.actor.userId,
     documentId: normalized.source.documentId, signal: req.requestTimeout?.signal ?? current.signal,
-    claims: deepFreeze(cloneData(req.auth.claims, "Purchase authenticated claims")), intent: intent(command) };
+    claims: deepFreeze(cloneData(req.auth.claims, "Purchase authenticated claims")), intent: intent(command),
+    costInputs: receiptCostInputs(normalized.lines, options.costInputs) };
   assertBinding(record);
   const capsule = Object.freeze({}); contexts.set(capsule, record); issuedRequests.add(req);
   return capsule;
@@ -123,7 +140,8 @@ export function consumePurchaseReceiptContext(tx, capsule, command, database) {
   if (!record || record.kind === "reversal" || record.tx !== tx || record.database !== database || record.intent !== intent(command)) throw permissionStaleError();
   assertBinding(record);
   contexts.delete(capsule);
-  return Object.freeze({ check: options => checkCurrent(record, options), assertTime: () => assertBinding(record) });
+  return Object.freeze({ check: options => checkCurrent(record, options), assertTime: () => assertBinding(record),
+    getCostInput: sourceLineId => { assertBinding(record); return record.costInputs.get(sourceLineId); } });
 }
 
 function deviceMismatch() {

@@ -57,3 +57,28 @@ test("Opening CSV counts zero rows towards the 5000 data row limit", () => {
   assert.deepEqual(aboveLimit.rows, []);
   assert.deepEqual(aboveLimit.errors, [{ row: 5002, field: "file", code: "OPENING_CSV_TOO_MANY_ROWS" }]);
 });
+
+test("Costed opening requires its own header and preserves unit cost as an exact decimal", () => {
+  const costHeader = header + ",unitCostHkd";
+  const parseCosted = (...records) =>
+    parseInventoryOpeningCsv(Buffer.from(records.join("\r\n")), { costingEnabled: true });
+
+  assert.deepEqual(parseCosted(header, valid).errors, [
+    { row: 1, field: "header", code: "OPENING_CSV_INVALID_HEADER" }
+  ]);
+  const result = parseCosted(costHeader, valid + ",2.05", "W1,B2,SKU2,,,AVAILABLE,1,0",
+    "W1,B3,SKU3,,,AVAILABLE,0,");
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.rows.map(row => [row.baseQuantity, row.unitCostHkd]), [[12, "2.0500"], [1, "0.0000"]]);
+  assert.deepEqual(result.skippedRows, [4]);
+});
+
+test("Costed opening rejects invalid precision, sign, blank costs and unrepresentable row amounts", () => {
+  const input = [header + ",unitCostHkd", valid + ",1.20", valid + ",", valid + ",-0",
+    valid + ",0.00001", valid + ",999999999999999.9999", valid + ',"1\t"'];
+  const result = parseInventoryOpeningCsv(Buffer.from(input.join("\r\n")), { costingEnabled: true });
+
+  assert.deepEqual(result.rows, []);
+  assert.deepEqual(result.errors, [3, 4, 5, 6, 7].map(row =>
+    ({ row, field: "unitCostHkd", code: "OPENING_CSV_INVALID_FIELD" })));
+});
