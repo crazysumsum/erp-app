@@ -3,6 +3,7 @@ import { ItemLookupService } from "../../item/ItemLookupService.js";
 import { InventoryOperationService, inventoryOperationHash } from "../InventoryOperationService.js";
 import { InventoryAuditService } from "../InventoryAuditService.js";
 import { InventoryLockService } from "../InventoryLockService.js";
+import { readInventoryCostInstallation } from "../inventoryCostLedger.js";
 import { consumeInventoryHighRiskContext } from "../inventoryHighRiskContext.js";
 import { applyInventoryOpeningRows } from "./inventoryOpeningPosting.js";
 import { inventoryError } from "../inventoryErrors.js";
@@ -48,7 +49,10 @@ export class InventoryOpeningService {
       await authorize(tx);
       assertOpeningAllowed(await openingControl(tx));
       const lookup = new ItemLookupService({ database: tx, time: this.time, logger: this.logger });
-      const { rows, errors, skippedRows } = await precheckInventoryOpeningCsv(bytes, { reader: tx, itemLookup: lookup });
+      const costingEnabled = await readInventoryCostInstallation(tx);
+      const { rows, errors, skippedRows } = await precheckInventoryOpeningCsv(bytes, {
+        reader: tx, itemLookup: lookup, costingEnabled
+      });
       if (!errors.length && !rows.length) errors.push({ row: 1, field: "file", code: "OPENING_NO_POSITIVE_ROWS" });
       const snapshotHash = rows.length ? openingSnapshotHash(rows) : null;
       const status = errors.length ? "INVALID" : "READY";
@@ -109,14 +113,17 @@ export class InventoryOpeningService {
         "SELECT csv_row_number, normalized_input, movement_id FROM inventory_opening_rows WHERE job_id=? ORDER BY csv_row_number FOR UPDATE", [jobId]
       );
       const rows = stored.map(entry => json(entry.normalized_input));
+      const costingEnabled = await readInventoryCostInstallation(tx);
       if (!rows.length || rows.length !== Number(job.ready_rows) ||
           stored.some((entry, i) => entry.movement_id !== null || rows[i].row !== Number(entry.csv_row_number)) ||
+          (costingEnabled && rows.some(row => typeof row.unitCostHkd !== "string" ||
+            !/^\d{1,15}\.\d{4}$/u.test(row.unitCostHkd))) ||
           openingSnapshotHash(rows) !== job.precheck_snapshot_hash) {
         throw inventoryError("OPENING_PRECHECK_STALE");
       }
       const day = this.time.fileDate();
       const movementGroupId = await applyInventoryOpeningRows(tx, rows, {
-        jobId, claim, actor, reason, day, now, guard, locks: new InventoryLockService(),
+        jobId, claim, actor, reason, day, now, guard, costingEnabled, locks: new InventoryLockService(),
         lookup: new ItemLookupService({ database: tx, time: this.time, logger: this.logger })
       });
 

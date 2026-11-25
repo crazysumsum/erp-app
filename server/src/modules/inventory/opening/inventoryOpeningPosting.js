@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { inventoryError } from "../inventoryErrors.js";
+import { lockInventoryCostPools, persistInventoryCostBatch } from "../inventoryCostLedger.js";
+import { inboundCost, parseInventoryCost, receiptCost } from "../inventoryCostMath.js";
 import { openingPositionOccupied } from "./inventoryOpeningPrecheck.js";
 
 const key = (...values) => JSON.stringify(values);
 const priority = (a, b) => a < b ? -1 : a === b ? 0 : 1;
 
-export async function applyInventoryOpeningRows(tx, rows, { jobId, claim, actor, reason, day, now, guard, locks, lookup }) {
+export async function applyInventoryOpeningRows(tx, rows, { jobId, claim, actor, reason, day, now, guard, costingEnabled, locks, lookup }) {
   const locked = await locks.lockForCommand(tx, {
     warehouseIds: rows.map(row => row.warehouseId), binIds: rows.map(row => row.binId),
     stockControls: rows.map(({ warehouseId, skuId }) => ({ warehouseId, skuId })),
@@ -83,12 +85,32 @@ export async function applyInventoryOpeningRows(tx, rows, { jobId, claim, actor,
   });
   const byBucket = new Map(balances.map(row => [key(Number(row.warehouse_id), Number(row.bin_id),
     Number(row.sku_id), row.lot_id === null ? null : Number(row.lot_id), row.stock_status), row]));
+  let costPools;
+  const costEntries = [];
+  const currentCost = new Map();
+  if (costingEnabled) {
+    // The existing authorization locks must precede the cross-warehouse cost locks.
+    await guard.check(tx, { locking: true });
+    costPools = await lockInventoryCostPools(tx, legs.map(row => row.skuId), now);
+  }
   const groupId = randomUUID();
   for (const row of legs) {
     guard.assertTime();
     const balance = byBucket.get(key(row.warehouseId, row.binId, row.skuId, row.lotId, row.stockStatus));
     if (!balance || Number(balance.on_hand_quantity) !== 0 || Number(balance.allocated_quantity) !== 0) {
       throw inventoryError("OPENING_POSITION_OCCUPIED", { rows: [row.row] });
+    }
+    let cost;
+    if (costingEnabled) {
+      const skuId = String(row.skuId), quantity = BigInt(row.baseQuantity);
+      try {
+        cost = inboundCost(currentCost.get(skuId) ?? costPools.get(skuId), quantity,
+          receiptCost(quantity, parseInventoryCost(row.unitCostHkd), 1n));
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+        throw inventoryError("INVENTORY_INPUT_INVALID", { field: "unitCostHkd", row: row.row });
+      }
+      currentCost.set(skuId, cost);
     }
     const profile = profiles.get(row.skuId), warehouse = warehouses.get(row.warehouseId), bin = bins.get(row.binId);
     const [updated] = await tx.execute(
@@ -113,6 +135,9 @@ export async function applyInventoryOpeningRows(tx, rows, { jobId, claim, actor,
       [movement.insertId, jobId, row.row]
     );
     if (linked.affectedRows !== 1) throw inventoryError("CONCURRENT_OPERATION");
+    if (cost) costEntries.push({ ...cost, movementId: movement.insertId, skuId: String(row.skuId),
+      kind: "OPENING", source: "OPENING_FILE" });
   }
+  if (costingEnabled) await persistInventoryCostBatch(tx, costPools, costEntries, now);
   return groupId;
 }
