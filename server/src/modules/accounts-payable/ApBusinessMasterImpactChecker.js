@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 
 const DOCUMENTS = [
-  ["invoice", "ap_invoices", "outstanding_amount"],
-  ["payment", "ap_payments", "available_amount"]
+  ["invoice", "ap_invoices", "outstanding_amount > 0"],
+  ["payment", "ap_payments", "available_amount > 0"],
+  ["credit", "ap_credit_notes", "available_amount > 0"],
+  ["refund", "ap_supplier_refunds", "0"]
 ];
 
 function count(row, field) {
@@ -25,7 +27,8 @@ export class ApBusinessMasterImpactChecker {
     }
     const [[table]] = await this.database.query(
       `SELECT COUNT(*) AS present FROM information_schema.tables
-        WHERE table_schema = DATABASE() AND table_name IN ('ap_invoices', 'ap_payments')`
+        WHERE table_schema = DATABASE() AND table_name IN (${DOCUMENTS.map(() => "?").join(", ")})`,
+      DOCUMENTS.map(([, tableName]) => tableName)
     );
     if (Number(table?.present) === 0) {
       return { status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0, watermark: "not-installed:ap" };
@@ -37,11 +40,11 @@ export class ApBusinessMasterImpactChecker {
         watermark: `ap:PAYMENT_TERM:${Number(entityKey)}:no-reference` };
     }
 
-    const [rows] = await this.database.query(DOCUMENTS.map(([type, tableName, balance]) =>
-      `SELECT '${type}' AS document_type, status, (${balance} > 0) AS unsettled, COUNT(*) AS reference_count,
+    const [rows] = await this.database.query(DOCUMENTS.map(([type, tableName, unsettled]) =>
+      `SELECT '${type}' AS document_type, status, (${unsettled}) AS unsettled, COUNT(*) AS reference_count,
               COALESCE(SUM(version), 0) AS version_sum, COALESCE(MAX(updated_at), 0) AS latest_updated_at, COALESCE(MAX(id), 0) AS max_id
          FROM ${tableName} WHERE currency_code = ? GROUP BY status, unsettled`).join(" UNION ALL ") +
-      " ORDER BY document_type, status, unsettled", [entityKey, entityKey]);
+      " ORDER BY document_type, status, unsettled", DOCUMENTS.map(() => entityKey));
     let openUseCount = 0, historicalCount = 0;
     const projection = rows.map((row) => {
       const references = count(row, "reference_count"), unsettled = Number(row.unsettled) === 1;

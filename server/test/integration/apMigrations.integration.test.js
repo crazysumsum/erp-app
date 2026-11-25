@@ -129,7 +129,7 @@ integrationTest("AP credit and refund tables enforce amounts and accept their se
       INSERT INTO ap_credit_notes (status, invoice_id, supplier_id, supplier_code_snapshot,
         supplier_name_snapshot, currency_code, currency_decimal_places, credit_date, reason,
         total_amount, applied_amount, refunded_amount, available_amount, created_by_label, created_at, updated_at)
-      VALUES (?, 1, 1, 'TEST', 'Test supplier', 'ZZZ', 2, '2026-11-25', 'Test', 10, ?, ?, ?, 'test', 1, 1)
+      VALUES (?, 1, 1, 'TEST', 'Test supplier', 'XCM', 2, '2026-11-25', 'Test', 10, ?, ?, ?, 'test', 1, 1)
     `, [status, applied, refunded, available]);
     const invalidCheck = { code: "ER_CHECK_CONSTRAINT_VIOLATED" };
     const [credit] = await insertCredit("CONFIRMED", 3, 2, 5);
@@ -159,14 +159,22 @@ integrationTest("AP credit and refund tables enforce amounts and accept their se
     await assert.rejects(insertApplication(1, 0), invalidCheck);
     await insertApplication(1, 3);
 
-    const insertRefund = (method, amount) => db.execute(`
+    const insertRefund = (method, amount, status = "DRAFT") => db.execute(`
       INSERT INTO ap_supplier_refunds (credit_note_id, supplier_id, currency_code, refund_date,
-        amount, payment_method, created_by_label, created_at, updated_at)
-      VALUES (?, 1, 'ZZZ', '2026-11-25', ?, ?, 'test', 1, 1)
-    `, [credit.insertId, amount, method]);
+        amount, payment_method, status, created_by_label, created_at, updated_at)
+      VALUES (?, 1, 'XCM', '2026-11-25', ?, ?, ?, 'test', 1, 1)
+    `, [credit.insertId, amount, method, status]);
     await assert.rejects(insertRefund("CASH", 0), invalidCheck);
     await assert.rejects(insertRefund("INVALID", 2), invalidCheck);
     await insertRefund("CASH", 2);
+    await insertRefund("CASH", 2, "CONFIRMED");
+    await insertCredit("DRAFT", 0, 0, 10);
+    await insertCredit("CONFIRMED", 10, 0, 0);
+    const { ApBusinessMasterImpactChecker } = await import("../../src/modules/accounts-payable/ApBusinessMasterImpactChecker.js");
+    const checker = new ApBusinessMasterImpactChecker({ database: db });
+    const currencyImpact = await checker.check({ entityType: "CURRENCY", entityKey: "XCM" });
+    assert.equal(currencyImpact.openUseCount, 3);
+    assert.equal(currencyImpact.historicalCount, 3);
 
     const insertSequence = (type) => db.execute(
       "INSERT INTO ap_document_sequences (document_type, business_year, updated_at) VALUES (?, 9999, 1)", [type]
