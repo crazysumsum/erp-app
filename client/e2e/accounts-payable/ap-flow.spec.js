@@ -42,7 +42,7 @@ test.beforeAll(async () => {
   const insert = async (table, row) => (await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId;
   const role = await insert("roles", { name: `ap-browser-${tag}`, created_at: now });
   await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)",
-    [role, ["ap.view", "ap.invoice.mgmt", "ap.invoice.price.override", "ap.payment.mgmt", "purchasing.view"]]);
+    [role, ["ap.view", "ap.invoice.mgmt", "ap.invoice.price.override", "ap.payment.mgmt", "ap.credit.mgmt", "purchasing.view"]]);
   await db.query("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username IN (?, ?)", [role, actor.username, peer.username]);
   const supplierRole = await insert("roles", { name: `ap-supplier-browser-${tag}`, created_at: now });
   await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = 'supplier.view'", [supplierRole]);
@@ -117,6 +117,107 @@ async function logout(page, account) {
   await page.getByText("登出", { exact: true }).click();
   await page.waitForURL("**/login");
 }
+
+test("AP credit note browser flow applies and reverses invoice credits", async ({ page }) => {
+  page.setDefaultTimeout(10_000);
+  const problems = [];
+  const creditEndpoint = "**/api/v1/ap-credit-notes";
+  let lostResponseRequest;
+  const isApApi = (url) => /^\/api\/v1\/ap-/u.test(new URL(url).pathname);
+  page.on("pageerror", (error) => problems.push(error.message));
+  page.on("console", (message) => {
+    if (["warning", "error"].includes(message.type()) && !message.text().startsWith("Failed to load resource")) problems.push(message.text());
+  });
+  page.on("response", (response) => {
+    if (isApApi(response.url()) && response.status() >= 400) problems.push(`${response.status()} ${new URL(response.url()).pathname}`);
+  });
+  page.on("requestfailed", (request) => {
+    if (request !== lostResponseRequest && isApApi(request.url()) && request.failure()?.errorText !== "net::ERR_ABORTED") {
+      problems.push(request.failure()?.errorText);
+    }
+  });
+  const code = `APC-${tag}`, now = Date.now();
+  const [party] = await db.query("INSERT INTO suppliers SET ?", [{
+    supplier_code: code, supplier_code_key: code.toLowerCase(), supplier_name: "Credit Browser Supplier", supplier_name_key: "credit browser supplier",
+    default_currency_code: "HKD", status: "active", created_at: now, updated_at: now
+  }]);
+  const makeInvoice = async (name, total, allocated, outstanding) => {
+    const number = `${name}-${tag}`, now = Date.now();
+    const [inserted] = await db.query("INSERT INTO ap_invoices SET ?", [{
+      invoice_number: number, status: "CONFIRMED", supplier_id: party.insertId,
+      supplier_code_snapshot: code, supplier_name_snapshot: "Credit Browser Supplier", currency_code: "HKD",
+      currency_decimal_places: 2, supplier_invoice_number: number, invoice_date: today, due_date: today,
+      total_amount: total, allocated_amount: allocated, outstanding_amount: outstanding, created_by_label: actor.name, created_at: now, updated_at: now
+    }]);
+    return { id: inserted.insertId, number };
+  };
+  const origin = await makeInvoice("APC-ORIGIN", "0.0300", "0.0200", "0.0100");
+  const target = await makeInvoice("APC-TARGET", "8.0000", "0.0000", "8.0000");
+  const [first] = await db.execute(`INSERT INTO ap_invoice_lines (invoice_id, line_no, line_type, line_amount, description)
+    VALUES (?, 1, 'EXPENSE', 0.0149, '第一筆費用'), (?, 2, 'EXPENSE', 0.0149, '第二筆費用')`, [origin.id, origin.id]);
+  await login(page, actor, true);
+  await page.goto(`/ap/invoices/${origin.id}`);
+  await page.getByRole("link", { name: "建立貸項單" }).click();
+  await expect(page.getByRole("heading", { name: "建立應付貸項單" })).toBeVisible();
+  await page.getByLabel("貸項原因", { exact: true }).fill("供應商修正原發票");
+  await page.getByLabel("原發票行", { exact: true }).selectOption(String(first.insertId));
+  await page.getByLabel("貸項金額", { exact: true }).fill("0.021");
+  await page.getByRole("button", { name: "建立貸項草稿", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "請選擇每行的原發票行並輸入有效金額" })).toBeFocused();
+  await page.getByLabel("貸項金額", { exact: true }).fill("0.02");
+  const loseResponse = async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    const response = await route.fetch();
+    expect(response.ok()).toBe(true);
+    lostResponseRequest = route.request();
+    await route.abort("failed");
+  };
+  await page.route(creditEndpoint, loseResponse);
+  await page.getByRole("button", { name: "建立貸項草稿", exact: true }).click();
+  const retry = page.getByRole("button", { name: "重試原操作", exact: true });
+  await expect(retry).toBeVisible();
+  await page.unroute(creditEndpoint, loseResponse);
+  await page.reload();
+  const replayed = page.waitForResponse((response) => response.ok() && response.request().method() === "POST" &&
+    new URL(response.url()).pathname === "/api/v1/ap-credit-notes");
+  await retry.click();
+  expect((await replayed).request().postDataJSON().eventId).toBe(lostResponseRequest.postDataJSON().eventId);
+  await page.waitForURL(/\/ap\/credit-notes\/\d+$/u);
+  const [[{ total }]] = await db.query("SELECT COUNT(*) AS total FROM ap_credit_notes WHERE invoice_id = ?", [origin.id]);
+  expect(Number(total)).toBe(1);
+  const creditPath = new URL(page.url()).pathname;
+  await page.reload();
+  await page.getByRole("button", { name: "編輯草稿" }).click();
+  await page.getByLabel("備註（選填）", { exact: true }).fill("核對供應商貸項");
+  await page.getByRole("button", { name: "儲存草稿" }).click();
+  await expect(page.getByText("核對供應商貸項", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "確認貸項單", exact: true }).click();
+  const confirm = page.getByRole("dialog", { name: "確認貸項單" });
+  await expect(confirm.getByRole("button", { name: "返回" })).toBeFocused();
+  await confirm.getByRole("button", { name: "確認貸項單" }).click();
+  await expect(page.getByRole("heading", { name: /^SCN-\d{4}-\d{6}$/u })).toBeVisible();
+  await expect(page.getByText("原發票核銷", { exact: true })).toBeVisible();
+  await page.getByLabel("被核銷發票", { exact: true }).selectOption(String(target.id));
+  await page.getByLabel("核銷金額", { exact: true }).fill("0.01");
+  await page.getByRole("button", { name: "核銷貸項", exact: true }).click();
+  await expect(page.getByText("其他發票核銷", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "解除核銷", exact: true }).click();
+  await page.getByRole("dialog", { name: "解除核銷" }).getByRole("button", { name: "解除核銷" }).click();
+  await expect(page.getByRole("button", { name: "解除核銷", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "作廢貸項單", exact: true }).click();
+  const voidDialog = page.getByRole("dialog", { name: "作廢貸項單" });
+  await voidDialog.getByLabel("作廢原因（最少 5 字）").fill("供應商更正貸項原因");
+  await voidDialog.getByRole("button", { name: "作廢貸項單" }).click();
+  await expect(page.getByText("供應商更正貸項原因", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "返回貸項列表" }).click();
+  const link = page.getByRole("link", { name: /^SCN-\d{4}-\d{6}$/u }).first();
+  await expect(link).toHaveAttribute("href", creditPath);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect(link).toHaveAttribute("href", creditPath);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  expect(problems).toEqual([]);
+});
 
 test("AP browser flow confirms a receipt-backed invoice, pays it and clears aging", async ({ page }) => {
   const errors = [];
