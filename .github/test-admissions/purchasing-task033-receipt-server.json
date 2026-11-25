@@ -736,6 +736,20 @@
         "Reports reject an oversized result and never project partial data",
         "Stock reports suppress data on an abort or a permission change after reading"
       ]
+    },
+    {
+      "path": "client/src/pages/inventory/MovementsPage.vue",
+      "mode": "100644",
+      "blob": "49d19e6086a027aab1407118c9dde3e40d72a7fa",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "client/src/pages/inventory/StocksPage.vue",
+      "mode": "100644",
+      "blob": "a9fc7c4242a947b3999d04dddacfedf6715b1b97",
+      "kind": "support",
+      "cases": []
     }
   ]
 }
