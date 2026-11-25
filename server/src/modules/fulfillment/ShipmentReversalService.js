@@ -21,7 +21,7 @@ import { InventoryLookupService } from "../inventory/InventoryLookupService.js";
 import { SalesFulfillmentService } from "../sales/SalesFulfillmentService.js";
 import { ShipmentEventAdmission } from "./shipmentEventAdmission.js";
 import { readShipmentReversalRecoveryActor } from "./shipmentRecoveryActor.js";
-import { readDurableShipmentReversal,shipmentReversalZeroEffectSource,assertLocalShipmentReversalZeroEffect } from "./shipmentReversalRecoverySource.js";
+import { readDurableShipmentReversal,shipmentReversalIssueIds,shipmentReversalZeroEffectSource,assertLocalShipmentReversalZeroEffect } from "./shipmentReversalRecoverySource.js";
 import { SHIPMENT_RECOVERY_MAX_ATTEMPTS,SHIPMENT_RECOVERY_MAX_DELAY_MS,shipmentRecoveryDelay } from "./shipmentRecoveryBackoff.js";
 
 const fail=code=>{throw fulfillmentError(code);};
@@ -39,9 +39,14 @@ export class ShipmentReversalService {
  #recoveryStarts=new WeakMap();
  #zeroSessions=new WeakMap();
  #recheckLegacyDownstream;
- constructor({database,time,logger,downstreamRegistry,downstreamProviders,operationLeaseMs=60000,recoveryVerifier=null}){
+ #issueCostRead;
+ constructor({database,time,logger,downstreamRegistry,downstreamProviders,issueCostProvider,operationLeaseMs=60000,recoveryVerifier=null}){
   Object.assign(this,{database,time});this.transactions=new FulfillmentTransactionService({database});this.operations=new FulfillmentOperationService({database,time,leaseMs:operationLeaseMs});this.sequence=new FulfillmentSequenceService({database,time});this.downstream=new FulfillmentDownstreamMatterService({database,registry:downstreamRegistry,providers:downstreamProviders});
   this.#recheckLegacyDownstream=downstreamProviders===undefined;
+  if(issueCostProvider!==undefined){
+   if(this.#recheckLegacyDownstream||typeof issueCostProvider?.assertIssueCostAvailableInTransaction!=="function")throw new TypeError("Shipment Reversal cost check requires trusted providers");
+   this.#issueCostRead=issueCostProvider.assertIssueCostAvailableInTransaction.bind(issueCostProvider);
+  }
   this.#admission=new ShipmentEventAdmission({database,readWriter:token=>this.#startedAttempts.get(token)});
   if(recoveryVerifier!==null&&typeof recoveryVerifier!=="function")throw new TypeError("Private reversal Recovery verifier required");
   this.#recoveryVerifier=recoveryVerifier;
@@ -96,6 +101,7 @@ export class ShipmentReversalService {
     const terminalResult=await this.operations.getShipmentReversalReplayInTransaction(tx,{shipmentId:durable.request.target.id,command:durable.request.payload});
     if(terminalResult)return {state:terminalResult.status==="SUCCEEDED"?"SUCCEEDED":"FAILED",result:terminalResult};
     if(!this.#recheckLegacyDownstream&&durable.registryVersion!==SHIPMENT_DOWNSTREAM_PROVIDERS_VERSION)return {state:"UNKNOWN"};
+    if(Boolean(this.#issueCostRead)!==Boolean(durable.issueCost))return {state:"UNKNOWN"};
     const record={tx,token,signal:transactionSignal,durable,phase:null,source:null};
     const current=await this.#inspectionFence(tx,record),attemptCount=Number(current.row.attempt_count);
     if(!Number.isSafeInteger(attemptCount)||attemptCount<1||attemptCount>4294967295)return {state:"UNKNOWN"};
@@ -109,6 +115,7 @@ export class ShipmentReversalService {
     record.phase="reversal.zero.sales.read";const salesProof=await sales.readShipmentReversalZeroEffectInTransaction(tx,session);
     const locked=await readLockedShipmentReversalSnapshot(this.database,tx,{request:durable.request,reversalId:String(durable.reversal.id),fulfillmentId:record.source.fulfillmentId,actorId:durable.actorId});
     if(JSON.stringify(shipmentReversalZeroEffectSource(locked,durable))!==JSON.stringify(record.source))return {state:"UNKNOWN"};
+    if(durable.issueCost&&JSON.stringify(shipmentReversalIssueIds(locked.issues))!==JSON.stringify(durable.issueCost.movementIds))return {state:"UNKNOWN"};
     await assertLocalShipmentReversalZeroEffect(tx,locked,durable);
     if(this.#recheckLegacyDownstream)await this.downstream.assertShipmentReversibleInTransaction(tx,{shipmentId:durable.request.target.id});
     record.phase="reversal.zero.inventory.finish";const inventoryProof=await inventory.readShipmentReversalZeroEffectInTransaction(tx,inventoryContext);
@@ -331,6 +338,16 @@ export class ShipmentReversalService {
    const [effective]=await tx.query("SELECT id FROM shipment_reversals WHERE effective_shipment_id=? ORDER BY id LIMIT 2",[shipmentId]);if(effective.length)fail("SHIPMENT_ALREADY_REVERSED");
    const downstream=await this.downstream.assertShipmentReversibleInTransaction(tx,{shipmentId});
    const at=this.time.nowMs(),before={shipmentId,fulfillmentId:String(root.id),version:command.version,status:"SHIPPED",registryVersion:downstream.registryVersion};
+   if(this.#issueCostRead){
+    const [issues]=await tx.query("SELECT id,inventory_movement_id FROM shipment_issue_details WHERE shipment_id=? ORDER BY id LIMIT 5001",[shipmentId]);
+    const movementIds=shipmentReversalIssueIds(issues);
+    let cost;
+    try{cost=await this.#issueCostRead(tx,Object.freeze({movementIds}));}catch{fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");}
+    if(cost?.costingEnabled!==true)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    if(cost.state==="MISSING")fail("SHIPMENT_ISSUE_COST_UNAVAILABLE");
+    if(cost.state!=="AVAILABLE")fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+    Object.assign(before,{summaryVersion:2,issueCost:{enabled:true,movementIds}});
+   }
    const [inserted]=await tx.execute("INSERT INTO shipment_reversals (reversal_number,shipment_id,status,event_id,correlation_id,reason,goods_under_company_control,goods_returned_to_original_bins,before_summary,created_at,created_by) VALUES (?,?,'REVERSING',?,?,?,1,1,?,?,?)",[number,shipmentId,command.eventId,request.correlationId,command.reason,JSON.stringify(before),at,actor.id]);
    const reversalId=String(inserted.insertId);fulfillmentInteger(reversalId);
    const [changed]=await tx.execute("UPDATE shipments SET status='REVERSING',reversal_event_id=?,correlation_id=?,version=version+1,updated_at=?,last_business_updated_at=?,updated_by=? WHERE id=? AND fulfillment_id=? AND status='SHIPPED' AND version=?",[command.eventId,request.correlationId,at,at,actor.id,shipmentId,root.id,command.version]);if(changed.affectedRows!==1)fail("VERSION_CONFLICT");

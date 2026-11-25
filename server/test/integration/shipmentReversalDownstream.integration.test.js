@@ -72,3 +72,99 @@ nativeTest("Shipment Reverse provider-mode Recovery preserves an expired legacy 
   assert.deepEqual(result, { state: "UNKNOWN" });
   assert.deepEqual(await facts(f), before);
 });
+
+function clearDownstream() {
+  return {
+    invoicing: { async findShipmentInvoiceClaimsInTransaction(_tx, { shipmentIds: [shipmentId] }) {
+      return [{ shipmentId, activeInvoiceLineCount: 0 }];
+    } },
+    returns: { async findShipmentReturnsInTransaction(_tx, { shipmentIds: [shipmentId] }) {
+      return [{ shipmentId, openReturnCount: 0 }];
+    } }
+  };
+}
+
+nativeTest("Shipment Reverse checks every stored ISSUE and rolls back Phase A on missing or unknown cost", async t => {
+  const f = await reversalFixture(t, { archives: true, twoLines: true });
+  const before = await facts(f);
+  const movementIds = before.shipment_issue_details.map(issue => String(issue.inventory_movement_id));
+  assert.equal(movementIds.length, 2);
+  let answer = { state: "MISSING", costingEnabled: true };
+  let calls = 0;
+  const issueCostProvider = { async assertIssueCostAvailableInTransaction(tx, scope) {
+    assert.equal(tx, f.database.context.get().databaseTransaction);
+    assert.deepEqual(scope, { movementIds });
+    const [[shipment]] = await tx.query("SELECT status FROM shipments WHERE id=?", [f.shipmentId]);
+    assert.equal(shipment.status, "SHIPPED");
+    calls++;
+    return answer;
+  } };
+  const reversal = new ShipmentReversalService({ ...f.options, downstreamProviders: clearDownstream(), issueCostProvider });
+  const start = () => f.execute(() => reversal.startReversal(f.shipmentId, f.command));
+  await assert.rejects(start, { code: "SHIPMENT_ISSUE_COST_UNAVAILABLE", statusCode: 409 });
+  assert.deepEqual(await facts(f), before);
+  answer = { state: "AVAILABLE", costingEnabled: false };
+  await assert.rejects(start, { code: "FULFILLMENT_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
+  assert.deepEqual(await facts(f), before);
+  answer = { state: "AVAILABLE", costingEnabled: true };
+  const pending = await start();
+  assert.equal(pending.outcome, "REVERSING");
+  assert.deepEqual(await start(), pending);
+  const [[row]] = await f.db.query("SELECT before_summary FROM shipment_reversals WHERE event_id=?", [f.command.eventId]);
+  const summary = typeof row.before_summary === "string" ? JSON.parse(row.before_summary) : row.before_summary;
+  assert.deepEqual(summary.issueCost, { enabled: true, movementIds });
+  assert.equal(summary.summaryVersion, 2);
+  assert.equal(calls, 3);
+});
+
+nativeTest("Shipment Reverse Recovery verifies the versioned cost witness against stored ISSUEs after restart", async t => {
+  const f = await reversalFixture(t, { archives: true });
+  let calls = 0;
+  const options = {
+    ...f.options,
+    downstreamProviders: clearDownstream(),
+    issueCostProvider: { async assertIssueCostAvailableInTransaction() {
+      calls++;
+      return { state: "AVAILABLE", costingEnabled: true };
+    } }
+  };
+  const first = new ShipmentReversalService(options);
+  await f.execute(() => first.startReversal(f.shipmentId, f.command));
+  await f.db.execute("UPDATE fulfillment_operation_requests SET lease_expires_at=1 WHERE event_id=?", [f.command.eventId]);
+  const signal = new AbortController().signal;
+  const restarted = new ShipmentReversalService({ ...options, recoveryVerifier: async () => signal });
+  const recover = service => f.execute(() => service.recoverExpiredReversal(f.command.eventId, {}, { signal }));
+  const withoutCost = new ShipmentReversalService({ ...f.options, downstreamProviders: clearDownstream(), recoveryVerifier: async () => signal });
+  const pending = await facts(f);
+  assert.deepEqual(await recover(withoutCost), { state: "UNKNOWN" });
+  assert.deepEqual(await facts(f), pending);
+
+  const transaction = f.database.withTransaction;
+  let witnessReads = 0;
+  f.database.withTransaction = function(work, options) {
+    return transaction.call(this, async (tx, details) => {
+      const query = tx.query.bind(tx);
+      tx.query = async (sql, params) => {
+        const reply = await query(sql, params);
+        if (sql !== "SELECT * FROM shipment_reversals WHERE event_id=? LIMIT 2") return reply;
+        const [[row], fields] = reply;
+        const summary = typeof row.before_summary === "string" ? JSON.parse(row.before_summary) : row.before_summary;
+        witnessReads++;
+        return [[{ ...row, before_summary: { ...summary, issueCost: { enabled: true, movementIds: ["99999"] } } }], fields];
+      };
+      return work(tx, details);
+    }, options);
+  };
+  try {
+    assert.deepEqual(await recover(restarted), { state: "UNKNOWN" });
+    assert.equal(witnessReads, 2);
+    assert.deepEqual(await facts(f), pending);
+  } finally {
+    f.database.withTransaction = transaction;
+  }
+  const result = await recover(restarted);
+  assert.equal(result.state, "SUCCEEDED");
+  assert.equal(result.result.outcome, "REVERSED");
+  assert.deepEqual(await recover(restarted), result);
+  assert.equal(calls, 1);
+});
