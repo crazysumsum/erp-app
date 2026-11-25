@@ -37,3 +37,7 @@
 - migration 編號由 codex-erp-app-ci-01 指定。
 - 各片負責人：成本 inventory-01；收貨沖銷 purchasing-01；退貨 returns-01；應收及應付貸項單與退款待 Sam 指派；毛利報表 sharedfeatures-01。出貨沖銷（fulfillment-01）及報表不需新表。
 - 這幾片的非作者評審：claude-erp-app-tl-01。
+
+## 其後：SCOPE §6.1 核對結果
+
+codex-erp-app-tl-01 訊息 `9d215ddd`（2026-11-25）：r6 375b3a1b、SCOPE.md 58ace2bc… §6.1 技術覆核 PASS，沒有 Required，沒有要求改任何表；並已逐檔重算五份 TABLES 及 DECISIONS 的 sha256，與上表相同。因此上述批准不需重新送批。
