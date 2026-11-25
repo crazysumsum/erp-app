@@ -40,7 +40,7 @@ test.beforeAll(async () => {
   createUser(`pw-boot-${run}`, `PW Boot ${run}`, `Pw-boot-${run}-Aa1!`);
   await db.execute("UPDATE users SET status = 'disabled' WHERE username = ?", [`pw-boot-${run}`]);
   for (const u of Object.values(users)) createUser(u.username, u.name, u.password);
-  for (const [key, perms] of [["U1", ["purchasing.view", "purchasing.mgmt", "receiving.operation", "inventory.view"]], ["U2", ["purchasing.view", "purchasing.approval"]], ["U3", ["purchasing.settings"]]]) {
+  for (const [key, perms] of [["U1", ["purchasing.view", "purchasing.mgmt", "receiving.operation", "inventory.view", "inventory.adjust"]], ["U2", ["purchasing.view", "purchasing.approval"]], ["U3", ["purchasing.settings"]]]) {
     const [role] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`pw-${key.toLowerCase()}-${run}`, now]);
     await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)", [role.insertId, perms]);
     await db.execute("INSERT INTO user_roles (user_id, role_id) SELECT id, ? FROM users WHERE username = ?", [role.insertId, users[key].username]);
@@ -339,7 +339,7 @@ test("PO approval and receipt: settings, submit, withdraw/resubmit, approve thro
   const confirmPath = `/api/v1/goods-receipts/${receipt.id}/confirm`;
   const confirmReceipt = async () => {
     await page.getByRole("button", { name: "確認收貨並入庫", exact: true }).click();
-    await expect(page.getByText("首期不能在系統內撤回或沖銷")).toBeVisible();
+    await expect(page.getByText(/日後如需更正，請另開沖銷單/u)).toBeVisible();
     const confirmation = response(page, "POST", confirmPath);
     await page.getByRole("button", { name: "確認入庫", exact: true }).click();
     return confirmation;
@@ -373,7 +373,66 @@ test("PO approval and receipt: settings, submit, withdraw/resubmit, approve thro
   await page.goto(`/inventory/movements?skuId=${skuId}&movementId=${movementId}`);
   await expect(page.getByRole("heading", { name: `Movement ${movementId} 詳情` })).toBeVisible();
   await expect(page.getByRole("row").filter({ hasText: skuCode }).getByText("入 1", { exact: true })).toBeVisible();
-  expect(unexpectedResponses).toEqual([`409 ${confirmPath}`]);
+
+  await page.goto(receiptPath);
+  const openReversal = page.getByRole("button", { name: "沖銷收貨", exact: true });
+  await openReversal.click();
+  const correction = page.getByRole("dialog", { name: `沖銷收貨 ${receipt.number}` });
+  await expect(correction).toBeVisible();
+  await expect(correction.getByRole("button", { name: "關閉" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(openReversal).toBeFocused();
+  await openReversal.click();
+  const reversalQuantity = correction.getByRole("textbox", { name: /^沖銷數量/u });
+  const reversalReason = correction.getByRole("textbox", { name: "沖銷原因" });
+  const reversalPassword = correction.getByLabel("登入密碼");
+  const postReversal = correction.getByRole("button", { name: "確認沖銷" });
+  const reversePath = `/api/v1/goods-receipts/${receipt.id}/reversals/create`;
+  await expect(correction.getByText("最多 1", { exact: true })).toBeVisible();
+  await reversalQuantity.fill("2");
+  await reversalReason.fill("E2E 更正錯誤收貨");
+  await reversalPassword.fill(users.U1.password);
+  await postReversal.click();
+  await expect(correction.getByRole("alert")).toContainText("須為 1 至 1 的整數");
+  await reversalQuantity.fill("1");
+  await reversalPassword.fill(users.U1.wrongPassword);
+  pending = response(page, "POST", reversePath);
+  await postReversal.click();
+  res = await pending;
+  expect(res.status()).toBe(403);
+  expect((await res.json()).error.code).toBe("PASSWORD_INVALID");
+  await expect(reversalQuantity).toHaveValue("1");
+  expect([await onHand(), await movementCount()]).toEqual([1, 1]);
+
+  let actualResult;
+  await page.route(`**${reversePath}`, async route => {
+    actualResult = await route.fetch();
+    await route.abort("failed");
+  }, { times: 1 });
+  await reversalPassword.fill(users.U1.password);
+  await postReversal.click();
+  await expect(correction.getByRole("alert")).toContainText("沖銷結果尚未確認");
+  expect(actualResult?.status()).toBe(200);
+  await expect(reversalQuantity).toHaveAttribute("readonly", "");
+  let replayedResult;
+  await page.route(`**${reversePath}`, async route => {
+    replayedResult = await route.fetch();
+    await route.abort("failed");
+  }, { times: 1 });
+  await reversalPassword.fill(users.U1.password);
+  const retryFailed = page.waitForEvent("requestfailed", request => new URL(request.url()).pathname === reversePath);
+  await correction.getByRole("button", { name: "重試原沖銷" }).click();
+  await retryFailed;
+  expect(replayedResult?.headers()["idempotency-replayed"]).toBe("true");
+  await correction.getByRole("button", { name: "查詢處理結果" }).click();
+  await expect(correction).toBeHidden();
+  await expect(page.getByText("已沖銷", { exact: true })).toBeVisible();
+  await expect(page.getByText(`${receipt.number}-R01 · 基本數量 1`, { exact: true })).toBeVisible();
+  expect([await onHand(), await movementCount()]).toEqual([0, 2]);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "沖銷紀錄" })).toBeVisible();
+  await expect(openReversal).toHaveCount(0);
+  expect(unexpectedResponses).toEqual([`409 ${confirmPath}`, `403 ${reversePath}`]);
   await context.close();
   expect(browserErrors).toEqual([]);
 });

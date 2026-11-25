@@ -1,6 +1,6 @@
 import { computed, ref } from "vue";
 
-const UNCERTAIN = ["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "IDEMPOTENCY_IN_PROGRESS"];
+const UNCERTAIN = ["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "IDEMPOTENCY_IN_PROGRESS", "IDEMPOTENCY_RESULT_UNAVAILABLE"];
 
 /**
  * Command 嘅 eventId 生命週期（§2.3），一個 key 一個 record。要放喺穩定嘅 owner（頁面），唔好放喺會被 v-if 卸載嘅 child。

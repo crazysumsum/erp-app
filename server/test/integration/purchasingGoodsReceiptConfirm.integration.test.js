@@ -11,11 +11,13 @@ import mysql from "mysql2/promise";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { hasActiveGoodsReceiptInvoiceInTransaction } from "../../src/modules/accounts-payable/hasActiveGoodsReceiptInvoiceInTransaction.js";
 import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
 import { issuePurchaseReversalContext } from "../../src/modules/inventory/InventoryPurchaseContext.js";
 import { PurchasingAuditService } from "../../src/modules/purchasing/PurchasingAuditService.js";
 import { PurchasingOperationService } from "../../src/modules/purchasing/PurchasingOperationService.js";
 import { ReceiptReversalService } from "../../src/modules/purchasing/ReceiptReversalService.js";
+import { readPostedSupplierReturnQuantitiesInTransaction } from "../../src/modules/returns/readPostedSupplierReturnQuantitiesInTransaction.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const MONTH = "209812", RECEIPT_DATE = "2098-12-02";
@@ -151,6 +153,108 @@ async function assertUntouched(f, id, poRow, before) {
   assert.deepEqual([await f.progress(poRow.id), await f.po(poRow.id), await f.stock()], before);
 }
 const snapshot = async (f, poRow) => [await f.progress(poRow.id), await f.po(poRow.id), await f.stock()];
+
+async function reversalRaceFixture(f) {
+  const order = await f.order(), id = await f.draft(order.id);
+  const accepted = await f.confirm(id, 1, [{ purchaseOrderLineId: order.lineA, details: [detail(f, { inputUomId: f.box })] }]);
+  assert.equal(accepted.status, 200, JSON.stringify(accepted.body));
+  const [[source]] = await f.db.query(`SELECT d.id, d.goods_receipt_line_id, d.inventory_movement_id, g.supplier_code_snapshot, g.supplier_name_snapshot
+    FROM goods_receipt_details d JOIN goods_receipts g ON g.id = d.goods_receipt_id WHERE g.id = ?`, [id]);
+  const permissions = ["purchasing.view", "inventory.adjust"];
+  const user = await f.person(`gr_race_${id}`, permissions);
+  const claims = { sub: String(user.id), roles: [user.name], permissions };
+  const operations = new PurchasingOperationService();
+  const reversal = new ReceiptReversalService({
+    database: f.db, operations, time: f.application.services.require("time"), logger: f.application.services.require("logging").logger,
+    audit: new PurchasingAuditService({ auditDetailMaxBytes: 8192 }), hasActiveInvoice: hasActiveGoodsReceiptInvoiceInTransaction,
+    readReturnedQuantities: readPostedSupplierReturnQuantitiesInTransaction,
+    postInventory: () => assert.fail("A concurrently occupied quantity must be rejected before Inventory")
+  });
+  const input = { eventId: randomUUID(), version: 2, reason: "更正重複入庫記錄",
+    details: [{ goodsReceiptDetailId: Number(source.id), baseQuantity: 2 }] };
+  return { id, order, source, claims, operations, reversal, input };
+}
+
+/** Give the contender a real RR snapshot, then start the conflicting PO lock before the writer commits. */
+async function assertConcurrentReversalRejected(f, receipt, countOccupancy, writeOccupancy, code) {
+  const { order, id, claims, input, operations, reversal } = receipt;
+  const writerLocked = Promise.withResolvers(), contenderWaiting = Promise.withResolvers();
+  const writer = f.db.context.storage.run({}, () => f.db.withTransaction(async tx => {
+    await tx.query("SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE", [order.id]);
+    await tx.query("SELECT id FROM goods_receipts WHERE id = ? FOR SHARE", [id]);
+    writerLocked.resolve();
+    await contenderWaiting.promise;
+    await writeOccupancy(tx);
+  }, { isolationLevel: "READ COMMITTED" }));
+  writer.catch(writerLocked.reject);
+  const run = operations.run.bind(operations);
+  operations.run = (database, work) => run(database, async tx => {
+    assert.equal(await countOccupancy(tx), 0);
+    const query = tx.query.bind(tx);
+    tx.query = (sql, params) => {
+      const pending = query(sql, params);
+      if (sql === "SELECT id, status, version FROM purchase_orders WHERE id = ? FOR UPDATE") contenderWaiting.resolve();
+      return pending;
+    };
+    try {
+      return await work(tx);
+    } catch (error) {
+      assert.equal(await countOccupancy(tx), 0, "the original RR snapshot does not see the committed occupancy");
+      throw error;
+    } finally { delete tx.query; }
+  });
+  const before = await snapshot(f, order);
+  let attempt;
+  try {
+    await writerLocked.promise;
+    attempt = f.db.context.storage.run({}, () => reversal.create({ id, claims, input }));
+    await assert.rejects(attempt, { code });
+    await writer;
+    assert.equal(await countOccupancy(f.db), 1);
+    assert.deepEqual(await snapshot(f, order), before);
+    assert.equal((await f.header(id)).status, "CONFIRMED");
+  } finally {
+    contenderWaiting.resolve();
+    await Promise.allSettled([writer, attempt]);
+    operations.run = run;
+  }
+}
+
+integrationTest("沖銷等採購單鎖期間提交應付佔用時，以真 AP 當前讀取拒絕沖銷", async () => {
+  const f = await fixture(), receipt = await reversalRaceFixture(f);
+  const { id, source } = receipt;
+  const invoiceCode = `REV-${randomUUID()}`, now = Date.now();
+  const invoiceId = await f.insert("ap_invoices", { status: "DRAFT", supplier_id: f.supplier, supplier_code_snapshot: source.supplier_code_snapshot,
+    supplier_name_snapshot: source.supplier_name_snapshot, currency_code: "HKD", currency_decimal_places: 2, supplier_invoice_number: invoiceCode,
+    active_supplier_invoice_key: invoiceCode, invoice_date: RECEIPT_DATE, due_date: RECEIPT_DATE, total_amount: 12, outstanding_amount: 12,
+    created_at: now, updated_at: now, created_by_label: "fixture" });
+  const count = async tx => Number((await tx.query("SELECT COUNT(*) AS total FROM ap_invoice_lines WHERE invoice_id = ?", [invoiceId]))[0][0].total);
+  const occupy = tx => tx.query(`INSERT INTO ap_invoice_lines
+    (invoice_id, line_no, line_type, goods_receipt_id, goods_receipt_line_id, active_goods_receipt_line_id, quantity, line_amount)
+    VALUES (?, 1, 'RECEIPT', ?, ?, ?, 12, 12)`, [invoiceId, id, source.goods_receipt_line_id, source.goods_receipt_line_id]);
+  await assertConcurrentReversalRejected(f, receipt, count, occupy, "GR_REVERSAL_INVOICED");
+});
+
+integrationTest("沖銷等採購單鎖期間提交退供已過帳行時，以真 Returns 當前讀取限制沖銷數量", async () => {
+  const f = await fixture(), receipt = await reversalRaceFixture(f);
+  const { id, order, source, claims, reversal } = receipt, now = Date.now();
+  const returnId = await f.insert("supplier_returns", { goods_receipt_id: id, purchase_order_id: order.id, supplier_id: f.supplier,
+    supplier_code_snapshot: source.supplier_code_snapshot, supplier_name_snapshot: source.supplier_name_snapshot, return_date: RECEIPT_DATE,
+    reason: "私人測試退供行", created_by_label: "fixture", created_at: now, updated_at: now });
+  const count = async tx => Number((await tx.query(`SELECT COUNT(*) AS total FROM supplier_return_lines
+    WHERE return_id = ? AND inventory_movement_id IS NOT NULL`, [returnId]))[0][0].total);
+  const occupy = async tx => {
+    await tx.query(`INSERT INTO supplier_return_lines
+      (return_id, goods_receipt_id, line_no, goods_receipt_detail_id, base_quantity, bin_id, stock_status, inventory_movement_id)
+      VALUES (?, ?, 1, ?, 11, ?, 'AVAILABLE', ?)`, [returnId, id, source.id, f.b1, source.inventory_movement_id]);
+    await tx.query("UPDATE supplier_returns SET status = 'POSTED', posted_event_id = ?, posted_at = ?, version = 2 WHERE id = ?",
+      [randomUUID(), now, returnId]);
+  };
+  await assertConcurrentReversalRejected(f, receipt, count, occupy, "GR_REVERSAL_QUANTITY_EXCEEDED");
+  const result = await f.db.context.storage.run({}, () => reversal.preview({ id, claims }));
+  assert.deepEqual(result, { version: 2, details: [{ id: Number(source.id), remainingBaseQuantity: "1" }] });
+  assert.equal((await f.read(`/api/v1/goods-receipts/${id}/reversals/preview`, f.viewer.token)).status, 403);
+});
 
 integrationTest("收貨沖銷部分與全部過帳可重送，已開票或退回超限時拒絕，稽核失敗整筆回滾", async () => {
   const f = await fixture();

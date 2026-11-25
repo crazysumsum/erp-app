@@ -16,7 +16,7 @@ async function authorize(tx, claims) {
   return actor;
 }
 
-function normalize(input) {
+export function normalizeReceiptReversal(input) {
   const body = onlyFields(input, ["eventId", "version", "reason", "details"], "body");
   const details = Array.from(requireItems(body.details, 200, "details"), (item, index) => {
     const path = `details.${index}`;
@@ -104,10 +104,18 @@ export class ReceiptReversalService {
     });
   }
 
+  verifyReplay(claims, eventId) {
+    return this.operations.run(this.database, async tx => {
+      const actor = await authorize(tx, claims);
+      const result = await this.operations.lookup(tx, { eventId, actorId: actor.id, permissions: actor.permissions });
+      if (result.resultType !== "REVERSAL") throw purchasingError("PURCHASING_OPERATION_NOT_FOUND");
+    });
+  }
+
   async create({ id, claims, input, req, context = {} }) {
     try {
       positiveId(id, "id");
-      const request = normalize(input);
+      const request = normalizeReceiptReversal(input);
       return await this.operations.run(this.database, async tx => {
         const nowMs = this.time.nowMs();
         const actor = await authorize(tx, claims);

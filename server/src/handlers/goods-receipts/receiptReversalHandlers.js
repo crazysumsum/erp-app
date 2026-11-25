@@ -1,4 +1,5 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { deepFreeze } from "../../framework/api/normalizeApiDefaultsConfig.js";
 import { hasActiveGoodsReceiptInvoiceInTransaction } from "../../modules/accounts-payable/hasActiveGoodsReceiptInvoiceInTransaction.js";
 import { issuePurchaseReversalContext } from "../../modules/inventory/InventoryPurchaseContext.js";
 import { InventoryPostingService } from "../../modules/inventory/InventoryPostingService.js";
@@ -6,7 +7,7 @@ import { normalizePurchasingConfig } from "../../modules/purchasing/normalizePur
 import { PurchasingAuditService } from "../../modules/purchasing/PurchasingAuditService.js";
 import { PurchasingOperationService } from "../../modules/purchasing/PurchasingOperationService.js";
 import { purchasingError } from "../../modules/purchasing/purchasingErrors.js";
-import { ReceiptReversalService } from "../../modules/purchasing/ReceiptReversalService.js";
+import { normalizeReceiptReversal, ReceiptReversalService } from "../../modules/purchasing/ReceiptReversalService.js";
 import { readPostedSupplierReturnQuantitiesInTransaction } from "../../modules/returns/readPostedSupplierReturnQuantitiesInTransaction.js";
 import { EMPTY } from "../purchasing/purchasingSchemas.js";
 import { GOODS_RECEIPT_CONFIRM_PARAMS } from "../purchasing/receivingSchemas.js";
@@ -22,6 +23,12 @@ const input = shape({
   password: { type: "string", minLength: 1, maxLength: 1024 },
   details: { type: "array", minItems: 1, maxItems: 200, items: shape({ goodsReceiptDetailId: id, baseQuantity: id }) }
 });
+
+function reversalInput(req) {
+  const { password: _password, ...body } = req.input.body;
+  if (req.get("Idempotency-Key") !== body.eventId) throw purchasingError("PURCHASING_INPUT_INVALID", { field: "eventId" });
+  return body;
+}
 
 class ReceiptReversalHandler extends BaseRequestHandler {
   constructor(services) {
@@ -65,11 +72,20 @@ export class ReverseGoodsReceiptHandler extends ReceiptReversalHandler {
     responseSchema: { 200: shape({ id, number: { type: "string" }, status: { const: "POSTED" }, version: id, replayed: { type: "boolean" } }) }
   };
 
+  prepareIdempotency(req) {
+    const body = normalizeReceiptReversal(reversalInput(req));
+    return {
+      input: deepFreeze({ body, params: { id: req.input.params.id }, query: {} }),
+      replay: async sendCachedResponse => {
+        await this.reversals.verifyReplay(req.auth.claims, body.eventId);
+        sendCachedResponse();
+      }
+    };
+  }
+
   async execute(req) {
-    const { password: _password, ...input } = req.input.body;
-    if (req.get("Idempotency-Key") !== input.eventId) throw purchasingError("PURCHASING_INPUT_INVALID", { field: "eventId" });
     return this.response(await this.reversals.create({
-      id: Number(req.input.params.id), claims: req.auth.claims, input, req,
+      id: Number(req.input.params.id), claims: req.auth.claims, input: reversalInput(req), req,
       context: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ip: req.ip ?? "" }
     }));
   }
