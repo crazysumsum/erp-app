@@ -219,7 +219,11 @@ export class ApInvoiceService {
     return this.#run({ claims, invoiceId, body, context }, voiding ? "VOID_INVOICE" : "CANCEL_INVOICE", { reason: why },
       async (tx, { actor, nowMs }, id, version) => {
         const invoice = await this.#lock(tx, id, version, voiding ? "CONFIRMED" : "DRAFT");
-        if (voiding && storedUnits(invoice.allocated_amount) !== 0n) throw apError("AP_INVOICE_HAS_ALLOCATIONS");
+        if (voiding) {
+          if (storedUnits(invoice.allocated_amount) !== 0n) throw apError("AP_INVOICE_HAS_ALLOCATIONS");
+          const [[credit]] = await tx.query("SELECT 1 FROM ap_credit_notes WHERE invoice_id = ? AND status = 'CONFIRMED' LIMIT 1", [id]);
+          if (credit) throw apError("AP_INVOICE_HAS_ALLOCATIONS");
+        }
         await tx.query("UPDATE ap_invoice_lines SET active_goods_receipt_line_id = NULL WHERE invoice_id = ? AND active_goods_receipt_line_id IS NOT NULL", [id]);
         const voidFields = voiding ? { void_reason: why, voided_by: actor.id, voided_by_label: actor.username, voided_at: nowMs } : {};
         await tx.query("UPDATE ap_invoices SET ? WHERE id = ?", [{
