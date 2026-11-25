@@ -121,6 +121,8 @@ async function logout(page, account) {
 test("AP credit note browser flow applies and reverses invoice credits", async ({ page }) => {
   page.setDefaultTimeout(10_000);
   const problems = [];
+  const creditEndpoint = "**/api/v1/ap-credit-notes";
+  let lostResponseRequest;
   const isApApi = (url) => /^\/api\/v1\/ap-/u.test(new URL(url).pathname);
   page.on("pageerror", (error) => problems.push(error.message));
   page.on("console", (message) => {
@@ -130,7 +132,9 @@ test("AP credit note browser flow applies and reverses invoice credits", async (
     if (isApApi(response.url()) && response.status() >= 400) problems.push(`${response.status()} ${new URL(response.url()).pathname}`);
   });
   page.on("requestfailed", (request) => {
-    if (isApApi(request.url()) && request.failure()?.errorText !== "net::ERR_ABORTED") problems.push(request.failure()?.errorText);
+    if (request !== lostResponseRequest && isApApi(request.url()) && request.failure()?.errorText !== "net::ERR_ABORTED") {
+      problems.push(request.failure()?.errorText);
+    }
   });
   const code = `APC-${tag}`, now = Date.now();
   const [party] = await db.query("INSERT INTO suppliers SET ?", [{
@@ -161,8 +165,26 @@ test("AP credit note browser flow applies and reverses invoice credits", async (
   await page.getByRole("button", { name: "建立貸項草稿", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "請選擇每行的原發票行並輸入有效金額" })).toBeFocused();
   await page.getByLabel("貸項金額", { exact: true }).fill("0.02");
+  const loseResponse = async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    const response = await route.fetch();
+    expect(response.ok()).toBe(true);
+    lostResponseRequest = route.request();
+    await route.abort("failed");
+  };
+  await page.route(creditEndpoint, loseResponse);
   await page.getByRole("button", { name: "建立貸項草稿", exact: true }).click();
+  const retry = page.getByRole("button", { name: "重試原操作", exact: true });
+  await expect(retry).toBeVisible();
+  await page.unroute(creditEndpoint, loseResponse);
+  await page.reload();
+  const replayed = page.waitForResponse((response) => response.ok() && response.request().method() === "POST" &&
+    new URL(response.url()).pathname === "/api/v1/ap-credit-notes");
+  await retry.click();
+  expect((await replayed).request().postDataJSON().eventId).toBe(lostResponseRequest.postDataJSON().eventId);
   await page.waitForURL(/\/ap\/credit-notes\/\d+$/u);
+  const [[{ total }]] = await db.query("SELECT COUNT(*) AS total FROM ap_credit_notes WHERE invoice_id = ?", [origin.id]);
+  expect(Number(total)).toBe(1);
   const creditPath = new URL(page.url()).pathname;
   await page.reload();
   await page.getByRole("button", { name: "編輯草稿" }).click();
