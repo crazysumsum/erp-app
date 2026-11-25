@@ -469,6 +469,28 @@ integrationTest("P1 發票來源讀取確認收貨快照，序列化採購單及
   assert.deepEqual(otherCurrencyList.body.data.items.map(item => [String(item.id), item.currencyCode]), [[otherCurrencyReceipt, "BMD"]]);
 });
 
+integrationTest("部分沖銷後應付來源只取正淨量，省略全數沖銷行並拒絕整張已沖銷", async () => {
+  const f = await fixture();
+  const order = await f.order(), id = await f.draft(order.id);
+  assert.equal((await f.confirm(id, 1, twoLines(f, order))).status, 200);
+  const read = () => f.transaction(tx => readSupplierInvoiceSourcesInTransaction(tx, { goodsReceiptIds: [String(id)] }),
+    { isolationLevel: "READ COMMITTED" });
+  const [original] = await read();
+  // Applied reversal projections are the Purchasing contract. The reversal service verifies actual inventory posting separately.
+  await f.db.query(`UPDATE goods_receipt_details SET reversed_base_quantity =
+    CASE WHEN purchase_order_line_id = ? THEN 2 ELSE received_base_quantity END WHERE goods_receipt_id = ?`, [order.lineA, id]);
+  await f.db.query("UPDATE goods_receipts SET status = 'PARTIALLY_REVERSED', total_reversed_base_quantity = 12 WHERE id = ?", [id]);
+  const [net] = await read();
+  assert.deepEqual(net.lines, [{ ...original.lines[0], receivedBaseQuantity: "10" }]);
+  const listed = await f.read(`/api/v1/goods-receipts?status=PARTIALLY_REVERSED&purchaseOrderId=${order.id}`);
+  assert.deepEqual(listed.body.data.items.map(item => [item.id, item.status]), [[id, "PARTIALLY_REVERSED"]]);
+  await f.db.query("UPDATE goods_receipts SET total_reversed_base_quantity = 13 WHERE id = ?", [id]);
+  await assert.rejects(() => read(), { code: "PURCHASING_DEPENDENCY_UNAVAILABLE" });
+  await f.db.query("UPDATE goods_receipt_details SET reversed_base_quantity = received_base_quantity WHERE goods_receipt_id = ?", [id]);
+  await f.db.query("UPDATE goods_receipts SET status = 'REVERSED', total_reversed_base_quantity = 22 WHERE id = ?", [id]);
+  await assert.rejects(() => read(), { code: "GR_STATE_CONFLICT" });
+});
+
 integrationTest("收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403", async () => {
   const f = await fixture();
   const open = await f.order(), draftPo = await f.order("DRAFT");
