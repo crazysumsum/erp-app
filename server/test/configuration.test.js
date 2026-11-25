@@ -15,6 +15,7 @@ test("global configuration validation normalizes every configuration section", (
   assert.deepEqual(Object.keys(configuration).sort(), [
     "api",
     "application",
+    "company",
     "customer",
     "database",
     "deviceBinding",
