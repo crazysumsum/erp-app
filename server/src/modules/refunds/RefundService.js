@@ -30,9 +30,9 @@ function assertRefundDate(time, nowMs, refundDate) {
 }
 
 export class RefundService {
-  constructor({ kind, commands, time, nextDocumentNumber, lockCreditNote }) {
+  constructor({ kind, commands, time, nextDocumentNumber, lockCreditNote, updateCreditNote }) {
     if (!Object.hasOwn(KINDS, kind)) throw new TypeError("Unknown refund kind");
-    Object.assign(this, { kind: KINDS[kind], commands, time, nextDocumentNumber, lockCreditNote });
+    Object.assign(this, { kind: KINDS[kind], commands, time, nextDocumentNumber, lockCreditNote, updateCreditNote });
   }
 
   create({ claims, input, context }) {
@@ -130,6 +130,10 @@ export class RefundService {
   }
 
   async #changeCredit(tx, credit, { availableAmount, refundedAmount }, nowMs) {
+    if (this.updateCreditNote) {
+      await this.updateCreditNote(tx, credit, { available_amount: availableAmount, refunded_amount: refundedAmount }, nowMs);
+      return;
+    }
     if (Number(credit.version) >= MAX_VERSION) throw refundError("REFUND_BALANCE_CONFLICT");
     const [updated] = await tx.execute(
       `UPDATE ${this.kind.credit} SET available_amount = ?, refunded_amount = ?, version = version + 1, updated_at = ?
