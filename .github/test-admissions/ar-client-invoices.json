@@ -1,22 +1,23 @@
 {
   "version": 1,
-  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Work item: PM work list ccea29fb of 2026-11-20 (Sam's instruction relayed), item 3a+3b, AR client pages by claude-erp-app-supplier-01. client/config/menu.js (one added group, one-off SCOPE from claude-erp-app-tl-01, agentmsg fe7cd70a) is pinned by purchasing-task024-client.json, whose menu.js pin this change refreshes (CI admin 1c5b13d6). The author does not approve this receipt.",
-  "purpose": "AR client, invoice pages: a service for /api/v1/ar-invoices and /api/v1/ar-invoiced-shipments whose commands send Idempotency-Key equal to body.eventId; an invoice list with URL-restored filters; an invoice detail that shows the server totalAmount rather than a line sum, line amounts without rounding and sales-unit quantities and, with fulfillment.view, links from lines to their shipments, with confirm, cancel and void through the existing useCommandEvent (an uncertain outcome retries the same eventId); and a create-from-shipments page that lists SHIPPED shipments, marks those already invoiced, limits the selection to one customer and 20 shipments, and locks the form while an outcome is uncertain. menu.js gains the accountsReceivable group these pages declare. The receipt UI follow-up displays an em dash for outstanding amounts on voided or cancelled invoices in both the list and details.",
-  "data": "No database or network: mocked services and real discovered pages, with inline objects of at most 4 shipments, 2 invoice lines and 1 invoice. No fixture files. One follow-up case uses three inline invoice rows, with no database or network.",
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Work item: PM work list ccea29fb of 2026-11-20 (Sam's instruction relayed), item 3a+3b, AR client pages by claude-erp-app-supplier-01. client/config/menu.js (one added group, one-off SCOPE from claude-erp-app-tl-01, agentmsg fe7cd70a) is pinned by purchasing-task024-client.json, whose menu.js pin this change refreshes (CI admin 1c5b13d6). The author does not approve this receipt. G1 uses Sam's 2026-11-24 extension 「延續到上線」 in AGENTS.md (#395). G1 functional candidate c0b02259763ec798ec67f644c1643da95e867797 was independently reviewed by codex-erp-app-tl-01 (agentmsg df386a3a); codex-erp-app-ci-01 confirmed the four affected receipts and test scope (agentmsg 30df4073). The author supplies the updated pins for external registration. G5 functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator codex-erp-app-ci-01 confirmed exact candidate fdef6ce2e28ea7152e43d164f8bcade778fdb59d, the active receipt ownership and the seven-case delta (agentmsg 2591579c). Codex TL independently reviewed that exact functional candidate (agentmsg f06e4b9a). The CI administrator registers the updated digests.",
+  "purpose": "AR client, invoice pages: a service for /api/v1/ar-invoices and /api/v1/ar-invoiced-shipments whose commands send Idempotency-Key equal to body.eventId; an invoice list with URL-restored filters; an invoice detail that shows the server totalAmount rather than a line sum, line amounts without rounding and sales-unit quantities and, with fulfillment.view, links from lines to their shipments, with confirm, cancel and void through the existing useCommandEvent (an uncertain outcome retries the same eventId); and a create-from-shipments page that lists SHIPPED shipments, marks those already invoiced, limits the selection to one customer and 20 shipments, and locks the form while an outcome is uncertain. menu.js gains the accountsReceivable group these pages declare. The receipt UI follow-up displays an em dash for outstanding amounts on voided or cancelled invoices in both the list and details. G1 covers opening invoice customer lookup and registration, the dedicated permission, stale customer selection, and retrying an uncertain submission with the same payload and event ID. G5 covers the A4 invoice sheet and a print-time recheck, including withholding print if the invoice was voided after preview.",
+  "data": "No database or network: mocked services and real discovered pages, with inline objects of at most 4 shipments, 2 invoice lines and 1 invoice. No fixture files. One follow-up case uses three inline invoice rows, with no database or network. G1 adds three mocked page cases plus one mocked service case, each using one inline customer and at most one invoice. No database or network. G5 adds three unit cases using one mocked invoice and up to one line; no database or network.",
   "concurrency": "Within a case: 1, no concurrent requests. Runner workers unchanged: the existing client job keeps Vitest's default file workers.",
   "repetitions": "1",
-  "thresholds": "All 24 cases pass. The client coverage configuration is unchanged (it sets no numeric floor); server floors are untouched. No timing threshold.",
+  "thresholds": "All 31 cases pass. The client coverage configuration is unchanged (it sets no numeric floor); server floors are untouched. No timing threshold.",
   "trigger": "Existing ci.yml triggers and discovery only, in the existing client test job: admitted PR dispatch, push to main and the existing weekly schedule. No new job, step, schedule or dispatch. No capacity or performance workload.",
-  "cost": "Local run of the 3 new files: 23 cases in about 0.3 s of test time (about 1.1 s wall). Not measured in CI. No new job. Browser evidence is a private Playwright run outside CI discovery (3 flows, mocked AR API because the AR endpoints of #372/#375 are not in main), kept in .worktrees/ci-pm-handoffs/ar-client-invoices-browser-20261120; it adds nothing to CI. The follow-up additionally verifies the amount display once using the existing private real HTTP and Playwright receipt and aging flow.",
+  "cost": "Local run of the 3 new files: 23 cases in about 0.3 s of test time (about 1.1 s wall). Not measured in CI. No new job. Browser evidence is a private Playwright run outside CI discovery (3 flows, mocked AR API because the AR endpoints of #372/#375 are not in main), kept in .worktrees/ci-pm-handoffs/ar-client-invoices-browser-20261120; it adds nothing to CI. The follow-up additionally verifies the amount display once using the existing private real HTTP and Playwright receipt and aging flow. G1 adds four local unit cases. Six related files (46 cases) ran in under 2 seconds locally per timezone. CI time has not been measured. G5 adds three unit cases under existing Vitest discovery. Six related client files (39 cases) ran in 1.3 to 2.7 seconds locally per timezone. CI time has not been measured.",
   "files": [
     {
       "path": "client/test/services/ar.test.js",
       "mode": "100644",
-      "blob": "e8df6aa8435d978bd1fc6fbc78896a196a381d62",
+      "blob": "82a2a3566291df85126033bc43333b024ffe99fc",
       "kind": "functional",
       "cases": [
         "confirm、cancel、void 用 body.eventId 做 Idempotency-Key，body 原封不動",
         "列表映射 DataTable；唔送 sortBy／descending 同空 filter；detail 轉發 AbortSignal",
+        "期初按客戶代碼查找，登記使用專用端點並以 eventId 去重",
         "按幣別小數位顯示，但唔四捨五入真 4 位小數",
         "整除顯示銷售單位 × 單價；否則顯示基本單位並註明單價單位；大數用 BigInt"
       ]
@@ -60,19 +61,67 @@
     {
       "path": "client/src/pages/ar/ArInvoicesPage.vue",
       "mode": "100644",
-      "blob": "af688c728ea44b40da4f73558dbe3cdd16813621",
+      "blob": "a65fa59a7e9e489f5823bc6ae48c52c4956d4194",
       "kind": "support"
     },
     {
       "path": "client/src/pages/ar/ArInvoiceDetailPage.vue",
       "mode": "100644",
-      "blob": "c2c4fc723d08859912c48d1b9d28f994fbec1e20",
+      "blob": "9c2a0bbb29c4e32d2d1f5bdf6297f3ad3fbb59bd",
       "kind": "support"
     },
     {
       "path": "client/src/pages/ar/ArInvoiceCreatePage.vue",
       "mode": "100644",
       "blob": "c4c8ad77498841512d85facb305cde5d15da2dc2",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/pages/ar/arOpeningInvoicePage.test.js",
+      "mode": "100644",
+      "blob": "dded64e230b61efeac00c5b572fa3d20488e1f63",
+      "kind": "functional",
+      "cases": [
+        "期初登記只需專用權限，輸入代碼核對客戶，確認後顯示客戶和新編號",
+        "結果未確定時鎖定欄位，重試沿用相同內容及 eventId",
+        "修改客戶代碼後必須重新核對，查不到的代碼不能入帳"
+      ]
+    },
+    {
+      "path": "client/src/pages/ar/ArOpeningInvoiceCreatePage.vue",
+      "mode": "100644",
+      "blob": "aacfaa9b4c55f98213632d420991344e6ebb3a78",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/pages/ar/arInvoicePrintPage.test.js",
+      "mode": "100644",
+      "blob": "8973ec74c34eaed1f832f6870b96a30413f2ab70",
+      "kind": "functional",
+      "cases": [
+        "列印前重新讀取發票，使用新取得的應收列印資料",
+        "發票在預覽後作廢時，重新檢查會移除預覽並停印"
+      ]
+    },
+    {
+      "path": "client/test/pages/ar/arInvoicePrintSheet.test.js",
+      "mode": "100644",
+      "blob": "0a21c99e23df5e2f77438aeada10ff3a8c8e6a91",
+      "kind": "functional",
+      "cases": [
+        "列印版顯示帳單地址、來源單號、銷售單位、快照單價及伺服器總額"
+      ]
+    },
+    {
+      "path": "client/src/pages/ar/ArInvoicePrintPage.vue",
+      "mode": "100644",
+      "blob": "34d55693b3f4dc921dd79913b94bf63e93c2f35e",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/components/ar/ArInvoicePrintSheet.vue",
+      "mode": "100644",
+      "blob": "0d6b8b6ba41df9b2bad6b8a9ffd24474348a3fc0",
       "kind": "support"
     }
   ]
