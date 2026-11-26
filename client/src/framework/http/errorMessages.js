@@ -49,6 +49,7 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   GOODS_RECEIPT_NOT_FOUND: "找不到這張收貨單，請返回列表重新查詢",
   PURCHASING_OPERATION_NOT_FOUND: "暫時查不到這個操作的結果；請稍後用同一操作再查，不要重新建立",
   GR_STATE_CONFLICT: "收貨單目前的狀態不允許這個操作，請重新整理",
+  GR_INVOICE_SOURCE_MISMATCH: "同一張發票的收貨單必須屬於同一供應商及幣別，請重新選擇",
   PO_LINE_NOT_RECEIVABLE: "採購單行不屬於這張採購單或已關閉，不能收貨",
   GR_DETAIL_MISMATCH: "收貨明細的貨品或單位與採購單行不符，請重新選擇",
   DUPLICATE_RECEIPT_DIMENSION: "同一採購單行在同一倉庫、庫位、批次及狀態只可有一行明細，請合併數量",
