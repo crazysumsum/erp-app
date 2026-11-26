@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { SalesOrderService, readSalesOrderDetail, lockSalesOrderLines } from "../../src/modules/sales/SalesOrderService.js";
+import { SalesQuotationService } from "../../src/modules/sales/SalesQuotationService.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 import { formatDateForFile } from "../../src/services/time/timeFormat.js";
 import { createOrder, newOrderInsideInventory, secondCustomer, setup, stock } from "../sales/phase2/fixtures.js";
@@ -70,6 +71,47 @@ integrationTest("TC-021 Phase B confirms full, partial and zero ATP with exact m
     assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_order_status_history WHERE sales_order_id=? AND action='confirmed'", [f.request.id]))[0][0].n, 1);
   });
 });
+integrationTest("TC-024 quotation order confirmation reports only real master changes and retains the quoted price source", async t => {
+  const f = await setup(t);
+  await stock(f, 4);
+  f.beforeParents.push(() => f.db.execute("DELETE FROM sales_quotation_conversions WHERE quotation_id IN (SELECT id FROM sales_quotations WHERE customer_id=?)", [f.customerId]));
+  f.beforeParents.unshift(() => f.db.execute("DELETE FROM sales_quotations WHERE customer_id=?", [f.customerId]));
+  const quotations = new SalesQuotationService(f);
+  const date = f.time.fileDate();
+  const currencyCode = "HKD";
+  await f.db.execute("UPDATE item_skus SET suggested_price_amount='2.5000' WHERE id=?", [f.skuId]);
+  const lines = [{ skuId: f.skuId, skuUomId: f.skuUomId, quantity: "1", unitSellingPrice: "1.2500" }];
+
+  const scenarios = [
+    { priceSource: "QUOTATION", unitSellingPrice: "1.2500", masterChanged: false },
+    { priceSource: "MANUAL", unitSellingPrice: "2.5000", masterChanged: false },
+    { priceSource: "QUOTATION", unitSellingPrice: "1.2500", masterChanged: true }
+  ];
+  for (const { priceSource, unitSellingPrice, masterChanged } of scenarios) {
+    const { quotation } = await quotations.create({ claims: f.claims, input: { eventId: randomUUID(),
+      customerId: f.customerId, currencyCode, quotationDate: date, validUntil: date, lines } });
+    const { quotation: issued } = await quotations.issue({ claims: f.claims, id: quotation.id,
+      input: { eventId: randomUUID(), version: quotation.version } });
+    const { salesOrder: draft } = await quotations.convert({ claims: f.claims, id: quotation.id,
+      input: { eventId: randomUUID(), version: issued.version, order: { customerId: f.customerId, currencyCode,
+        fulfillmentWarehouseId: f.warehouseId, orderDate: date, lines: [{ ...lines[0], unitSellingPrice }] } } });
+    const [[draftLine]] = await f.db.query("SELECT price_source FROM sales_order_lines WHERE sales_order_id=?", [draft.id]);
+    assert.equal(draftLine.price_source, priceSource);
+    if (masterChanged) await f.db.execute("UPDATE item_skus SET sku_name='Changed after conversion' WHERE id=?", [f.skuId]);
+
+    const eventId = randomUUID();
+    const confirmed = await f.service().confirm({ claims: f.claims, id: draft.id, input: { eventId, version: draft.version } });
+    assert.equal(confirmed.statusCode, 200);
+    assert.deepEqual(confirmed.data.warnings, masterChanged ? ["MASTER_DATA_CHANGED"] : []);
+    assert.equal(confirmed.data.salesOrder.lines[0].priceSource, priceSource);
+    assert.equal(confirmed.data.salesOrder.lines[0].unitSellingPrice, unitSellingPrice);
+    if (masterChanged) assert.equal(confirmed.data.salesOrder.lines[0].skuName, "Changed after conversion");
+    const [[history]] = await f.db.query("SELECT reason FROM sales_order_status_history WHERE event_id=? AND action='confirmed'", [eventId]);
+    if (masterChanged) assert.match(history.reason, /^MASTER_DIFFERENCE [a-f0-9]{64}$/u);
+    else assert.equal(history.reason, "");
+  }
+});
+
 integrationTest("TC-024 Phase B rejects newly inactive Customer and commits Draft/FAILED without Inventory effects", async t => {
   const f = await setup(t), intent = await f.service().startConfirmation(f.request);
   await f.db.execute("UPDATE customers SET status='inactive' WHERE id=?", [f.customerId]);
