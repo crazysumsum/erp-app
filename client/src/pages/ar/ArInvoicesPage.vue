@@ -51,7 +51,7 @@ function reset() { router.replace({ query: {} }); }
 
 <template>
   <div>
-    <PageHeader subtitle="由出貨開立的應收發票；可用發票編號、客戶代碼或名稱的開頭搜尋。">
+    <PageHeader subtitle="可用發票編號、舊發票號碼、客戶代碼或名稱的開頭搜尋。">
       <template #actions><q-btn v-if="canCreate" color="primary" label="由出貨開立發票" to="/ar/invoices/new" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md">
@@ -67,11 +67,11 @@ function reset() { router.replace({ query: {} }); }
     </div>
     <div class="q-px-md q-pb-md" aria-live="polite">
       <DataTable :key="tableKey" :fetch="fetchRows" :columns="columns" sticky-actions :initial-pagination="pagination()">
-        <template #body-cell-number="{ row }"><q-td>{{ row.number || "（草稿未編號）" }}</q-td></template>
+        <template #body-cell-number="{ row }"><q-td>{{ row.number || "（草稿未編號）" }}<div v-if="row.openingReference" class="text-caption">舊號 <span style="white-space: break-spaces">{{ row.openingReference }}</span></div></q-td></template>
         <template #body-cell-status="{ row }"><q-td><q-badge :color="statusColors[row.status]" :label="invoiceStatusLabels[row.status]" /></q-td></template>
         <template #body-cell-customer="{ row }"><EllipsisCell :text="`${row.customerCode} — ${row.customerName}`" max-width="160px" /></template>
         <template #body-cell-dueDate="{ row }"><q-td>{{ row.dueDate || "—" }}</q-td></template>
-        <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ money(row.totalAmount, row.currencyDecimalPlaces) }}</q-td></template>
+        <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ money(row.totalAmount, row.currencyDecimalPlaces) }}<div v-if="row.openingReference" class="text-caption">截數餘額</div></q-td></template>
         <template #body-cell-outstandingAmount="{ row }"><q-td class="text-right">{{ invoiceOutstandingText(row) }}</q-td></template>
         <template #body-cell-updatedAt="{ row }"><q-td>{{ timestamp(row.updatedAt) }}</q-td></template>
         <template #body-cell-actions="{ row }"><q-td class="text-right"><q-btn flat dense label="查看" :aria-label="`查看 ${row.number || `草稿 ${row.id}`}`" :to="`/ar/invoices/${row.id}`" /></q-td></template>

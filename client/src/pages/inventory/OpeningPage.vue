@@ -19,6 +19,7 @@ const session = useSessionStore(), route = useRoute(), router = useRouter();
 const active = computed(() => can(session, page.requires));
 const job = shallowRef(null), fileInput = ref(null), queryId = ref(""), reason = ref("");
 const error = ref(""), busy = ref(false), dialogOpen = ref(false), needsLookup = ref(false);
+const control = shallowRef(null), goLiveVersion = ref(""), goLiveReason = ref(""), closing = ref(false);
 const labels = { READY: "可確認入帳", INVALID: "預檢有錯誤", COMPLETED: "已完成入帳", CANCELLED: "已取消" };
 const issueLabels = {
   OPENING_CSV_TOO_MANY_ROWS: "最多 5,000 筆資料列",
@@ -39,14 +40,16 @@ const issueLabels = {
   LOT_DATA_CONFLICT: "同一批次的到期日不一致"
 };
 const canConfirm = computed(() => active.value && job.value?.status === "READY" &&
-  job.value.control.status === "PRE_GO_LIVE" && !needsLookup.value);
+  control.value?.status === "PRE_GO_LIVE" && !needsLookup.value);
+const canGoLive = computed(() => active.value && control.value?.status === "PRE_GO_LIVE" &&
+  safeId(goLiveVersion.value.trim()) && [...goLiveReason.value.trim()].length >= 5);
 let controller = new AbortController();
 
 function safeId(value) {
   return typeof value === "string" && /^[1-9][0-9]{0,15}$/u.test(value) && Number.isSafeInteger(Number(value));
 }
 
-async function run(work, { uncertain = false } = {}) {
+async function run(work, { uncertain = false, controlOnly = false } = {}) {
   if (!active.value || busy.value) return;
   const current = controller.signal;
   busy.value = true;
@@ -54,13 +57,29 @@ async function run(work, { uncertain = false } = {}) {
   try {
     const result = await work(current);
     if (current.aborted) return;
+    if (controlOnly) {
+      control.value = result;
+      return;
+    }
+    control.value = result.control;
     job.value = result;
     queryId.value = String(result.id);
     needsLookup.value = false;
     await router.replace({ query: { id: queryId.value } });
   } catch (cause) {
     if (current.aborted) return;
-    if (uncertain && (!cause.status || cause.status >= 500)) {
+    if (controlOnly && uncertain && cause.code === "VERSION_CONFLICT") {
+      control.value = null;
+      goLiveVersion.value = "";
+      error.value = "期初資料已變更，請重新讀取狀態並重新對帳簽核。";
+    } else if (controlOnly && uncertain && (!cause.status || cause.status >= 500)) {
+      control.value = null;
+      goLiveVersion.value = "";
+      error.value = "結案結果未確認。請先重新讀取結案狀態。";
+    } else if (cause.code === "OPENING_CLOSED") {
+      control.value = null;
+      error.value = "期初匯入已關閉。請重新讀取結案狀態。";
+    } else if (uncertain && (!cause.status || cause.status >= 500)) {
       needsLookup.value = true;
       error.value = "入帳結果未確認。請先按「查詢結果」核對原匯入。";
     } else {
@@ -69,6 +88,10 @@ async function run(work, { uncertain = false } = {}) {
   } finally {
     if (!current.aborted) busy.value = false;
   }
+}
+
+function readControl() {
+  return run(signal => inventory.getOpeningControl({ signal }), { controlOnly: true });
 }
 
 function lookup() {
@@ -83,7 +106,7 @@ function lookup() {
 
 function upload() {
   const file = fileInput.value?.files?.[0];
-  if (!file || busy.value) return;
+  if (!file || busy.value || control.value?.status !== "PRE_GO_LIVE") return;
   job.value = null;
   return run(signal => inventory.uploadOpening(file, { signal }));
 }
@@ -96,18 +119,38 @@ async function confirm(password) {
   await run(signal => inventory.confirmOpening(current.id, body, { signal }), { uncertain: true });
 }
 
+function review(goLive) {
+  closing.value = goLive;
+  dialogOpen.value = true;
+}
+
+async function confirmGoLive(password) {
+  if (!canGoLive.value || busy.value) return;
+  dialogOpen.value = false;
+  const body = { eventId: crypto.randomUUID(), expectedVersion: Number(goLiveVersion.value.trim()),
+    reason: goLiveReason.value.trim(), password };
+  await run(signal => inventory.goLive(body, { signal }), { uncertain: true, controlOnly: true });
+}
+
 watch([() => session.user?.id, active], () => {
   controller.abort();
   controller = new AbortController();
   job.value = null;
+  control.value = null;
   busy.value = false;
   error.value = "";
   dialogOpen.value = false;
   reason.value = "";
+  goLiveVersion.value = "";
+  goLiveReason.value = "";
+  closing.value = false;
   needsLookup.value = false;
   queryId.value = safeId(route.query.id) ? route.query.id : "";
   if (fileInput.value) fileInput.value.value = "";
-  if (queryId.value && active.value) lookup();
+  if (active.value) {
+    if (queryId.value) lookup();
+    else readControl();
+  }
 }, { immediate: true, flush: "sync" });
 onUnmounted(() => controller.abort());
 </script>
@@ -118,8 +161,11 @@ onUnmounted(() => controller.abort());
     <div class="q-px-md q-pb-md opening-page">
       <q-banner v-if="error" class="q-mb-md" role="alert">{{ error }}</q-banner>
       <p v-if="busy" role="status">處理中，請稍候。</p>
+      <p v-if="control?.status === 'PRE_GO_LIVE'">尚未結案 · 目前對帳版本 {{ control.version }}</p>
+      <p v-else-if="control?.status === 'LIVE'" role="status">庫存已上線，期初匯入已關閉。可查詢歷史結果。</p>
+      <q-btn v-else flat label="重新讀取結案狀態" :disable="busy" @click="readControl" />
       <form
-        v-if="job?.control.status !== 'LIVE'"
+        v-if="control?.status === 'PRE_GO_LIVE'"
         method="post"
         aria-labelledby="opening-upload"
         class="q-mb-lg"
@@ -132,7 +178,18 @@ onUnmounted(() => controller.abort());
         <p id="opening-file-help" class="text-caption">UTF-8 CSV，每檔最多 5,000 筆。上傳預檢後須另外確認入帳。</p>
         <q-btn label="上傳預檢" color="primary" type="submit" :disable="busy" />
       </form>
-      <p v-else>庫存已上線，期初匯入已關閉。可查詢歷史結果。</p>
+
+      <form v-if="control?.status === 'PRE_GO_LIVE'" method="post" aria-labelledby="opening-go-live"
+        class="q-mb-lg" @submit.prevent="canGoLive && review(true)">
+        <h2 id="opening-go-live" class="text-subtitle1">期初結案</h2>
+        <label for="opening-go-live-version" class="block">已簽核的對帳版本（必填）</label>
+        <input id="opening-go-live-version" v-model="goLiveVersion" type="text" inputmode="numeric"
+          pattern="[1-9][0-9]{0,15}" required :disabled="busy">
+        <label for="opening-go-live-reason" class="block">結案原因（必填）</label>
+        <input id="opening-go-live-reason" v-model="goLiveReason" type="text" required minlength="5" maxlength="500"
+          :disabled="busy">
+        <q-btn class="q-ml-sm" label="核對並結案" color="negative" outline type="submit" :disable="busy || !canGoLive" />
+      </form>
 
       <form method="get" aria-labelledby="opening-query" class="q-mb-lg" @submit.prevent="lookup">
         <h2 id="opening-query" class="text-subtitle1">查詢已保存結果</h2>
@@ -144,7 +201,8 @@ onUnmounted(() => controller.abort());
 
       <section v-if="job" aria-labelledby="opening-result">
         <h2 id="opening-result" class="text-subtitle1">匯入結果</h2>
-        <p role="status">匯入 #{{ job.id }} · {{ labels[job.status] }} · {{ job.readyRows }} 筆正數資料</p>
+        <p role="status">匯入 #{{ job.id }} · {{ job.status === "READY" && control?.status === "LIVE"
+          ? "期初已結案，不可入帳" : labels[job.status] }} · {{ job.readyRows }} 筆正數資料</p>
         <p v-if="job.operationId">入帳操作編號 {{ job.operationId }}</p>
         <details v-if="job.skippedRows.length" class="q-mb-md">
           <summary>已略過 {{ job.skippedRows.length }} 筆零數量列</summary>
@@ -155,7 +213,7 @@ onUnmounted(() => controller.abort());
             第 {{ issue.row }} 列 · {{ issue.field }} · {{ Object.hasOwn(issueLabels, issue.code) ? issueLabels[issue.code] : issue.code }}
           </li>
         </ul>
-        <form v-if="canConfirm" method="post" aria-labelledby="opening-review" @submit.prevent="dialogOpen = true">
+        <form v-if="canConfirm" method="post" aria-labelledby="opening-review" @submit.prevent="review(false)">
           <h3 id="opening-review" class="text-subtitle1">確認入帳</h3>
           <label for="opening-reason" class="block">入帳原因（必填）</label>
           <input id="opening-reason" v-model="reason" name="reason" type="text" required minlength="5" maxlength="500"
@@ -164,10 +222,18 @@ onUnmounted(() => controller.abort());
         </form>
       </section>
 
-      <InventoryHighRiskDialog v-model="dialogOpen" title="確認期初庫存整批入帳"
-        :busy="busy" :disabled="!canConfirm || reason.trim().length < 5" :execute="confirm">
-        <p>匯入 #{{ job?.id }}（預檢版本 {{ job?.version }}）的 {{ job?.readyRows }} 筆資料將一起入帳。任一列失敗時整批回滾。</p>
-        <p>原因：{{ reason.trim() }}</p>
+      <InventoryHighRiskDialog v-model="dialogOpen" aria-labelledby="inventory-confirm-title" :title="closing ? '確認期初結案' : '確認期初庫存整批入帳'"
+        :confirm-label="closing ? '確認結案' : '確認過帳'" :busy="busy"
+        :disabled="closing ? !canGoLive : !canConfirm || reason.trim().length < 5" :execute="closing ? confirmGoLive : confirm">
+        <template v-if="closing">
+          <p>結案將永久關閉期初上傳及入帳。後續差異請依授權庫存調整流程處理。</p>
+          <p>已簽核的對帳版本 {{ goLiveVersion.trim() }}</p>
+          <p>原因：{{ goLiveReason.trim() }}</p>
+        </template>
+        <template v-else>
+          <p>匯入 #{{ job?.id }}（預檢版本 {{ job?.version }}）的 {{ job?.readyRows }} 筆資料將一起入帳。任一列失敗時整批回滾。</p>
+          <p>原因：{{ reason.trim() }}</p>
+        </template>
       </InventoryHighRiskDialog>
     </div>
   </div>
