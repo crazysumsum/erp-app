@@ -71,7 +71,7 @@ integrationTest("TC-021 Phase B confirms full, partial and zero ATP with exact m
     assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_order_status_history WHERE sales_order_id=? AND action='confirmed'", [f.request.id]))[0][0].n, 1);
   });
 });
-integrationTest("TC-024 quotation order confirmation reports only real master changes and retains the quoted price source", async t => {
+integrationTest("UAT D-01 quotation order confirmation reports only real master changes and retains the quoted price source", async t => {
   const f = await setup(t);
   await stock(f, 4);
   f.beforeParents.push(() => f.db.execute("DELETE FROM sales_quotation_conversions WHERE quotation_id IN (SELECT id FROM sales_quotations WHERE customer_id=?)", [f.customerId]));
