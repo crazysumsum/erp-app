@@ -16,6 +16,12 @@ function list(path, { page, rowsPerPage, filter, status, lockStatus, sortBy, des
   }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
 }
 
+function report(path, { signal, ...filters } = {}) {
+  const query = new URLSearchParams(Object.entries(filters)
+    .filter(([, value]) => value !== undefined && value !== null && value !== ""));
+  return httpClient.getBlob(`${path}?${query}`, { signal });
+}
+
 function stocktakeList(path, { page, rowsPerPage, signal, ...filters } = {}) {
   const params = Object.fromEntries(Object.entries({ page, pageSize: rowsPerPage, ...filters })
     .filter(([, value]) => value !== undefined && value !== null && value !== ""));
@@ -87,6 +93,8 @@ export default {
   listLots(options) { return list("/api/v1/inventory/lots", options); },
   listExpiry(options) { return list("/api/v1/inventory/expiry", options); },
   listMovements(options) { return list("/api/v1/inventory/movements", options); },
+  exportStocks(options) { return report("/api/v1/inventory/reports/stocks", options); },
+  exportMovements(options) { return report("/api/v1/inventory/reports/movements", options); },
   getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); },
   findOperationBySource(source, { signal } = {}) {
     return httpClient.get("/api/v1/inventory/operations/by-source", {
