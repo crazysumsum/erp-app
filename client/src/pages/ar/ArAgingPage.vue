@@ -2,14 +2,17 @@
 export const page = { name: "ar-aging", path: "/ar/aging", title: "應收帳齡", requires: { permissions: ["ar.view"] }, menu: { group: "accountsReceivable", icon: "hourglass_bottom", order: 30 } };
 </script>
 <script setup>
-import { onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import AgingCsvDownload from "@/components/aging/AgingCsvDownload.vue";
 import { money } from "@/components/ar/arPresentation.js";
 import ar from "@/services/ar.js";
 
 const route = useRoute(), router = useRouter();
 const filters = reactive({ customerId: "", currencyCode: "" });
+const appliedQuery = computed(() => Object.fromEntries(["customerId", "currencyCode"]
+  .map((key) => [key, route.query[key] ?? ""]).filter(([, value]) => value !== "")));
 const report = ref(null), loading = ref(false), error = ref("");
 const BUCKETS = [["notDue", "未到期"], ["days1To30", "逾期 1–30 日"], ["days31To60", "逾期 31–60 日"], ["days61To90", "逾期 61–90 日"], ["over90", "逾期 90 日以上"], ["total", "合計"]];
 
@@ -19,7 +22,7 @@ async function load() {
   controller?.abort();
   controller = new AbortController();
   const { signal } = controller;
-  const query = Object.fromEntries(["customerId", "currencyCode"].map((key) => [key, route.query[key] ?? ""]).filter(([, value]) => value !== ""));
+  const query = appliedQuery.value;
   Object.assign(filters, { customerId: "", currencyCode: "", ...query });
   loading.value = true; error.value = "";
   try {
@@ -34,6 +37,7 @@ async function load() {
 watch(() => JSON.stringify(route.query), load, { immediate: true });
 function apply() { router.replace({ query: Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== "")) }); }
 function reset() { router.replace({ query: {} }); }
+function exportCsv({ signal }) { return ar.exportAging({ ...appliedQuery.value, signal }); }
 </script>
 
 <template>
@@ -44,7 +48,10 @@ function reset() { router.replace({ query: {} }); }
         <div class="col-12 col-sm-6 col-md-4"><q-input v-model="filters.customerId" label="客戶 ID" hint="數字 ID" mask="################" outlined dense @keyup.enter="apply" /></div>
         <div class="col-12 col-sm-6 col-md-4"><q-input v-model="filters.currencyCode" label="貨幣代碼" hint="例如 HKD" mask="AAA" outlined dense @keyup.enter="apply" /></div>
       </div>
-      <div class="row q-gutter-sm q-mt-md"><q-btn label="查詢" color="primary" @click="apply" /><q-btn flat label="清除篩選" @click="reset" /></div>
+      <div class="row q-gutter-sm q-mt-md">
+        <q-btn label="查詢" color="primary" @click="apply" /><q-btn flat label="清除篩選" @click="reset" />
+        <AgingCsvDownload :download="exportCsv" :disabled="loading || Boolean(error) || !report" fallback-filename="ar-aging.csv" />
+      </div>
     </div>
     <div class="q-px-md q-pb-md" aria-live="polite">
       <q-skeleton v-if="loading" type="rect" aria-label="載入帳齡表" />

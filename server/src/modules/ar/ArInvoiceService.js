@@ -176,8 +176,17 @@ export class ArInvoiceService {
   /** 確認：取號，形成應收。 */
   confirm(command) {
     return this.#transition(command, { commandType: "CONFIRM_INVOICE", from: "DRAFT", action: "invoice.confirmed", checkShipmentDate: true }, async (tx, invoice, { actor, nowMs }) => {
+      const customers = this.customers(tx), customerId = Number(invoice.customer_id);
+      const customer = await customers.findById(customerId, { purpose: "ar_existing_document" });
+      if (!customer) throw arError("AR_CUSTOMER_NOT_FOUND");
+      const address = (await customers.listAddresses(customerId, { purpose: "billing" })).find((item) => item.isDefault);
+      if (!address) throw arError("AR_BILLING_ADDRESS_REQUIRED");
+      const locality = [address.city, address.stateRegion, address.postalCode].filter(Boolean).join(" ");
+      const snapshot = [address.recipientCompanyDepartment, address.addressLine1, address.addressLine2, address.addressLine3, locality, address.countryCode]
+        .filter(Boolean).join("\n");
       const number = await nextDocumentNumber(tx, { documentType: "INVOICE", time: this.time, nowMs });
-      return { number, changes: { status: "CONFIRMED", invoice_number: number, confirmed_by: actor.id, confirmed_by_label: actor.username, confirmed_at: nowMs } };
+      return { number, changes: { status: "CONFIRMED", invoice_number: number, customer_name_snapshot: customer.legalName,
+        billing_address_snapshot: snapshot, confirmed_by: actor.id, confirmed_by_label: actor.username, confirmed_at: nowMs } };
     });
   }
 

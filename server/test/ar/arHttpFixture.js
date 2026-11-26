@@ -24,11 +24,12 @@ async function runCleanups(cleanups) {
 
 let shared = null;
 
-async function setup(database = {}) {
+async function setup(database = {}, company) {
   const cleanups = [];
   const source = defaultConfigurationSource();
   // 這個檔案的請求數超過預設的每 IP 流量上限；同 supplierHttpHarness 一樣只放寬這一項。
   const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 },
+    ...(company ? { company } : {}),
     database: { ...source.database, ...database },
     requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100_000 } } });
   cleanups.push(() => application.shutdown("ar_integration_complete"));
@@ -94,20 +95,24 @@ async function setup(database = {}) {
     const read = async (id, token = clerk.token) => ok(await send(`/api/v1/ar-receipts/${id}`, { token }));
     const invoiceRow = async (id) => (await db.query("SELECT status, total_amount, allocated_amount, outstanding_amount, version FROM ar_invoices WHERE id = ?", [id]))[0][0];
     const count = async (sql, values) => Number((await db.query(`SELECT COUNT(*) AS total FROM ${sql}`, values))[0][0].total);
-    return { application, db, cleanups, send, post, invoicePost, ok, draft, receipt, read, invoice, invoiceRow, customer, count, clerk, biller, viewer, outsider, other, today, day };
+    return { application, db, cleanups, url, send, post, invoicePost, ok, draft, receipt, read, invoice, invoiceRow, customer, count, clerk, biller, viewer, outsider, other, today, day };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "AR fixture setup failed and its cleanup also failed") : error;
   }
 }
 /** 發票確認案例使用真實出貨，application 與 Fulfillment 共用隔離庫。 */
-export async function arHttpShipmentFixture(t, { includeSecond = false } = {}) {
+export async function arHttpShipmentFixture(t, { includeSecond = false, withBillingAddress = true, company } = {}) {
   const cleanups = [];
   t.after(async () => {
     const errors = await runCleanups(cleanups);
     if (errors.length) throw new AggregateError(errors, "AR shipment fixture cleanup failed");
   });
   const shipment = await shipmentDraftFixture({ after: (cleanup) => cleanups.push(cleanup) });
+  if (withBillingAddress) {
+    await shipment.s.insert("customer_address_purposes", { address_id: shipment.s.addressId, customer_id: shipment.s.customerId,
+      purpose_code: "billing", is_default: 1, created_at: shipment.s.now, updated_at: shipment.s.now });
+  }
   await migrateArShipmentFixture(shipment.db);
   await shipment.db.query("UPDATE sales_order_lines SET unit_selling_price = 40, line_amount = 200 WHERE id = ?", [shipment.s.lineId]);
   const first = (await shipment.create(shipment.body())).outcome.id;
@@ -121,7 +126,7 @@ export async function arHttpShipmentFixture(t, { includeSecond = false } = {}) {
   }
   const [[party]] = await shipment.db.query("SELECT id, customer_code AS code, legal_name AS name FROM customers WHERE id = ?", [shipment.s.customerId]);
   const [[{ currency_code: currencyCode }]] = await shipment.db.query("SELECT currency_code FROM sales_orders WHERE id = ?", [shipment.s.orderId]);
-  const http = await setup({ ...shipment.f.connectionOptions, database: shipment.f.name });
+  const http = await setup({ ...shipment.f.connectionOptions, database: shipment.f.name }, company);
   cleanups.push(...http.cleanups);
   return { ...http, party, currencyCode, shipmentIds: shipmentIds.map(Number) };
 }

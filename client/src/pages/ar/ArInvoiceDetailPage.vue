@@ -47,6 +47,8 @@ onBeforeUnmount(() => { generation += 1; controller?.abort(); });
 const canViewShipments = computed(() => session.permissions.includes("fulfillment.view"));
 const canCreateCredit = computed(() => session.permissions.includes("ar.credit.mgmt") && invoice.value?.status === "CONFIRMED");
 const actions = computed(() => (session.permissions.includes("ar.invoice.mgmt") ? invoice.value?.allowedActions ?? [] : []));
+const issuedShipmentInvoice = computed(() => invoice.value?.status === "CONFIRMED" && invoice.value.number &&
+  !invoice.value.openingReference && invoice.value.lines.length > 0);
 const dp = computed(() => invoice.value?.currencyDecimalPlaces ?? 2);
 const amount = (value) => `${invoice.value.currencyCode} ${money(value, dp.value)}`;
 const overview = computed(() => {
@@ -138,8 +140,10 @@ async function ask(action) {
           <q-btn v-for="action in actions.filter((name) => ACTIONS[name])" :key="action" :label="ACTIONS[action].label" :color="action === 'confirm' ? 'primary' : undefined"
             :loading="command.isBusy(commandKey(action))" :disable="busy || uncertain.length > 0" @click="ask(action)" />
           <q-btn v-if="canCreateCredit" flat label="開立貸項單" :to="{ name: 'ar-credit-note-draft', query: { invoiceId } }" />
+          <q-btn v-if="issuedShipmentInvoice && invoice.hasBillingAddressSnapshot" flat label="列印預覽" :to="`/ar/invoices/${invoice.id}/print`" />
           <q-btn flat label="返回發票列表" to="/ar/invoices" />
         </div>
+        <p v-if="issuedShipmentInvoice && !invoice.hasBillingAddressSnapshot">這張發票確認時尚未保存帳單地址，因此無法列印。</p>
         <q-card flat bordered class="q-mb-md">
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">概覽</h2>

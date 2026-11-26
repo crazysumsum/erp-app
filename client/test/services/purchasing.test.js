@@ -55,6 +55,20 @@ describe("TASK-024 審批及設定 client contract", () => {
   });
 });
 
+it("TASK-026 撤回確認、取消與結清送原採購版本、原因和 Idempotency-Key", async () => {
+  const payload = { eventId: "intent", version: 3, reason: "供應商確認不再到貨" };
+  for (const [method, path, body] of [
+    ["withdrawPurchaseOrderConfirmation", "confirmation/withdraw", payload],
+    ["cancelPurchaseOrder", "cancel", payload],
+    ["closePurchaseOrderRemaining", "close-remaining", { ...payload, lineIds: [11, 12] }]
+  ]) {
+    await purchasing[method](8, body);
+    expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/purchase-orders/8/${path}`, {
+      idempotent: true, idempotencyKey: "intent", body
+    });
+  }
+});
+
 describe("useCommandEvent", () => {
   const failure = (fields) => Object.assign(new Error("failed"), fields);
 
