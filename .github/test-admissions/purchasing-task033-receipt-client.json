@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"A、B、C1、C2、C4 全部批准，C3、C5 暫緩\", answering the approval package docs/purchasing_receiving_management/implementation/P2_approval_package_2026-11-09.md (sha256 f1f80354…) on branch claude/purchasing-task025. C1 approves 29 new jsdom registrations (6 non-final error variants and H1 in client/test/services/purchasing.test.js; 14 UI variants in purchasingApprovals.test.js; 8 in purchasingPurchaseOrderEditor.test.js) and 3 changed existing cases in services/purchasing.test.js, against the TL-accepted source 092c86dd. Earlier approval of 2026-11-09 (\"前端測試提案全部批准，TASK-025 可以開始\") covers the first TASK-024 client cases. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json. The existing TASK-020 Create case's FormStub is adapted to the accepted owner callback (commands.saved), as a compatibility update the PM ruled necessary for the approved C2 run, with no case added and no assertion changed; the replacement for the removed reset case keeps the original 2 sends. This decision does not authorize the agent to publish the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending. Receives the functional-only 2026-11-19 through 2026-11-26 Taipei umbrella decision (Sam: 「暫停 7 天」, PM agentmsg f3f4c3c8); non-author review, green functional CI, and external administrator registration apply to this exact revision.",
-  "purpose": "The my-approvals page requests only the actor's pending list with paging and search and links to detail; the detail page shows the fixed approval snapshot, not the live PO, and shows decision controls only for allowedActions plus purchasing.approval; a failed decision keeps the reason, clears the password and retries an uncertain result with the same action and eventId; the settings page sends version, reason and password through the signed update and keeps the reason after an error; submit with approval on requires an approver and sends it; the TASK-018 to TASK-021 client behaviour stays pinned Reception form, page-state and service coverage for receipt entry, validation, replay locking and discovery. Show the formal supplier name when its display name is empty; warn the buyer when the draft's supplier is blocked.",
-  "data": "No database or network: mocked services, real discovered pages, and small inline objects of at most 1 approval and 1 line. No fixture files Four receipt-form and two receipt-page registrations with inline mocked inputs; existing navigation and service tests updated. No additional fixture files. One new client functional test uses the existing mocked form setup and two inline supplier options (blank and populated display name). The blocked and reactivated supplier flow is verified separately in a local browser, outside routine test discovery.",
+  "decision": "Sam's explicit decision of 2026-11-09 in Claude Code session f804490c: \"A、B、C1、C2、C4 全部批准，C3、C5 暫緩\", answering the approval package docs/purchasing_receiving_management/implementation/P2_approval_package_2026-11-09.md (sha256 f1f80354…) on branch claude/purchasing-task025. C1 approves 29 new jsdom registrations (6 non-final error variants and H1 in client/test/services/purchasing.test.js; 14 UI variants in purchasingApprovals.test.js; 8 in purchasingPurchaseOrderEditor.test.js) and 3 changed existing cases in services/purchasing.test.js, against the TL-accepted source 092c86dd. Earlier approval of 2026-11-09 (\"前端測試提案全部批准，TASK-025 可以開始\") covers the first TASK-024 client cases. Other pinned files are unchanged re-pins of purchasing-task018.json and purchasing-task021.json. The existing TASK-020 Create case's FormStub is adapted to the accepted owner callback (commands.saved), as a compatibility update the PM ruled necessary for the approved C2 run, with no case added and no assertion changed; the replacement for the removed reset case keeps the original 2 sends. This decision does not authorize the agent to publish the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending. Receives the functional-only 2026-11-19 through 2026-11-26 Taipei umbrella decision (Sam: 「暫停 7 天」, PM agentmsg f3f4c3c8); non-author review, green functional CI, and external administrator registration apply to this exact revision. TASK-026 functional-only coverage uses Sam's 2026-11-19 suspension as extended to production go-live on 2026-11-24 (「延續到上線」, AGENTS.md and agents-md-sam-20261124.json). PM agentmsg 5cbe30b3 requested the new-main candidate and CI agentmsg 2bad0887 verified the exact G2 scope and requested this successor receipt. The candidate code is a5891fa1144257d3662cc54a6324d388137d1474. Independent review and external administrator registration apply to the exact receipt.",
+  "purpose": "The my-approvals page requests only the actor's pending list with paging and search and links to detail; the detail page shows the fixed approval snapshot, not the live PO, and shows decision controls only for allowedActions plus purchasing.approval; a failed decision keeps the reason, clears the password and retries an uncertain result with the same action and eventId; the settings page sends version, reason and password through the signed update and keeps the reason after an error; submit with approval on requires an approver and sends it; the TASK-018 to TASK-021 client behaviour stays pinned Reception form, page-state and service coverage for receipt entry, validation, replay locking and discovery. Show the formal supplier name when its display name is empty; warn the buyer when the draft's supplier is blocked. TASK-026 adds purchase-order withdrawal, cancellation and selected-line closure; reason validation, stale versions, view-only permissions, same-event retry, and the three existing HTTP contracts.",
+  "data": "No database or network: mocked services, real discovered pages, and small inline objects of at most 1 approval and 1 line. No fixture files Four receipt-form and two receipt-page registrations with inline mocked inputs; existing navigation and service tests updated. No additional fixture files. One new client functional test uses the existing mocked form setup and two inline supplier options (blank and populated display name). The blocked and reactivated supplier flow is verified separately in a local browser, outside routine test discovery. TASK-026 uses six Vitest declarations expanding into eight instances: a three-variant success family, four workflow cases, and one service contract. Each uses jsdom and inline mocked input, with at most three PO lines and at most two PO snapshots for the route-change case. No database or browser job is added to routine CI.",
   "concurrency": "Within a case: 1, with no concurrent requests. Runner workers are unchanged: the existing client job keeps Vitest's default file workers",
   "repetitions": "1",
   "thresholds": "All cases pass; coverage floors unchanged; no timing threshold Require all client functional tests and preserve all coverage floors.",
   "trigger": "The existing ci.yml triggers, as approval package C1 states: every admitted PR dispatch, every push to main, and the weekly schedule on Monday 02:17 UTC (10:17 Hong Kong time), in the existing client test job",
-  "cost": "Not measured for the new cases. The previous 121 registrations took 1.67 s locally at 64ca24c8; the expected total is 150 registrations. No new job and no capacity workload The complete client functional suite including the new registration ran in 13.62 seconds locally on 2026-11-23; CI duration is unmeasured.",
+  "cost": "Not measured for the new cases. The previous 121 registrations took 1.67 s locally at 64ca24c8; the expected total is 150 registrations. No new job and no capacity workload The complete client functional suite including the new registration ran in 13.62 seconds locally on 2026-11-23; CI duration is unmeasured. At the new-main candidate, the two affected client files (63 cases including the eight G2 instances) ran in 2.10 seconds UTC and 1.86 seconds Hong Kong locally. CI cost is unmeasured. Independent true-DB Chromium stays outside routine discovery.",
   "files": [
     {
       "path": "client/test/services/purchasing.test.js",
       "mode": "100644",
-      "blob": "d477c7be7525787d8310ff0bdd8ebaf97a6ce922",
+      "blob": "9945d85ac1a4fb531d6ef2499f95da051cd04fe6",
       "kind": "functional",
       "cases": [
         "create、update、submit、copy 用 eventId 做 Idempotency-Key，body 原封不動",
@@ -23,7 +23,8 @@
         "唔同 key 互不影響：新 key 唔用舊 intent，原 key 仍然未確定",
         "未確定之後 %i %s 證明唔到原交易失敗：保留原 eventId、payload 同未確定，只有原操作成功先解除",
         "同一 key 只准一個 in-flight，亦唔准換動作：本地 COMMAND_PENDING 唔發 HTTP；未確定 record 由空開始都睇得到",
-        "收貨寫入用 eventId 做 Idempotency-Key；列表映射 DataTable；detail、operation lookup 及收貨選項轉發 AbortSignal"
+        "收貨寫入用 eventId 做 Idempotency-Key；列表映射 DataTable；detail、operation lookup 及收貨選項轉發 AbortSignal",
+        "TASK-026 撤回確認、取消與結清送原採購版本、原因和 Idempotency-Key"
       ]
     },
     {
@@ -91,7 +92,7 @@
     {
       "path": "client/test/pages/purchasing/purchasingPurchaseOrderPages.test.js",
       "mode": "100644",
-      "blob": "02b901e52a6bd5ccb7a193af6afad9a4eb36f2be",
+      "blob": "acabc792b143c937d659e3d0a5bfb0cca393d9d8",
       "kind": "functional",
       "cases": [
         "只要 purchasing.view；無 mgmt 唔見新增同編輯，預設按更新時間倒序",
@@ -118,7 +119,14 @@
         "複製成功去新 PO，並顯示每個 warning",
         "結果未確定：保留同一 eventId 重試，唔再問確認；期間唔可以開新複製",
         "結果未確定時轉去另一張 PO：banner 清走，唔會用舊 eventId 複製新 PO",
-        "明確拒絕：留喺原頁，下次係新 eventId"
+        "明確拒絕：留喺原頁，下次係新 eventId",
+        "TASK-026 採購單例外操作 > 撤回確認 確認後用同一版本寫入，並重新讀取採購單",
+        "TASK-026 採購單例外操作 > 取消採購單 確認後用同一版本寫入，並重新讀取採購單",
+        "TASK-026 採購單例外操作 > 結清餘量 確認後用同一版本寫入，並重新讀取採購單",
+        "只有 view 的帳號看不到這三個動作",
+        "空白原因或放棄確認都不送出；切換採購單會關閉確認",
+        "版本衝突顯示拒絕並讀取最新狀態",
+        "結果不明時只重試同一操作，沿用原因、版本與 eventId"
       ]
     },
     {
@@ -172,7 +180,7 @@
     {
       "path": "client/src/pages/purchasing/PurchaseOrderDetailPage.vue",
       "mode": "100644",
-      "blob": "eee63cfebb0c764fa88da7b5981811e3b81f13a6",
+      "blob": "33410b8c626acb6d5d48d12cec60dde98ca238b7",
       "kind": "support"
     },
     {
@@ -275,6 +283,20 @@
       "path": "client/src/pages/purchasing/GoodsReceiptEditPage.vue",
       "mode": "100644",
       "blob": "fd3a88e771c87f7ac7e47bca2484cd5a8aea748f",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "client/src/services/purchasing.js",
+      "mode": "100644",
+      "blob": "c1c8b881610c781bf996f9fa69b9ef523b174c76",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "client/src/components/purchasing/PurchaseOrderLifecycleDialog.vue",
+      "mode": "100644",
+      "blob": "c76f2537e574a9946aa5f4bb2d3b592cdf415e76",
       "kind": "support",
       "cases": []
     }
