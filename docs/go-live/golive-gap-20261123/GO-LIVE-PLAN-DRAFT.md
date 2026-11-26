@@ -52,10 +52,12 @@ UAT 後的合併（Claude TL 的建議，待 CI 管理員確認）：
 
 ## 4. 正式環境及人員
 
-- 部署負責人未指定。須核對：角色及裝置、Customer 與 Supplier 共用的金鑰（不符會令系統無法啟動）、匯入用的檔案目錄及背景工作、備份及還原演練、資料庫連線逾時設定。
+- 部署負責人未指定（Sam 2026-11-24：「我另行指派」；PM 不代為安排）。須核對：角色及裝置、Customer 與 Supplier 共用的金鑰（不符會令系統無法啟動）、匯入用的檔案目錄及背景工作、備份及還原演練、資料庫連線逾時設定（UAT 負責人 11-25 建庫時記錄 `wait_timeout` 及應用連線 keepalive 的實際值，供部署負責人對照）。
 - 發票列印的四個參數由伺服器設定提供（Sam 2026-11-23：「這些設成參數不要寫死」）：公司名稱（必填）、公司抬頭其餘內容（選填）、付款資料（必填）、頁尾字句（選填）。必填兩項未設定時不能列印發票；正式值在部署時填入。
 - 每個會被開票的客戶須有預設帳單地址，否則發票不能確認。
 - 列印發票須使用 Chrome 或 Edge：每頁的發票編號及頁碼只有這類瀏覽器會印出。
+- 時區（Claude TL 11-24 的建議）：伺服器的 Node 程序設 `TZ=UTC`，與 CI 相同；業務日期由 `APP_TIME_ZONE` 決定（香港公司用 `Asia/Hong_Kong`；與預演所用的 `Asia/Taipei` 同為 UTC+8、無夏令時間，日期相同）。原因：資料庫驅動把 DATE 欄以本機時區的 Date 物件回傳，若伺服器設在 UTC+8，未被發現的讀取路徑會早一天（UAT-004 屬此類）。11-25 驗收庫照此設定並核對日期顯示。
+- 啟動檢查（Sam 11-26 批准「方法2」，sharedfeatures-01 `codex/server-utc-startup`，TL 非作者 PASS，排在小修正整合 PR 合併）：正式入口啟動時若 `TZ` 不是 `UTC`／`Etc/UTC` 或實際 offset 不為 0，系統拒絕啟動並在 stderr 寫明實際 TZ 與 offset；`NODE_ENV` 未設一律當正式環境。**部署及 UAT 環境必須明確設：`NODE_ENV=production`、`TZ=UTC`、`APP_TIME_ZONE=Asia/Hong_Kong`**（即使主機系統時區已是 UTC，沒有明確設 `TZ=UTC` 也會拒啟）。另須設 `CUSTOMER_IMPORT_ROOT`（客戶匯入目錄；11-26 獨立驗收 SD-01 發現 `.env.example` 缺此行，已派 customer-01 補）。根本修正（mysql2 `dateStrings`）延到上線後。
 - 資料庫（請部署負責人核對，Claude TL 提出，未在正式環境條件下量度）：migration 會建立 trigger，MySQL 開啟 binlog 時須設 `log_bin_trust_function_creators` 或以有足夠權限的帳號執行；執行 migration 的管理帳號與應用程式帳號分開；MySQL 版本、字元集及定序與測試一致。
 - 應用程式設定：`FULFILLMENT_LIFECYCLE_ENABLED=true`（沒有它銷售的履約流程不可用）；`APP_TIME_ZONE` 明確設定（業務日期及發票年度編號都取這個時區）；JWT 密鑰、CORS 允許的來源、`NODE_ENV`；Customer 及 Supplier 的銀行金鑰要另存備份，遺失即已加密的銀行資料無法讀回。
 - 執行方式：單一還是多個應用程式實例（排程工作不可重複執行）；反向代理及 HTTPS、代理之後客戶端 IP 的取得；日誌目錄、輪替及磁碟空間；附件及匯入檔的目錄。
