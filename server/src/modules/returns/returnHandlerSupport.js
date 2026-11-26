@@ -1,11 +1,11 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { issueInventoryReturnContext } from "../../modules/inventory/InventoryReturnContext.js";
 import { InventoryReturnPostingService } from "../../modules/inventory/InventoryReturnPostingService.js";
-import { ReturnInquiryService } from "../../modules/returns/ReturnInquiryService.js";
-import { ReturnService } from "../../modules/returns/ReturnService.js";
-import { returnError } from "../../modules/returns/returnErrors.js";
-import { returnSourceId } from "../../modules/returns/returnSourceScope.js";
-import { RETURN_STATUSES, RETURN_STOCK_STATUSES } from "../../modules/returns/returnTypes.js";
+import { ReturnInquiryService } from "./ReturnInquiryService.js";
+import { ReturnService } from "./ReturnService.js";
+import { returnError } from "./returnErrors.js";
+import { returnSourceId } from "./returnSourceScope.js";
+import { RETURN_STATUSES, RETURN_STOCK_STATUSES } from "./returnTypes.js";
 
 const object = (properties, required = Object.keys(properties)) => ({ type: "object", properties, required, additionalProperties: false });
 const EMPTY = object({});
@@ -23,9 +23,6 @@ const PAGE = {
   pageSize: { type: "integer", minimum: 1, maximum: 100 }
 };
 const VIEW = { name: "hasPermission", options: { permissions: ["returns.view"] } };
-const CUSTOMER_WRITE = { name: "hasPermission", options: { permissions: ["returns.customer.mgmt"] } };
-const SUPPLIER_WRITE = { name: "hasPermission", options: { permissions: ["returns.supplier.mgmt"] } };
-const CUSTOMER = "/api/v1/customer-returns", SUPPLIER = "/api/v1/supplier-returns";
 const COMMAND_RESULT = object({ id: ID, returnNumber: TEXT, status: STATUS, version: VERSION, replayed: { type: "boolean" } });
 const LIST_FILTERS = { ...PAGE, status: STATUS, returnNumber: { type: "string", pattern: "^(CRT|SRT)-[1-9][0-9]{0,15}$" } };
 const SUMMARY = { id: ID, returnNumber: TEXT, status: STATUS, version: VERSION, partyCode: TEXT, partyName: TEXT, returnDate: DATE };
@@ -119,80 +116,4 @@ class CommandHandler extends BaseRequestHandler {
   }
 }
 
-const CUSTOMER_SUMMARY = { ...SUMMARY, shipmentId: ID, shipmentNumber: TEXT };
-const SUPPLIER_SUMMARY = { ...SUMMARY, goodsReceiptId: ID, goodsReceiptNumber: TEXT };
-
-export class ListCustomerReturnsHandler extends InquiryHandler {
-  static handlerName = "listCustomerReturns";
-  static api = list(CUSTOMER, CUSTOMER_SUMMARY, { salesOrderId: ID });
-  static kind = "customer";
-  static action = "list";
-}
-export class GetCustomerReturnHandler extends InquiryHandler {
-  static handlerName = "getCustomerReturn";
-  static api = detail(CUSTOMER, CUSTOMER_SUMMARY);
-  static kind = "customer";
-  static action = "detail";
-}
-export class GetCustomerReturnSourceHandler extends InquiryHandler {
-  static handlerName = "getCustomerReturnSource";
-  static api = source(CUSTOMER);
-  static kind = "customer";
-  static action = "source";
-}
-export class CreateCustomerReturnHandler extends CommandHandler {
-  static handlerName = "createCustomerReturn";
-  static api = write(CUSTOMER, CUSTOMER_WRITE, "Create a customer return draft", EMPTY);
-  static kind = "customer";
-  static action = "create";
-}
-export class PostCustomerReturnHandler extends CommandHandler {
-  static handlerName = "postCustomerReturn";
-  static api = write(`${CUSTOMER}/:id/post`, CUSTOMER_WRITE, "Receive a customer return into quarantine");
-  static kind = "customer";
-  static action = "post";
-}
-export class CancelCustomerReturnHandler extends CommandHandler {
-  static handlerName = "cancelCustomerReturn";
-  static api = write(`${CUSTOMER}/:id/cancel`, CUSTOMER_WRITE, "Cancel a customer return draft");
-  static kind = "customer";
-  static action = "cancel";
-}
-
-export class ListSupplierReturnsHandler extends InquiryHandler {
-  static handlerName = "listSupplierReturns";
-  static api = list(SUPPLIER, SUPPLIER_SUMMARY);
-  static kind = "supplier";
-  static action = "list";
-}
-export class GetSupplierReturnHandler extends InquiryHandler {
-  static handlerName = "getSupplierReturn";
-  static api = detail(SUPPLIER, SUPPLIER_SUMMARY);
-  static kind = "supplier";
-  static action = "detail";
-}
-export class GetSupplierReturnSourceHandler extends InquiryHandler {
-  static handlerName = "getSupplierReturnSource";
-  static api = source(SUPPLIER);
-  static kind = "supplier";
-  static action = "source";
-}
-export class CreateSupplierReturnHandler extends CommandHandler {
-  static handlerName = "createSupplierReturn";
-  static api = write(SUPPLIER, SUPPLIER_WRITE, "Create a supplier return draft", EMPTY);
-  static kind = "supplier";
-  static action = "create";
-}
-export class CancelSupplierReturnHandler extends CommandHandler {
-  static handlerName = "cancelSupplierReturn";
-  static api = write(`${SUPPLIER}/:id/cancel`, SUPPLIER_WRITE, "Cancel a supplier return draft");
-  static kind = "supplier";
-  static action = "cancel";
-}
-
-export class PostSupplierReturnHandler extends CommandHandler {
-  static handlerName = "postSupplierReturn";
-  static api = write(`${SUPPLIER}/:id/post`, SUPPLIER_WRITE, "Post a supplier return issue");
-  static kind = "supplier";
-  static action = "post";
-}
+export { CommandHandler, EMPTY, ID, InquiryHandler, SUMMARY, TEXT, detail, list, source, write };
