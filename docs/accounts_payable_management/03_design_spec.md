@@ -9,7 +9,7 @@ Relationship authority: `08_traceability.json`; module/data/API boundary:
 
 | 項目 | 內容 |
 | --- | --- |
-| 版本／狀態 | 0.12 Draft；四個交付（DES-001～DES-035）的Required已獲非作者評審在設計層面全部關閉；收貨發票未設計；整份設計未完成，不授權任何實作 |
+| 版本／狀態 | 0.14 Draft；四個交付（DES-001～DES-035）的Required已獲非作者評審在設計層面全部關閉；第五個交付（DES-036～DES-039）有兩項Required，**已修訂、待覆核**；收貨發票未設計；整份設計未完成，不授權任何實作 |
 | 日期 | 2026-11-17 |
 | 需求基線 | `01_requirement_spec.md` 0.3 Draft（git blob `edd09c087f19b947361508a13d34125bda9ec185`，尚未commit） |
 | 程式基線 | `origin/main` `6a34b8c2`；下文引用的檔案及行號均以此為準 |
@@ -21,11 +21,12 @@ Relationship authority: `08_traceability.json`; module/data/API boundary:
 - **第二個交付（DES-016～DES-023，已獲非作者評審在設計層面接受）**：列表及詳情、現況及As-of的計算、Supplier Statement、列印頁、CSV匯出、權限及物件層授權、輸入輸出及上傳的安全處理、檔案保留及清理。
 - **第三個交付（DES-024～DES-028，兩項Required已在設計層面關閉）**：資料表欄位及索引、migration分片、API及權限、錯誤及結果不明的查回、Audit。均不含收貨發票。
 - **第四個交付（DES-029～DES-035，一項Required已在設計層面關閉）**：路由、頁面及選單；列表及詳情的共同行為；命令的畫面流程；表單及核銷；帳戶、報表、列印、匯出及Audit的畫面；期初匯入的畫面；無障礙、回應式、文案及共用檔案的改動。均不含收貨發票。
+- **第五個交付（DES-036～DES-039，兩項Required已修訂、待覆核）**：寫入請求的欄位、回應的欄位及`allowedActions`、查詢參數、各頁面的欄位及版面。均不含收貨發票；不新增業務規則，需求沒有訂明的列為待決事項。
 
 ### 尚未涵蓋（留待其後的交付）
 
 - 由收貨行建立發票、可開票數量、按PO單價計價及尾差、收貨沖銷時的AP檢查、發票與收貨之間的來源追溯（FR-004～FR-007、FR-009～FR-011、FR-020及FR-033的一部分），包括其欄位、介面及畫面：只在DES-014列出待確認事項。
-- 請求及回應的欄位schema；報表的SQL及其索引；CSV及列印的欄位格式；各頁面的欄位清單及版面稿；對賬的排程及報告；部署及回滾。
+- 報表的SQL及其索引；CSV（包括期初檔案）及列印的欄位格式；對賬的排程及報告；部署及回滾。
 
 ### 約束
 
@@ -1110,9 +1111,309 @@ SEC-004、SEC-007、NFR-002。沿用現有的元件及規範，是為了不增�
 ### Failure behavior
 N/A：本項是規範及改動清單；不合規的頁面在檢查清單及評審中處理。
 
+## DES-036 — 寫入請求的欄位（不含收貨發票）
+
+### Decision
+DES-026每個`POST`的body。除期初檔案的上傳外，body一律是JSON物件；**未列於下表的欄位一律拒絕**（`AP_INPUT_INVALID`，指出欄位），不靜默忽略。
+
+共同的欄位型別：
+
+| 型別 | 規則 |
+| --- | --- |
+| ID | 正整數（JSON number），不大於JavaScript的安全整數上限 |
+| `eventId` | UUID字串；格式檢查與`ap_operation_requests.event_id`的`CHECK`相同（DES-024） |
+| `expectedVersion` | 正整數；是這個命令所屬文件根列的版本（發票、貸項、付款或設定） |
+| 金額 | 字串，符合`^\d+(\.\d+)?$`；小數位不超過4位；不超過DES-002的上限；須大於0。不接受JSON number、正負號、千位分隔或科學記號。「小數位不超過該Currency的小數位」依賴主檔或文件的快照，屬下文的第三層 |
+| 日期 | `YYYY-MM-DD`字串，須為有效的曆日 |
+| 單行文字 | 字串；去除首尾空白後處理；不含換行及控制字元；長度上限`maxSingleLineChars`（建議值190個字元，待定） |
+| 原因 | 字串；去除首尾空白後不可為空；可多行；長度上限`maxReasonChars`（建議值500個字元，待定） |
+| 備註 | 字串；可為空；可多行；長度上限`maxNotesChars`（建議值2,000個字元，待定） |
+| 代碼 | 列舉值，須完全相符 |
+
+- 三個文字長度上限是具名參數。建議值取自Purchasing現有的做法（`purchasingValidation.js:43–63`：原因500、備註2,000、單行190），但那不是AP已獲批准的拒收規則；在定案之前（見「待決事項」），本設計不聲稱某一長度的輸入會被拒絕。受單行文字上限影響的欄位：供應商發票號、供應商貸項單號、費用行的描述、交易參考、支票號、其他付款方式的說明，以及三個文件前綴。
+- 「原因」只要求不為空，這是需求的寫法（FR-015、FR-021）；AP不另設最短字數。
+- `password`只出現在須重新認證的命令。它由`jwt-password`在認證階段讀取，不屬於內容hash，也不放入`idempotencyPreparation`的input（DES-004、DES-031）。
+- 內容hash涵蓋下表所列的全部欄位（`password`除外）及路徑上的目標ID。
+- 陣列的元素數量受DES-012的具名參數限制，數值待定。
+- **省略、`null`及空字串**：可選欄位省略與給`null`相同，都是「沒有值」。文字欄位先去除首尾空白；可選的文字欄位去除後為空，同樣是「沒有值」。必填的文字欄位去除後為空即不合規，唯一的例外是`followUpNotes`，空字串表示清除。內容hash以正規化後的輸入計算，所以同一意圖的不同寫法得到相同的hash。
+- **修改是完整替換**：`update`帶該Draft全部可修改的欄位；省略的可選欄位表示清除，不表示保留原值。伺服器不會以文件當時的資料補上請求沒有的欄位，所以原來的意圖不會在重送時改變。
+
+**驗證分三層**。本項各表的「規則」不全是event claim之前的檢查。依賴當前業務資料的條件只在新的執行中、在鎖之下驗證，不可在重播之前用來否定原來的請求。
+
+| 層 | 時點 | 內容 | 失敗時 |
+| --- | --- | --- | --- |
+| 一 | claim之前 | 只有結構：JSON的形狀及allowlist、必填、型別、ID及UUID的格式、有效的曆日、金額字串的格式及上限、文字的字元及長度、陣列的元素數量，以及同一請求內欄位之間的關係（三個前綴互不相同、到期日不早於發票日期、付款方式與其欄位的配搭、陣列內不重複、`remove`及`add`不同時為空）。當時的認證、授權及必要的物件可見性照舊進行，重播時不會略過（DES-004） | `AP_INPUT_INVALID`並列出欄位；不開始業務交易，不留event的終態，回應不帶`details.eventOutcome` |
+| 二 | claim及身分比較（DES-004步驟3） | 該event已有成功或拒絕的終態：比較身分及內容hash後回該終態。**不**重新檢查任何會隨時間改變的條件 | 身分或內容不同回`AP_EVENT_CONFLICT` |
+| 三 | 新的執行，在DES-005的鎖之下 | 依賴當前資料的全部條件：`expectedVersion`；文件的狀態及歸屬（原發票為`CONFIRMED`、發票行屬於該發票、核銷或應用屬於該文件並且有效）；Supplier為Active、Currency有效；兩份文件同Supplier同Currency；供應商發票號唯一；日期與今日及關帳日的關係（發票日期及付款日期不在未來、Effect Date在開放期間、新的關帳日晚於現值）；金額的小數位不超過該Currency的小數位；數額上限；供應商銀行帳戶的歸屬、有效性及權限；上游介面可用 | DES-027既定的具體代碼（`AP_VERSION_CONFLICT`、`AP_STATE_CONFLICT`、`AP_PERIOD_CLOSED`、`AP_AMOUNT_EXCEEDED`、`AP_HISTORY_BALANCE_VIOLATION`、`AP_DUPLICATE_SUPPLIER_INVOICE_NUMBER`、`AP_RELATIONS_BLOCK_VOID`、`AP_DEPENDENCY_UNAVAILABLE`等），不一律改為`AP_INPUT_INVALID`。業務拒絕按DES-004做拒絕收口；終態確定commit、或讀回已提交的終態時，才帶`details.eventOutcome` |
+
+- **Currency小數位的來源**：建立類命令在第三層以Business Master當時的小數位檢查，並保存為文件的快照；既有文件上的命令以該文件保存的快照檢查。兩者都不在重播之前以新的主檔值否定原來的請求。
+- 例：以event E成功推進關帳日，回應遺失；重送時`closeDate`已等於現值。第一層只檢查它是有效的日期；第二層找到E的成功終態並回原結果。「須晚於現值」是第三層的條件，重播不會到達。建立Draft之後Supplier變為非Active時，重送同一建立請求同樣取回原結果。
+- 核銷ID及應用ID先解析出所屬的根文件，再在鎖下重驗其關係；不以鎖前的讀取代替（DES-005）。
+- 下表「型別及規則」一欄提到的狀態、歸屬、Active、有效、開放期間、不在未來、唯一性及「須晚於」等條件，都屬第三層。
+
+各命令的欄位（「必填」欄以✓表示；所有命令都必填`eventId`，下表不再重複）：
+
+| 路徑 | 欄位 | 必填 | 型別及規則 |
+| --- | --- | --- | --- |
+| `/ap-settings/update` | `expectedVersion` | ✓ | |
+| | `invoicePrefix`、`creditNotePrefix`、`paymentPrefix` | ✓ | 單行文字；格式待定（見「待決事項」）；三者互不相同（DES-006） |
+| | `reason` | ✓ | 原因 |
+| | `password` | ✓ | |
+| `/ap-settings/advance-close-date` | `expectedVersion` | ✓ | |
+| | `closeDate` | ✓ | 日期；須晚於現有的關帳日（DES-011） |
+| | `reason` | ✓ | 原因 |
+| | `password` | ✓ | |
+| `/ap-invoices/create`（無PO發票） | `supplierId` | ✓ | ID；須為Active（FR-015） |
+| | `currencyCode` | ✓ | 代碼；Business Master的有效Currency（DES-015） |
+| | `supplierInvoiceNumber` | ✓ | 單行文字；比對唯一性時去首尾空白、不分大小寫（FR-008） |
+| | `invoiceDate` | ✓ | 日期；不可在未來（FR-008） |
+| | `effectDate` | ✓ | 日期 |
+| | `dueDate` | | 日期；Draft可空，確認時必須有值且不早於`invoiceDate`（FR-011） |
+| | `enteredTotalAmount` | | 金額；Draft可空，確認時必須有值並等於行合計（FR-013） |
+| | `nonPoReason` | ✓ | 原因 |
+| | `notes` | | 備註 |
+| | `lines` | ✓ | 陣列，1至`maxInvoiceLines`項；次序即行號 |
+| | `lines[].description` | ✓ | 單行文字，不可為空（FR-012） |
+| | `lines[].amount` | ✓ | 金額 |
+| `/ap-invoices/:id/update` | `expectedVersion` | ✓ | |
+| | 與建立相同，但**不含**`supplierId`及`currencyCode` | | Draft不可更換Supplier及Currency（FR-014所列的可修改欄位不包括兩者）。`lines`是完整的替換，不是逐行增減 |
+| `/ap-invoices/:id/cancel`、`/confirm` | `expectedVersion` | ✓ | |
+| `/ap-invoices/:id/follow-up-notes/update` | `expectedVersion` | ✓ | |
+| | `followUpNotes` | ✓ | 備註；可為空字串以清除 |
+| `/ap-invoices/:id/void` | `expectedVersion` | ✓ | |
+| | `reason` | ✓ | 原因 |
+| | `effectDate` | ✓ | 日期；須在開放期間（FR-003） |
+| | `password` | ✓ | |
+| `/ap-credit-notes/create` | `invoiceId` | ✓ | ID；須為`CONFIRMED`的發票（DES-009） |
+| | `creditDate` | ✓ | 日期 |
+| | `effectDate` | ✓ | 日期 |
+| | `reason` | ✓ | 原因 |
+| | `supplierCreditNumber` | | 單行文字 |
+| | `lines` | ✓ | 陣列，1至`maxCreditLines`項；同一發票行不可重複出現 |
+| | `lines[].invoiceLineId` | ✓ | ID；須屬於`invoiceId`（DES-024的複合外鍵） |
+| | `lines[].creditAmount` | ✓ | 金額 |
+| `/ap-credit-notes/:id/update` | `expectedVersion` | ✓ | |
+| | 與建立相同；`invoiceId`可否更改待定（見「待決事項」） | | `lines`是完整的替換。貸項屬於一張發票、Supplier及Currency由原發票帶入，是FR-021已訂明的，不在待定之列 |
+| `/ap-credit-notes/:id/cancel`、`/confirm` | `expectedVersion` | ✓ | |
+| `/ap-credit-notes/:id/void` | `expectedVersion`、`reason`、`effectDate`、`password` | ✓ | 同發票作廢 |
+| `/ap-credit-applications/create` | `creditNoteId` | ✓ | ID |
+| | `expectedVersion` | ✓ | 貸項的版本 |
+| | `targetInvoiceId` | ✓ | ID；同Supplier、同Currency（DES-009） |
+| | `amount` | ✓ | 金額 |
+| | `effectDate` | ✓ | 日期 |
+| `/ap-credit-applications/:id/unapply` | `expectedVersion` | ✓ | 貸項的版本 |
+| | `effectDate` | ✓ | 日期 |
+| `/ap-payments/create` | `supplierId`、`currencyCode` | ✓ | 同發票 |
+| | `paymentDate` | ✓ | 日期；不可在未來（FR-026） |
+| | `effectDate` | ✓ | 日期 |
+| | `amount` | ✓ | 金額 |
+| | `paymentMethod` | ✓ | 代碼：`BANK_TRANSFER`、`CHEQUE`、`CASH`、`OTHER` |
+| | `transactionReference` | 方式為`BANK_TRANSFER`時✓ | 單行文字；其他方式不可提供 |
+| | `chequeNumber` | 方式為`CHEQUE`時✓ | 單行文字；其他方式不可提供 |
+| | `otherDescription` | 方式為`OTHER`時✓ | 單行文字；其他方式不可提供 |
+| | `supplierBankAccountId` | | ID；須具`supplier.bank.view`；確認時重驗（DES-010）。帳戶清單的介面待Supplier owner確認（DES-015第3項） |
+| | `notes` | | 備註 |
+| `/ap-payments/:id/update` | `expectedVersion` | ✓ | |
+| | 與建立相同；`supplierId`及`currencyCode`可否更改待定（見「待決事項」） | | |
+| `/ap-payments/:id/cancel`、`/confirm` | `expectedVersion` | ✓ | |
+| `/ap-payments/:id/allocate` | `expectedVersion` | ✓ | 付款的版本 |
+| | `effectDate` | ✓ | 日期 |
+| | `allocations` | ✓ | 陣列，1至`maxAllocationItemsPerRequest`項；同一發票不可重複出現 |
+| | `allocations[].invoiceId`、`allocations[].amount` | ✓ | ID、金額 |
+| `/ap-payments/:id/reallocate` | `expectedVersion` | ✓ | |
+| | `effectDate` | ✓ | 日期；同時是移除及新增的Effect Date |
+| | `remove` | ✓ | 核銷ID的陣列，可為空；須是這筆付款的`ACTIVE`核銷 |
+| | `add` | ✓ | 與`allocations`相同形狀的陣列，可為空 |
+| | | | `remove`及`add`不可同時為空；兩者合計不超過`maxAllocationItemsPerRequest` |
+| `/ap-payment-allocations/:id/unapply` | `expectedVersion` | ✓ | 付款的版本 |
+| | `effectDate` | ✓ | 日期 |
+| `/ap-payments/:id/reverse` | `expectedVersion`、`reason`、`effectDate`、`password` | ✓ | 同發票作廢 |
+| `/ap-opening-imports/upload` | `file` | ✓ | `multipart/form-data`的單一檔案；大小及行數受`maxOpeningFileBytes`、`maxOpeningRows`限制；檢查見DES-022。`eventId`以表單欄位提供 |
+| `/ap-opening-imports/:id/documents/:documentId/confirm` | — | | 只有`eventId`。批次文件沒有版本；以鎖下的`PENDING`檢查代替（DES-013） |
+| `/ap-opening-imports/:id/documents/:documentId/reopen` | — | | 只有`eventId`，用於Audit及關聯；不claim event（DES-005） |
+| `/ap-opening-imports/:id/cancel` | — | | 只有`eventId` |
+| `/ap-exports/create` | `exportType` | ✓ | 代碼：`INVOICES`、`CREDIT_NOTES`、`PAYMENTS`、`OUTSTANDING`、`AGING`、`STATEMENT` |
+| | `filters` | ✓ | 物件；欄位與DES-038該類型的查詢參數相同，同樣以allowlist限定；不含分頁及排序。報表類型的`asOfDate`、Statement的`fromDate`及`toDate`都在`filters`內；`asOfDate`另存於`ap_exports.as_of_date`，`request_hash`涵蓋`exportType`及`filters`的全部內容（DES-024） |
+
+- `expectedVersion`只檢查命令所屬文件的根列。命令同時更新的其他文件（例如核銷的目標發票）不以版本檢查，而是在鎖下按當時的數額重驗（DES-009、DES-010）。
+- 付款方式的必要欄位在建立及修改時已檢查，確認時再檢查一次（DES-010）。
+- 期初檔案每一行的欄位（文件類型、Supplier、Currency、金額、舊系統來源識別及可選的原票面金額與日期）屬CSV的欄位格式，在其後的交付定義。
+
+### Rationale
+FR-001、FR-003、FR-008、FR-011～FR-015、FR-019、FR-021、FR-024～FR-032、FR-038、FR-042、SEC-005、SEC-007。欄位只來自已批准的需求及DES-008～DES-013的命令；沒有為了介面而新增業務輸入。拒絕未列出的欄位，使內容hash涵蓋的範圍與伺服器實際接受的輸入一致。
+
+### Failure behavior
+第一層的拒絕回`AP_INPUT_INVALID`並列出欄位及原因，命令不開始業務交易；這種拒絕在event claim之前，不留event的終態，回應不帶`details.eventOutcome`，client不可據此清除曾經結果不明的intent（DES-027）。第三層的拒絕回DES-027的具體代碼，並按DES-004留下拒絕的終態。已有終態的event在第二層返回，不會因為Supplier、Currency、關帳日、版本或狀態其後改變而被第一層或第三層否定。
+
+## DES-037 — 回應的欄位（不含收貨發票）
+
+### Decision
+回應使用框架現有的外層（`apiResponse.js:14–60`）：成功為`{ success: true, data, meta }`，失敗為`{ success: false, error: { code, message, details }, meta }`。下文所列的是`data`或`error`的內容。
+
+回應以白名單組成：只輸出下列欄位，不把資料列直接序列化（做法同`PurchasingInquiryService.js`的具名對照）。金額一律是字串並帶該Currency的小數位；時間是epoch毫秒的數字，與現有回應一致；業務日期是`YYYY-MM-DD`。
+
+**寫入命令的回應**：成功時只回最小的結果：文件類型、`id`、`internalNumber`（未取號時為空）、`status`及`version`。建立匯出回匯出記錄的`id`及`status`；期初文件的確認回該文件的`id`及`status`；上傳回批次的`id`。這個結果就是保存在`ap_operation_requests.result_summary`的內容，所以重送及HTTP回放取回的與原結果逐項相同（DES-004），不含會隨時間改變的數額、`allowedActions`或銀行資料。畫面在成功後以`GET`重新載入詳情或批次摘要（DES-031、DES-034）。
+
+**錯誤回應**：
+
+| 欄位 | 內容 |
+| --- | --- |
+| `code` | DES-027的代碼 |
+| `message` | 固定的中文訊息，不含SQL、路徑、完整銀行帳號或未授權的ID |
+| `details.fields` | 只在`AP_INPUT_INVALID`：每項有欄位路徑及原因代碼 |
+| `details.eventOutcome` | 只在拒絕的終態已確定commit時出現，值為`REJECTED`（DES-004）。框架的錯誤只有`code`、`message`及`details`三項，所以放在`details`內 |
+| `details`的其他內容 | 按代碼提供的有限內容：`AP_LIMIT_EXCEEDED`指出是哪一個參數；`AP_DUPLICATE_SUPPLIER_INVOICE_NUMBER`及`AP_OPENING_SOURCE_CONFLICT`指出既有文件的ID及號碼；`AP_RELATIONS_BLOCK_VOID`列出相關的貸項、應用及核銷；`AP_AMOUNT_EXCEEDED`指出超出的項目；推進關帳日被阻擋時（`AP_STATE_CONFLICT`，DES-011）在`details.blockers`列出相關的Draft（類型、`id`、Effect Date）及未完成的期初批次（`id`、檔名） |
+
+`details`內引用的文件，只在操作者有權查看時列出。
+
+**列表的回應**：`items`、`total`、`page`、`pageSize`（與`PurchasingInquiryService.js:179`相同）。各類文件的列表項目：
+
+| 列表 | 項目的欄位 |
+| --- | --- |
+| 發票 | `id`、`internalNumber`、`supplierInvoiceNumber`、`invoiceType`、`status`、`settlementStatus`、Supplier（`id`、代碼、名稱）、`currencyCode`、`invoiceDate`、`dueDate`、`totalAmount`、`outstandingAmount` |
+| 貸項 | `id`、`internalNumber`、`supplierCreditNumber`、`creditType`、`status`、Supplier、`currencyCode`、`creditDate`、`totalAmount`、`balanceAvailableAmount`、原發票（`id`、`internalNumber`） |
+| 付款 | `id`、`internalNumber`、`paymentType`、`status`、Supplier、`currencyCode`、`paymentDate`、`paymentMethod`、`amount`、`availableAmount` |
+| 期初批次 | `id`、原檔名、`createdAt`、文件總數、三類摘要及其分項（DES-013）、`completed`、`cancelledAt` |
+| 匯出 | `id`、`exportType`、`status`、`rowCount`、`createdAt`、`expiresAt`、`downloadable` |
+| Audit | DES-028的欄位，包括`actorUserId`及`actorLabel`；`detail`為白名單內容 |
+
+**詳情的回應**：
+
+| 文件 | 欄位 |
+| --- | --- |
+| 發票 | 列表項目的欄位，另加：`version`、`effectDate`、`enteredTotalAmount`、`creditReductionAmount`、`creditAppliedAmount`、`paymentAppliedAmount`、`nonPoReason`、`notes`、`followUpNotes`、期初的原票面金額及日期（只作參考）、作廢的原因及Effect Date、`lines`（`id`、`lineNo`、`lineType`、`description`、`lineAmount`、`creditedAmount`）、`creditNotes`、`creditApplications`、`allocations`、`statusHistory`、建立／確認／作廢的操作者名稱及時間、`allowedActions` |
+| 貸項 | 列表項目的欄位，另加：`version`、`effectDate`、`reason`、`originReductionAmount`、`balanceIssuedAmount`、`balanceAppliedAmount`、作廢的原因及Effect Date、`lines`（`id`、`lineNo`、`invoiceLineId`、發票行的描述、`creditAmount`）、`applications`、`statusHistory`、操作者及時間、`allowedActions` |
+| 付款 | 列表項目的欄位，另加：`version`、`effectDate`、`allocatedAmount`、`transactionReference`、`chequeNumber`、`otherDescription`、供應商銀行帳戶的**遮蔽快照**、`notes`、沖銷的原因及Effect Date、`allocations`、`statusHistory`、操作者及時間、`allowedActions` |
+| 期初批次 | 列表項目的欄位，另加：`documents`（分頁；每項有`id`、`rowNo`、`documentType`、Supplier、`legacySourceId`、Currency、金額、`status`、`resultCode`、結果文件的類型及ID）、`allowedActions` |
+| 匯出 | 列表項目的欄位，另加：`filters`、`asOfDate`、`completedAt` |
+| 設定 | 三個前綴、`closeDate`、`version`、`updatedAt`、最後修改者的名稱、`allowedActions` |
+
+- 應用及核銷的每一項：`id`、對方文件（`id`、`internalNumber`及供應商發票號）、`amount`、`status`、`effectDate`、結束的Effect Date、建立及結束的操作者名稱與時間。
+- `statusHistory`的每一項：`fromStatus`、`toStatus`、`effectDate`、`reason`、操作者名稱、`occurredAt`。
+- 供應商銀行資料只輸出遮蔽快照；`supplierBankAccountId`只在操作者具`supplier.bank.view`時輸出（SEC-004）。
+- 不輸出：`request_hash`、`event_id`、`active_number_key`等內部欄位，以及其他操作者的匯出。文件的回應只輸出操作者的顯示名稱；使用者ID只在Audit輸出（DES-028的`actor_user_id`），供按操作者篩選。
+- **檔案下載**（期初模板、來源檔、結果檔及匯出的結果）不是JSON：以附件回傳CSV，不可快取，檔名由伺服器決定（DES-020、DES-022）。
+
+**`allowedActions`的取值**（由伺服器按文件狀態、數額、關帳日及操作者當時的權限決定；只供顯示）：
+
+| 文件 | 取值 |
+| --- | --- |
+| 發票 | `update`、`cancel`、`confirm`、`updateFollowUpNotes`、`void`、`createCreditNote` |
+| 貸項 | `update`、`cancel`、`confirm`、`apply`、`unapply`、`void` |
+| 付款 | `update`、`cancel`、`confirm`、`allocate`、`reallocate`、`unapply`、`reverse` |
+| 期初批次 | `confirmDocuments`、`reopenDocuments`、`cancel`、`downloadSource`、`downloadResult` |
+| 匯出 | `download` |
+| 設定 | `update`、`advanceCloseDate` |
+
+**報表的回應**：
+
+| 報表 | 內容 |
+| --- | --- |
+| 供應商帳戶 | Supplier、`currencyCode`、`asOfDate`（現況時為空）、`invoiceOutstanding`、`creditAvailable`、`paymentAvailable`、`netPayable`（有號，DES-002）。FR-034的交易明細不在這個回應內。需要同時顯示摘要及交易的畫面，兩者都取自同一次Statement回應（DES-039），不把這個回應與Statement拼在一起 |
+| 未付清單、到期應付 | `asOfDate`、`currencyCode`、`items`（發票的識別、Supplier、`dueDate`、在該日的未付額、逾期日數）、該Currency的合計；分頁 |
+| Aging | `asOfDate`、`currencyCode`、每個Supplier一列的五個分桶及合計、各分桶的總計 |
+| Statement | Supplier、`currencyCode`、`fromDate`、`toDate`、`opening`（三個合計及淨應付）、`transactions`（Effect Date、文件類型、內部文件號、供應商發票號、三個變動、累計淨應付）、`closing`、`aging` |
+
+每個報表回應只含一個Currency；不同Currency不相加（DES-030）。
+
+### Rationale
+FR-033～FR-037、FR-043、SEC-003、SEC-004、SEC-006、DES-016～DES-018、DES-021、DES-027、DES-028。以白名單輸出，使新增的資料表欄位不會自動出現在回應中。寫入命令只回最小的結果、畫面其後以`GET`重新載入，使重播的回應不含過期的數額，畫面也不以前端計算的數額顯示（DES-031）。
+
+### Failure behavior
+文件不存在或操作者無權查看時回`AP_NOT_FOUND`，兩者的回應相同。回應內引用的其他文件在操作者無權查看時不輸出，而不是輸出部分內容。
+
+## DES-038 — 查詢參數
+
+### Decision
+全部`GET`的查詢參數以allowlist限定，未列出的參數回`AP_INPUT_INVALID`。分頁及排序的參數名稱與現有列表相同（`PurchasingInquiryService.js:52–54`）：`page`（由1起）、`pageSize`、`sortBy`及`descending`（布林值）。`pageSize`的預設值及上限沿用現有列表的設定，不另訂數字。篩選只包括DES-016所列的欄位。
+
+| 路徑 | 篩選參數 | 可排序的欄位（預設） |
+| --- | --- | --- |
+| `/ap-invoices` | `supplierId`、`status`、`settlementStatus`（可多選）、`currencyCode`、`invoiceDateFrom`、`invoiceDateTo`、`dueDateFrom`、`dueDateTo`、`internalNumber`（精確）、`supplierInvoiceNumber`（精確，正規化後比對） | `invoiceDate`（預設，新的在前）、`dueDate`、`internalNumber`、`outstandingAmount` |
+| `/ap-credit-notes` | `supplierId`、`status`、`currencyCode`、`creditDateFrom`、`creditDateTo`、`invoiceId`、`internalNumber`（精確） | `creditDate`（預設，新的在前）、`internalNumber` |
+| `/ap-payments` | `supplierId`、`status`、`currencyCode`、`paymentDateFrom`、`paymentDateTo`、`internalNumber`（精確） | `paymentDate`（預設，新的在前）、`internalNumber`、`availableAmount` |
+| `/ap-supplier-accounts/:supplierId` | `currencyCode`（必填）、`asOfDate` | — |
+| `/ap-reports/outstanding`、`/ap-reports/due` | `currencyCode`（必填）、`asOfDate`、`supplierId`、`dueDateTo`（只適用於到期應付）；分頁 | `dueDate`（預設，早的在前）、Supplier代碼 |
+| `/ap-reports/aging` | `currencyCode`（必填）、`asOfDate`、`supplierId` | Supplier代碼（預設） |
+| `/ap-reports/statement` | `supplierId`、`currencyCode`、`fromDate`、`toDate`（四者必填；`toDate`即As-of日期，DES-026） | 固定：Effect Date，再按事件次序 |
+| `/ap-opening-imports` | 無；只列操作者有權查看的批次 | `createdAt`（固定，新的在前） |
+| `/ap-opening-imports/:id` | `documentStatus`；文件的分頁 | `rowNo`（固定） |
+| `/ap-exports` | `status`、`exportType` | `createdAt`（固定，新的在前） |
+| `/ap-audit-logs` | `occurredFrom`、`occurredTo`、`supplierId`、`actorUserId`、`action`、`outcome`、`targetType`、`targetId` | `occurredAt`（固定，新的在前） |
+
+- 日期範圍的兩端都包含在內；起日晚於止日時拒絕。
+- 相同排序值時以`id`按同一方向作次序，使分頁穩定（做法同`PurchasingInquiryService.js:177`）。「固定」表示該列表不接受`sortBy`。
+- 核銷及Credit Balance應用所需的「同一Supplier及Currency、仍有未付額的發票，按到期日排列」（DES-032）以`/ap-invoices`取得：`supplierId`、`currencyCode`、`status=CONFIRMED`、`settlementStatus`為`OPEN`及`PARTIALLY_SETTLED`、`sortBy=dueDate`。不另設介面。
+- 跨Supplier的歷史As-of查詢受`maxAsOfInvoices`限制，Statement受`maxStatementRows`限制（DES-012、DES-017、DES-018）。
+- 匯出的`filters`使用同一組篩選參數及同一組驗證（DES-036）；日期範圍另受`maxExportRangeDays`限制。
+- 查詢參數不含`eventId`、銀行資料或其他敏感內容（DES-029）。
+
+### Rationale
+FR-033～FR-037、FR-042、FR-043、DES-016、DES-026。篩選欄位取自DES-016及各報表的定義；列表與匯出共用同一組參數，使匯出的範圍與畫面所見一致。
+
+### Failure behavior
+不在allowlist的參數、不合規的值或超出上限的範圍，一律在查詢之前拒絕，不回部分結果。
+
+## DES-039 — 各頁面的欄位及版面（不含收貨發票）
+
+### Decision
+以文字及表格描述每個頁面的內容；不製作圖片稿。版面結構、元件及回應式行為沿用`docs/frontend-design.md`及DES-030、DES-035，這裡只列各頁面特有的內容。「窄畫面保留」指375像素寬時仍須顯示的欄。
+
+**列表頁**（`PageHeader`＋篩選列＋`DataTable`）：
+
+| 頁面 | 篩選列 | 表格的欄（由左至右） | 窄畫面保留 | 頁首的動作 |
+| --- | --- | --- | --- | --- |
+| 發票列表 | Supplier、狀態、結算狀態、Currency、發票日期範圍、到期日範圍、內部文件號、供應商發票號 | 內部文件號、供應商發票號、Supplier、類型、發票日期、到期日、Currency、總額、未付額、狀態、結算狀態、操作 | 供應商發票號、到期日、Currency、未付額、狀態 | 新增無PO發票（`ap.invoice.mgmt`）、匯出（`ap.export`） |
+| 貸項列表 | Supplier、狀態、Currency、貸項日期範圍、內部文件號 | 內部文件號、供應商貸項單號、Supplier、原發票、貸項日期、Currency、總額、可用額、狀態、操作 | 內部文件號、Currency、總額、可用額、狀態 | 匯出 |
+| 付款列表 | Supplier、狀態、Currency、付款日期範圍、內部文件號 | 內部文件號、Supplier、付款日期、付款方式、Currency、金額、可用額、狀態、操作 | 內部文件號、Currency、金額、可用額、狀態 | 新增付款（`ap.payment.mgmt`）、匯出 |
+| 期初匯入列表 | 無 | 檔名、上傳時間、文件總數、確定成功、確定未入帳、尚未處理或待查明、是否完成、操作 | 檔名、尚未處理或待查明、是否完成 | 下載模板、上傳 |
+| 匯出記錄 | 狀態、類型 | 類型、建立時間、狀態、列數、到期時間、下載 | 類型、狀態、下載 | 無 |
+| Audit | 時間範圍、Supplier、操作者（由某一列的操作者帶入，不另設使用者選擇器）、動作、結果 | 時間、操作者、動作、結果、目標、Supplier、原因、內容 | 時間、動作、結果、目標 | 無 |
+
+- 列表的預設排序見DES-038。預設不套用任何狀態篩選；這是畫面的初始值，使用者可改。
+- 「操作」欄只有進入詳情的連結；命令在詳情頁進行。
+
+**詳情頁**（由上至下的區塊）：
+
+| 頁面 | 區塊 |
+| --- | --- |
+| 發票詳情 | ①頁首：內部文件號（Draft顯示「草稿」）、狀態及結算狀態徽章、動作按鈕（按`allowedActions`）②基本資料：Supplier、供應商發票號、類型、發票日期、Effect Date、到期日、Currency、無PO原因、備註 ③金額：總額、貸項沖減、Credit應用、付款核銷、未付額 ④行：行號、描述、金額、已貸項額 ⑤相關貸項 ⑥Credit Balance應用 ⑦付款核銷 ⑧跟進備註（可單獨修改）⑨狀態歷史及Audit連結 |
+| 貸項詳情 | ①頁首 ②基本資料：Supplier、原發票（連結）、供應商貸項單號、貸項日期、Effect Date、Currency、原因 ③金額：總額、原發票沖減額、發行的Credit Balance、已應用額、可用額 ④行：原發票行的描述、沖減金額 ⑤Credit Balance的應用（含應用及解除的操作）⑥狀態歷史及Audit連結 |
+| 付款詳情 | ①頁首（含列印）②基本資料：Supplier、付款日期、Effect Date、Currency、付款方式及其欄位、供應商銀行帳戶的遮蔽快照、備註 ③金額：金額、已核銷額、可用額 ④核銷：現有的核銷清單（含解除），以及核銷的操作區（DES-032）⑤狀態歷史及Audit連結 |
+| 供應商帳戶 | ①Supplier及Currency的選擇、起日及截止日（As-of日期）②截止日的三個合計及淨應付 ③交易明細（FR-034）：期初及期內各列的累計淨應付 ④連到該Supplier的未付發票清單；各列連到文件。②及③來自**同一次**Statement回應：②用它的`closing`，③用它的`opening`及`transactions`，條件改變時整個回應一起更新。畫面不把`/ap-supplier-accounts/:supplierId`的結果與Statement的交易並列為「必然相等」的一組：兩個獨立的`GET`不在同一個快照，其間提交的付款或補記會令兩者合法地不同。該介面保留給只需要摘要的位置 |
+| 期初批次詳情 | ①頁首：檔名、上傳時間、是否完成、動作 ②摘要：三類及其分項（DES-013）③文件：行號、類型、Supplier、來源識別、Currency、金額、狀態、結果，可按狀態篩選 ④進度及未確認結果的提示（DES-034） |
+| 應付設定 | ①三個前綴 ②關帳日及「推進關帳日」③被阻擋時的清單：推進被拒絕時，由錯誤回應的`details.blockers`列出相關的Draft及未完成的期初批次（DES-037） |
+
+**表單頁**（`FormPanel`；必填欄位以標記顯示，欄位次序如下）：
+
+| 頁面 | 欄位（依次序） | 動作 |
+| --- | --- | --- |
+| 新增及編輯無PO發票 | Supplier（編輯時唯讀）、Currency（編輯時唯讀）、供應商發票號、發票日期、Effect Date、到期日、無PO原因、費用行（描述、金額；可增刪）、行合計（唯讀）、發票總額、差額（唯讀）、備註 | 儲存Draft；確認在詳情頁進行 |
+| 由發票新增及編輯貸項 | 原發票（新增時由發票帶入；編輯時可否改指另一張發票待定，見「待決事項」）、Supplier及Currency（唯讀，由原發票帶入）、供應商貸項單號、貸項日期、Effect Date、原因、發票行的清單（描述、行金額、尚可沖減額、本次沖減金額）、貸項總額（唯讀）、預計的原發票沖減額及Credit Balance（唯讀，只供參考） | 儲存Draft |
+| 新增及編輯付款 | Supplier及Currency（編輯時可否更改待定，見「待決事項」）、付款日期、Effect Date、金額、付款方式、該方式的必要欄位、供應商銀行帳戶（只在具`supplier.bank.view`時顯示）、備註 | 儲存Draft |
+
+**報表頁及列印頁**：
+
+| 頁面 | 條件 | 內容 |
+| --- | --- | --- |
+| 未付及Aging | Currency（必選）、As-of日期、Supplier | 每個Supplier一列：未到期、1–30、31–60、61–90、90日以上、合計；末列為各分桶的總計；可展開看該Supplier的發票 |
+| 到期應付 | Currency（必選）、As-of日期、到期日上限、Supplier | 發票、Supplier、到期日、未付額、逾期日數；合計 |
+| Supplier Statement | Supplier、Currency、起日、截止日（DES-033） | 標題顯示條件；期初、期內交易、期末、Aging摘要 |
+| 付款明細列印、Statement列印 | 由詳情頁或報表頁帶入 | 與畫面相同的資料，A4版面；已沖銷或已作廢的有明顯標示（DES-019） |
+
+- 所有頁面在當前操作者於本分頁有未確認的操作時，於頁首顯示提示（DES-031）。
+- 金額欄靠右並帶Currency；狀態以文字徽章顯示（DES-030）。
+- 待開票收貨清單、由收貨建立發票的表單及發票詳情中的來源追溯區塊不在本項，待DES-014確認。
+
+### Rationale
+FR-033～FR-041、FR-043、NFR-002、SEC-004。欄位只取自DES-037的回應及DES-036的請求，畫面不顯示回應沒有的資料，也不要求請求沒有的輸入。
+
+### Failure behavior
+N/A：本項是欄位及版面的清單；頁面的錯誤及空白狀態見DES-030至DES-035。
+
 ## Detailed cross-cutting design
 
-DES-001～DES-035只涵蓋下列部分；其餘在其後的交付補上。
+DES-001～DES-039只涵蓋下列部分；其餘在其後的交付補上。
 
 | 範疇 | 本交付的內容 |
 | --- | --- |
@@ -1127,9 +1428,9 @@ DES-001～DES-035只涵蓋下列部分；其餘在其後的交付補上。
 | 檔案 | 匯出檔、期初檔的私有保存、下載授權及清理（DES-020、DES-021、DES-023）。 |
 | 輸入輸出的安全 | schema驗證、純文字呈現、CSV處理及上傳檢查（DES-022）。 |
 | 資料及migration | 表的欄位、鍵及約束（DES-024）；六個分片，序號在實作時決定（DES-025）。 |
-| API及錯誤 | 路徑、動作及權限（DES-026）；錯誤代碼及結果不明的查回（DES-027）。請求及回應的欄位schema留待其後。 |
+| API及錯誤 | 路徑、動作及權限（DES-026）；錯誤代碼及結果不明的查回（DES-027）；請求、回應及查詢參數的欄位（DES-036～DES-038）。 |
 | Audit | 欄位、寫入時點、動作及內容白名單（DES-028）。 |
-| 畫面 | 路由及選單、列表及詳情、命令流程、表單及核銷、報表及檔案、期初匯入、無障礙及回應式（DES-029～DES-035）。各頁面的欄位清單及版面稿留待其後。 |
+| 畫面 | 路由及選單、列表及詳情、命令流程、表單及核銷、報表及檔案、期初匯入、無障礙及回應式（DES-029～DES-035）；各頁面的欄位及版面（DES-039），以文字及表格描述，沒有圖片稿。 |
 | 部署、回滾、可觀察性、收貨發票 | 尚未涵蓋。 |
 
 ## Assumptions, open issues and human decisions
@@ -1158,6 +1459,14 @@ DES-001～DES-035只涵蓋下列部分；其餘在其後的交付補上。
 | T-18 | 期初匯入由前端逐筆送出、一次一個請求，摘要以伺服器回傳為準（DES-034）。 | 前端並行送出或自行累計；與DES-013的一個請求一個文件及摘要口徑不符。 |
 | T-19 | Statement的請求一律帶起日及截止日，As-of日期即截止日；伺服器不設預設，畫面預填本月第一日至今日，使用者可改；輸出維持DES-018的完整內容（DES-026、DES-033）。 | 伺服器在沒有起日時自行推定期間：會加入一條需求沒有訂明的規則。只給As-of時減少輸出：會刪減FR-036的輸出，不採用。 |
 | T-21 | claim之後的業務拒絕，在業務交易rollback後以附屬交易為該event寫入拒絕的終態（DES-004的拒絕收口）；client重送時只憑終態移除intent（DES-027）。 | 拒絕不留記錄：遲到的原請求仍可執行，client只能一直保留intent，使用者無法修正後繼續。在同一交易內撤回業務變更而保留claim：須逐個命令證明沒有殘留的財務效果。 |
+| T-22 | 請求的body及查詢參數以allowlist限定，未列出的欄位一律拒絕（DES-036、DES-038）。 | 忽略未知欄位；內容hash涵蓋的範圍會與伺服器實際接受的輸入不一致。 |
+| T-23 | 寫入命令成功時只回最小的結果（類型、ID、號碼、狀態、版本），畫面其後以`GET`重新載入（DES-037）。 | 回完整的詳情；重送或HTTP回放時會是過期的數額及`allowedActions`，並可能輸出操作者其後已無權查看的資料。 |
+| T-24 | 發票Draft建立後不可更換Supplier及Currency，要更換須取消後重建（DES-036）；依據是FR-014所列的可修改欄位。付款Draft可否更換Supplier或Currency、貸項Draft可否改指另一張發票，**未定**，見「待決事項」。 | 容許在Draft更換；一個命令會涉及舊及新兩組根列，DES-005的鎖表及重驗須另行補上。 |
+| T-25 | 修改Draft時，行以完整的清單替換（DES-036）。 | 逐行新增、修改及刪除；請求較小，但要為Draft的行維持穩定的ID及個別的版本。 |
+| T-26 | 文字欄位的長度上限是具名參數，建議值取自Purchasing現有的數值，未定案（DES-036、「待決事項」）。 | 直接把建議值寫成規則；沿用另一個模組的數值不是AP拒收較長輸入的依據。 |
+| T-27 | 重新核銷只有一個`effectDate`，同時用於移除及新增（DES-036）。 | 移除及新增各有Effect Date；FR-031把重新核銷描述為一次提交，沒有要求兩個日期。 |
+| T-28 | 付款的請求不可帶其他付款方式的欄位（例如方式為現金時帶支票號），帶了即拒絕（DES-036）。 | 接受並忽略，或接受並保存；前者令內容hash與實際保存的不一致，後者會保存與方式不符的資料。 |
+| T-29 | 供應商帳戶頁的摘要及交易明細取自同一次Statement回應，不另設交易明細的介面，也不把兩個獨立`GET`的結果並列（DES-039）。 | 摘要用帳戶介面、交易用Statement；兩者不在同一個快照，不能承諾相等。在供應商帳戶的介面另回交易列表；會有第二套要與Statement保持一致的計算。 |
 | T-20 | 匯出記錄的列表由伺服器按建立者查詢（DES-026）。 | 前端取回後過濾；會把別人的記錄送到瀏覽器。 |
 
 ### 評審記錄
@@ -1242,6 +1551,47 @@ DES-004已獲接受的「被拒絕的命令不留operation列」因此有一個�
 
 這個接受只綁定被覆核的內容：是設計的窄審，不是畫面的驗收；瀏覽器的保存及恢復、真實資料庫的鎖競爭都沒有實測。整份AP設計仍未完成，不授權實作、新的CI案例或非功能驗證。
 
+第五個交付（DES-036～DES-039，blob `84e314c8…`）的範圍依`AP-NEXT-DELIVERY-A-PROPOSAL.md`（sha256 `af9b4e2155809ac5cb0e29d6270aea11ad277d861514134a3aff2410d298066d`）；Sam於2026-11-18在作者的對話中確認開始。base為commit `a6d6d2f2`。本交付沒有改動DES-001～DES-035的契約。
+
+非作者評審：`AP-design-A1-source-review-20261118.md`，sha256 `3818c83e1daa54edd5a164b717011e1a6c84f0f576677afef5d2111d3d11925a`。兩項Required；內容hash、最小的寫入結果、`expectedVersion`的範圍、`details.eventOutcome`的位置、輸出白名單、`allowedActions`及銀行資料的遮蔽獲接受。本版的修訂：
+
+| Required | 內容 | 修訂位置 |
+| --- | --- | --- |
+| A1-R1（HIGH） | 把依賴當前業務資料的條件當作claim之前的schema檢查，會令已成功的event在重播時被否定 | DES-036「驗證分三層」、Currency小數位的來源、省略／`null`／空字串及完整替換的語義、Failure behavior |
+| A1-R2（MEDIUM） | 兩個獨立的`GET`不能承諾同一個財務快照 | DES-039供應商帳戶頁改用同一次Statement回應；DES-037；T-29 |
+
+另按報告：DES-037的Rationale仍寫「回詳情」的舊文字已改正；文字長度由寫定的規則改為具名參數及建議值；付款Draft更換Supplier／Currency、貸項Draft改指另一張發票由「不可」改為待定；「待決事項」重寫，分為已有需求訂明、作者延伸的限制及技術可選值三組。上述修訂未經覆核，在原reviewer確認前兩項Required仍未關閉。
+
+### 待決事項（第五個交付）
+
+下列各項由PM集中處理。作者沒有代為決定；「現況」一欄說明設計目前怎樣寫。
+
+**一、已有需求訂明，不需要決定（只作記錄）**
+
+| 項目 | 依據 |
+| --- | --- |
+| 發票Draft不可更換Supplier及Currency | FR-014所列的可修改欄位不包括兩者 |
+| 貸項屬於一張發票，Supplier及Currency由原發票帶入、不可另選 | FR-021 |
+| 供應商發票號比對唯一性時去首尾空白、不分大小寫 | FR-008 |
+| 原因只要求不為空，沒有最短字數 | FR-015、FR-021；AP沒有採用Purchasing的「至少5個字」 |
+
+**二、作者延伸的限制，尚未批准**
+
+| 項目 | 現況 | 選項 | 實際使用影響 |
+| --- | --- | --- | --- |
+| 付款Draft可否更換Supplier或Currency | DES-036標為待定 | A 不可更換，取消後重建。B 可在Draft更換 | A：選錯供應商或幣別時要取消Draft並重新輸入全部欄位；Draft沒有號碼及財務效果，取消不留號碼空缺；與發票Draft的做法（FR-014）一致。B：使用者直接修改；已選的供應商銀行帳戶須清除；設計須補上同時鎖定舊及新Supplier列並重新驗證全部關係，不是只增加一個欄位。作者傾向A，理由是與發票一致 |
+| 貸項Draft可否改指另一張發票 | DES-036標為待定 | A 不可更改，取消後重建。B 可更改 | 貸項的每一行都指向原發票的行，改指另一張發票時全部行都要重選，B能保留的只有日期、原因及供應商貸項單號。A：多一次取消。B：設計須補上舊及新兩張發票的鎖及重驗。作者傾向A |
+
+**三、技術可選值，但有實際使用影響**
+
+| 項目 | 現況 | 選項 | 實際使用影響及約束 |
+| --- | --- | --- | --- |
+| 單行文字的長度上限（`maxSingleLineChars`） | 建議值190，未定案 | 190；較大的單一上限；各欄位各自的上限 | 受影響的欄位：供應商發票號、供應商貸項單號、費用行的描述、交易參考、支票號、其他付款方式的說明、文件前綴。超過上限的輸入會被拒絕，例如過長的供應商發票號不能照單據輸入。儲存上的約束：DES-024沒有訂出這些欄位的長度；唯一的硬限制來自供應商發票號正規化欄位的唯一索引（InnoDB索引鍵的長度上限）。190只是其他模組現用的數值，不是儲存所迫 |
+| 原因及備註的長度上限（`maxReasonChars`、`maxNotesChars`） | 建議值500及2,000，未定案 | 沿用建議值；另訂 | 影響作廢、沖銷、無PO原因及備註可寫的長度；沒有儲存上的硬限制 |
+| 文件前綴的格式 | DES-036不寫出格式 | A 只可用大寫英文字母及數字，長度有上限。B 另加連字號。C 任何單行文字 | FR-001只說格式不合法時拒絕。事實：main上沒有任何模組實作了可設定的前綴；內部文件號是「前綴＋年度＋流水號」（DES-006），會出現在列印、CSV及按號碼的精確查詢。A及B令號碼可預期地排序及比對；C較靈活，但含空白、符號或中文的號碼在精確查詢及匯出時較易出錯。長度上限及流水號的位數同樣未訂。作者傾向A |
+
+上表的「作者傾向」只是建議，不是決定。第二組屬業務限制；第三組的數值由PM判斷哪些需要Sam確認。
+
 ### 未定數值
 
 - DES-012的全部上限。
@@ -1262,5 +1612,6 @@ DES-004已獲接受的「被拒絕的命令不留operation列」因此有一個�
 - 密碼不計入HTTP idempotency指紋，是按`IdempotencyService.js:157–176,202–216`及`passwordReauth.js`的來源閱讀得出的，以AP的`idempotencyPreparation`不把密碼放入input為前提；沒有執行。
 - 失敗的請求會釋放HTTP key、讓重試重新執行（`IdempotencyService.js:330–338`），所以HTTP層不保存拒絕；拒絕的終態由DES-004的拒絕收口保存。其三個交錯是紙上推演，沒有執行。
 - 拒絕收口及回應的`eventOutcome`欄位是對實作的要求，尚無程式可核對。
+- DES-036～DES-039是紙上的欄位清單，沒有對照任何執行中的介面或畫面。已閱讀的來源只有`apiResponse.js`的外層及`PurchasingInquiryService.js`的列表參數與回應；`pageSize`的上限、現有文件前綴的格式、`DataTable`對排序參數的實際用法及Supplier、Currency選擇器回傳的欄位沒有核對。
 - DES-020不以時間推定原請求、其交易或其檔案寫入已經結束；`exportAbandonAfterMs`只挑選候選，數值待定。完成與清理的三個交錯是紙上推演，沒有執行。
 - DES-020及DES-023假設私有儲存支援「不存在才建立」的開啟、改名及刪除，並可列出目錄內的檔案；前三項是Customer匯出現用的操作（`CustomerImportStorage.js:80–92,127–163`），列出目錄是否已有現成的做法沒有核對。
