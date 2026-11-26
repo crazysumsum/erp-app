@@ -9,6 +9,7 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import ApprovalSnapshotPanel from "@/components/purchasing/ApprovalSnapshotPanel.vue";
+import PurchaseOrderLifecycleDialog from "@/components/purchasing/PurchaseOrderLifecycleDialog.vue";
 import PurchaseOrderProgress from "@/components/purchasing/PurchaseOrderProgress.vue";
 import PurchaseOrderReceipts from "@/components/purchasing/PurchaseOrderReceipts.vue";
 import { addressText, printKind, statusColors, statusLabels, timestamp, warningText } from "@/components/purchasing/purchaseOrderPresentation.js";
@@ -22,19 +23,38 @@ import purchasing from "@/services/purchasing.js";
 
 const route = useRoute(), router = useRouter(), session = useSessionStore();
 const copyCommand = useCommandEvent(), withdrawCommand = useCommandEvent(), decisionCommand = useCommandEvent();
+const lifecycleCommand = useCommandEvent();
 const { document, loading, error, load } = usePurchaseOrder();
 // 呢個頁係 record 嘅穩定 owner（換 PO 時 vue-router 重用佢；panel 會因 loading／error 卸載）。Key 綁 actor、route 上嘅 PO 同目標：
 // 同一 context 重新載入唔清走未確定操作；換 PO／actor 唔會用錯原 record，返嚟仍然可以用原 eventId 確認結果。
 const poId = computed(() => Number(route.params.id));
 const commandKey = (action) => `${session.user?.id}:${poId.value}:${action}`;
+const lifecycleKey = computed(() => commandKey("lifecycle"));
+const lifecycle = reactive({ target: null, message: "" });
+const lifecyclePending = computed(() => lifecycleCommand.pending(lifecycleKey.value));
+const lifecycleBusy = computed(() => lifecycleCommand.isBusy(lifecycleKey.value));
+const canManage = computed(() => session.permissions.includes("purchasing.mgmt"));
 // 可見回調只屬於發出嗰次生命週期：真正換 PO、換 actor 或者卸載就作廢；普通同 context GET 唔算離開。
 let generation = 0;
 const decision = reactive({ key: null, message: "", stale: false });
-watch([poId, () => session.user?.id], () => { generation += 1; Object.assign(decision, { key: null, message: "", stale: false }); });
+watch([poId, () => session.user?.id], () => {
+  generation += 1;
+  Object.assign(decision, { key: null, message: "", stale: false });
+  Object.assign(lifecycle, { target: null, message: "" });
+});
+watch(canManage, (allowed) => { if (!allowed) lifecycle.target = null; });
 onBeforeUnmount(() => { generation += 1; });
 
 // 審批決定要 purchasing.approval，其餘寫入要 purchasing.mgmt（§6.1 六個權限互不繼承）；server 仍然會再驗。
 const DECISIONS = ["approve", "reject"];
+const LIFECYCLE = {
+  withdrawConfirmation: { label: "撤回確認", impact: "採購單將回到草稿，重新提交後才可收貨。",
+    success: "已撤回確認，回到草稿。", send: "withdrawPurchaseOrderConfirmation" },
+  cancel: { label: "取消採購單", impact: "取消後不能收貨，待審批的申請也會失效。",
+    success: "已取消。", send: "cancelPurchaseOrder" },
+  closeRemaining: { label: "結清餘量", impact: "勾選的明細結清後不能再收貨；已收數量不變。",
+    success: "已結清所選明細的餘量。", send: "closePurchaseOrderRemaining" }
+};
 const actions = computed(() => (document.value?.allowedActions ?? [])
   .filter((action) => session.permissions.includes(DECISIONS.includes(action) ? "purchasing.approval" : "purchasing.mgmt")));
 const sum = (field) => document.value.lines.reduce((total, line) => total + BigInt(line[field]), 0n).toString();
@@ -66,6 +86,49 @@ const BASE_ROWS = [["Ordered", "orderedBaseQuantity"], ["Gross Received", "gross
 
 // 喺開任何 dialog 之前捕捉原 generation 同目標；dialog 返嚟時 context 唔同就唔送（0 HTTP）。
 const capture = (action) => ({ id: poId.value, number: document.value?.number ?? "", version: document.value?.version, key: commandKey(action), gen: generation });
+function openLifecycle(action) {
+  if (!actions.value.includes(action) || lifecycleBusy.value || lifecyclePending.value) return;
+  const lines = action === "closeRemaining"
+    ? document.value.lines.filter((line) => line.outstandingBaseQuantity !== "0")
+    : [];
+  if (action === "closeRemaining" && !lines.length) return;
+  lifecycle.message = "";
+  lifecycle.target = { ...capture("lifecycle"), action, lines, ...LIFECYCLE[action] };
+}
+
+async function sendLifecycle(target, fields) {
+  const { id, key, version, action, gen } = target;
+  if (gen !== generation || !canManage.value) return;
+  lifecycle.message = "";
+  try {
+    const result = await lifecycleCommand.run(
+      { ...fields, version }, (body) => purchasing[LIFECYCLE[action].send](id, body), key, { action }
+    );
+    if (gen !== generation) return;
+    notifySuccess(`${result.number} ${LIFECYCLE[action].success}`);
+    await load({ keep: true });
+  } catch (failure) {
+    if (gen !== generation) return;
+    lifecycle.message = failure.message || "採購單操作失敗。";
+    if (!lifecycleCommand.isUncertain(key) && (RELOAD.includes(failure.code) || failure.status === 403)) {
+      await load({ keep: true });
+    }
+  }
+}
+
+function confirmLifecycle(fields) {
+  const target = lifecycle.target;
+  lifecycle.target = null;
+  if (target && actions.value.includes(target.action)) return sendLifecycle(target, fields);
+}
+
+function retryLifecycle() {
+  const pending = lifecyclePending.value;
+  if (!pending || lifecycleBusy.value) return;
+  const { payload, meta } = pending;
+  return sendLifecycle({ ...capture("lifecycle"), version: payload.version, action: meta.action }, payload);
+}
+
 async function copy(target = capture("copy")) {
   const { id, number, key, gen } = target;
   if (gen !== generation) return;
@@ -157,6 +220,12 @@ async function askCopy() {
       <q-skeleton v-if="loading" type="rect" aria-label="載入採購單" />
       <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load()" /><q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" /></template></q-banner>
       <template v-else-if="document">
+        <q-banner v-if="lifecyclePending" role="status" class="bg-warning text-dark q-mb-md">
+          {{ LIFECYCLE[lifecyclePending.meta.action].label }}結果尚未確認。請以原資料重試。
+          <div v-if="lifecycle.message">{{ lifecycle.message }}</div>
+          <template v-if="canManage" #action><q-btn flat label="重試原操作" :loading="lifecycleBusy" @click="retryLifecycle" /></template>
+        </q-banner>
+        <q-banner v-else-if="lifecycle.message" role="alert" class="bg-negative text-white q-mb-md">{{ lifecycle.message }}</q-banner>
         <q-banner v-if="copyCommand.isUncertain(commandKey('copy'))" role="status" class="bg-warning text-dark q-mb-md">複製結果尚未確認；請重試同一操作以確認結果，不會重複建立。<template #action><q-btn flat label="重試確認結果" :loading="copyCommand.isBusy(commandKey('copy'))" @click="copy()" /></template></q-banner>
         <q-banner v-if="withdrawCommand.isUncertain(commandKey('withdraw'))" role="status" class="bg-warning text-dark q-mb-md">撤回結果尚未確認；請重試同一操作以確認結果。<template #action><q-btn flat label="重試確認結果" :loading="withdrawCommand.isBusy(commandKey('withdraw'))" @click="withdraw()" /></template></q-banner>
         <div class="row items-center q-gutter-sm q-mb-md">
@@ -165,6 +234,10 @@ async function askCopy() {
           <q-btn v-if="actions.includes('edit')" label="編輯草稿" :to="`/purchasing/purchase-orders/${document.id}/edit`" />
           <q-btn v-if="actions.includes('withdraw')" label="撤回審批" :loading="withdrawCommand.isBusy(commandKey('withdraw'))" :disable="withdrawCommand.isUncertain(commandKey('withdraw'))" @click="askWithdraw" />
           <q-btn v-if="actions.includes('copy')" label="複製" :loading="copyCommand.isBusy(commandKey('copy'))" :disable="copyCommand.isUncertain(commandKey('copy'))" @click="askCopy" />
+          <template v-for="(operation, action) in LIFECYCLE" :key="action">
+            <q-btn v-if="actions.includes(action)" outline color="negative" :label="operation.label"
+              :disable="lifecycleBusy || !!lifecyclePending" @click="openLifecycle(action)" />
+          </template>
           <q-btn v-if="printKind(document.status)" label="列印" :to="`/purchasing/purchase-orders/${document.id}/print`" />
           <q-btn flat label="返回採購單列表" to="/purchasing/purchase-orders" />
         </div>
@@ -210,6 +283,7 @@ async function askCopy() {
         </q-card>
       </template>
     </div>
+    <PurchaseOrderLifecycleDialog :target="lifecycle.target" @cancel="lifecycle.target = null" @confirm="confirmLifecycle" />
   </div>
 </template>
 

@@ -47,6 +47,8 @@ onBeforeUnmount(() => { generation += 1; controller?.abort(); });
 const canViewShipments = computed(() => session.permissions.includes("fulfillment.view"));
 const canCreateCredit = computed(() => session.permissions.includes("ar.credit.mgmt") && invoice.value?.status === "CONFIRMED");
 const actions = computed(() => (session.permissions.includes("ar.invoice.mgmt") ? invoice.value?.allowedActions ?? [] : []));
+const issuedShipmentInvoice = computed(() => invoice.value?.status === "CONFIRMED" && invoice.value.number &&
+  !invoice.value.openingReference && invoice.value.lines.length > 0);
 const dp = computed(() => invoice.value?.currencyDecimalPlaces ?? 2);
 const amount = (value) => `${invoice.value.currencyCode} ${money(value, dp.value)}`;
 const overview = computed(() => {
@@ -56,7 +58,7 @@ const overview = computed(() => {
     ["發票日期", value.invoiceDate], ["到期日", value.dueDate ? `${value.dueDate}${value.dueDateOverridden ? `（手動：${value.dueDateReason}）` : ""}` : "—"],
     ["付款條款", value.paymentTermCode ? `${value.paymentTermCode} — ${value.paymentTermName}` : "—"],
     // 總額直接用 server 嘅 totalAmount：各行 lineAmount 有 4 位小數，相加唔一定等於總額（Sam 2026-11-19「採用 A」）。
-    ["總額", amount(value.totalAmount)], ["已核銷", amount(value.allocatedAmount)], ["未收額", invoiceOutstandingText(value)],
+    [value.openingReference ? "截數餘額" : "總額", amount(value.totalAmount)], ["已核銷", amount(value.allocatedAmount)], ["未收額", invoiceOutstandingText(value)],
     ["建立", `${value.createdByLabel}，${timestamp(value.createdAt)}`],
     ...(value.confirmedAt ? [["確認", `${value.confirmedByLabel}，${timestamp(value.confirmedAt)}`]] : []),
     ...(value.voidedAt ? [["作廢", `${value.voidedByLabel}，${timestamp(value.voidedAt)}`], ["作廢原因", value.voidReason]] : [])
@@ -86,7 +88,7 @@ const creditColumns = [
 const ACTIONS = Object.freeze({
   confirm: { label: "確認發票", send: ar.confirmInvoice, done: (r) => `已確認，發票編號 ${r.number}。` },
   cancel: { label: "取消草稿", send: ar.cancelInvoice, done: () => "草稿已取消，出貨已釋放。" },
-  void: { label: "作廢發票", send: ar.voidInvoice, done: (r) => `${r.number} 已作廢，出貨已釋放。` }
+  void: { label: "作廢發票", send: ar.voidInvoice, done: (r, opening) => opening ? `${r.number} 已作廢，可用同一舊號重新登記。` : `${r.number} 已作廢，出貨已釋放。` }
 });
 const RELOAD = ["VERSION_CONFLICT", "AR_STATE_CONFLICT", "CONCURRENT_OPERATION", "AR_INVOICE_HAS_ALLOCATIONS"];
 const commandKey = (action) => `${session.user?.id}:${invoiceId.value}:${action}`;
@@ -98,7 +100,7 @@ async function run(action, payload) {
   try {
     const result = await command.run(payload, (body) => ACTIONS[action].send(id, body), key, { action });
     if (gen !== generation) return;
-    notifySuccess(ACTIONS[action].done(result));
+    notifySuccess(ACTIONS[action].done(result, Boolean(invoice.value?.openingReference)));
     await load({ keep: true });
   } catch (failure) {
     if (gen !== generation || command.isUncertain(key)) return;
@@ -111,7 +113,8 @@ const retry = (action) => run(action, {});
 async function ask(action) {
   const { version, number } = invoice.value, gen = generation, label = number || "這張草稿";
   if (action === "void") {
-    const reason = await promptReason({ title: "作廢發票", message: `作廢 ${label}？出貨會釋放，可重新開票。請填寫原因（5 字以上）。`, okLabel: "作廢" });
+    const effect = invoice.value.openingReference ? "可用同一舊發票號碼重新登記。" : "出貨會釋放，可重新開票。";
+    const reason = await promptReason({ title: "作廢發票", message: `作廢 ${label}？${effect}請填寫原因（5 字以上）。`, okLabel: "作廢" });
     if (reason !== null && gen === generation) await run("void", { version, reason: reason.trim() });
     return;
   }
@@ -122,7 +125,7 @@ async function ask(action) {
 
 <template>
   <div>
-    <PageHeader :title="invoice?.number || '發票詳情'" subtitle="發票金額以伺服器計算為準；草稿不可修改，填錯請取消後重開。" />
+    <PageHeader :title="invoice?.number || '發票詳情'" :subtitle="invoice?.openingReference ? '期初發票，沒有明細' : '發票金額以伺服器計算為準；草稿不可修改，填錯請取消後重開。'" />
     <div class="q-px-md q-pb-md">
       <q-banner v-for="action in uncertain" :key="action" role="status" class="bg-warning text-dark q-mb-md" data-testid="ar-invoice-uncertain">
         {{ ACTIONS[action].label }}的結果尚未確認；請重試同一操作以確認結果，不會重複執行。
@@ -137,19 +140,22 @@ async function ask(action) {
           <q-btn v-for="action in actions.filter((name) => ACTIONS[name])" :key="action" :label="ACTIONS[action].label" :color="action === 'confirm' ? 'primary' : undefined"
             :loading="command.isBusy(commandKey(action))" :disable="busy || uncertain.length > 0" @click="ask(action)" />
           <q-btn v-if="canCreateCredit" flat label="開立貸項單" :to="{ name: 'ar-credit-note-draft', query: { invoiceId } }" />
+          <q-btn v-if="issuedShipmentInvoice && invoice.hasBillingAddressSnapshot" flat label="列印預覽" :to="`/ar/invoices/${invoice.id}/print`" />
           <q-btn flat label="返回發票列表" to="/ar/invoices" />
         </div>
+        <p v-if="issuedShipmentInvoice && !invoice.hasBillingAddressSnapshot">這張發票確認時尚未保存帳單地址，因此無法列印。</p>
         <q-card flat bordered class="q-mb-md">
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">概覽</h2>
             <dl class="row q-col-gutter-md q-my-none break-word">
+              <div v-if="invoice.openingReference" class="col-12 col-md-6"><dt class="text-caption text-grey-7">舊發票號碼</dt><dd class="q-ml-none" style="white-space: break-spaces">{{ invoice.openingReference }}</dd></div>
               <div v-for="[label, value] in overview" :key="label" class="col-12 col-md-6"><dt class="text-caption text-grey-7">{{ label }}</dt><dd class="q-ml-none">{{ value }}</dd></div>
               <div class="col-12"><dt class="text-caption text-grey-7">備註</dt><dd class="q-ml-none pre-line">{{ invoice.notes || "—" }}</dd></div>
             </dl>
           </q-card-section>
         </q-card>
-        <h2 class="text-h6 q-ma-none q-mb-md">明細</h2>
-        <DataTable :rows="invoice.lines" :columns="lineColumns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
+        <h2 v-if="!invoice.openingReference" class="text-h6 q-ma-none q-mb-md">明細</h2>
+        <DataTable v-if="!invoice.openingReference" :rows="invoice.lines" :columns="lineColumns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
           <template #body-cell-sku="{ row }"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" max-width="160px" /></template>
           <template #body-cell-quantity="{ row }"><q-td>{{ quantityText(row) }}</q-td></template>
           <template #body-cell-lineAmount="{ row }"><q-td class="text-right">{{ money(row.lineAmount, dp) }}</q-td></template>

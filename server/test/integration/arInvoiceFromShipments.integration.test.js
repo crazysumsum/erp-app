@@ -31,6 +31,8 @@ const code = (expected) => (error) => { assert.equal(error.code, expected, error
 async function arFixture(t, { lineAmount, unitPrice }) {
   const f = await shipmentDraftFixture(t);
   await migrateArShipmentFixture(f.db);
+  await f.s.insert("customer_address_purposes", { address_id: f.s.addressId, customer_id: f.s.customerId, purpose_code: "billing", is_default: 1,
+    created_at: f.s.now, updated_at: f.s.now });
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。
   const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.receipt.mgmt", "ar.view"];
   const userId = await f.s.insert("users", { username: label, password_hash: "synthetic-only", display_name: "AR synthetic", created_at: f.s.now, updated_at: f.s.now });
