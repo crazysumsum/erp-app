@@ -1,5 +1,5 @@
 import { BaseService } from "../../framework/services/BaseService.js";
-import { ShipmentReversalService } from "../../modules/fulfillment/ShipmentReversalService.js";
+import { createShipmentReversalService } from "./createShipmentReversalService.js";
 import { assertFulfillmentTransaction } from "../../modules/fulfillment/FulfillmentTransactionService.js";
 import { shipmentTransactionBudget } from "../../modules/fulfillment/shipmentOperationLease.js";
 import { fulfillmentError } from "../../modules/fulfillment/fulfillmentErrors.js";
@@ -8,7 +8,7 @@ const name="fulfillment.reversalRecovery",serviceName="job.fulfillmentReversalRe
 const unavailable=()=>{throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");};
 
 export class ShipmentReversalRecoveryJob extends BaseService {
- static service=Object.freeze({name:serviceName,lifecycle:"singleton",dependencies:["scheduler","mysqldatabase","time","logging"],eager:false});
+ static service=Object.freeze({name:serviceName,lifecycle:"singleton",dependencies:["scheduler","mysqldatabase","time","logging"],eager:true});
  static jobs=Object.freeze([{name,method:"run",scope:"cluster",intervalMs:60000,timeoutMs:120000,runOnStart:false}]);
  #job;
  #invocations=new WeakMap();
@@ -16,9 +16,10 @@ export class ShipmentReversalRecoveryJob extends BaseService {
  #reversal;
  constructor(input={}){
   super(input);this.scheduler=this.services.require("scheduler");this.database=this.services.require("mysqldatabase");this.time=this.services.require("time");this.logger=this.services.require("logging").logger;
-  this.#reversal=new ShipmentReversalService({database:this.database,time:this.time,logger:this.logger,operationLeaseMs:this.config.fulfillment.operationLeaseMs,recoveryVerifier:(tx,token)=>tx===null?this.#admit(token):this.#verify(tx,token)});
+  const create=this.options.reversalServiceFactory??createShipmentReversalService;
+  this.#reversal=create({database:this.database,time:this.time,logger:this.logger,operationLeaseMs:this.config.fulfillment.operationLeaseMs,recoveryVerifier:(tx,token)=>tx===null?this.#admit(token):this.#verify(tx,token)});
  }
- // No scheduler registration: deployment/writer membership and public activation remain separate gates.
+ async initialize(){this.scheduler.register(this);this.#job=this.scheduler.jobs.get(name);}
  #runtime(token){
   const record=this.#invocations.get(token),scheduler=this.scheduler,job=this.#job;
   if(!record||scheduler.owner!==record.owner||scheduler.started!==true||scheduler.stopped!==false||scheduler.schedulerConfig.enabled!==true||scheduler.jobs.get(name)!==job||job?.serviceName!==serviceName||job.method!=="run"||job.scope!=="cluster"||job.enabled!==true||scheduler.running.get(name)?.controller.signal!==record.signal||record.signal.aborted||performance.now()>=record.deadline)unavailable();

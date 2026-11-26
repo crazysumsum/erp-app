@@ -239,7 +239,8 @@ export class ShipmentReversalService {
   if(!row||String(row.id)!==binding.operationId||row.status!=="IN_PROGRESS"||row.operation_type!=="REVERSE"||row.target_type!=="SHIPMENT"||String(row.target_id)!==request.target.id||String(row.initiated_by)!==binding.initiatorId||String(actor.id)!==binding.initiatorId||row.payload_hash!==binding.payloadHash||row.correlation_id!==binding.correlationId||row.lease_owner!==binding.leaseOwner||Number(row.attempt_count)!==binding.attemptCount||Number(row.is_document_archived)!==0||row.next_attempt_at!==null||row.result_json!==null||row.completed_at!==null||row.public_error_code!==""||row.public_error_details!==null||!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(expires)||expires<=now)fail("CONCURRENT_OPERATION");
   return {row,actor,now,expires,observedAtMono};
  }
- // Internal normal path only. A retained attempt is never permission to retry; Recovery owns that decision.
+ ownsStartedReversal(started){return this.#startedAttempts.has(started);}
+ // A retained attempt is never permission to retry; Recovery owns that decision.
  async completeReversalPhaseB(started,{signal}={}){
   const binding=this.#startedAttempts.get(started);if(!binding)fail("FULFILLMENT_SOURCE_CONFLICT");
   const context=this.database.context?.get(),callerSignal=signal===undefined?(context?.signal??undefined):signal;

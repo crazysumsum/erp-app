@@ -170,7 +170,9 @@ export async function boundReversalCleanup(work,timeoutMs){
 }
 export async function reversalRecoveryRuntime({applicationSource,eventId,shipmentId,restart=false}){
  const {createApplication}=await import("../../src/framework/application/createApplication.js");
- const app=await createApplication({configurationSource:applicationSource});
+ const app=await createApplication({configurationSource:applicationSource,serviceOptions:{
+  "job.fulfillmentReversalRecovery":{reversalServiceFactory:options=>new ShipmentReversalService(options)}
+ }});
  const database=app.services.require("mysqldatabase"),scheduler=app.services.require("scheduler"),name="fulfillment.reversalRecovery";
  const reached=Promise.withResolvers(),resume=Promise.withResolvers();
  const state={service:null,declared:false,missingIssue:false,loseTakeoverAck:false,cloneChecks:restart,dispatches:0,recoveries:[],proofs:[],takeovers:[],phaseBs:0,posts:0,preclaims:0,missingRows:0,cloneRefusals:0,ackLosses:0,destroys:0,releasesAfterAck:0,unknownOutcomes:[],phaseBReached:reached.promise,resumePhaseB:resume.resolve};
@@ -265,12 +267,7 @@ export async function reversalRecoveryRuntime({applicationSource,eventId,shipmen
    await app.start();
    assert.equal(database.config.transactionTimeoutMs,20000);assert.equal(database.config.connectionLimit,10);
    const refresh=scheduler.jobs.get("tokenRevocation.refresh");assert.equal(refresh?.enabled,true);assert.equal(refresh.intervalMs,30000);
-   assert.equal(scheduler.jobs.has(name),false,"No product activation");
-   const service=await app.services.resolve("job.fulfillmentReversalRecovery"),prepare=scheduler.prepareAndSchedule;
-   let prepared;
-   scheduler.prepareAndSchedule=function(candidate){const result=prepare.call(this,candidate);if(candidate.name===name)prepared=result;return result;};
-   try{scheduler.register(service);assert.ok(prepared);await prepared;}
-   finally{scheduler.prepareAndSchedule=prepare;}
+   const service=await app.services.resolve("job.fulfillmentReversalRecovery");
    job=scheduler.jobs.get(name);assert.ok(job?.enabled);const timer=scheduler.timers.get(name);assert.ok(timer);scheduler.clearTimer(timer);scheduler.timers.delete(name);
    return service;
   },
