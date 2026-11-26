@@ -1,11 +1,11 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { issueInventoryReturnContext } from "../../modules/inventory/InventoryReturnContext.js";
 import { InventoryReturnPostingService } from "../../modules/inventory/InventoryReturnPostingService.js";
-import { ReturnInquiryService } from "./ReturnInquiryService.js";
-import { ReturnService } from "./ReturnService.js";
-import { returnError } from "./returnErrors.js";
-import { returnSourceId } from "./returnSourceScope.js";
-import { RETURN_STATUSES, RETURN_STOCK_STATUSES } from "./returnTypes.js";
+import { ReturnInquiryService } from "../../modules/returns/ReturnInquiryService.js";
+import { ReturnService } from "../../modules/returns/ReturnService.js";
+import { returnError } from "../../modules/returns/returnErrors.js";
+import { returnSourceId } from "../../modules/returns/returnSourceScope.js";
+import { RETURN_STATUSES, RETURN_STOCK_STATUSES } from "../../modules/returns/returnTypes.js";
 
 const object = (properties, required = Object.keys(properties)) => ({ type: "object", properties, required, additionalProperties: false });
 const EMPTY = object({});

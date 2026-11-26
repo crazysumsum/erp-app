@@ -1,4 +1,4 @@
-import { CommandHandler, EMPTY, ID, InquiryHandler, SUMMARY, TEXT, detail, list, source, write } from "../../modules/returns/returnHandlerSupport.js";
+import { CommandHandler, EMPTY, ID, InquiryHandler, SUMMARY, TEXT, detail, list, source, write } from "../returns/_returnHandlerSupport.js";
 
 const CUSTOMER = "/api/v1/customer-returns";
 const CUSTOMER_WRITE = { name: "hasPermission", options: { permissions: ["returns.customer.mgmt"] } };

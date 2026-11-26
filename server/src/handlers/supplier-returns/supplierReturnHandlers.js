@@ -1,4 +1,4 @@
-import { CommandHandler, EMPTY, ID, InquiryHandler, SUMMARY, TEXT, detail, list, source, write } from "../../modules/returns/returnHandlerSupport.js";
+import { CommandHandler, EMPTY, ID, InquiryHandler, SUMMARY, TEXT, detail, list, source, write } from "../returns/_returnHandlerSupport.js";
 
 const SUPPLIER = "/api/v1/supplier-returns";
 const SUPPLIER_WRITE = { name: "hasPermission", options: { permissions: ["returns.supplier.mgmt"] } };
