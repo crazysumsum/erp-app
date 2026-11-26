@@ -1,3 +1,4 @@
+import { apSupplierReferenceChecker, openApSupplierInvoiceChecker } from "../accounts-payable/ApSupplierReferenceCheckers.js";
 import { openPurchaseOrderChecker, purchaseOrderReferenceChecker } from "../purchasing/PurchasingSupplierReferenceCheckers.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
 
@@ -5,7 +6,7 @@ import { SupplierReferenceService } from "./SupplierReferenceService.js";
 // 都用呢個 factory，令「被引用就鎖 Code」同「有未完成流程就唔准封存」喺所有 handler 都生效。
 export function createSupplierReferenceServices() {
   return {
-    references: new SupplierReferenceService({ checkers: [purchaseOrderReferenceChecker] }),
-    openFlows: new SupplierReferenceService({ checkers: [openPurchaseOrderChecker] })
+    references: new SupplierReferenceService({ checkers: [purchaseOrderReferenceChecker, apSupplierReferenceChecker] }),
+    openFlows: new SupplierReferenceService({ checkers: [openPurchaseOrderChecker, openApSupplierInvoiceChecker] })
   };
 }
