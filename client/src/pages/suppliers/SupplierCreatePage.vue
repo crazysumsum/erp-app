@@ -160,6 +160,7 @@ async function submit(activate) {
         <div class="text-subtitle1">供應商 {{ created.supplierCode }} 已建立</div>
         <div>狀態：{{ created.status === "active" ? "啟用" : created.status === "pending_approval" ? "待審批" : "草稿" }}</div>
         <div class="q-mt-xs">下一步：可前往供應商詳情補充地址、聯絡人、識別資料及付款資料。</div>
+        <template #action><q-btn flat label="前往供應商詳情" :to="`/suppliers/${created.id}`" /></template>
       </q-banner>
 
       <q-banner v-if="warnings.length" class="bg-warning text-dark q-mb-md" rounded>
@@ -211,6 +212,7 @@ async function submit(activate) {
           color="secondary"
           label="儲存 Draft"
           :loading="submitting"
+          :disable="Boolean(created) && !dirty"
           :aria-label="submitting ? '儲存 Draft 中' : '儲存 Draft'"
           @click="submit(false)"
         />
@@ -218,6 +220,7 @@ async function submit(activate) {
           color="primary"
           :label="requireApproval ? '提交審批' : '直接啟用'"
           :loading="submitting"
+          :disable="Boolean(created) && !dirty"
           :aria-label="submitting ? '處理中' : (requireApproval ? '提交審批' : '直接啟用')"
           @click="submit(true)"
         />

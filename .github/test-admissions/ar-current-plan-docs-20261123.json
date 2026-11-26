@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Sam authorised this documentation PR in the TL session on 2026-11-23: 「兩項都做」 to the TL's question 「是否授權我開 PR 放入規劃文件，並開始寫期初應收的範圍說明？」. No test case, fixture, data, worker, discovery rule or trigger is added or changed, so there is no test to admit. The CI administrator asked for this support receipt (agentmsg 84b20e22) because three of the new file names match names already written in existing test content. Non-author review of the documents and one-time path scope: codex-erp-app-tl-01 (agentmsg a7a381e8). The author (claude-erp-app-tl-01) does not approve this receipt and does not register its digest.",
+  "purpose": "Bind three new documentation files whose basenames occur in existing tests: README.md is a literal string in .github/scripts/sales-import-capacity.test.mjs (a selector input and a temporary file in the test's own directory), and TABLES.md and TABLES-ADDENDUM-1.md are named in a comment of server/test/integration/arMigrations.integration.test.js. The new files are prose under docs/invoicing_accounts_receivable_management/; no test opens them.",
+  "data": "Unchanged. Documentation only.",
+  "concurrency": "Unchanged.",
+  "repetitions": "Unchanged.",
+  "thresholds": "Unchanged: existing assertions and coverage floors.",
+  "trigger": "Existing CI only. No new case, job, step, schedule or dispatch.",
+  "cost": "No additional test workload or job.",
+  "files": [
+    {
+      "path": "docs/invoicing_accounts_receivable_management/README.md",
+      "mode": "100644",
+      "blob": "1746e785efa06d840e4e5f56867408f4ce31d483",
+      "kind": "support"
+    },
+    {
+      "path": "docs/invoicing_accounts_receivable_management/ar-minimal-scope-20261119/TABLES.md",
+      "mode": "100644",
+      "blob": "5071074b72aaee563ca106f382b97553b5888234",
+      "kind": "support"
+    },
+    {
+      "path": "docs/invoicing_accounts_receivable_management/ar-minimal-scope-20261119/TABLES-ADDENDUM-1.md",
+      "mode": "100644",
+      "blob": "99457298108ddadb6adfab89ab3230421e872312",
+      "kind": "support"
+    }
+  ]
+}
