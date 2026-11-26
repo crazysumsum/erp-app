@@ -18,7 +18,8 @@ const ACTIONS = Object.freeze({
   "goods_receipt.created": { target: "GR", fields: ["version"] },
   "goods_receipt.updated": { target: "GR", fields: ["version"] },
   "goods_receipt.cancelled": { target: "GR", fields: ["version"] },
-  "goods_receipt.confirmed": { target: "GR", fields: ["version"] }
+  "goods_receipt.confirmed": { target: "GR", fields: ["version"] },
+  "purchasing.exported": { target: "EXPORT", fields: ["rowCount"] }
 });
 // 冇業務寫入嘅拒絕結果（§4.15）：同名 action 加 outcome REJECTED；同 event 唔同內容另用 operation_conflict（§12.2）。
 const REJECTABLE = new Set([...Object.keys(ACTIONS), "purchasing.operation_conflict"]);
@@ -42,6 +43,7 @@ function detailFor(fields, detail) {
     else if (key === "currencyCode") { if (typeof value !== "string" || !CURRENCY_CODE.test(value)) throw new TypeError("Invalid Purchasing audit currency"); }
     else if (key === "requirePoApproval") { if (typeof value !== "boolean") throw new TypeError("Invalid Purchasing audit flag"); }
     else if (key === "lineCount") { if (!Number.isSafeInteger(value) || value < 1 || value > 100) throw new TypeError("Invalid Purchasing audit count"); }
+    else if (key === "rowCount") { if (!Number.isSafeInteger(value) || value < 0) throw new TypeError("Invalid Purchasing export row count"); }
     else positive(value);
   }
   return JSON.stringify(Object.fromEntries(fields.map(field => [field, detail[field]])));
@@ -57,12 +59,13 @@ export class PurchasingAuditService {
   async record(connection, { actor, action, targetId, targetLabel, detail, nowMs, reason = "", requestId = "", correlationId = "", ip = "" }) {
     if (!Object.hasOwn(ACTIONS, action)) throw new TypeError("Unsupported Purchasing audit action");
     const { target, fields } = ACTIONS[action], json = detailFor(fields, detail);
+    const id = target === "EXPORT" ? null : positive(targetId);
     if (Buffer.byteLength(json, "utf8") > this.auditDetailMaxBytes) throw new TypeError("Purchasing audit detail too large");
     if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError("Invalid Purchasing audit timestamp");
     await connection.execute(`INSERT INTO purchasing_audit_logs
       (occurred_at, actor_user_id, actor_label, action, outcome, target_type, target_id, purchase_order_id, goods_receipt_id, target_label, reason, detail,
         request_id, correlation_id, ip) VALUES (?, ?, ?, ?, 'SUCCEEDED', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [nowMs, positive(actor?.id), bounded(actor.username, 190), action, target, positive(targetId), target === "PO" ? targetId : null, target === "GR" ? targetId : null,
+    [nowMs, positive(actor?.id), bounded(actor.username, 190), action, target, id, target === "PO" ? id : null, target === "GR" ? id : null,
       bounded(targetLabel, 190, { ascii: true }), reason === "" ? "" : validReason(reason), json,
       bounded(requestId, 64, { ascii: true, empty: true }), bounded(correlationId, 64, { ascii: true, empty: true }), bounded(ip, 45, { ascii: true, empty: true })]);
   }

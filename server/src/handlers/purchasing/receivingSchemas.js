@@ -103,7 +103,7 @@ const GR_DETAIL = strict({ id: ID, detailNumber: ID, inputUomId: ID, inputUomCod
 const GR_LINE = strict({ id: ID, purchaseOrderLineId: ID, lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, receivedBaseQuantity: BASE,
   overReceivedBaseQuantity: BASE, overReceiptReason: TEXT, skuExceptionReason: TEXT, skuWarningCodes: { type: "array", items: TEXT },
   details: { type: "array", items: GR_DETAIL } });
-export const GOODS_RECEIPT_LIST_RESPONSE = strict({ items: { type: "array", items: strict(HEADER_PROPERTIES) }, total: INT, page: ID,
+export const GOODS_RECEIPT_LIST_RESPONSE = strict({ items: { type: "array", items: strict({ ...HEADER_PROPERTIES, currencyCode: TEXT }) }, total: INT, page: ID,
   pageSize: { type: "integer", minimum: 1, maximum: 100 } });
 export const GOODS_RECEIPT_DETAIL_RESPONSE = strict({ ...HEADER_PROPERTIES, notes: TEXT, supplierStatusAtConfirm: TEXT, supplierExceptionReason: TEXT,
   createdByLabel: TEXT, updatedByLabel: TEXT, createdAt: INT, cancelledAt: NINT, cancelReason: TEXT,
