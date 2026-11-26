@@ -70,7 +70,7 @@ test("invalid Fulfillment environment configuration stops the actual server befo
   const result = spawnSync(process.execPath, ["src/index.js"], {
     cwd: fileURLToPath(new URL("../../", import.meta.url)),
     env: {
-      ...process.env, PORT: "0", FULFILLMENT_MAX_LINES_PER_DOCUMENT: "0",
+      ...process.env, NODE_ENV: "test", PORT: "0", FULFILLMENT_MAX_LINES_PER_DOCUMENT: "0",
       DB_SOCKET_PATH: path.join(directory, "absent.sock"), DB_NAME: "fulfillment_config_no_database"
     },
     encoding: "utf8",

@@ -137,7 +137,7 @@ async function startServer(database, overrides = {}) {
   const port = await freePort();
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-mig-"));
   const child = spawn(process.execPath, [path.join(SERVER, "src/index.js")], { cwd,
-    env: { ...process.env, ...childDatabaseEnv(database), APP_HOST: "127.0.0.1", APP_PORT: String(port), ...overrides } });
+    env: { ...process.env, ...childDatabaseEnv(database), NODE_ENV: "test", APP_HOST: "127.0.0.1", APP_PORT: String(port), ...overrides } });
   const output = { stdout: "", stderr: "" };
   child.stdout.on("data", (chunk) => { output.stdout += chunk; });
   child.stderr.on("data", (chunk) => { output.stderr += chunk; });
