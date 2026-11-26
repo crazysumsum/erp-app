@@ -1826,6 +1826,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 - 原GR／Movement不可變；每次成功建立新OUT Movement及link，累計反向不超原量。
 - Inventory不足、Reservation、Counting Bin或結果mapping異常令整次rollback。
 - GR reversed projection及PO net／outstanding／status正確；人工Closed PO不重開。
+- 正式候選在 UTC 與香港時區各驗證全新空庫，以及已套 `0133` 後補 `0131` 的升級庫。升級只補套 `0131`，重跑無變更。發布依賴見[收貨沖銷實作紀錄](implementation/P3_receipt_reversal.md#發布依賴)。
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-007。對應 mandatory 技術測試：TC-008, TC-009。
@@ -1842,6 +1843,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 - 一般receiving／purchasing使用者不可反向；撤權、停用、owner替換及弱auth全部拒絕。
 - 支援單／多detail部分或全部反向；同event replay一次，不同payload 409。
 - 成功後UI重讀GR／PO／Inventory facts；失敗保留輸入且不顯示假成功。
+- 應付 A1 與庫存成本入主幹後，先發布實物退貨，再發布收貨沖銷。退供與沖銷共用上限回歸 `5ee2b597` 留在沖銷 PR，應付佔用回歸 `e66028f3` 也在沖銷 PR 登記一次。
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-035。對應 mandatory 技術測試：TC-008, TC-001。
