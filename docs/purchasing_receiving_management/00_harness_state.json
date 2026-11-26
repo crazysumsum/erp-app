@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 19,
+  "revision": 20,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -51,7 +51,7 @@
     "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
-    "TASK-026": "PENDING",
+    "TASK-026": "DONE",
     "TASK-027": "DONE",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
@@ -1020,9 +1020,17 @@
       "idempotency_key": "purchasing-task032-pr387-merge-20261123",
       "status": "CONFIRMED",
       "source_ref": "Merge 3a70e1276f621bbaae613c86122eddc6add14e16, tree 94468b4d55b62879115a7d0ccb13d1185bd6d3ee equal to admitted merge 07d4db6941b9d14503cf306e3af7033cd724a693 (head e5060743, base 50e2a6fa). PR CI 45117475474 succeeded with 18 functional jobs passing and 2 capacity jobs skipped. Non-author review b6f447ea, no Required. CI acceptance 0c7daa81. Natural main CI 45118929375 started."
+    },
+    {
+      "id": "EXT-034",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/401 -> main",
+      "idempotency_key": "purchasing-task026-g2-pr401-merge-20261125",
+      "status": "CONFIRMED",
+      "source_ref": "PM c401e97b merged #401 as 0e0473e56f8ba6f450a1ea7c24c47d310ba0e9a1 (parents 5d1bd1d7 and b52b0325). Its tree cd9198b82253307e08055154cdfe8e304312a276 matches the admitted synthetic merge 5dea44496d099e88673b697ecc8ab946754796dd. Non-author review 6f5ae380 and 6da59175 passed; controller 45563731816, functional PR CI 45563779984 and natural main CI 45565729230 all passed on attempt 1 (CI a533684a and 9807d0bd). Functional coverage and Chromium passed; capacity work was excluded."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-024, TASK-028 and TASK-029 are DONE (PR #351, #353, #365, #367). TASK-032 GR Confirm posting is DONE (PR #387). Operation lookup and timeout recovery are in TASK-033. Sam's 2026-11-19 decision suspends per-case test admission until the end of 2026-11-26: ordinary PR, green functional CI and one non-author review. Next: TASK-033, a minimal GR list/detail GET before TASK-034 (PM 00108ad7), then TASK-030/031/034. TASK-041 to 044 are phase two. Do not run a full suite or capacity locally. TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021 is DONE (PR #342, implementation/P1_task021_nav_errors.md). TASK-022 is DONE (PR #344, implementation/P2_task022_approval_schema.md). TASK-023 connects the services to commands and routes, starts writing status history. Do not run bare npm run test:coverage locally: it executes the capacity catalog. PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-021 folds into TASK-023's criteria in 05_development_tasks.md at the plan's next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
+  "next_safe_action": "TASK-026 G2 is DONE (PR #401). TASK-024, TASK-028 and TASK-029 are DONE (PR #351, #353, #365, #367). TASK-032 GR Confirm posting is DONE (PR #387). Operation lookup and timeout recovery are in TASK-033. Sam's 2026-11-19 decision suspends per-case test admission until the end of 2026-11-26: ordinary PR, green functional CI and one non-author review. Next: TASK-033, a minimal GR list/detail GET before TASK-034 (PM 00108ad7), then TASK-030/031/034. TASK-041 to 044 are phase two. Do not run a full suite or capacity locally. TASK-017 is DONE (PR #334, HD-018). HD-019 answered: 1A a preparatory backend PR delivers purchasing-lookups under purchasing.mgmt before TASK-018's client PR; 2A Buyer candidates are Active users holding purchasing.mgmt, defaulting to the actor; 3A Supplier search without a SKU reads IDs only and the provider decides eligibility. TASK-018 is DONE (PR #339, implementation/P1_task018_po_form.md). TASK-019 is DONE (PR #340, implementation/P1_task019_po_pages.md). TASK-020 is DONE (PR #341, implementation/P1_task020_po_create_edit_print.md); Sam chose no routine browser e2e, so a committed browser suite and Edge and Safari print evidence for TC-010 wait for TEST_AND_VERIFY. TASK-021 is DONE (PR #342, implementation/P1_task021_nav_errors.md). TASK-022 is DONE (PR #344, implementation/P2_task022_approval_schema.md). TASK-023 connects the services to commands and routes, starts writing status history. Do not run bare npm run test:coverage locally: it executes the capacity catalog. PO_MASTER_CHANGED and the menu group's order 350 and icon need folding into §5.7 and §7.1. Operation lookup by eventId arrives with TASK-033. Triggers for GR, approval and status-history tables are added with those tables. HD-009..HD-014 and HD-019 fold into the design at its next revision. HD-021 folds into TASK-023's criteria in 05_development_tasks.md at the plan's next revision. HD-006 is answered: greenfield go-live, no Purchasing records imported; fold OPEN-006 = DECIDED into the requirement and TASK-044 before TASK-044 runs. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY."
 }
