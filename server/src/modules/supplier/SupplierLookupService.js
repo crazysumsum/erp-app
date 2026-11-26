@@ -111,6 +111,12 @@ export class SupplierLookupService {
     return this.#read((connection) => this.#findById(connection, id, normalized));
   }
 
+  async findByIdInTransaction(connection, supplierId, options) {
+    requireConnection(connection);
+    const id = requireSupplierId(supplierId);
+    return this.#findById(connection, id, lookupOptions(options));
+  }
+
   async findByCode(supplierCode, options) {
     const code = normalizeSupplierCode(supplierCode);
     const normalized = lookupOptions(options);
