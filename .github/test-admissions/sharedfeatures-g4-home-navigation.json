@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "decision": "PM assigned G4 for branch-only preparation on 2026-11-23 (agentmsg 31e12f6b). Functional-test admission suspension applies through 2026-11-26. CI administrator to precheck; publication and PR timing after UAT are to be arranged under the policy then in force.",
+  "decision": "Sam instructed 「已開發完成的安排合併」. On 2026-11-26 the PM scheduled G4 during UAT (agentmsg 43368171 and 4147496d). Under AGENTS.md, per-case functional test admission is suspended until production go-live. The CI administrator releases the PR window after receipt registration.",
   "purpose": "Prevent a misleading home-page environment label and ensure both error screens provide a working link back home.",
   "data": "Two component fixtures (/403 and /missing); the existing home-page fixture adds two text assertions.",
   "concurrency": "Existing client functional runner settings; no new workers or jobs.",
   "repetitions": "One check per error view and the existing home test once per normal functional run.",
   "thresholds": "Rendered home guidance with no development-only label; each error screen links to / and clicking navigates home. Existing thresholds unchanged.",
-  "trigger": "Existing client functional discovery; PR deferred until after UAT and CI administrator scheduling.",
+  "trigger": "Existing client functional test discovery on each PR and main push.",
   "cost": "Two new component cases and two assertions in one existing case; estimated under one second incremental test execution, no new job. No capacity workload.",
   "files": [
     {
