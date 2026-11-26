@@ -8,6 +8,7 @@ import AuthLayout from "@/framework/layout/AuthLayout.vue";
       <q-icon name="search_off" size="48px" color="grey-6" />
       <h1 class="text-h6 q-ma-none q-mt-md">搵唔到呢一頁</h1>
       <div class="text-grey-7 q-mt-sm">請確認網址啱唔啱。</div>
+      <q-btn flat color="primary" class="q-mt-md" label="回首頁" :to="{ name: 'home' }" />
     </q-card-section>
   </AuthLayout>
 </template>
