@@ -10,12 +10,17 @@ import { fulfillmentInventoryFields,fulfillmentInventoryId } from "./inventoryFu
 import { number } from "./inventoryFulfillmentStock.js";
 import { readOriginalFulfillmentIssueBatch } from "./inventoryFulfillmentReceipts.js";
 import { InventoryPurchaseService } from "./InventoryPurchaseService.js";
+import { readIssueCostAvailability } from "./inventoryCostLedger.js";
 
 export class InventoryLookupService {
   constructor(options={}) {
     this.fulfillment=options.fulfillment??new InventoryFulfillmentService(options);
     this.time=options.time;
     this.purchase=new InventoryPurchaseService(options);
+  }
+  async assertIssueCostAvailableInTransaction(tx, input) {
+    await this.#authorize(tx, "fulfillment.reverse");
+    return readIssueCostAvailability(tx, input);
   }
   findOperationsBySource(tx,query) { return this.purchase.findOperationsBySource(tx,query); }
   readShipmentEventAdmissionInTransaction(tx,source){return this.fulfillment.readShipmentEventAdmissionInTransaction(tx,source);}

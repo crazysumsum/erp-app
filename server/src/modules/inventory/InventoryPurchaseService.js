@@ -3,6 +3,8 @@ import { authorizePurchaseLookup, consumePurchaseReceiptContext } from "./Invent
 import { normalizePurchaseReceipt } from "./inventoryPurchaseValidation.js";
 import { claimPurchaseReceipt, completePurchaseReceipt, readPurchaseReceipt } from "./inventoryPurchaseReceipts.js";
 import { inventoryError } from "./inventoryErrors.js";
+import { readInventoryCostInstallation, lockInventoryCostPools, persistInventoryCostBatch } from "./inventoryCostLedger.js";
+import { inboundCost, parseInventoryCost, receiptCost } from "./inventoryCostMath.js";
 import { reversePurchaseReceiptBatchInTransaction } from "./inventoryPurchaseReversal.js";
 import { inventoryRemainingLifeDays, isInventoryLotExpired, validateInventoryLotInput } from "./inventoryValidation.js";
 
@@ -12,6 +14,20 @@ function number(value, field, minimum = 0) {
   const parsed = typeof value === "string" && /^(0|[1-9][0-9]*)$/u.test(value) ? Number(value) : value;
   if (!Number.isSafeInteger(parsed) || parsed < minimum) throw inventoryError("INVENTORY_QUANTITY_INVALID", { field });
   return parsed;
+}
+
+function receiptCosts(lines, guard) {
+  return new Map(lines.map(line => {
+    const input = guard.getCostInput(line.sourceLineId);
+    if (!input) throw inventoryError("INVENTORY_COST_SOURCE_MISSING", { sourceLineId: line.sourceLineId });
+    if (input.currencyCode !== "HKD") throw inventoryError("INVENTORY_RECEIPT_CURRENCY_UNSUPPORTED");
+    try {
+      return [line.sourceLineId, receiptCost(BigInt(line.baseQuantity), parseInventoryCost(input.unitPrice), BigInt(input.toBaseFactor))];
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      throw inventoryError("INVENTORY_INPUT_INVALID", { field: "unitPrice", sourceLineId: line.sourceLineId });
+    }
+  }));
 }
 
 function checkProfile(line, profile, date, actor) {
@@ -65,6 +81,7 @@ export class InventoryPurchaseService {
       return result;
     }
     const lines = batch.members.map(m => m.line);
+    const costs = await readInventoryCostInstallation(tx) ? receiptCosts(lines, guard) : null;
     const locked = await this.locks.lockForCommand(tx, {
       warehouseIds: lines.map(line => line.warehouseId),
       stockControls: lines.map(({ warehouseId, skuId }) => ({ warehouseId, skuId })),
@@ -130,12 +147,29 @@ export class InventoryPurchaseService {
       return { member, line, lot, lotId, balanceId: balance.id, allocated: balance.allocated, before, after: balance.quantity,
         version, nextVersion: balance.version };
     });
+    const costPools = costs && await lockInventoryCostPools(tx, skuIds, batch.timestamp);
+    const currentCosts = new Map(), entries = [];
     const results = [];
     for (const write of writes) {
       guard.assertTime();
-      results.push(await this.#write(tx, command, batch, write, profiles.get(write.line.skuId),
-        warehouses.get(write.line.warehouseId), bins.get(write.line.binId), actor));
+      const result = await this.#write(tx, command, batch, write, profiles.get(write.line.skuId),
+        warehouses.get(write.line.warehouseId), bins.get(write.line.binId), actor);
+      results.push(result);
+      if (costs) {
+        const skuId = String(write.line.skuId);
+        let change;
+        try {
+          change = inboundCost(currentCosts.get(skuId) ?? costPools.get(skuId), BigInt(write.line.baseQuantity),
+            costs.get(write.line.sourceLineId));
+        } catch (error) {
+          if (!(error instanceof RangeError)) throw error;
+          throw inventoryError("INVENTORY_INPUT_INVALID", { field: "unitPrice", sourceLineId: write.line.sourceLineId });
+        }
+        currentCosts.set(skuId, change);
+        entries.push({ ...change, movementId: result.movementId, skuId, kind: "RECEIPT", source: "PURCHASE_PRICE" });
+      }
     }
+    if (costs) await persistInventoryCostBatch(tx, costPools, entries, batch.timestamp);
     await completePurchaseReceipt(tx, batch, results);
     guard.assertTime();
     const result = await this.#result(tx, command, batch);

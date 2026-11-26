@@ -80,10 +80,14 @@ export class GoodsReceiptPostingService {
   async post(tx, { req, gr, po, poLines, rows, detailIds, confirm, actor, request, version, nowMs, correlationId }) {
     const command = { actor: { userId: actor.id, serviceName: "", claimedRoles: req.auth.claims.roles, claimedPermissions: req.auth.claims.permissions },
       correlationId: correlation(correlationId), source: { documentId: String(gr.id), eventId: request.eventId }, lines: [] };
+    const costInputs = [];
     for (const [index, { poLine, details }] of rows.entries()) {
       for (const detail of details) {
         const facts = confirm.details.get(detail.path);
-        command.lines.push({ sourceLineId: String(detailIds.get(detail.path)), skuId: Number(poLine.sku_id),
+        const sourceLineId = String(detailIds.get(detail.path));
+        costInputs.push({ sourceLineId, currencyCode: po.currency_code, unitPrice: poLine.unit_price,
+          toBaseFactor: Number(poLine.uom_to_base_factor_snapshot) });
+        command.lines.push({ sourceLineId, skuId: Number(poLine.sku_id),
           baseQuantity: detail.quantity.receivedBaseQuantity, warehouseId: detail.warehouseId, binId: detail.binId,
           lotNumber: detail.tracking.lotNumber === "" ? null : detail.tracking.lotNumber, expiryDate: detail.tracking.expiryDate,
           manufactureDate: detail.tracking.manufactureDate, stockStatus: detail.stockStatus, minimumLifeEvidence: facts.evidence,
@@ -98,7 +102,8 @@ export class GoodsReceiptPostingService {
     // Proof：PO 喺同一 transaction FOR UPDATE 鎖住而且係 CONFIRMED／PARTIALLY_RECEIVED（caller 已驗），即係已確認承諾。
     const confirmedLines = command.lines.map(({ sourceLineId, commitment: { skuExceptionReason: _reason, ...snapshot } }) =>
       ({ sourceLineId, status: "CONFIRMED", ...snapshot }));
-    command.context = issuePurchaseReceiptContext(req, tx, command, confirmedLines, { database: this.database, time: this.time, ...this.auth });
+    command.context = issuePurchaseReceiptContext(req, tx, command, confirmedLines,
+      { database: this.database, time: this.time, ...this.auth, costInputs });
     let result;
     try {
       result = await this.inventory.postPurchaseReceiptBatchInTransaction(tx, command);

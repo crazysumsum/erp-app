@@ -7,6 +7,9 @@ import { InventoryOperationService } from "../../src/modules/inventory/Inventory
 export async function inventoryNativeFixture(t) {
   let pool=null;
   const f=await nativeDatabase(t,{migrateAuth:true,beforeClose:async()=>{if(pool)await pool.end();}});
+  await f.db.query(`CREATE TABLE fr_schema_migrations (
+    name VARCHAR(190) NOT NULL PRIMARY KEY, applied_at BIGINT UNSIGNED NOT NULL
+  )`);
   for (const name of ["0011_create_item_categories","0012_create_item_brands","0013_create_item_uoms","0014_create_items","0015_create_item_skus","0016_create_item_sku_uoms",
     "0055_seed_inventory_permissions","0056_create_inventory_operations","0057_create_inventory_audit","0058_create_inventory_master","0059_create_inventory_stock","0060_create_inventory_movements","0063_create_inventory_reservations","0091_seed_fulfillment_permissions"]) await (await import(`../../database/migrations/${name}.js`)).up(f.db);
   const insert=async(sql,args=[])=>String((await f.db.execute(sql,args))[0].insertId);
