@@ -16,6 +16,7 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
+import InventoryReportDownload from "@/components/inventory/InventoryReportDownload.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -102,6 +103,9 @@ function commonFilters() {
     withinDays: expiryState.value === "WITHIN_DAYS" ? nonNegative(withinDays.value) ?? 30 : undefined
   };
 }
+function exportStocks(signal) {
+  return inventoryService.exportStocks({ ...commonFilters(), q: search.value, signal });
+}
 function syncUrl() {
   router.replace({ query: {
     q: search.value || undefined, ...commonFilters(),
@@ -175,6 +179,7 @@ onUnmounted(() => { aggregateController?.abort(); bucketController?.abort(); sum
   <div>
     <PageHeader subtitle="先查看 SKU 聚合數量，再深入倉庫、庫位、批次與狀態 bucket。">
       <template #actions>
+        <InventoryReportDownload label="匯出結存數量 CSV" filename="inventory-stocks.csv" :load="exportStocks" />
         <q-btn flat icon="event" label="批次與效期" to="/inventory/lots" />
         <q-btn flat icon="history" label="庫存異動" to="/inventory/movements" />
       </template>
