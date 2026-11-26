@@ -17,6 +17,14 @@ const props = defineProps({
 const form = reactive({ businessReceiptDate: "", supplierDeliveryNote: "", notes: "", supplierExceptionReason: "", lines: [] });
 const warehouses = ref([]), optionsError = ref(""), adding = ref(null);
 const intent = ref("save");
+const FIELD_LABELS = {
+  businessReceiptDate: "收貨日期", supplierDeliveryNote: "供應商送貨單號", notes: "備註",
+  supplierExceptionReason: "供應商例外原因", lines: "收貨明細", purchaseOrderLineId: "採購單行",
+  overReceiptReason: "超收原因", skuExceptionReason: "貨品例外原因", details: "收貨明細",
+  inputUomId: "單位", receivedQuantity: "數量", warehouseId: "倉庫", binId: "庫位", lotNumber: "批號",
+  expiryDate: "到期日", manufactureDate: "生產日", stockStatus: "庫存狀態", expiryOverrideReason: "低效期放行原因"
+};
+let submittedLines = [];
 
 watch(() => props.document, (document) => Object.assign(form, toForm(document)), { immediate: true });
 onMounted(async () => {
@@ -34,11 +42,29 @@ function addLine(line) {
   form.lines.push(newLine(line, defaultWarehouse.value));
   adding.value = null;
 }
+function formatFieldError(path, message) {
+  const match = /^lines\.(\d+)(?:\.details\.(\d+))?(?:\.(\w+))?$/u.exec(path);
+  const field = match ? match[3] : path;
+  const label = Object.hasOwn(FIELD_LABELS, field) ? FIELD_LABELS[field] : "";
+  if (!match) return label ? `${label}：${message}` : message;
+
+  const line = submittedLines[Number(match[1])];
+  if (!line) return message;
+  const detailIndex = match[2];
+  const showDetail = detailIndex !== undefined && line.detailCount > 1 && Number(detailIndex) < line.detailCount;
+  const detail = showDetail ? `第 ${Number(detailIndex) + 1} 筆明細` : "";
+  const position = [`第 ${line.number} 行`, detail, label].filter(Boolean).join(" ");
+  return `${position}：${message}`;
+}
 async function submit() {
   const body = toPayload(form, props.document.version);
   // 首期冇收貨沖銷（Sam 2026-11-20），確認入庫唔可以撤回，所以送出前一定要再問一次（TL 8a852727）。
   if (intent.value === "confirm" && !(await confirm({ title: "確認收貨並入庫", okLabel: "確認入庫",
     message: "確認後會即時增加庫存並更新採購單收貨進度；首期不能在系統內撤回或沖銷。要繼續嗎？" }))) return null;
+  // 錯誤路徑指向已提交的資料，移除或修改表單行後仍須顯示原來的行號。
+  submittedLines = body.lines.map((line, index) => ({
+    number: poLines.value.get(line.purchaseOrderLineId)?.lineNumber ?? index + 1, detailCount: line.details.length
+  }));
   try {
     return await (intent.value === "confirm" ? props.onConfirm(body) : props.onSave(body));
   } catch (error) {
@@ -48,7 +74,7 @@ async function submit() {
 </script>
 
 <template>
-  <FormPanel v-slot="{ submitting, fieldError }" :on-submit="submit">
+  <FormPanel v-slot="{ submitting, fieldError }" :on-submit="submit" :format-field-error="formatFieldError">
     <fieldset class="q-pa-none q-ma-none" :disabled="submitting || locked" :inert="submitting || locked">
       <section aria-labelledby="gr-header-heading">
         <h2 id="gr-header-heading" class="text-h6 q-mt-none q-mb-md">收貨資料</h2>

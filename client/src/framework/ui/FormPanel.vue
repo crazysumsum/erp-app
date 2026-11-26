@@ -17,7 +17,8 @@ import { nextTick, ref } from "vue";
  * 會觸發，唔使呢度再叫多次。
  */
 const props = defineProps({
-  onSubmit: { type: Function, required: true }
+  onSubmit: { type: Function, required: true },
+  formatFieldError: { type: Function, default: (field, message) => `${field}：${message}` }
 });
 
 const emit = defineEmits(["success"]);
@@ -96,7 +97,7 @@ defineExpose({ fieldError, resetValidation: () => formRef.value?.resetValidation
         <template v-else>
           <div class="q-mb-xs">請檢查以下欄位：</div>
           <ul class="q-ma-none q-pl-md">
-            <li v-for="(message, field) in fieldErrors" :key="field">{{ field }}：{{ message }}</li>
+            <li v-for="(message, field) in fieldErrors" :key="field">{{ props.formatFieldError(field, message) }}</li>
           </ul>
         </template>
       </q-banner>

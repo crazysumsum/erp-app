@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 21,
+  "revision": 22,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -1036,6 +1036,14 @@
       "idempotency_key": "purchasing-ap-p1-pr407-merge-20261126",
       "status": "CONFIRMED",
       "source_ref": "PM 42e2bc34 merged #407 as 3bb47ef2e7e45936f068328897f5ef23a716ff7b (parents f84843b5 and c87c6d44). Its tree da2527b31d651602b4f7263c83edab5cb902ae04 matches admitted synthetic merge 2e8109f737750e5866a0fe4344ca0034dcf4ee71. P1 provides confirmed receipt sources for AP and supplier-filtered receipt listing. Non-author reviews 93661a9c, cd729aa5 and aaad65fd passed. Controller 45753482915 and functional PR CI 45753527578 passed on attempt 1 (CI c9cd074c). Natural main CI 45755392809 started on the verified merged commit."
+    },
+    {
+      "id": "EXT-036",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/408 -> main",
+      "idempotency_key": "purchasing-report-pr408-merge-20261126",
+      "status": "CONFIRMED",
+      "source_ref": "PM 445b6e0f merged #408 as c1b1c7585ce0d2d91117ed3c837efa865a027ba1 (parents 3bb47ef2 and 244f5423). Its tree 8f6e7fac605603bb2e9ef1439f581e397729ef82 matches admitted synthetic merge d875916417b0d923252e5cb9b57f6de086026394. Non-author review 2dd9d12a passed. Controller 45756995674, functional PR CI 45757042029, and natural main CI 45758938999 passed on attempt 1 (CI 884c90de and 1a7ca09a)."
     }
   ],
   "evidence_files": [],
