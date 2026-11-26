@@ -41,12 +41,16 @@ export class GoodsReceiptInquiryService {
       where.push("gr.status = ?"); values.push(query.status);
     }
     if (query.purchaseOrderId !== undefined) { where.push("gr.purchase_order_id = ?"); values.push(positiveId(Number(query.purchaseOrderId), "purchaseOrderId")); }
+    if (query.supplierId !== undefined) {
+      where.push("gr.supplier_id = ?");
+      values.push(positiveId(Number(query.supplierId), "supplierId"));
+    }
     const clause = where.length ? ` WHERE ${where.join(" AND ")}` : "";
     return this.database.withTransaction(async (tx) => {
       await this.#actor(tx, claims);
       const [[{ total }]] = await tx.query(`SELECT COUNT(*) AS total FROM goods_receipts gr${clause}`, values);
-      const [rows] = await tx.query(`SELECT ${HEADER} ${FROM}${clause} ORDER BY gr.id DESC LIMIT ? OFFSET ?`, [...values, pageSize, (page - 1) * pageSize]);
-      return { items: rows.map(header), total: Number(total), page, pageSize };
+      const [rows] = await tx.query(`SELECT ${HEADER}, po.currency_code ${FROM}${clause} ORDER BY gr.id DESC LIMIT ? OFFSET ?`, [...values, pageSize, (page - 1) * pageSize]);
+      return { items: rows.map(row => ({ ...header(row), currencyCode: row.currency_code })), total: Number(total), page, pageSize };
     });
   }
 
