@@ -32,6 +32,7 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   ORIGINAL_BUCKET_UNAVAILABLE: "原庫位目前不能回補，請先處理庫位狀態",
   FULFILLMENT_DEPENDENCY_UNAVAILABLE: "履約服務暫時未能確認結果，請沿用原操作識別碼查詢進度",
   PURCHASING_INPUT_INVALID: "採購資料不正確，請檢查標示的欄位後再試",
+  PURCHASING_EXPORT_TOO_LARGE: "一次最多匯出 50,000 張採購單，請縮小篩選範圍",
   PURCHASING_QUANTITY_INVALID: "採購數量不正確，請檢查數量及小數位",
   UNIT_PRICE_INVALID: "單價不正確，請輸入最多四位小數的非負數字",
   ZERO_PRICE_REASON_REQUIRED: "單價為零時必須填寫原因",

@@ -7,8 +7,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
+import { parse } from "csv-parse/sync";
 
 import { PurchasingInquiryService } from "../../src/modules/purchasing/PurchasingInquiryService.js";
+import { PurchasingAuditService } from "../../src/modules/purchasing/PurchasingAuditService.js";
 import { SupplierLookupService } from "../../src/modules/supplier/SupplierLookupService.js";
 import { RequestContextService } from "../../src/services/context/RequestContextService.js";
 import { createMySqlDatabasePool } from "../../src/services/mysqldatabase/connection.js";
@@ -41,7 +43,10 @@ async function inRollback(db, work) {
 /** Service 全部讀取都行外層 transaction，先見到未 commit 嘅 fixture。 */
 function service(tx) {
   const database = { query: (...args) => tx.query(...args), withTransaction: (work) => work(tx) };
-  return new PurchasingInquiryService({ database, logger: silent, time, suppliers: new SupplierLookupService({ database, logger: silent, time }) });
+  return new PurchasingInquiryService({
+    database, logger: silent, time, suppliers: new SupplierLookupService({ database, logger: silent, time }),
+    audit: new PurchasingAuditService({ auditDetailMaxBytes: 8192 })
+  });
 }
 
 async function masters(tx) {
@@ -102,6 +107,37 @@ const coded = (code, field) => (error) => {
   if (field) assert.equal(error.publicDetails?.field, field);
   return true;
 };
+
+integrationTest("採購報表 CSV 沿用列表篩選及排序、輸出交易快照，並防止公式注入", async (t) => {
+  await inRollback(database(t), async (tx) => {
+    const f = await masters(tx), inquiry = service(tx);
+    await f.order({ order_date: "2099-10-31" });
+    const first = await f.order({ order_date: "2099-11-01", supplier_name_snapshot: '=SUM(1,2)' });
+    const last = await f.order({ order_date: "2099-11-30", status: "CONFIRMED" });
+    await f.order({ supplierId: f.supplierB });
+    const input = { supplierId: f.supplierA, orderDateFrom: "2099-11-01", orderDateTo: "2099-11-30", sortBy: "orderDate", descending: false };
+    const claims = f.viewer.claims;
+    const list = await inquiry.list({ claims, input });
+    const csv = await inquiry.exportPurchaseOrdersCsv({ claims, input });
+    assert.equal(csv.charCodeAt(0), 0xfeff);
+    const records = parse(csv, { bom: true });
+    const headers = ["purchaseOrderNumber", "orderDate", "supplierCode", "supplierName", "status", "currencyCode", "totalAmount"];
+    assert.deepEqual(records[0], headers);
+    assert.deepEqual(records.slice(1).map(([number]) => number), list.items.map(({ number }) => number));
+    assert.deepEqual(records.slice(1), [
+      [first.number, "2099-11-01", `INQ-${f.tag}-a`, "'=SUM(1,2)", "DRAFT", "HKD", "10.00"],
+      [last.number, "2099-11-30", `INQ-${f.tag}-a`, `Name${f.tag} a`, "CONFIRMED", "HKD", "10.00"]
+    ]);
+    assert.deepEqual(parse(await inquiry.exportPurchaseOrdersCsv({ claims, input: { ...input, status: "CANCELLED" } }), { bom: true }), [headers]);
+    await assert.rejects(inquiry.exportPurchaseOrdersCsv({ claims, input: { ...input, orderDateTo: "2099-10-31" } }), coded("PURCHASING_INPUT_INVALID", "orderDate"));
+    await tx.query("DELETE rp FROM role_permissions rp JOIN roles r ON r.id = rp.role_id WHERE r.name = ?", [claims.roles[0]]);
+    await assert.rejects(inquiry.exportPurchaseOrdersCsv({ claims, input }), coded("PERMISSION_STALE"));
+    const [audit] = await tx.query(`SELECT target_type, target_id, outcome, detail FROM purchasing_audit_logs
+      WHERE action = 'purchasing.exported' AND actor_user_id = ? ORDER BY id`, [f.viewer.id]);
+    assert.deepEqual(audit.map(row => [row.target_type, row.target_id, row.outcome, row.detail]),
+      [["EXPORT", null, "SUCCEEDED", { rowCount: 2 }], ["EXPORT", null, "SUCCEEDED", { rowCount: 0 }]]);
+  });
+});
 
 integrationTest("列表預設按更新時間同 ID 倒序，分頁穩定；summary 係交易快照同安全欄位，allowedActions 跟 DB 權限", async (t) => {
   await inRollback(database(t), async (tx) => {
