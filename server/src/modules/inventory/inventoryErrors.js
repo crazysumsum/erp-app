@@ -45,6 +45,7 @@ const definitions = [
   ["OPENING_STATE_CONFLICT", 409, "期初庫存工作狀態已改變"],
   ["OPENING_CLOSED", 403, "系統上線後不可再匯入期初庫存"],
   ["INVENTORY_RESOURCE_NOT_FOUND", 404, "找不到指定的庫存資料"],
+  ["INVENTORY_REPORT_TOO_LARGE", 422, "匯出上限為 5,000 筆，請收窄篩選條件後再試"],
   ["OPENING_RESULT_EXPIRED", 410, "期初庫存結果檔案已清理"],
   ["INVENTORY_DEPENDENCY_UNAVAILABLE", 503, "庫存服務所需資料暫時無法使用"]
 ];

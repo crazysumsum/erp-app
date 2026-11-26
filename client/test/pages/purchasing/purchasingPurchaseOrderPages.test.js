@@ -1,11 +1,14 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { Quasar } from "quasar";
 import { h } from "vue";
 import { RouterView, createMemoryHistory, createRouter } from "vue-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/services/purchasing.js", () => ({ default: { listPurchaseOrders: vi.fn(), getPurchaseOrder: vi.fn(), copyPurchaseOrder: vi.fn() } }));
+vi.mock("@/services/purchasing.js", () => ({ default: {
+  listPurchaseOrders: vi.fn(), getPurchaseOrder: vi.fn(), copyPurchaseOrder: vi.fn(),
+  withdrawPurchaseOrderConfirmation: vi.fn(), cancelPurchaseOrder: vi.fn(), closePurchaseOrderRemaining: vi.fn()
+} }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 import purchasing from "@/services/purchasing.js";
@@ -39,6 +42,105 @@ beforeEach(() => {
   purchasing.listPurchaseOrders.mockResolvedValue({ rows: [row], rowsNumber: 1 });
   purchasing.getPurchaseOrder.mockResolvedValue(detail);
   confirm.mockResolvedValue(true);
+});
+
+describe("TASK-026 採購單例外操作", () => {
+  const dialog = () => new DOMWrapper(document.body).get('[role="dialog"]');
+  const dialogButton = (label) => dialog().findAll("button").find((node) => node.text() === label);
+  const labels = ["撤回確認", "取消採購單", "結清餘量"];
+  const available = ["withdrawConfirmation", "cancel", "closeRemaining"];
+  const reason = "供應商確認不再到貨";
+
+  async function start(label, po, permissions = MANAGE) {
+    purchasing.getPurchaseOrder.mockResolvedValue(po);
+    const router = await open("/purchasing/purchase-orders/8", permissions);
+    await button(label).trigger("click");
+    await flushPromises();
+    return router;
+  }
+
+  async function confirmAction(label, value = reason) {
+    await dialog().get("textarea").setValue(value);
+    await dialogButton(label).trigger("click");
+    await flushPromises();
+  }
+
+  it.each([
+    ["撤回確認", "CONFIRMED", "withdrawConfirmation", "withdrawPurchaseOrderConfirmation", "DRAFT", "草稿"],
+    ["取消採購單", "CONFIRMED", "cancel", "cancelPurchaseOrder", "CANCELLED", "已取消"],
+    ["結清餘量", "PARTIALLY_RECEIVED", "closeRemaining", "closePurchaseOrderRemaining", "CLOSED", "已結案"]
+  ])("%s 確認後用同一版本寫入，並重新讀取採購單", async (label, status, action, method, result, statusLabel) => {
+    const po = { ...detail, status, version: 6, allowedActions: [action], lines: [
+      line, { ...line, id: 12, lineNumber: 2, outstandingBaseQuantity: "3" },
+      { ...line, id: 13, lineNumber: 3, outstandingBaseQuantity: "0" }
+    ] };
+    purchasing[method].mockResolvedValue({ id: po.id, number: po.number, status: result, version: 7 });
+    await start(label, po);
+    if (action === "closeRemaining") {
+      const choices = dialog().findAll('[role="checkbox"]');
+      expect(choices).toHaveLength(2);
+      expect(choices[0].text()).toContain("6 EA");
+      expect(choices[1].text()).toContain("3 EA");
+      expect(dialogButton(label).attributes("disabled")).toBeDefined();
+      await choices[0].trigger("click");
+      await choices[1].trigger("click");
+    }
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...po, status: result, version: 7, allowedActions: [] });
+    await confirmAction(label, `  ${reason}  `);
+    const body = { version: 6, reason, eventId: expect.any(String), ...(action === "closeRemaining" ? { lineIds: [11, 12] } : {}) };
+    expect(purchasing[method]).toHaveBeenCalledExactlyOnceWith(8, body);
+    expect(purchasing.getPurchaseOrder).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).toContain(statusLabel);
+    expect(button(label)).toBeUndefined();
+  });
+
+  it("只有 view 的帳號看不到這三個動作", async () => {
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...detail, allowedActions: available });
+    await open("/purchasing/purchase-orders/8", VIEW);
+    for (const label of labels) expect(button(label)).toBeUndefined();
+  });
+
+  it("空白原因或放棄確認都不送出；切換採購單會關閉確認", async () => {
+    const po = { ...detail, status: "CONFIRMED", allowedActions: ["cancel"] };
+    const router = await start("取消採購單", po);
+    await confirmAction("取消採購單", "     ");
+    expect(dialog().text()).toContain("請輸入 5 至 500 字");
+    expect(purchasing.cancelPurchaseOrder).not.toHaveBeenCalled();
+    await dialogButton("返回").trigger("click");
+    await vi.waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeNull());
+    await button("取消採購單").trigger("click");
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...po, id: 9, number: "PO-202611-000009" });
+    await router.push("/purchasing/purchase-orders/9");
+    await vi.waitFor(() => expect(document.body.querySelector('[role="dialog"]')).toBeNull());
+    expect(purchasing.cancelPurchaseOrder).not.toHaveBeenCalled();
+  });
+
+  it("版本衝突顯示拒絕並讀取最新狀態", async () => {
+    const po = { ...detail, status: "CONFIRMED", allowedActions: ["withdrawConfirmation"] };
+    purchasing.withdrawPurchaseOrderConfirmation.mockRejectedValueOnce(Object.assign(new Error("採購單版本已更新"), { code: "VERSION_CONFLICT" }));
+    await start("撤回確認", po);
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...po, status: "PARTIALLY_RECEIVED", version: 3, allowedActions: ["closeRemaining"] });
+    await confirmAction("撤回確認");
+    expect(wrapper.text()).toContain("採購單版本已更新");
+    expect(wrapper.text()).toContain("部分收貨");
+    expect(button("撤回確認")).toBeUndefined();
+  });
+
+  it("結果不明時只重試同一操作，沿用原因、版本與 eventId", async () => {
+    const po = { ...detail, status: "CONFIRMED", allowedActions: ["cancel", "withdrawConfirmation"] };
+    purchasing.cancelPurchaseOrder.mockRejectedValueOnce(Object.assign(new Error("連線逾時"), { code: "TIMEOUT" }))
+      .mockResolvedValueOnce({ id: 8, number: po.number, status: "CANCELLED", version: 3 });
+    await start("取消採購單", po);
+    await confirmAction("取消採購單");
+    expect(wrapper.text()).toContain("結果尚未確認");
+    expect(button("撤回確認").attributes("disabled")).toBeDefined();
+    purchasing.getPurchaseOrder.mockResolvedValue({ ...po, status: "CANCELLED", version: 3, allowedActions: [] });
+    await button("重試原操作").trigger("click");
+    await flushPromises();
+    expect(purchasing.cancelPurchaseOrder.mock.calls).toHaveLength(2);
+    expect(purchasing.cancelPurchaseOrder.mock.calls[1]).toEqual(purchasing.cancelPurchaseOrder.mock.calls[0]);
+    expect(wrapper.text()).toContain("已取消");
+  });
 });
 afterEach(() => { wrapper?.unmount(); wrapper = null; document.body.innerHTML = ""; });
 
