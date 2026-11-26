@@ -66,6 +66,7 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "ar.view", description: "查看發票、收款、核銷及帳齡表" }),
   Object.freeze({ name: "ar.invoice.mgmt", description: "由出貨建立、確認及作廢發票" }),
   Object.freeze({ name: "ar.receipt.mgmt", description: "登記、確認及作廢收款，核銷及解除核銷" }),
+  Object.freeze({ name: "ar.opening.mgmt", description: "登記期初發票" }),
   Object.freeze({ name: "returns.view", description: "查看客戶退貨及退回供應商單據" }),
   Object.freeze({ name: "returns.customer.mgmt", description: "建立、取消及過帳客戶退貨" }),
   Object.freeze({ name: "returns.supplier.mgmt", description: "建立、取消及過帳退回供應商" })
