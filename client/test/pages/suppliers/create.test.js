@@ -107,6 +107,9 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     expect(body.text()).toContain("下一步");
     expect(body.text()).toContain("尚未設定地址");
     expect(notifySuccess).toHaveBeenCalled();
+    // UAT 前核對：建立後要有去詳情嘅連結；未改表單前唔可以再撳建立（避免以同一 Code 重複送出）。
+    expect(body.findAll("a").find((link) => link.text() === "前往供應商詳情").attributes("href")).toBe("/suppliers/41");
+    expect(wrapper.find('button[aria-label="儲存 Draft"]').attributes("disabled")).toBeDefined();
   });
 
   it("requires explicit confirmation before creating a possible duplicate", async () => {

@@ -8,6 +8,7 @@ import AuthLayout from "@/framework/layout/AuthLayout.vue";
       <q-icon name="block" size="48px" color="negative" />
       <h1 class="text-h6 q-ma-none q-mt-md">冇權限</h1>
       <div class="text-grey-7 q-mt-sm">你冇權限查看呢一頁。</div>
+      <q-btn flat color="primary" class="q-mt-md" label="回首頁" :to="{ name: 'home' }" />
     </q-card-section>
   </AuthLayout>
 </template>
