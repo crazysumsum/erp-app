@@ -29,6 +29,7 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   SHIPMENT_ALREADY_REVERSED: "這張出貨單已沖銷，請重新載入現有結果",
   FULFILLMENT_SOURCE_CONFLICT: "履約資料或狀態已變更，請重新載入後再試",
   DOWNSTREAM_MATTER_BLOCKS_REVERSAL: "已有下游事項，請先處理相關事項再沖銷",
+  SHIPMENT_ISSUE_COST_UNAVAILABLE: "原出貨沒有完整成本流水，不能按原值沖銷",
   ORIGINAL_BUCKET_UNAVAILABLE: "原庫位目前不能回補，請先處理庫位狀態",
   FULFILLMENT_DEPENDENCY_UNAVAILABLE: "履約服務暫時未能確認結果，請沿用原操作識別碼查詢進度",
   PURCHASING_INPUT_INVALID: "採購資料不正確，請檢查標示的欄位後再試",

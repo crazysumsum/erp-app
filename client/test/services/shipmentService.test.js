@@ -3,6 +3,21 @@ vi.mock("@/framework/http/HttpClient.js",()=>({httpClient:{get:vi.fn(),post:vi.f
 import {httpClient} from "@/framework/http/HttpClient.js";
 const modules=import.meta.glob("../../src/services/shipment.js",{eager:true});
 
+it("Reversal only sends the whole-shipment command with its original event and rejects an unrelated receipt",async()=>{
+ const shipment=modules["../../src/services/shipment.js"].default;
+ const eventId="c2e7f6b5-5b56-46f9-83cc-0ce21382bd8c";
+ const body=Object.freeze({eventId,version:3,reason:"Incorrect shipment",goodsUnderCompanyControl:true,goodsReturnedToOriginalBins:true});
+ const reversed={outcome:"REVERSED",shipment:{id:"9",status:"REVERSED",version:5}};
+ const signal=new AbortController().signal;
+ httpClient.post.mockResolvedValue(reversed);
+ await expect(shipment.reverse("9",body,{signal})).resolves.toBe(reversed);
+ expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/shipments/9/reverse",{idempotent:true,idempotencyKey:eventId,body,signal});
+ expect(()=>shipment.reverse("9",{...body,goodsReturnedToOriginalBins:false})).toThrow(TypeError);
+ expect(()=>shipment.reverse("9",{...body,quantity:"1"})).toThrow(TypeError);
+ httpClient.post.mockResolvedValue({...reversed,shipment:{...reversed.shipment,id:"10"}});
+ await expect(shipment.reverse("9",body)).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
+});
+
 it("CLIENT-CONTRACT: Shipment wire identities, exact weight and malformed outcome rejection without resubmission",async()=>{
  const module=modules["../../src/services/shipment.js"];expect(module,"The approved Shipment client service must exist").toBeDefined();
  const shipment=module.default,eventId="c2e7f6b5-5b56-46f9-83cc-0ce21382bd8c",correlationId="b5e03d47-e9fc-4b17-9d78-d19f06897a6e",signal=new AbortController().signal;
