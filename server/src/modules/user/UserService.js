@@ -144,6 +144,13 @@ export class UserService {
       return { ok: false, reason: AUTH_FAILURE.LOCKED };
     }
 
+    if (row.locked_until !== null) {
+      await this.database.execute(
+        "UPDATE users SET failed_login_attempts = 0, locked_until = NULL, updated_at = ? WHERE id = ? AND locked_until <= ?",
+        [nowMs, row.id, nowMs]
+      );
+    }
+
     if (!(await verifyPassword(password, row.password_hash))) {
       await this.#recordFailedAttempt(row, nowMs);
       return { ok: false, reason: AUTH_FAILURE.BAD_PASSWORD };

@@ -146,6 +146,14 @@ export class JwtService extends BaseService {
       throw new jwt.JsonWebTokenError("jwt auth_time is required");
     }
 
+    if (!Number.isSafeInteger(claims.exp) || !Number.isSafeInteger(claims.iat) ||
+        claims.exp <= claims.iat || claims.exp - claims.iat > this.#jwt.expiresInSeconds) {
+      throw new jwt.JsonWebTokenError("invalid jwt lifetime");
+    }
+    if (claims.auth_time > Math.floor(Date.now() / 1000) + this.#jwt.clockToleranceSeconds) {
+      throw new jwt.JsonWebTokenError("invalid jwt authentication time");
+    }
+
     return claims;
   }
 }

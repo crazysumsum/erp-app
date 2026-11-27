@@ -91,7 +91,7 @@ export class TokenRevocationService extends BaseService {
     }
 
     // 沒有列代表從未撤銷過，等同版本 0——與 DEFAULT 1 的第一次撤銷銜接得上。
-    return version < (this.snapshot.get(subject) ?? 0);
+    return version !== (this.snapshot.get(subject) ?? 0);
   }
 
   /**

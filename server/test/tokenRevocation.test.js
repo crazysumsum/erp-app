@@ -136,9 +136,7 @@ test("a token older than the current version is revoked, the current one is not"
   assert.equal(service.isRevoked({ sub: "42", ver: 2 }), true);
   // 邊界：ver === 目前版本 就是最新簽的那一批，必須放行。
   assert.equal(service.isRevoked({ sub: "42", ver: 3 }), false);
-  // 比目前版本還新：只可能是快照落後了一輪，那個 token 是有效的。反過來當成
-  // 已撤銷的話，撤銷的那一刻剛登入的人會被自己的新 token 鎖在外面。
-  assert.equal(service.isRevoked({ sub: "42", ver: 4 }), false);
+  assert.equal(service.isRevoked({ sub: "42", ver: 4 }), true);
   // 沒有被撤銷過的 subject 沒有列，等同版本 0。
   assert.equal(service.isRevoked({ sub: "99", ver: 0 }), false);
   // 沒有 sub 就沒有 key 可查。放行的話那個 token 對所有撤銷免疫，所以唯一

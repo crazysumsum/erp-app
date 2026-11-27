@@ -79,6 +79,7 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   DEVICE_PENDING_APPROVAL: "這台設備正在等待審批，批准後才可以使用",
   DEVICE_REJECTED: "這台設備的申請已被拒絕，請聯絡管理員",
   DEVICE_REVOKED: "這台設備的存取權已被撤銷，請聯絡管理員",
+  DEVICE_SELF_REVIEW_DENIED: "請由另一位設備管理員審批自己的設備。",
   DEVICE_BINDING_CONFLICT: "這個請求已經被其他人處理過了",
   REQUEST_TIMEOUT: "請求逾時，請稍後再試",
   REQUEST_BODY_TIMEOUT: "請求內容接收逾時",
