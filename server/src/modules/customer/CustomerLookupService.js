@@ -156,6 +156,30 @@ export class CustomerLookupService {
     return Object.freeze({ items: Object.freeze(rows.map(customerProjection)), total: Number(count.total), page: safePage, pageSize: safePageSize });
   }
 
+  async listReferences({ q = "", status, page = 1, pageSize = 20 } = {}) {
+    const conditions = [];
+    const params = [];
+    const search = q.trim().normalize("NFKC").toLowerCase();
+    if (search) {
+      const contains = (key) => `%${key.replace(/[!%_\\]/gu, (character) => `!${character}`)}%`;
+      conditions.push("(customer_code_key LIKE ? ESCAPE '!' OR legal_name_key LIKE ? ESCAPE '!')");
+      params.push(contains(search), contains(search.replace(/\s+/gu, " ")));
+    }
+    if (status !== undefined) {
+      conditions.push("status = ?");
+      params.push(status);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
+    const [rows] = await this.database.query(
+      `SELECT id, customer_code, legal_name, status FROM customers ${where}
+       ORDER BY customer_code_key ASC, id ASC LIMIT ? OFFSET ?`,
+      [...params, pageSize, (page - 1) * pageSize]
+    );
+    const items = rows.map((row) => ({ id: Number(row.id), code: row.customer_code, name: row.legal_name, status: row.status }));
+    return { items, total: Number(count.total), page, pageSize };
+  }
+
   async getCreditPolicy(customerId, { atMs } = {}) {
     requireId(customerId, "customerId"); requireAtMs(atMs);
     const [[row]] = await this.database.query(
