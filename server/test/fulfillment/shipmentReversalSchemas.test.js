@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { ReverseShipmentHandler } from "../../src/handlers/shipments/reverseShipmentHandler.js";
 import { RequestValidator } from "../../src/framework/validation/requestValidator.js";
 import {
   SHIPMENT_REVERSE_BODY,
@@ -21,7 +22,15 @@ function validator(schema, title) {
 
 test("Shipment Reverse command accepts only one whole shipment and both confirmations", () => {
   const validate = validator(SHIPMENT_REVERSE_BODY, "Reverse request");
-  assert.doesNotThrow(() => validate(request));
+  assert.equal(ReverseShipmentHandler.api.authType, "jwt-device-password");
+  const req = { get: () => eventId, body: { ...request, password: "synthetic-confirmation" } };
+  const handler = { runtime: { authorizeRequest(permission) {
+    assert.equal(permission, "fulfillment.reverse");
+    return true;
+  } } };
+  assert.equal(ReverseShipmentHandler.prototype.authorizeRequest.call(handler, req), true);
+  assert.deepEqual(req.body, request);
+  assert.doesNotThrow(() => validate(req.body));
   for (const field of ["lineId", "quantity", "binId", "actorId"]) {
     assert.throws(() => validate({ ...request, [field]: 1 }));
   }
