@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "decision": "依 TL 安全審核 S-01／S-03／S-06／S-07／F-06，PM 8a27d864；交 CI 管理員核定。",
+  "purpose": "Functional regression for the approved review items.",
+  "data": "Existing unit and disposable functional fixtures.",
+  "concurrency": "Existing worker configuration.",
+  "repetitions": "One check per scenario under the existing triggers.",
+  "thresholds": "Preserve existing correctness, coverage and CI gates.",
+  "trigger": "Existing functional and integration triggers.",
+  "cost": "No new job or workload scale. Estimated incremental runtime in seconds.",
+  "files": [
+    {
+      "path": "docs/device-binding-auth.md",
+      "mode": "100644",
+      "blob": "827f2319ef3c76980fe94a8d902b5d4d67b61e28",
+      "kind": "support"
+    },
+    {
+      "path": "server/config/logging.js",
+      "mode": "100644",
+      "blob": "a62902a2c4b00ceec6bdeef8c58d158afbf54e42",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/deviceHandlers.test.js",
+      "mode": "100644",
+      "blob": "9ecbaa449246181eafb61f168812ccb3e817f772",
+      "kind": "functional",
+      "cases": [
+        "S-01 device review checks the actor and records completed decisions",
+        "approving and rejecting record who did it and any note",
+        "the pending queue maps rows to the shape the approver sees"
+      ]
+    },
+    {
+      "path": "server/test/jwtService.test.js",
+      "mode": "100644",
+      "blob": "ea2f1c7d51b3c288deb48dee09e0fa1c5d77c52f",
+      "kind": "functional",
+      "cases": [
+        "S-06 validates the verified session timestamps",
+        "expiresIn must carry a unit, because a bare number means milliseconds"
+      ]
+    },
+    {
+      "path": "server/test/logger.test.js",
+      "mode": "100644",
+      "blob": "ff2bfa718a59f4b94d393173951b25ffa2f51c38",
+      "kind": "functional",
+      "cases": [
+        "F-06 applies the same credential fields to request and system logs",
+        "logging service flushes registry loggers once and separately flushes an injected logger"
+      ]
+    },
+    {
+      "path": "server/test/tokenRevocation.test.js",
+      "mode": "100644",
+      "blob": "3e1426d82a68d2ad83b45c07ce974e0888ba4bdf",
+      "kind": "functional",
+      "cases": [
+        "S-06 confirms a newer persisted version and reuses it on the next request",
+        "S-06 rejects a version the database does not confirm",
+        "S-06 reports service unavailable when a newer version cannot be confirmed",
+        "a token older than the current version is revoked, the current one is not",
+        "a token without ver is treated as revoked",
+        "the first revocation takes a never-revoked subject from 0 to 1",
+        "revocation takes effect locally without waiting for the next refresh",
+        "a failed refresh keeps serving the old snapshot and says how stale it is",
+        "fail open is time boxed: past the cap the snapshot stops counting",
+        "a successful refresh picks up another instance's revocation",
+        "a refresh that would exceed maxCachedSubjects fails open and leaves the old snapshot untouched"
+      ]
+    },
+    {
+      "path": "server/test/userLockExpiry.test.js",
+      "mode": "100644",
+      "blob": "945a95dd1c4badb59e352c4b4bc6255efdeafb1a",
+      "kind": "functional",
+      "cases": [
+        "S-03 starts a fresh attempt count after lock expiry"
+      ]
+    }
+  ]
+}
