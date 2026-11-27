@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam extended functional per-case admission suspension until production go-live in AGENTS.md (PR #395). PM 47461a13, 07250f43 and eaacc66b directed the AR Credit Memo scope, ordinary merges and functional handoff. The source head is 3e89378f928427b6b16dbbff5c55908cc22ffbd2 on main ac3dd17a379368852af90fd4dedeee0855601b81. Independent exact review and trusted CI administrator digest registration are required.",
+  "decision": "Sam extended functional per-case admission suspension until production go-live in AGENTS.md (PR #395). PM 47461a13, 07250f43 and eaacc66b directed the AR Credit Memo scope, ordinary merges and functional handoff. The source head is 3e89378f928427b6b16dbbff5c55908cc22ffbd2 on main ac3dd17a379368852af90fd4dedeee0855601b81. Independent exact review and trusted CI administrator digest registration are required. PM f8ab3e3a and a551b7f2, with TL eb6da488, authorized a fixture-only correction for the three existing TC-020 cases after #424's first CI failure. The correction aligns the schema probe result shape without changing assertions or execution counts. PM c3efbc58 and TL c8d893e8 authorized one in-memory TC-020 negative regression after confirming that the existing cases did not cover an omitted credit_present column.",
   "purpose": "Verify AR Credit Memo schema, permission seeding, currency rounding and remaining credit amounts, invoice void protection, concurrent confirmations, idempotent commands, credit applications and the shared refund balance contract.",
-  "data": "Two MySQL schema checks verify permission seeds and credit/refund constraints in a freshly migrated private schema. Two HTTP cases use synthetic customers and a single opening invoice or a single shipped two-line order, with one matching posted return for source validation. Three in-memory tests cover per-line caps and shared credit balance locking.",
+  "data": "Two MySQL schema checks verify permission seeds and credit/refund constraints in a freshly migrated private schema. Two HTTP cases use synthetic customers and a single opening invoice or a single shipped two-line order, with one matching posted return for source validation. Three in-memory tests cover per-line caps and shared credit balance locking. The added TC-020 regression uses one in-memory stub returning an absent-schema row with no credit table count; it writes no database rows.",
   "concurrency": "Existing routine server jobs and shard configuration. The HTTP case uses two concurrent confirmations for one original invoice to verify serialized credit limits. No new worker or job.",
-  "repetitions": "Seven functional cases run once per applicable existing routine server run. Browser tests remain explicit local evidence and are outside this candidate.",
+  "repetitions": "Eight added functional cases run once per applicable existing routine server run. The three refreshed TC-020 fixtures keep their existing execution counts. Browser tests remain explicit local evidence and are outside this candidate.",
   "thresholds": "Exact money and schema constraints; permissions, idempotency and transactional outcomes match the assertions. Existing thresholds and coverage floors are preserved.",
   "trigger": "Existing server functional discovery only. No workflow, schedule, capacity or performance changes.",
-  "cost": "Author measured the two HTTP cases together at 5.3 seconds in UTC and 7.3 seconds in Asia/Hong_Kong per timezone including setup; the other five cases total under one second locally. Remote CI critical-path impact is unmeasured.",
+  "cost": "Author measured the two HTTP cases together at 5.3 seconds in UTC and 7.3 seconds in Asia/Hong_Kong per timezone including setup; the other five cases total under one second locally. The added TC-020 in-memory case took under 1 ms locally. Remote CI critical-path impact is unmeasured.",
   "files": [
     {
       "path": "server/database/migrations/0134_seed_ar_credit_permissions.js",
@@ -52,6 +52,18 @@
       "cases": [
         "an opening credit on a paid invoice keeps its funds and prevents invoice void after cash is unapplied",
         "confirmation serializes the same invoice and applies the largest-remainder per-line caps"
+      ]
+    },
+    {
+      "path": "server/test/business-master/consumer-contract/providerContract.test.js",
+      "mode": "100644",
+      "blob": "0d9d842984ffacc71f6e28017e95f6389619f5bc",
+      "kind": "functional",
+      "cases": [
+        "TC-020 the registered Supplier-owned checker replaces only its conservative readiness boundary",
+        "TC-020 all six absent consumer modules report explicit NOT_INSTALLED, never an unknown success",
+        "TC-020 the registered Customer checker reports Currency defaults without exposing Customer records",
+        "TC-020 AR impact fails closed when the schema probe omits the credit table count"
       ]
     }
   ]

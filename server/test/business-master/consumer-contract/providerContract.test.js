@@ -132,7 +132,7 @@ function factoryServices(database, supplierChecker = null) {
 }
 
 test("TC-020 the registered Supplier-owned checker replaces only its conservative readiness boundary", async () => {
-  const database = { async query() { return [[{ present: 0 }]]; } };
+  const database = { async query() { return [[{ present: 0, credit_present: 0 }]]; } };
   const supplierChecker = {
     id: "supplier",
     async check() {
@@ -162,7 +162,7 @@ test("TC-020 the registered Supplier-owned checker replaces only its conservativ
 });
 
 test("TC-020 all six absent consumer modules report explicit NOT_INSTALLED, never an unknown success", async () => {
-  const database = { async query() { return [[{ present: 0 }]]; } };
+  const database = { async query() { return [[{ present: 0, credit_present: 0 }]]; } };
   const admin = createBusinessMasterAdminService(factoryServices(database));
   const preview = await admin.impactRegistry.preview({
     actorId: 1,
@@ -186,11 +186,29 @@ test("TC-020 all six absent consumer modules report explicit NOT_INSTALLED, neve
   ));
 });
 
+test("TC-020 AR impact fails closed when the schema probe omits the credit table count", async () => {
+  const database = { async query() { return [[{ present: 0 }]]; } };
+  const admin = createBusinessMasterAdminService(factoryServices(database));
+
+  await assert.rejects(admin.impactRegistry.preview({
+    actorId: 1,
+    entityType: "CURRENCY",
+    entityKey: "HKD",
+    version: 1,
+    operation: "DEACTIVATE",
+    proposedChange: { status: "INACTIVE" }
+  }), {
+    statusCode: 503,
+    code: "IMPACT_CHECK_UNAVAILABLE",
+    details: { checkerId: "ar" }
+  });
+});
+
 test("TC-020 the registered Customer checker reports Currency defaults without exposing Customer records", async () => {
   const database = {
     async query(sql, params = []) {
       if (sql.includes("information_schema.tables")) {
-        return [[{ present: sql.includes("table_name = 'customers'") ? 1 : 0 }]];
+        return [[{ present: sql.includes("table_name = 'customers'") ? 1 : 0, credit_present: 0 }]];
       }
       assert.match(sql, /FROM customers/);
       assert.deepEqual(params, ["HKD"]);
