@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "decision": "PM assignment 4c398eff and recovery policy decision 16226007. Independent TL review 71897648 for source 107370edf3548b56be0c8faa2bf4ed0a1bd3b694. CI administrator precheck d6feb84d.",
+  "purpose": "Check effective permissions before account password reset and disable, including delegated recovery by system administrators and protection of system-admin targets by role.",
+  "data": "Four functional cases using the existing in-memory directory and revocation fixtures. Each scenario uses two or three synthetic accounts. The positive case covers equal and strictly greater permission sets with separate fixtures.",
+  "concurrency": "Serial calls in each case using the existing server test worker.",
+  "repetitions": "Each new case runs once in the existing functional suite. The positive case checks the two permission relationships once each.",
+  "thresholds": "Denied actions return the existing permission error without revoking sessions or recording a successful change. Authorized reset and disable succeed, including recovery via the protected role’s existing delegation rules. Equal permissions alone cannot authorize management of a system administrator. Existing last-admin, stale-claim and personal password-change assertions remain in place.",
+  "trigger": "Existing functional server test discovery on PR and main.",
+  "cost": "About one second for the four new case bodies in a local run, mostly the password hashing in the success cases. CI overhead is estimated at a few seconds on an existing worker.",
+  "files": [
+    {
+      "path": "server/test/userAdminService.test.js",
+      "mode": "100644",
+      "blob": "dddb39b073c735a5c8b19e501c5f2dec452d7e23",
+      "kind": "functional",
+      "cases": [
+        "account administration checks all target permissions before changing credentials or status",
+        "only protected administrators can manage other accounts through delegated bank permissions",
+        "matching permissions without the protected role cannot reset or disable a system administrator",
+        "equal or higher permissions allow administration of a peer account"
+      ]
+    }
+  ]
+}
