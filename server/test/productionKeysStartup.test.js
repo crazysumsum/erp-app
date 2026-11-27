@@ -46,7 +46,7 @@ function assertDenied(variable, secret, overrides) {
 }
 
 test("production rejects published or constant JWT secrets and names only the setting", () => {
-  for (const [mode, secret] of [["production", publicJwt], ["", publicJwt], ["staging", "x".repeat(48)]]) {
+  for (const [mode, secret] of [["production", publicJwt], ["development", publicJwt], ["", publicJwt], ["staging", "x".repeat(48)]]) {
     assertDenied("JWT_SECRET", secret, { NODE_ENV: mode, JWT_SECRET: " " + secret + " " });
   }
 });
@@ -70,7 +70,7 @@ test("a repeated-byte bank fixture and a published bank key reused as JWT are re
 });
 
 test("fresh production keys and explicit nonproduction fixtures reach application configuration", () => {
-  for (const overrides of [{}, { NODE_ENV: "test", JWT_SECRET: publicJwt }, { NODE_ENV: "development", JWT_SECRET: publicJwt }]) {
+  for (const overrides of [{}, { NODE_ENV: "test", JWT_SECRET: publicJwt }]) {
     const { error } = startup(overrides);
     assert.equal(error.code, "CONFIGURATION_INVALID");
     assert.ok(error.message.includes("maxLinesPerDocument"));

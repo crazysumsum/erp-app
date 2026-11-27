@@ -365,8 +365,8 @@ export class DeviceBindingService extends BaseService {
    * 而第三條規則看的是 last_used_at。兩欄都是 NULL 的列會同時逃過兩條規則，
    * 變成永遠清不掉的孤兒。
    */
-  async #transition(bindingId, { from, to, reviewerId, note, event, message }) {
-    const [result] = await this.database.execute(
+  async #transition(bindingId, { from, to, reviewerId, note, event, message }, connection) {
+    const [result] = await connection.execute(
       `UPDATE ${DEVICES_TABLE}
        SET status = ?, reviewed_at = ?, reviewed_by = ?, review_note = ?
        WHERE id = ? AND status = ?`,
@@ -384,7 +384,7 @@ export class DeviceBindingService extends BaseService {
       return null;
     }
 
-    const binding = await this.findById(bindingId);
+    const binding = await this.findById(bindingId, connection);
 
     await this.logger.info(event, message, {
       bindingId: Number(bindingId),
@@ -397,7 +397,7 @@ export class DeviceBindingService extends BaseService {
   }
 
   /** 核准一筆待審批的綁定。 */
-  async approve(bindingId, { reviewerId = null, note = "" } = {}) {
+  async approve(bindingId, { reviewerId = null, note = "" } = {}, connection = this.database) {
     return this.#transition(bindingId, {
       from: DEVICE_STATUS.pending,
       to: DEVICE_STATUS.approved,
@@ -405,11 +405,11 @@ export class DeviceBindingService extends BaseService {
       note,
       event: "auth.device.binding_approved",
       message: "A device binding was approved"
-    });
+    }, connection);
   }
 
   /** 拒絕一筆待審批的綁定。 */
-  async reject(bindingId, { reviewerId = null, note = "" } = {}) {
+  async reject(bindingId, { reviewerId = null, note = "" } = {}, connection = this.database) {
     return this.#transition(bindingId, {
       from: DEVICE_STATUS.pending,
       to: DEVICE_STATUS.rejected,
@@ -417,7 +417,7 @@ export class DeviceBindingService extends BaseService {
       note,
       event: "auth.device.binding_rejected",
       message: "A device binding was rejected"
-    });
+    }, connection);
   }
 
   /**
@@ -430,7 +430,7 @@ export class DeviceBindingService extends BaseService {
    * 檢查綁定仍是 approved）。要立刻生效，呼叫端還要 revoke 那個 subject 的
    * token 版本；那一步屬於業務決定，不在這個 service。
    */
-  async revoke(bindingId, { reviewerId = null, note = "" } = {}) {
+  async revoke(bindingId, { reviewerId = null, note = "" } = {}, connection = this.database) {
     return this.#transition(bindingId, {
       from: DEVICE_STATUS.approved,
       to: DEVICE_STATUS.revoked,
@@ -438,15 +438,15 @@ export class DeviceBindingService extends BaseService {
       note,
       event: "auth.device.binding_revoked",
       message: "A device binding was revoked"
-    });
+    }, connection);
   }
 
   /** 依 id 取一筆綁定。找不到回傳 null。 */
-  async findById(bindingId) {
+  async findById(bindingId, connection = this.database) {
     let rows;
 
     try {
-      [rows] = await this.database.query(
+      [rows] = await connection.query(
         `SELECT id, user_id, device_id, label, status, requested_at,
                 requested_ip, requested_ua, reviewed_at, reviewed_by, last_used_at
          FROM ${DEVICES_TABLE}
@@ -466,7 +466,7 @@ export class DeviceBindingService extends BaseService {
    * 刻意不回傳 public_key：審批者看不懂它，而它是驗簽用的資料，沒有理由出現在
    * 一個給人看的清單裡。
    */
-  async listPending({ limit = 200 } = {}) {
+  async listPending({ limit = 200, connection = this.database } = {}) {
     let rows;
 
     // LIMIT 不能用佔位符：MySQL 的 binary protocol 會以 ER_WRONG_ARGUMENTS 拒絕
@@ -475,7 +475,7 @@ export class DeviceBindingService extends BaseService {
     const rowLimit = Math.max(1, Math.floor(Number(limit) || 200));
 
     try {
-      [rows] = await this.database.query(
+      [rows] = await connection.query(
         `SELECT d.id, d.user_id, u.username, u.display_name, d.device_id, d.label,
                 d.status, d.requested_at, d.requested_ip, d.requested_ua
          FROM ${DEVICES_TABLE} d

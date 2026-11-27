@@ -94,7 +94,7 @@ export class JwtAuthStrategy extends BaseAuthStrategy {
       //
       // 代價是任何直接呼叫 jwt.verify() 的地方都會繞過撤銷。目前只有這裡在
       // 呼叫，新增呼叫端時必須自己想清楚這一點。
-      if (this.tokenRevocation.isRevoked(claims)) {
+      if (await this.tokenRevocation.isRevoked(claims)) {
         // 撤銷後仍被使用，通常代表對方還不知道自己已經被踢掉，也可能是被盜的
         // token 正在被使用。這個區別靠 subject 與頻率去看，所以兩者都要記。
         void this.logger?.warn?.("auth.jwt.revoked", "JWT was revoked", {
