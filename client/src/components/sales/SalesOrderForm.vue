@@ -1,4 +1,5 @@
 <script setup>
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import { computed,onBeforeUnmount,reactive,ref,toRaw,watch } from "vue";
 import { onBeforeRouteLeave,onBeforeRouteUpdate } from "vue-router";
 import FormPanel from "@/framework/ui/FormPanel.vue";
@@ -61,8 +62,8 @@ function reload(){if(!dirty.value||window.confirm("載入最新資料會取代�
   </div>
   <q-banner v-if="customer?.defaultCurrencyCode&&form.currencyCode!==customer.defaultCurrencyCode" class="bg-warning text-dark q-mb-md">貨幣與客戶預設不同；售價不自動換算。</q-banner>
   <q-banner v-if="customer?.credit?.status==='on_hold'" class="bg-warning text-dark q-mb-md">客戶信用暫停；Draft 可儲存，確認訂單時會重新驗證信用。</q-banner>
-  <p v-else-if="customer?.credit?.creditLimit" class="text-caption">信用限額參考：{{ customer.credit.currencyCode }} {{ customer.credit.creditLimit }}；不代表可用信用或庫存承諾。</p>
+  <p v-else-if="customer?.credit?.creditLimit" class="text-caption">信用限額參考：{{ customer.credit.currencyCode }} {{ formatMoney(customer.credit.creditLimit, customer.credit.currencyCode) }}；不代表可用信用或庫存承諾。</p>
   <SalesOrderLineEditor v-model="form.lines" :currency-code="form.currencyCode" :field-error="fieldError" />
- </fieldset><div class="sales-order-summary"><SalesOrderQuantitySummary :lines="form.lines" :currency-code="form.currencyCode" :saved-total="document?.totalAmount ?? null" /><q-btn class="q-mt-md" color="primary" type="submit" :label="uncertain?'重試確認結果':'儲存 Draft 銷售訂單'" :loading="submitting" :disable="stale" /></div></FormPanel>
+ </fieldset><div class="sales-order-summary"><SalesOrderQuantitySummary :lines="form.lines" :currency-code="form.currencyCode" :saved-total="document?.totalAmount ?? null" :saved-currency-code="document?.currencyCode" /><q-btn class="q-mt-md" color="primary" type="submit" :label="uncertain?'重試確認結果':'儲存 Draft 銷售訂單'" :loading="submitting" :disable="stale" /></div></FormPanel>
 </div></template>
 <style scoped>fieldset { border:0; min-width:0; }.sales-order-summary { position:sticky; bottom:0; z-index:1; background:var(--app-bg); padding:.5rem 0; border-top:1px solid var(--app-border); }</style>

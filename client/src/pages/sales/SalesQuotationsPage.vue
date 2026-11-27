@@ -2,6 +2,7 @@
 export const page = { name: "sales-quotations", path: "/sales/quotations", title: "報價單", requires: { permissions: ["sales.view"] }, menu: {group:"salesOrderManagement",icon:"request_quote",order:10} };
 </script>
 <script setup>
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import { computed, onBeforeUnmount, reactive, watch } from "vue";
 import { useRoute,useRouter } from "vue-router";
 import appConfig from "@config/app.js";
@@ -34,7 +35,7 @@ function apply(){router.replace({query:Object.fromEntries(Object.entries(filters
  <div class="q-px-md q-pb-md" aria-live="polite"><DataTable :key="JSON.stringify(route.query)" :fetch="fetchRows" :columns="columns" sticky-actions :initial-pagination="{page:1,rowsPerPage:appConfig.defaultPageSize,rowsNumber:0,sortBy:'quotationDate',descending:true}">
   <template #body-cell-customerName="{row}"><EllipsisCell :text="`${row.customerCode} — ${row.customerName}`" /></template>
   <template #body-cell-status="{row}"><q-td><q-badge :color="colors[row.status]" :label="labels[row.status]" /></q-td></template>
-  <template #body-cell-totalAmount="{row}"><q-td class="text-right">{{ row.currencyCode }} {{ row.totalAmount }}</q-td></template>
+  <template #body-cell-totalAmount="{row}"><q-td class="text-right">{{ row.currencyCode }} {{ formatMoney(row.totalAmount, row.currencyCode) }}</q-td></template>
   <template #body-cell-actions="{row}"><q-td class="text-right"><q-btn flat :label="`查看 ${row.number}`" :to="`/sales/quotations/${row.id}`" /></q-td></template>
   <template #no-data><p role="status">沒有符合條件的報價單；請調整搜尋條件。</p></template>
  </DataTable></div></div></template>

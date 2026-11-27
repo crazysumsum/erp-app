@@ -2,6 +2,7 @@
 export const page={name:"sales-orders",path:"/sales/orders",title:"銷售訂單",requires:{permissions:["sales.view"]},menu:{group:"salesOrderManagement",icon:"receipt_long",order:20}};
 </script>
 <script setup>
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
 import { computed,onBeforeUnmount,reactive,ref,watch } from "vue";
 import { useRoute,useRouter } from "vue-router";
 import appConfig from "@config/app.js";
@@ -24,7 +25,7 @@ watch(tableKey,()=>{for(const key of Object.keys(filters))filters[key]=route.que
 const quantityColumns=props.outstanding?[
  {name:"baseUomCode",label:"基本單位",field:row=>row.quantities?.baseUomCode??"—"},
  ...Object.entries(quantityLabels).map(([key,label])=>({
-  name:`${key}BaseQuantity`,field:row=>row.quantities?.[`${key}BaseQuantity`]??"—",label:`${label}（基本單位）`,align:"right"
+  name:`${key}BaseQuantity`,field:row=>row.quantities?.[`${key}BaseQuantity`],format:formatQuantity,label:`${label}（基本單位）`,align:"right"
  }))
 ]:[];
 const columns=[{name:"number",label:"訂單編號",field:"number",align:"left",sortable:true},{name:"customerName",label:"客戶",field:"customerName",align:"left",sortable:true},
@@ -58,7 +59,7 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
   <template #body-cell-warehouseName="{row}"><EllipsisCell :text="`${row.warehouseCode} — ${row.warehouseName}`" /></template>
   <template #body-cell-sourceType="{row}"><q-td>{{ sourceLabels[row.sourceType] }}</q-td></template>
   <template #body-cell-status="{row}"><q-td><q-badge :color="statusColors[row.status]" :label="statusLabels[row.status]" /></q-td></template>
-  <template #body-cell-totalAmount="{row}"><q-td class="text-right">{{ row.currencyCode }} {{ row.totalAmount }}</q-td></template>
+  <template #body-cell-totalAmount="{row}"><q-td class="text-right">{{ row.currencyCode }} {{ formatMoney(row.totalAmount, row.currencyCode) }}</q-td></template>
   <template #body-cell-hasBackorder="{row}"><q-td><q-badge v-if="row.hasBackorder" color="warning" text-color="dark" :label="`有欠貨（${row.backorderLineCount} 行）`" /><span v-else>沒有</span></q-td></template>
   <template #body-cell-updatedAt="{row}"><q-td>{{ timestamp(row.updatedAt) }}</q-td></template>
   <template #body-cell-actions="{row}"><q-td class="text-right"><q-btn flat :label="`查看 ${row.number}`" :to="`/sales/orders/${row.id}`" /><div v-if="outstanding&&!row.quantities" class="text-caption">數量請見明細</div></q-td></template>

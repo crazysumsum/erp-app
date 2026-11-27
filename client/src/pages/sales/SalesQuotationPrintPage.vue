@@ -2,6 +2,7 @@
 export const page = { name: "sales-quotation-print", path: "/sales/quotations/:id/print", title: "報價列印", requires: { permissions: ["sales.view"] } };
 </script>
 <script setup>
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
 import { onBeforeUnmount,ref,watch } from "vue";
 import { useRoute } from "vue-router";
 import appConfig from "@config/app.js";
@@ -18,8 +19,8 @@ function print(){window.print();}
   <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load" /></template></q-banner>
   <article v-else-if="document?.allowedActions.includes('print')" class="quotation-sheet">
    <h1 class="text-h5">{{ appConfig.title }}</h1><h2 class="text-h6">報價單 {{ document.number }}</h2><p>客戶：{{ document.customerCode }} — {{ document.customerName }}</p><p>報價日期：{{ document.quotationDate }} 有效至：{{ document.validUntil }}</p><p v-if="document.externalReference">參考編號：{{ document.externalReference }}</p>
-   <table><caption class="text-left">報價明細（{{ document.currencyCode }}）</caption><thead><tr><th scope="col">行</th><th scope="col">SKU／名稱</th><th scope="col">數量／單位</th><th scope="col">售價</th><th scope="col">金額</th></tr></thead><tbody><tr v-for="line in document.lines" :key="line.id"><td>{{ line.lineNo }}</td><td>{{ line.skuCode }} — {{ line.skuName }}<div v-if="line.lineNote">{{ line.lineNote }}</div></td><td><span class="print-number">{{ line.quantity }}</span> {{ line.uomCode }}</td><td class="print-number">{{ line.unitSellingPrice }}</td><td class="print-number">{{ line.lineAmount }}</td></tr></tbody></table>
-   <p class="text-right">總額：{{ document.currencyCode }} {{ document.totalAmount }}</p><p v-if="document.paymentTermName">付款條款：{{ document.paymentTermName }}</p><p v-if="document.notes" class="print-notes">{{ document.notes }}</p>
+   <table><caption class="text-left">報價明細（{{ document.currencyCode }}）</caption><thead><tr><th scope="col">行</th><th scope="col">SKU／名稱</th><th scope="col">數量／單位</th><th scope="col">售價</th><th scope="col">金額</th></tr></thead><tbody><tr v-for="line in document.lines" :key="line.id"><td>{{ line.lineNo }}</td><td>{{ line.skuCode }} — {{ line.skuName }}<div v-if="line.lineNote">{{ line.lineNote }}</div></td><td><span class="print-number">{{ formatQuantity(line.quantity) }}</span> {{ line.uomCode }}</td><td class="print-number">{{ formatMoney(line.unitSellingPrice, document.currencyCode, 4) }}</td><td class="print-number">{{ formatMoney(line.lineAmount, document.currencyCode) }}</td></tr></tbody></table>
+   <p class="text-right">總額：{{ document.currencyCode }} {{ formatMoney(document.totalAmount, document.currencyCode) }}</p><p v-if="document.paymentTermName">付款條款：{{ document.paymentTermName }}</p><p v-if="document.notes" class="print-notes">{{ document.notes }}</p>
   </article>
   <q-banner v-else-if="document" role="status">目前狀態不允許列印。</q-banner>
  </main></div></template>

@@ -2,6 +2,7 @@
 export const page={name:"sales-order-detail",path:"/sales/orders/:id",title:"銷售訂單詳情",requires:{permissions:["sales.view"]}};
 </script>
 <script setup>
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
 import { computed,onBeforeUnmount,ref,watch } from "vue";
 import { useRoute } from "vue-router";
 import appConfig from "@config/app.js";
@@ -52,9 +53,9 @@ async function openConfirm(){
 }
 watch(dialog,value=>{if(!value)creditController?.abort();});
 async function confirm(){if(!canConfirm.value||creditLoading.value||credit.value?.status==="on_hold")return;dialog.value=false;await command.start(document.value.id,document.value.version);}
-const masterStatusLabels={draft:"草稿",pending_approval:"待審批",active:"啟用",inactive:"已停用",suspended:"已暫停",blocked:"已封鎖",discontinued:"已停產",archived:"已封存"};
+const masterStatusLabels={draft:"草稿",pending_approval:"待審批",active:"啟用中",inactive:"已停用",suspended:"已暫停",blocked:"已封鎖",discontinued:"已停產",archived:"已封存"};
 const columns=[{name:"lineNo",label:"行",field:"lineNo"},{name:"sku",label:"SKU",field:"skuName",align:"left"},{name:"quantity",label:"訂購數量／單位",field:"quantity",align:"right"},
- {name:"base",label:"數量（基本單位）",field:"orderedBaseQuantity",align:"left"},{name:"unitSellingPrice",label:"售價",field:"unitSellingPrice",align:"right"},{name:"lineAmount",label:"明細總額",field:"lineAmount",align:"right"},{name:"lineNote",label:"備註",field:"lineNote",align:"left"}];
+ {name:"base",label:"數量（基本單位）",field:"orderedBaseQuantity",align:"left"},{name:"unitSellingPrice",label:"售價",field:"unitSellingPrice",format:value=>formatMoney(value, document.value?.currencyCode, 4),align:"right"},{name:"lineAmount",label:"明細總額",field:"lineAmount",format:value=>formatMoney(value, document.value?.currencyCode),align:"right"},{name:"lineNote",label:"備註",field:"lineNote",align:"left"}];
 const auditColumns=[{name:"occurredAt",field:"occurredAt",label:"時間",sortable:true},{name:"actorLabel",field:"actorLabel",label:"操作人",align:"left"},{name:"action",field:"action",label:"操作"},{name:"outcome",field:"outcome",label:"結果"},{name:"reason",field:"reason",label:"原因",align:"left"}];
 async function fetchAudit(params){return sales.listAudit({...params,targetType:"ORDER",targetId:document.value.id,signal:controller.signal});}
 function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia/Hong_Kong",dateStyle:"short",timeStyle:"short"}).format(new Date(value));}
@@ -71,13 +72,13 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
   <q-banner v-if="document.hasBackorder" role="status" class="bg-warning text-dark q-mb-md">有欠貨：{{ document.backorderLineCount }} 行。同一倉庫內的同一商品規格，會按訂單確認順序補配。庫存不足時會等待下一輪。<template #action><q-btn v-if="canWake" flat label="安排欠貨補配" @click="allocationDialog=true" /><q-btn flat label="重新讀取訂單" @click="load" /></template></q-banner>
   <q-card flat bordered class="q-mb-md"><q-card-section><h2 class="text-h6 q-ma-none q-mb-md">訂單資料</h2><dl class="row q-col-gutter-md break-word">
    <div class="col-12 col-md-6"><dt>客戶</dt><dd class="q-ml-none">{{ document.customerCode }} — {{ document.customerName }}</dd></div><div class="col-12 col-md-6"><dt>履約倉庫</dt><dd class="q-ml-none">{{ document.warehouseCode }} — {{ document.warehouseName }}</dd></div>
-   <div class="col-12 col-md-6"><dt>總額</dt><dd class="q-ml-none">{{ document.currencyCode }} {{ document.totalAmount }}</dd></div><div class="col-12 col-md-6"><dt>訂單日期／要求送貨日期</dt><dd class="q-ml-none">{{ document.orderDate }}／{{ document.requestedDeliveryDate||'未設定' }}</dd></div>
+   <div class="col-12 col-md-6"><dt>總額</dt><dd class="q-ml-none">{{ document.currencyCode }} {{ formatMoney(document.totalAmount, document.currencyCode) }}</dd></div><div class="col-12 col-md-6"><dt>訂單日期／要求送貨日期</dt><dd class="q-ml-none">{{ document.orderDate }}／{{ document.requestedDeliveryDate||'未設定' }}</dd></div>
    <div class="col-12 col-md-6"><dt>付款條款</dt><dd class="q-ml-none">{{ document.paymentTermName||'未設定' }}</dd></div><div class="col-12 col-md-6"><dt>客戶採購單號</dt><dd class="q-ml-none break-word">{{ document.customerPoReference||'—' }}</dd></div><div class="col-12"><dt>備註</dt><dd class="q-ml-none pre-line break-word">{{ document.notes||'—' }}</dd></div>
   </dl></q-card-section></q-card>
   <h2 class="text-h6 q-ma-none q-mb-md">訂單明細</h2><p v-if="document.status==='DRAFT'" class="text-caption">草稿尚未承諾或預留庫存。數量以訂單儲存時的基本單位顯示。</p>
   <DataTable :rows="document.lines" :columns="columns" :initial-pagination="{page:1,rowsPerPage:appConfig.defaultPageSize,sortBy:null,descending:false}">
-   <template #body-cell-sku="{row}"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" /></template><template #body-cell-quantity="{row}"><q-td class="text-right">{{ row.quantity }} {{ row.uomCode }}</q-td></template>
-   <template #body-cell-base="{row}"><q-td><div>{{ quantityLabels.ordered }} {{ row.orderedBaseQuantity }}</div><div>{{ quantityLabels.reserved }} {{ row.reservedBaseQuantity }}</div><div>{{ quantityLabels.backordered }} {{ row.backorderedBaseQuantity }}</div><div>{{ quantityLabels.fulfilled }} {{ row.fulfilledBaseQuantity }}</div><div>{{ quantityLabels.cancelled }} {{ row.cancelledBaseQuantity }}</div></q-td></template>
+   <template #body-cell-sku="{row}"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" /></template><template #body-cell-quantity="{row}"><q-td class="text-right">{{ formatQuantity(row.quantity) }} {{ row.uomCode }}</q-td></template>
+   <template #body-cell-base="{row}"><q-td><div>{{ quantityLabels.ordered }} {{ formatQuantity(row.orderedBaseQuantity) }}</div><div>{{ quantityLabels.reserved }} {{ formatQuantity(row.reservedBaseQuantity) }}</div><div>{{ quantityLabels.backordered }} {{ formatQuantity(row.backorderedBaseQuantity) }}</div><div>{{ quantityLabels.fulfilled }} {{ formatQuantity(row.fulfilledBaseQuantity) }}</div><div>{{ quantityLabels.cancelled }} {{ formatQuantity(row.cancelledBaseQuantity) }}</div></q-td></template>
    <template #body-cell-lineNote="{row}"><EllipsisCell :text="row.lineNote" /></template>
   </DataTable>
   <q-card flat bordered class="q-my-md"><q-card-section><h2 class="text-h6 q-ma-none q-mb-md">來源</h2><p>{{ sourceLabels[document.sourceType] }}</p><q-btn v-if="document.sourceQuotationId" flat label="返回來源報價" :to="`/sales/quotations/${document.sourceQuotationId}`" /><p v-if="document.externalOrderId" class="break-word">{{ document.channelCode }}／{{ document.externalOrderId }}</p></q-card-section></q-card>
@@ -95,13 +96,13 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
  <q-dialog v-model="dialog" aria-labelledby="sales-confirm-title"><q-card class="confirmation-dialog"><q-card-section>
   <h2 id="sales-confirm-title" class="text-h6 q-ma-none q-mb-md">確認銷售訂單</h2>
   <p>{{ document?.customerCode }} — {{ document?.customerName }}</p><p>{{ document?.warehouseCode }} — {{ document?.warehouseName }}</p>
-  <p>明細：{{ document?.lineCount }} 行；{{ document?.currencyCode }} {{ document?.totalAmount }}</p>
+  <p>明細：{{ document?.lineCount }} 行；{{ document?.currencyCode }} {{ formatMoney(document?.totalAmount, document?.currencyCode) }}</p>
   <p>確認時會重新核對客戶、商品資料及庫存，庫存不足的數量會列為欠貨。</p>
   <q-banner v-if="document?.lines.some(line=>/^0(?:\.0+)?$/u.test(line.unitSellingPrice))" class="bg-warning text-dark q-mb-sm">注意：包含零售價明細。</q-banner>
   <q-banner v-if="masterChanged" class="bg-warning text-dark q-mb-sm">草稿儲存後資料已有變更，確認時會使用最新有效資料。</q-banner>
   <q-skeleton v-if="creditLoading" type="text" aria-label="讀取信用狀態" />
   <q-banner v-else-if="credit?.status==='on_hold'" role="alert" class="bg-negative text-white">客戶信用已暫停，無法確認訂單。</q-banner>
-  <p v-else-if="credit?.configured">信用額度：{{ credit.currencyCode }} {{ credit.creditLimit??'未設定' }}；只供參考，不自動阻擋。</p>
+  <p v-else-if="credit?.configured">信用額度：{{ credit.currencyCode }} {{ credit.creditLimit == null ? '未設定' : formatMoney(credit.creditLimit, credit.currencyCode) }}；只供參考，不自動阻擋。</p>
   <p v-else>信用狀態{{ credit?'未設定':'參考不可用' }}；提交時會重新驗證。</p><p v-if="creditError" role="alert">{{ creditError }}</p>
  </q-card-section><q-card-actions align="right"><q-btn flat label="返回" @click="dialog=false" /><q-btn color="primary" label="提交確認" :disable="creditLoading||credit?.status==='on_hold'||!canConfirm" @click="confirm" /></q-card-actions></q-card></q-dialog>
  <q-dialog v-model="lifecycleDialog" aria-labelledby="sales-lifecycle-title"><q-card class="confirmation-dialog"><q-card-section>

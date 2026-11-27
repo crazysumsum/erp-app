@@ -1,4 +1,5 @@
 <script setup>
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import { computed, nextTick, onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import FormPanel from "@/framework/ui/FormPanel.vue";
@@ -104,7 +105,7 @@ function reload(){if(!dirty.value || window.confirm("載入最新資料會取代
     </div>
     <q-banner v-if="customer?.defaultCurrencyCode && form.currencyCode!==customer.defaultCurrencyCode" class="bg-warning text-dark q-mb-md">貨幣與客戶預設不同；售價不自動換算。</q-banner>
     <q-banner v-if="customer?.credit?.status==='on_hold'" class="bg-warning text-dark q-mb-md">客戶信用暫停；Draft 可儲存，確認訂單時會重新驗證信用。</q-banner>
-    <p v-else-if="customer?.credit?.creditLimit" class="text-caption">信用限額參考：{{ customer.credit.currencyCode }} {{ customer.credit.creditLimit }}；不代表可用信用或庫存承諾。</p>
+    <p v-else-if="customer?.credit?.creditLimit" class="text-caption">信用限額參考：{{ customer.credit.currencyCode }} {{ formatMoney(customer.credit.creditLimit, customer.credit.currencyCode) }}；不代表可用信用或庫存承諾。</p>
     <h2 class="text-h6 q-ma-none q-my-md">明細（{{ form.lines.length }}／100）</h2>
     <div class="row q-col-gutter-md q-mb-md">
      <div class="col-12 col-md-6"><q-select v-model="selectedSku" label="搜尋 SKU" :options="skus" :option-label="row=>`${row.skuCode} — ${row.skuName}`" use-input input-debounce="250" :loading="lookupBusy.skus" outlined dense @filter="(q,update)=>lookup('skus',q,update)"><template #no-option><q-item><q-item-section>沒有符合條件的可售 SKU；請縮小搜尋。</q-item-section></q-item></template></q-select></div>
@@ -121,7 +122,7 @@ function reload(){if(!dirty.value || window.confirm("載入最新資料會取代
      </q-card-section>
     </q-card>
    </fieldset>
-   <div class="q-mt-md" role="status">{{ form.currencyCode || '未選貨幣' }} 預計總額 {{ preview }}；以儲存後伺服器總額為準。<span v-if="document && !conversion"> 上次儲存總額 {{ document.totalAmount }}</span></div>
+   <div class="q-mt-md" role="status">{{ form.currencyCode || '未選貨幣' }} 預計總額 {{ formatMoney(preview, form.currencyCode) }}；以儲存後伺服器總額為準。<span v-if="document && !conversion"> 上次儲存總額 {{ document.currencyCode }} {{ formatMoney(document.totalAmount, document.currencyCode) }}</span></div>
    <q-btn class="q-mt-md" color="primary" type="submit" :label="uncertain?'重試確認結果':conversion?'建立 Draft 銷售訂單':'儲存報價 Draft'" :loading="submitting" :disable="stale" />
   </FormPanel>
  </div>
