@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import { rejectPublishedKeys } from "./framework/configuration/rejectPublishedKeys.js";
 
 dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
 
@@ -14,6 +15,8 @@ async function bootstrap() {
     if (environment !== "test" && environment !== "development") throw new Error(message);
     console.warn(message);
   }
+
+  if (environment !== "test" && environment !== "development") rejectPublishedKeys(process.env);
 
   const [{ createApplication }, { registerProcessLifecycle }] = await Promise.all([
     import("./framework/application/createApplication.js"),

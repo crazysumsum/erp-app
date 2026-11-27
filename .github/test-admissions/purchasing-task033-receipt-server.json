@@ -42,7 +42,7 @@
     {
       "path": "server/test/integration/supplierMigrationAcceptance.integration.test.js",
       "mode": "100644",
-      "blob": "09188cec728e8745e8d7bd78f0001c2a07958e41",
+      "blob": "b603b0928967c5326adc63850ea1dbb65fc8b09b",
       "kind": "functional",
       "cases": [
         "TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts",
