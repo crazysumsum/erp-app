@@ -270,6 +270,24 @@ integrationTest("TC-022 actual Confirm HTTP schema returns terminal detail and r
   assert.deepEqual(Object.keys(result).sort(),["outcome","salesOrder","warnings"]);
   const operation=await api.get(f.request.input.eventId);assert.equal(operation.status,200);assert.equal((await operation.json()).data.status,"SUCCEEDED");
 });
+integrationTest("Sales confirmation completes over HTTP with a 190-code-point Unicode role", async t => {
+  const f = await setup(t);
+  const role = "銷".repeat(189) + "𠮷";
+  await f.db.execute("UPDATE roles SET name=? WHERE id=?", [role, f.roleId]);
+  f.claims.claimedRoles = [role];
+  await stock(f, 10);
+
+  const api = await http(f), response = await api.confirm(), body = await response.json();
+  assert.equal(response.status, 200, JSON.stringify(body));
+  assert.equal(body.data.salesOrder.status, "CONFIRMED");
+  const operation = await api.get(f.request.input.eventId);
+  assert.equal(operation.status, 200);
+  assert.equal((await operation.json()).data.status, "SUCCEEDED");
+  const [[effect]] = await f.db.query("SELECT COUNT(*) AS total FROM inventory_reservations WHERE warehouse_id=? AND sku_id=?",
+    [f.warehouseId, f.skuId]);
+  assert.equal(Number(effect.total), 1);
+});
+
 integrationTest("TC-022 actual HTTP202 retains event/Retry-After and remains pollable before native Phase B commit",async t=>{
   const f=await setup(t,{waitMs:100});await stock(f,10);const api=await http(f);
   await f.db.query("START TRANSACTION");await f.db.query("SELECT id FROM inventory_warehouses WHERE id=? FOR UPDATE",[f.warehouseId]);

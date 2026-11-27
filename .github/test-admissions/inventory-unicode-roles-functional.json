@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "decision": "Sam's functional case-admission suspension until go-live in AGENTS.md applies. PM 8a2e7ac1, 7909d49e, 3f76663b, d8980e85 and 6818b16f authorized this Unicode role fix, synthetic HTTP validation and Role create/rename assertions. The source-only head is 0b095df1d68fc132255431e8d9ec19011e4b5fe0 on actual main 44d25ebe34944b91e5e1248cbece0484548bb953. TL non-author exact review and trusted CI administrator registration are required. This copy has no registration authority.",
+  "purpose": "Inventory, Purchasing and Sales/Fulfillment accept stored Unicode role names. Role create and rename reject C0 and DEL. Existing permissions and error mapping are preserved.",
+  "data": "Existing synthetic non-capacity fixtures. New focused Warehouse allocation uses one fulfillment, one reservation, one bucket and one Unicode role. Unit cases use inline data. Same existing first-attempt functional execution. Existing receipt, sales and role HTTP file ownership remains with their owners.",
+  "concurrency": "Existing serial case, no additional concurrent requests.",
+  "repetitions": "One per existing workflow invocation.",
+  "thresholds": "All functional assertions and existing coverage floors apply. No throughput or latency gate.",
+  "trigger": "Only current routine test discovery and already-defined jobs. No new schedule, workflow, step or capacity case.",
+  "cost": "Local first increment added allocation HTTP fixture took about 3 seconds. Unit assertions took under one second. Estimates for final CI are not measured. No new runner or job.",
+  "files": [
+    {
+      "path": "server/src/handlers/roles/roleSchemas.js",
+      "mode": "100644",
+      "blob": "892375661a45599df5a9d7c8504cddf8f4254460",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/modules/inventory/claimedRoles.js",
+      "mode": "100644",
+      "blob": "955b28393d89fc0ee0c01bced5fb0ac3a5c051d4",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/modules/sales/SalesFulfillmentService.js",
+      "mode": "100644",
+      "blob": "27330bfa802079be5692cbcad24c03320e5a2ed2",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/integration/fulfillmentUnicodeRole.integration.test.js",
+      "mode": "100644",
+      "blob": "3b17c853bebf7fb7a146f684c9ca0e52469181f1",
+      "kind": "functional",
+      "cases": [
+        "Fulfillment allocation posts stock over HTTP with a 190-code-point Unicode role"
+      ]
+    },
+    {
+      "path": "server/test/inventoryValidation.test.js",
+      "mode": "100644",
+      "blob": "5f11d28aefb640fa3df4c7f9ac2757768efb1f79",
+      "kind": "functional",
+      "cases": [
+        "Inventory accepts role names up to 190 Unicode code points and 760 UTF-8 bytes",
+        "Inventory still rejects invalid role names and keeps permission codes ASCII-only",
+        "Purchase reversal accepts the same Unicode role names and retains its rejection field"
+      ]
+    }
+  ]
+}

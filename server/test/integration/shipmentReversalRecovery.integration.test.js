@@ -8,6 +8,10 @@ import path from "node:path";
 import { reversalFixture,startReversal,completeReversal,facts,removeReversePermission,
  observeCommittedInputs,assertCommittedReversal,reversalRecoveryRuntime,boundReversalCleanup } from "../fulfillment/shipmentReversalFixture.js";
 import { getTransactionOutcome } from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
+import { createApplication } from "../../src/framework/application/createApplication.js";
+import { createShipmentReversalService } from "../../src/services/fulfillment/createShipmentReversalService.js";
+import { applyLegacyFulfillmentMigrations } from "../fulfillment/applyLegacyFulfillmentMigrations.js";
+import { installOpeningCost } from "../returns/returnShipmentCostFixture.js";
 
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 const nativeOptions={timeout:120000};
@@ -26,6 +30,33 @@ function sameIdentity(before,after){
   assert.deepEqual(after[field],before[field],field+" original identity");
 }
 function assertNoWriter(runtime){assert.equal(runtime.state.takeovers.length,0);assert.equal(runtime.state.phaseBs,0);assert.equal(runtime.state.preclaims,0);assert.equal(runtime.state.posts,0);}
+
+nativeTest("TASK036-RECOVERY registered cost-aware Job restores original ISSUE cost once",nativeOptions,async t=>{
+ const f=await reversalFixture(t,{archives:true,preflightConfiguration:true,beforeConfirm:installOpeningCost});
+ await applyLegacyFulfillmentMigrations(f.db,[92,93,95,96,97,98]);
+ const writer=createShipmentReversalService(f.options);
+ f.started=await f.execute(()=>writer.startReversal(f.shipmentId,f.command));
+ assert.equal(f.started.outcome,"REVERSING");
+ const [[witness]]=await f.db.query("SELECT JSON_EXTRACT(before_summary, '$.summaryVersion') AS version FROM shipment_reversals WHERE event_id=?",[f.command.eventId]);
+ assert.equal(Number(witness.version),2);
+ await expire(f);
+ const app=await createApplication({configurationSource:f.f.applicationSource});
+ try{
+  await app.start();
+  const scheduler=app.services.require("scheduler"),job=scheduler.jobs.get("fulfillment.reversalRecovery");
+  assert.equal(job?.enabled,true);assert.equal(job.scope,"cluster");assert.equal(job.intervalMs,60000);
+  await scheduler.execute(job);
+  assert.equal(scheduler.stats.get(job.name).lastOutcome,"succeeded");
+  const after=operation(await facts(f),f);
+  assert.equal(after.status,"SUCCEEDED");assert.equal(Number(after.attempt_count),2);
+  assert.equal(after.correlation_id,f.started.correlationId);
+  await scheduler.execute(job);
+  assert.equal(scheduler.stats.get(job.name).lastOutcome,"succeeded");
+  const [costs]=await f.db.query("SELECT entry_kind,quantity_delta,value_delta_hkd FROM inventory_cost_entries ORDER BY id");
+  assert.deepEqual(costs.map(row=>[row.entry_kind,String(row.quantity_delta),row.value_delta_hkd]),
+   [["ENABLEMENT","5","6.2500"],["ISSUE","-3","-3.7500"],["ISSUE_REVERSAL","3","3.7500"]]);
+ }finally{await app.shutdown("private_cost_reversal_recovery_complete");}
+});
 
 nativeTest("TASK036-RECOVERY genuine Job restart and stale writer fence",nativeOptions,async t=>{
  const f=await reversalFixture(t,{twoLines:true,archives:true,noDownstream:true,preflightConfiguration:true});await startReversal(f);await expire(f);

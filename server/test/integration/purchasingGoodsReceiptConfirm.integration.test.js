@@ -11,9 +11,16 @@ import mysql from "mysql2/promise";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { createTestDevice } from "../../test-support/testDevice.js";
+import { hasActiveGoodsReceiptInvoiceInTransaction } from "../../src/modules/accounts-payable/hasActiveGoodsReceiptInvoiceInTransaction.js";
 import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
+import { issuePurchaseReversalContext } from "../../src/modules/inventory/InventoryPurchaseContext.js";
 import { PurchasingAuditService } from "../../src/modules/purchasing/PurchasingAuditService.js";
 import { readSupplierInvoiceSourcesInTransaction } from "../../src/modules/purchasing/readSupplierInvoiceSourcesInTransaction.js";
+import { PurchasingOperationService } from "../../src/modules/purchasing/PurchasingOperationService.js";
+import { ReceiptReversalService } from "../../src/modules/purchasing/ReceiptReversalService.js";
+import { readPostedSupplierReturnQuantitiesInTransaction } from "../../src/modules/returns/readPostedSupplierReturnQuantitiesInTransaction.js";
+import { hashPassword } from "../../src/modules/user/passwordHash.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const MONTH = "209812", RECEIPT_DATE = "2098-12-02";
@@ -37,17 +44,19 @@ async function setup() {
     const db = application.services.require("mysqldatabase"), jwt = application.services.require("jwt");
     const tag = randomUUID().replaceAll("-", "").slice(0, 12), now = Date.now();
     const insert = async (table, row) => Number((await db.query(`INSERT INTO ${table} SET ?`, [row]))[0].insertId);
-    const person = async (suffix, permissions) => {
+    const person = async (suffix, permissions, password) => {
       const name = `gr_confirm_${suffix}_${tag}`, role = await insert("roles", { name, created_at: now });
       cleanups.push(() => db.query("DELETE FROM roles WHERE id = ?", [role]), () => db.query("DELETE FROM role_permissions WHERE role_id = ?", [role]));
       for (const permission of permissions) await db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = ?", [role, permission]);
-      const id = await insert("users", { username: name, password_hash: "synthetic", display_name: `User ${suffix}`, created_at: now, updated_at: now });
+      const id = await insert("users", { username: name, password_hash: password ? await hashPassword(password) : "synthetic",
+        display_name: `User ${suffix}`, created_at: now, updated_at: now });
       cleanups.push(() => db.query("DELETE FROM users WHERE id = ?", [id]), () => db.query("DELETE FROM fr_token_versions WHERE subject = ?", [String(id)]),
         () => db.query("DELETE FROM user_roles WHERE user_id = ?", [id]));
       await db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [id, role]);
       const version = await application.services.require("tokenRevocation").currentVersion(String(id));
-      const issue = async (granted) => jwt.issue({ roles: [name], permissions: granted }, { subject: String(id), version, authTime: Math.floor(Date.now() / 1000) });
-      return { id, role, issue, token: await issue(permissions) };
+      const issue = async (granted, extraClaims) => jwt.issue({ roles: [name], permissions: granted, ...extraClaims },
+        { subject: String(id), version, authTime: Math.floor(Date.now() / 1000) });
+      return { id, role, name, version, issue, token: await issue(permissions) };
     };
     const receiver = await person("receiver", ["purchasing.view", "receiving.operation"]), viewer = await person("viewer", ["purchasing.view"]);
     const overrider = await person("overrider", ["purchasing.view", "receiving.operation", "receiving.expiry.override"]);
@@ -91,9 +100,9 @@ async function setup() {
       return { id, lineA, lineB };
     };
     const { url } = await application.start();
-    const send = async (path, { token = receiver.token, body, key = body?.eventId }) => {
+    const send = async (path, { token = receiver.token, body, key = body?.eventId, headers }) => {
       const response = await fetch(`${url}${path}`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Idempotency-Key": key,
-        "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
       return { status: response.status, body: await response.json() };
     };
     const read = async (path, token = receiver.token) => {
@@ -129,7 +138,7 @@ async function setup() {
     };
     const context = application.services.require("context");
     const transaction = (work, options) => context.storage.run({ databaseTransaction: null }, () => db.withTransaction(work, options));
-    return { db, cleanups, order, draft, confirm, cancel, lookup, read, other, person, overrider, today, skuA, header, details, progress, po, audits, stock,
+    return { application, db, cleanups, order, draft, confirm, cancel, lookup, read, send, other, person, overrider, today, skuA, header, details, progress, po, audits, stock,
       receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3, insert, tag, transaction };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
@@ -158,6 +167,291 @@ async function assertUntouched(f, id, poRow, before) {
 }
 const snapshot = async (f, poRow) => [await f.progress(poRow.id), await f.po(poRow.id), await f.stock()];
 
+async function reversalRaceFixture(f) {
+  const order = await f.order(), id = await f.draft(order.id);
+  const accepted = await f.confirm(id, 1, [{ purchaseOrderLineId: order.lineA, details: [detail(f, { inputUomId: f.box })] }]);
+  assert.equal(accepted.status, 200, JSON.stringify(accepted.body));
+  const [[source]] = await f.db.query(`SELECT d.id, d.goods_receipt_line_id, d.inventory_movement_id, g.supplier_code_snapshot, g.supplier_name_snapshot
+    FROM goods_receipt_details d JOIN goods_receipts g ON g.id = d.goods_receipt_id WHERE g.id = ?`, [id]);
+  const permissions = ["purchasing.view", "inventory.adjust"];
+  const user = await f.person(`gr_race_${id}`, permissions);
+  const claims = { sub: String(user.id), roles: [user.name], permissions };
+  const operations = new PurchasingOperationService();
+  const reversal = new ReceiptReversalService({
+    database: f.db, operations, time: f.application.services.require("time"), logger: f.application.services.require("logging").logger,
+    audit: new PurchasingAuditService({ auditDetailMaxBytes: 8192 }), hasActiveInvoice: hasActiveGoodsReceiptInvoiceInTransaction,
+    readReturnedQuantities: readPostedSupplierReturnQuantitiesInTransaction,
+    postInventory: () => assert.fail("A concurrently occupied quantity must be rejected before Inventory")
+  });
+  const input = { eventId: randomUUID(), version: 2, reason: "更正重複入庫記錄",
+    details: [{ goodsReceiptDetailId: Number(source.id), baseQuantity: 2 }] };
+  return { id, order, source, claims, operations, reversal, input };
+}
+
+/** Give the contender a real RR snapshot, then start the conflicting PO lock before the writer commits. */
+async function assertConcurrentReversalRejected(f, receipt, countOccupancy, writeOccupancy, code) {
+  const { order, id, claims, input, operations, reversal } = receipt;
+  const writerLocked = Promise.withResolvers(), contenderWaiting = Promise.withResolvers();
+  const writer = f.db.context.storage.run({}, () => f.db.withTransaction(async tx => {
+    await tx.query("SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE", [order.id]);
+    await tx.query("SELECT id FROM goods_receipts WHERE id = ? FOR SHARE", [id]);
+    writerLocked.resolve();
+    await contenderWaiting.promise;
+    await writeOccupancy(tx);
+  }, { isolationLevel: "READ COMMITTED" }));
+  writer.catch(writerLocked.reject);
+  const run = operations.run.bind(operations);
+  operations.run = (database, work) => run(database, async tx => {
+    assert.equal(await countOccupancy(tx), 0);
+    const query = tx.query.bind(tx);
+    tx.query = (sql, params) => {
+      const pending = query(sql, params);
+      if (sql === "SELECT id, status, version FROM purchase_orders WHERE id = ? FOR UPDATE") contenderWaiting.resolve();
+      return pending;
+    };
+    try {
+      return await work(tx);
+    } catch (error) {
+      assert.equal(await countOccupancy(tx), 0, "the original RR snapshot does not see the committed occupancy");
+      throw error;
+    } finally { delete tx.query; }
+  });
+  const before = await snapshot(f, order);
+  let attempt;
+  try {
+    await writerLocked.promise;
+    attempt = f.db.context.storage.run({}, () => reversal.create({ id, claims, input }));
+    await assert.rejects(attempt, { code });
+    await writer;
+    assert.equal(await countOccupancy(f.db), 1);
+    assert.deepEqual(await snapshot(f, order), before);
+    assert.equal((await f.header(id)).status, "CONFIRMED");
+  } finally {
+    contenderWaiting.resolve();
+    await Promise.allSettled([writer, attempt]);
+    operations.run = run;
+  }
+}
+
+integrationTest("沖銷等採購單鎖期間提交應付佔用時，以真 AP 當前讀取拒絕沖銷", async () => {
+  const f = await fixture(), receipt = await reversalRaceFixture(f);
+  const { id, source } = receipt;
+  const invoiceCode = `REV-${randomUUID()}`, now = Date.now();
+  const invoiceId = await f.insert("ap_invoices", { status: "DRAFT", supplier_id: f.supplier, supplier_code_snapshot: source.supplier_code_snapshot,
+    supplier_name_snapshot: source.supplier_name_snapshot, currency_code: "HKD", currency_decimal_places: 2, supplier_invoice_number: invoiceCode,
+    active_supplier_invoice_key: invoiceCode, invoice_date: RECEIPT_DATE, due_date: RECEIPT_DATE, total_amount: 12, outstanding_amount: 12,
+    created_at: now, updated_at: now, created_by_label: "fixture" });
+  const count = async tx => Number((await tx.query("SELECT COUNT(*) AS total FROM ap_invoice_lines WHERE invoice_id = ?", [invoiceId]))[0][0].total);
+  const occupy = tx => tx.query(`INSERT INTO ap_invoice_lines
+    (invoice_id, line_no, line_type, goods_receipt_id, goods_receipt_line_id, active_goods_receipt_line_id, quantity, line_amount)
+    VALUES (?, 1, 'RECEIPT', ?, ?, ?, 12, 12)`, [invoiceId, id, source.goods_receipt_line_id, source.goods_receipt_line_id]);
+  await assertConcurrentReversalRejected(f, receipt, count, occupy, "GR_REVERSAL_INVOICED");
+});
+
+integrationTest("沖銷等採購單鎖期間提交退供已過帳行時，以真 Returns 當前讀取限制沖銷數量", async () => {
+  const f = await fixture(), receipt = await reversalRaceFixture(f);
+  const { id, order, source, claims, reversal } = receipt, now = Date.now();
+  const returnId = await f.insert("supplier_returns", { goods_receipt_id: id, purchase_order_id: order.id, supplier_id: f.supplier,
+    supplier_code_snapshot: source.supplier_code_snapshot, supplier_name_snapshot: source.supplier_name_snapshot, return_date: RECEIPT_DATE,
+    reason: "私人測試退供行", created_by_label: "fixture", created_at: now, updated_at: now });
+  const count = async tx => Number((await tx.query(`SELECT COUNT(*) AS total FROM supplier_return_lines
+    WHERE return_id = ? AND inventory_movement_id IS NOT NULL`, [returnId]))[0][0].total);
+  const occupy = async tx => {
+    await tx.query(`INSERT INTO supplier_return_lines
+      (return_id, goods_receipt_id, line_no, goods_receipt_detail_id, base_quantity, bin_id, stock_status, inventory_movement_id)
+      VALUES (?, ?, 1, ?, 11, ?, 'AVAILABLE', ?)`, [returnId, id, source.id, f.b1, source.inventory_movement_id]);
+    await tx.query("UPDATE supplier_returns SET status = 'POSTED', posted_event_id = ?, posted_at = ?, version = 2 WHERE id = ?",
+      [randomUUID(), now, returnId]);
+  };
+  await assertConcurrentReversalRejected(f, receipt, count, occupy, "GR_REVERSAL_QUANTITY_EXCEEDED");
+  const result = await f.db.context.storage.run({}, () => reversal.preview({ id, claims }));
+  assert.deepEqual(result, { version: 2, details: [{ id: Number(source.id), remainingBaseQuantity: "1" }] });
+  assert.equal((await f.read(`/api/v1/goods-receipts/${id}/reversals/preview`, f.viewer.token)).status, 403);
+});
+
+// Pause the HTTP request that acquired the PO lock until the other sends its own
+// locking query. Both queries still go to MySQL through the production services.
+async function postInLockOrder(f, orderId, first, second) {
+  const statements = {
+    reversal: "SELECT id, status, version FROM purchase_orders WHERE id = ? FOR UPDATE",
+    supplier: "SELECT id, supplier_id FROM purchase_orders WHERE id = ? FOR UPDATE"
+  };
+  const firstLocked = Promise.withResolvers(), secondWaiting = Promise.withResolvers();
+  let sawSecondLock = false;
+  const transact = f.db.withTransaction;
+  f.db.withTransaction = (work, options) => transact.call(f.db, async (tx, context) => {
+    const query = tx.query.bind(tx);
+    tx.query = async (sql, params) => {
+      const pending = query(sql, params);
+      if (Number(params?.[0]) !== orderId) return pending;
+      if (sql === statements[first.kind]) {
+        const rows = await pending;
+        firstLocked.resolve();
+        await secondWaiting.promise;
+        return rows;
+      }
+      if (sql === statements[second.kind]) {
+        sawSecondLock = true;
+        secondWaiting.resolve();
+      }
+      return pending;
+    };
+    try { return await work(tx, context); }
+    finally { delete tx.query; }
+  }, options);
+  const winner = first.post().finally(firstLocked.resolve);
+  const contender = firstLocked.promise.then(second.post).finally(secondWaiting.resolve);
+  try {
+    const results = await Promise.all([winner, contender]);
+    assert.ok(sawSecondLock, JSON.stringify(results));
+    return results;
+  } finally {
+    await Promise.allSettled([winner, contender]);
+    f.db.withTransaction = transact;
+  }
+}
+
+for (const winnerKind of ["reversal", "supplier"]) {
+  integrationTest(`真 HTTP 收貨沖銷與退供競爭，${winnerKind} 先鎖單時合計仍不超實收`, async () => {
+    const f = await fixture(), order = await f.order(), id = await f.draft(order.id);
+    const confirmed = await f.confirm(id, 1, [{ purchaseOrderLineId: order.lineA, details: [detail(f, { inputUomId: f.box })] }]);
+    assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+    const [[source]] = await f.db.query("SELECT id, inventory_movement_id FROM goods_receipt_details WHERE goods_receipt_id = ?", [id]);
+    const before = await f.stock();
+
+    const password = `Synthetic-${randomUUID()}-A1!`;
+    const adjust = ["purchasing.view", "inventory.adjust"];
+    const actor = await f.person(`race_reversal_${id}`, adjust, password), device = await createTestDevice();
+    const deviceRow = await f.insert("user_devices", { user_id: actor.id, device_id: device.deviceId, public_key: device.publicKeyDer,
+      status: "approved", requested_at: Date.now() });
+    f.cleanups.push(() => f.db.query("DELETE FROM user_devices WHERE id = ?", [deviceRow]));
+    const token = await actor.issue(adjust, { did: device.deviceId });
+    const supplier = await f.person(`race_returns_${id}`, ["returns.view", "returns.supplier.mgmt"]);
+    const draftReturn = async amount => {
+      const response = await f.send("/api/v1/supplier-returns", { token: supplier.token, body: {
+        eventId: randomUUID(), sourceId: String(id), returnDate: RECEIPT_DATE, reason: "私人整合測試退供",
+        lines: [{ sourceDetailId: String(source.id), baseQuantity: String(amount), binId: String(f.b1), stockStatus: "AVAILABLE" }]
+      } });
+      assert.equal(response.status, 200, JSON.stringify(response.body));
+      return response.body.data.id;
+    };
+    const supplierDraft = await draftReturn(8);
+    const postReturn = returnId => f.send(`/api/v1/supplier-returns/${returnId}/post`, { token: supplier.token,
+      body: { eventId: randomUUID(), version: 1 } });
+    const postReversal = async amount => {
+      const path = `/api/v1/goods-receipts/${id}/reversals/create`;
+      const body = { eventId: randomUUID(), version: 2, reason: "更正重複入庫記錄", password,
+        details: [{ goodsReceiptDetailId: Number(source.id), baseQuantity: amount }] };
+      const headers = await device.headers({ method: "POST", path, body: JSON.stringify(body), token });
+      return f.send(path, { token, body, headers });
+    };
+    const commands = [{ kind: "reversal", post: () => postReversal(8) }, { kind: "supplier", post: () => postReturn(supplierDraft) }];
+    if (winnerKind === "supplier") commands.reverse();
+
+    const [posted, blocked] = await postInLockOrder(f, order.id, ...commands);
+    assert.equal(posted.status, 200, JSON.stringify(posted.body));
+    assert.equal(blocked.status, 409, JSON.stringify(blocked.body));
+    assert.equal(blocked.body.error.code, winnerKind === "reversal" ? "RETURN_QUANTITY_EXCEEDED" : "GR_REVERSAL_QUANTITY_EXCEEDED");
+    assert.deepEqual(await f.stock(), [before[0] + 1, before[1] - 8]);
+    const remainder = winnerKind === "reversal" ? await postReturn(await draftReturn(4)) : await postReversal(4);
+    assert.equal(remainder.status, 200, JSON.stringify(remainder.body));
+    assert.deepEqual(await f.stock(), [before[0] + 2, before[1] - 12]);
+
+    const [[receipt]] = await f.db.query("SELECT status, total_received_base_quantity, total_reversed_base_quantity FROM goods_receipts WHERE id = ?", [id]);
+    const [[returned]] = await f.db.query(`SELECT SUM(l.base_quantity) AS quantity FROM supplier_return_lines l
+      JOIN supplier_returns r ON r.id = l.return_id WHERE l.goods_receipt_detail_id = ? AND r.status = 'POSTED' AND l.inventory_movement_id IS NOT NULL`, [source.id]);
+    assert.deepEqual([receipt.status, Number(receipt.total_received_base_quantity), Number(receipt.total_reversed_base_quantity), Number(returned.quantity)],
+      ["PARTIALLY_REVERSED", 12, winnerKind === "reversal" ? 8 : 4, winnerKind === "reversal" ? 4 : 8]);
+    const [costs] = await f.db.query(`SELECT m.direction, m.quantity, e.entry_kind, e.value_delta_hkd
+      FROM inventory_cost_entries e JOIN inventory_movements m ON e.movement_id = m.id
+      WHERE e.original_entry_id = (SELECT id FROM inventory_cost_entries WHERE movement_id = ?) ORDER BY m.id`, [source.inventory_movement_id]);
+    const kinds = winnerKind === "reversal" ? ["RECEIPT_REVERSAL", "SUPPLIER_RETURN"] : ["SUPPLIER_RETURN", "RECEIPT_REVERSAL"];
+    assert.deepEqual(costs.map(row => [row.direction, Number(row.quantity), row.entry_kind, row.value_delta_hkd]),
+      [["OUT", 8, kinds[0], "-0.6667"], ["OUT", 4, kinds[1], "-0.3333"]]);
+  });
+}
+
+integrationTest("收貨沖銷部分與全部過帳可重送，已開票或退回超限時拒絕，稽核失敗整筆回滾", async () => {
+  const f = await fixture();
+  const poRow = await f.order(), id = await f.draft(poRow.id);
+  const receiptLines = twoLines(f, poRow);
+  receiptLines[0].details[0].receivedQuantity = "2";
+  const confirmed = await f.confirm(id, 1, receiptLines);
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  assert.equal((await f.po(poRow.id)).status, "FULLY_RECEIVED");
+  const [source] = await f.db.query("SELECT id FROM goods_receipt_details WHERE goods_receipt_id = ? ORDER BY id", [id]);
+  const [detailA, detailB] = source.map(row => Number(row.id));
+
+  const permissions = ["purchasing.view", "inventory.adjust"], holder = await f.person("reversal", permissions);
+  const time = f.application.services.require("time"), context = f.application.services.require("context");
+  const logger = f.application.services.require("logging").logger, authTime = Math.floor(time.nowMs() / 1000);
+  const did = randomUUID().replaceAll("-", "").repeat(2), key = Buffer.from("Synthetic service-level reversal fixture");
+  const device = await f.insert("user_devices", { user_id: holder.id, device_id: did, public_key: key, status: "approved", requested_at: time.nowMs() });
+  f.cleanups.push(() => f.db.query("DELETE FROM user_devices WHERE id = ?", [device]));
+  const inventory = new InventoryPostingService({ database: f.db, logger, time });
+  const audit = new PurchasingAuditService({ auditDetailMaxBytes: 8192 });
+  let invoiced = false, returned = "0", injectAuditFailure = false, postingCalls = 0;
+  const operations = new PurchasingOperationService();
+  const reversal = new ReceiptReversalService({
+    database: f.db, logger, time, operations,
+    audit: { record: (...args) => {
+      if (injectAuditFailure) throw new Error("Synthetic reversal audit failure");
+      return audit.record(...args);
+    }, recordRejected: (...args) => audit.recordRejected(...args) },
+    hasActiveInvoice: async () => invoiced,
+    readReturnedQuantities: async (_tx, { goodsReceiptDetailIds }) => new Map(goodsReceiptDetailIds.map(key => [key, returned])),
+    postInventory: (tx, req, command, ownerProof) => {
+      postingCalls += 1;
+      command.context = issuePurchaseReversalContext(req, tx, command, { database: f.db, time, ownerProof,
+        sessionMaxAgeSeconds: 86400, clockToleranceSeconds: 0, signatureMaxSkewSeconds: 300 });
+      return inventory.reversePurchaseReceiptBatchInTransaction(tx, command);
+    }
+  });
+  const submit = (input) => {
+    const apiRoute = { path: "/api/v1/goods-receipts/:id/reversals/create", authType: "jwt-device-password" };
+    const claims = { sub: String(holder.id), roles: [holder.name], permissions, ver: holder.version, did, exp: authTime + 3600, auth_time: authTime };
+    const auth = { type: apiRoute.authType, claims, deviceBinding: { id: device, user_id: holder.id, device_id: did, public_key: key, status: "approved" } };
+    const requestContext = { auth, apiRoute, databaseTransaction: null };
+    const req = { context: requestContext, auth, apiRoute, method: "POST", input: { params: { id: String(id) } }, get: () => String(time.nowMs()) };
+    return context.storage.run(requestContext, () => reversal.create({ id, claims, input, req }));
+  };
+  const body = (version, details) => ({ version, details, eventId: randomUUID(), reason: "更正重複入庫記錄" });
+  const partial = body(2, [{ goodsReceiptDetailId: detailA, baseQuantity: 2 }]);
+  const before = await snapshot(f, poRow);
+  invoiced = true;
+  await assert.rejects(() => submit(partial), { code: "GR_REVERSAL_INVOICED" });
+  invoiced = false;
+  returned = "23";
+  await assert.rejects(() => submit(partial), { code: "GR_REVERSAL_QUANTITY_EXCEEDED" });
+  assert.equal(postingCalls, 0);
+  returned = "0";
+  injectAuditFailure = true;
+  await assert.rejects(() => submit(partial), error => error.cause?.message === "Synthetic reversal audit failure");
+  assert.deepEqual(await snapshot(f, poRow), before);
+  assert.equal((await f.header(id)).status, "CONFIRMED");
+  injectAuditFailure = false;
+
+  const posted = await submit(partial);
+  assert.deepEqual([posted.number, posted.status, posted.version, posted.replayed], [`${confirmed.body.data.number}-R01`, "POSTED", 3, false]);
+  assert.deepEqual([await f.progress(poRow.id), (await f.header(id)).status, (await f.po(poRow.id)).status],
+    [[[24, 22, 1, 0], [10, 10, 0, 0]], "PARTIALLY_REVERSED", "PARTIALLY_RECEIVED"]);
+  assert.deepEqual(await submit(partial), { ...posted, replayed: true });
+  await assert.rejects(() => submit({ ...partial, reason: "同一操作但內容改變" }), { code: "PURCHASING_EVENT_CONFLICT" });
+  assert.equal((await f.lookup(partial.eventId, holder.token)).body.data?.resultType, "REVERSAL");
+  assert.equal((await f.lookup(partial.eventId, f.viewer.token)).status, 404);
+  const afterFull = await submit(body(3, [{ goodsReceiptDetailId: detailA, baseQuantity: 22 }, { goodsReceiptDetailId: detailB, baseQuantity: 10 }]));
+  assert.deepEqual([afterFull.number, (await f.header(id)).status, (await f.po(poRow.id)).status, postingCalls],
+    [`${confirmed.body.data.number}-R02`, "REVERSED", "CONFIRMED", 3]);
+  assert.equal(Number((await f.po(poRow.id)).has_confirmed_receipt), 1);
+  const [rows] = await f.db.query(`SELECT r.reversal_reference, d.original_inventory_movement_id, m.direction, m.movement_type
+    FROM goods_receipt_reversals r JOIN goods_receipt_reversal_details d ON d.reversal_id = r.id
+    JOIN inventory_movements m ON m.id = d.reversal_inventory_movement_id WHERE r.goods_receipt_id = ? ORDER BY r.reversal_sequence, d.id`, [id]);
+  assert.equal(rows.length, 3);
+  assert.ok(rows.every(row => row.direction === "OUT" && row.movement_type === "REVERSAL"));
+  await assert.rejects(f.db.query("UPDATE goods_receipt_reversals SET reason = 'altered' WHERE id = ?", [posted.id]),
+    error => error.cause?.sqlState === "45000");
+});
+
 integrationTest("TASK-032 C1 確認兩行：一次 Inventory 過帳、GR CONFIRMED、PO progress 及狀態、history、Audit；收齊後 FULLY_RECEIVED（AC-036、AC-040）", async () => {
   const f = await fixture();
   const poRow = await f.order(), id = await f.draft(poRow.id), [moves, onHand] = await f.stock();
@@ -185,6 +479,22 @@ integrationTest("TASK-032 C1 確認兩行：一次 Inventory 過帳、GR CONFIRM
   assert.equal(second.status, 200, JSON.stringify(second.body));
   assert.deepEqual(await f.progress(poRow.id), [[24, 24, 0, 0], [10, 10, 0, 0]]);
   assert.deepEqual([(await f.po(poRow.id)).status, Number((await f.po(poRow.id)).has_outstanding)], ["FULLY_RECEIVED", 0]);
+});
+
+integrationTest("Goods receipt confirmation posts stock over HTTP with a 190-code-point Unicode role", async () => {
+  const f = await fixture(), permissions = ["purchasing.view", "receiving.operation"];
+  const actor = await f.person("unicode", permissions);
+  const role = "倉".repeat(189) + "𠮷";
+  await f.db.execute("UPDATE roles SET name=? WHERE id=?", [role, actor.role]);
+  const token = await actor.issue(permissions, { roles: [role] });
+  const po = await f.order(), id = await f.draft(po.id), [moves, onHand] = await f.stock();
+
+  const result = await f.confirm(id, 1, [{ purchaseOrderLineId: po.lineA, details: [detail(f)] }], { token });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal((await f.header(id)).status, "CONFIRMED");
+  const [posted] = await f.details(id);
+  assert.ok(posted.inventory_movement_id != null && posted.inventory_operation_request_id != null);
+  assert.deepEqual(await f.stock(), [moves + 1, onHand + 1]);
 });
 
 integrationTest("TASK-032 C2 同 event 同內容重送回原結果而且冇第二次庫存效果；同 event 唔同內容 409", async () => {
@@ -476,6 +786,28 @@ integrationTest("P1 發票來源讀取確認收貨快照，序列化採購單及
   await assert.rejects(() => read([receiptId, otherCurrencyReceipt]), { code: "GR_INVOICE_SOURCE_MISMATCH" });
   const otherCurrencyList = await f.read(`/api/v1/goods-receipts?purchaseOrderId=${otherCurrencyPo.id}&supplierId=${f.supplier}&status=CONFIRMED`);
   assert.deepEqual(otherCurrencyList.body.data.items.map(item => [String(item.id), item.currencyCode]), [[otherCurrencyReceipt, "BMD"]]);
+});
+
+integrationTest("部分沖銷後應付來源只取正淨量，省略全數沖銷行並拒絕整張已沖銷", async () => {
+  const f = await fixture();
+  const order = await f.order(), id = await f.draft(order.id);
+  assert.equal((await f.confirm(id, 1, twoLines(f, order))).status, 200);
+  const read = () => f.transaction(tx => readSupplierInvoiceSourcesInTransaction(tx, { goodsReceiptIds: [String(id)] }),
+    { isolationLevel: "READ COMMITTED" });
+  const [original] = await read();
+  // Applied reversal projections are the Purchasing contract. The reversal service verifies actual inventory posting separately.
+  await f.db.query(`UPDATE goods_receipt_details SET reversed_base_quantity =
+    CASE WHEN purchase_order_line_id = ? THEN 2 ELSE received_base_quantity END WHERE goods_receipt_id = ?`, [order.lineA, id]);
+  await f.db.query("UPDATE goods_receipts SET status = 'PARTIALLY_REVERSED', total_reversed_base_quantity = 12 WHERE id = ?", [id]);
+  const [net] = await read();
+  assert.deepEqual(net.lines, [{ ...original.lines[0], receivedBaseQuantity: "10" }]);
+  const listed = await f.read(`/api/v1/goods-receipts?status=PARTIALLY_REVERSED&purchaseOrderId=${order.id}`);
+  assert.deepEqual(listed.body.data.items.map(item => [item.id, item.status]), [[id, "PARTIALLY_REVERSED"]]);
+  await f.db.query("UPDATE goods_receipts SET total_reversed_base_quantity = 13 WHERE id = ?", [id]);
+  await assert.rejects(() => read(), { code: "PURCHASING_DEPENDENCY_UNAVAILABLE" });
+  await f.db.query("UPDATE goods_receipt_details SET reversed_base_quantity = received_base_quantity WHERE goods_receipt_id = ?", [id]);
+  await f.db.query("UPDATE goods_receipts SET status = 'REVERSED', total_reversed_base_quantity = 22 WHERE id = ?", [id]);
+  await assert.rejects(() => read(), { code: "GR_STATE_CONFLICT" });
 });
 
 integrationTest("收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403", async () => {

@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam's 2026-11-19 seven-day ordinary functional CI arrangement, together with Fulfillment-owner fixture scope directed by TL b28203ee and PM 65d36c6d. Non-author Claude TL 8ad414ca accepted the exact two-file binary patch SHA256 4a31c04ca797bfe201a0febc44d30a027306bab11c11e692470dffdb5e758fdc. CI administrator independently verifies and registers the digest. Inventory cost exact source 46d9685ac843094bc82d8193850e106f704b0f5a on merged main 9245e738dd946576e4097d3f4c89a43119dd5736 (PR #415). PM 9e41f325 and 834836b1 directed the common-base integrations, focused functional validation and receipt rebind. Sam directly approved the two costed Fulfillment cases in patch SHA-256 3f41665921abb6c8eb8b972a7fca7ea1474ed95f1b0c614ddad310d21a74ae90 and delegated comparable functional approvals to PM. TL cb68b5d2 reviewed that two-case patch. Trusted CI administrator registration is required for the exact candidate. Independent merge-only review: ed380775 applies to b8f386fa and its identical cost patch; the 46d9685a combined source was submitted to Claude TL in d1c7812a.",
-  "purpose": "A partial-migration isolated fixture fills only missing canonical permission names and descriptions before the existing application startup verification. Preserve the original active 140-pin group and workload with one fixture blob updated. Bind the existing lifecycle registration test that shares the helper.",
-  "data": "Existing fixtures, schemas, business rows, users, roles and grants unchanged. Only catalogue permission rows absent from the disposable partial-migration database are inserted. No production application or migration changes.",
+  "decision": "Sam's 2026-11-19 seven-day ordinary functional CI arrangement, together with Fulfillment-owner fixture scope directed by TL b28203ee and PM 65d36c6d. Non-author Claude TL 8ad414ca accepted the exact two-file binary patch SHA256 4a31c04ca797bfe201a0febc44d30a027306bab11c11e692470dffdb5e758fdc. CI administrator independently verifies and registers the digest. Inventory cost exact source 46d9685ac843094bc82d8193850e106f704b0f5a on merged main 9245e738dd946576e4097d3f4c89a43119dd5736 (PR #415). PM 9e41f325 and 834836b1 directed the common-base integrations, focused functional validation and receipt rebind. Sam directly approved the two costed Fulfillment cases in patch SHA-256 3f41665921abb6c8eb8b972a7fca7ea1474ed95f1b0c614ddad310d21a74ae90 and delegated comparable functional approvals to PM. TL cb68b5d2 reviewed that two-case patch. Trusted CI administrator registration is required for the exact candidate. Independent merge-only review: ed380775 applies to b8f386fa and its identical cost patch; the 46d9685a combined source was submitted to Claude TL in d1c7812a. Sam extended the functional-case suspension through go-live in PR #395. PM 07edcfa6 selected the registered cost-aware Recovery case on 2026-11-26 and PM 0b316242 directed the exact receipt rebind for source e88e94f59e676ce1b803053422779232729bf57b on main a79d737682525021b6acfb40f534e3a84e0b484e.",
+  "purpose": "A partial-migration isolated fixture fills only missing canonical permission names and descriptions before the existing application startup verification. Preserve the existing permission-fixture and lifecycle registration coverage. Rebind five existing pins for public shipment reversal, its registered Recovery job and the inquiry projection.",
+  "data": "Existing fixtures, schemas, business rows, users, roles and grants unchanged. Only catalogue permission rows absent from the disposable partial-migration database are inserted. The new Recovery case uses one private warehouse, one SKU and one shipped line of three units with opening cost. The client contract uses synthetic request and response objects.",
   "concurrency": "Existing functional runner, shard and case concurrency unchanged.",
-  "repetitions": "One existing lifecycle registration case and four existing Recovery cases. No new test registration, fixture datasets or CI repetition.",
+  "repetitions": "Preserve the existing registrations and retry counts. Add one client contract case and one registered cost-aware Recovery case with two bounded dispatches of the same event. Keep the existing inquiry fixture and verify its reversal action.",
   "thresholds": "All existing startup, recovery and rollback assertions, access checks, coverage and time limits unchanged. The production permission catalogue/migration convention and read-only startup guard remain asserted independently.",
   "trigger": "Existing ordinary PR, main and scheduled functional CI. No workflow, trigger or capacity execution changes.",
-  "cost": "Small fixture-only query with bounded inserts from the permission catalogue. Existing five cases passed locally on each baseline in about 13 seconds per suite. No new CI job, fixture dataset or estimated critical-path increase.",
+  "cost": "Preserve the existing permission-fixture workload. The added Recovery case took 3.55 seconds on the UTC author run, including setup. The added client contract is in-memory. The CI critical-path change is unmeasured.",
   "inheritance": {
     "receipt": ".github/test-admissions/fulfillment-task038-inquiry-functional.json",
     "sha256": "68225ef717e88c51a84603e4ed8cdbb1e967dea463bc2e732638204faceb234e",
@@ -213,10 +213,11 @@
     {
       "path": "client/test/services/shipmentService.test.js",
       "mode": "100644",
-      "blob": "83beef60e7af5219917177a627fba63ac9266975",
+      "blob": "51f7c21e038ba16c11b3ed989fc652b34b622841",
       "kind": "functional",
       "cases": [
-        "CLIENT-CONTRACT: Shipment wire identities, exact weight and malformed outcome rejection without resubmission"
+        "CLIENT-CONTRACT: Shipment wire identities, exact weight and malformed outcome rejection without resubmission",
+        "Reversal only sends the whole-shipment command with its original event and rejects an unrelated receipt"
       ]
     },
     {
@@ -234,7 +235,7 @@
     {
       "path": "docs/fulfillment_shipping_management/05_development_tasks.md",
       "mode": "100644",
-      "blob": "8dd94640f0193d13863658bf363006fd7b945e7a",
+      "blob": "3e802d6703f2efb71cc5081e73190c644d629a38",
       "kind": "support"
     },
     {
@@ -707,10 +708,11 @@
     {
       "path": "server/test/fulfillment/shipmentReversalFixture.js",
       "mode": "100644",
-      "blob": "c3e0176f9754858f69b6149e753785df7193dc1d",
+      "blob": "edb9888e359a1841f3e30735c6ac2d4a43dd3977",
       "kind": "functional",
       "cases": [
-        "Exactly the ten REVERSE-INTERNAL / REVERSE-PHASEB registrations in shipmentReversal.integration.test.js; fixed approved synthetic fixtures and transparent fault observers"
+        "Exactly the ten REVERSE-INTERNAL / REVERSE-PHASEB registrations in shipmentReversal.integration.test.js; fixed approved synthetic fixtures and transparent fault observers",
+        "Existing TASK036 Recovery cases use the registered job with an explicit test factory for the legacy provider contract"
       ]
     },
     {
@@ -1304,7 +1306,7 @@
     {
       "path": "server/test/integration/shipmentInquiry.integration.test.js",
       "mode": "100644",
-      "blob": "49be81b55d6ca3111907541dd0b078c6623a99c5",
+      "blob": "db1059db0561a5a83dd47a17eaa86f2abec2ee53",
       "kind": "functional",
       "cases": [
         "SHIPMENT-INQUIRY-DOCUMENT: exact filters, bounded detail and immutable two-line delivery projection",
@@ -1356,10 +1358,11 @@
         "TASK036-RECOVERY genuine Job restart and stale writer fence",
         "TASK036-RECOVERY ineligible unknown and exhausted work stays fenced",
         "TASK036-RECOVERY Sales version exhaustion preserves the original attempt",
-        "TASK036-RECOVERY unknown takeover commit never creates a writer binding"
+        "TASK036-RECOVERY unknown takeover commit never creates a writer binding",
+        "TASK036-RECOVERY registered cost-aware Job restores original ISSUE cost once"
       ],
       "mode": "100644",
-      "blob": "5c8330f636b0d0c91a7afe662839f8fd7c50fabe"
+      "blob": "5661410a5f7b52af613502e6e53464c7c9933684"
     },
     {
       "path": "server/test/inventoryAuditBatch.test.js",

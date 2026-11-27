@@ -19,7 +19,8 @@ const ACTIONS = Object.freeze({
   "goods_receipt.updated": { target: "GR", fields: ["version"] },
   "goods_receipt.cancelled": { target: "GR", fields: ["version"] },
   "goods_receipt.confirmed": { target: "GR", fields: ["version"] },
-  "purchasing.exported": { target: "EXPORT", fields: ["rowCount"] }
+  "purchasing.exported": { target: "EXPORT", fields: ["rowCount"] },
+  "goods_receipt.reversed": { target: "GR", fields: ["version", "reversalId"] }
 });
 // 冇業務寫入嘅拒絕結果（§4.15）：同名 action 加 outcome REJECTED；同 event 唔同內容另用 operation_conflict（§12.2）。
 const REJECTABLE = new Set([...Object.keys(ACTIONS), "purchasing.operation_conflict"]);
