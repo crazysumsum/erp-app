@@ -481,6 +481,22 @@ integrationTest("TASK-032 C1 確認兩行：一次 Inventory 過帳、GR CONFIRM
   assert.deepEqual([(await f.po(poRow.id)).status, Number((await f.po(poRow.id)).has_outstanding)], ["FULLY_RECEIVED", 0]);
 });
 
+integrationTest("Goods receipt confirmation posts stock over HTTP with a 190-code-point Unicode role", async () => {
+  const f = await fixture(), permissions = ["purchasing.view", "receiving.operation"];
+  const actor = await f.person("unicode", permissions);
+  const role = "倉".repeat(189) + "𠮷";
+  await f.db.execute("UPDATE roles SET name=? WHERE id=?", [role, actor.role]);
+  const token = await actor.issue(permissions, { roles: [role] });
+  const po = await f.order(), id = await f.draft(po.id), [moves, onHand] = await f.stock();
+
+  const result = await f.confirm(id, 1, [{ purchaseOrderLineId: po.lineA, details: [detail(f)] }], { token });
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal((await f.header(id)).status, "CONFIRMED");
+  const [posted] = await f.details(id);
+  assert.ok(posted.inventory_movement_id != null && posted.inventory_operation_request_id != null);
+  assert.deepEqual(await f.stock(), [moves + 1, onHand + 1]);
+});
+
 integrationTest("TASK-032 C2 同 event 同內容重送回原結果而且冇第二次庫存效果；同 event 唔同內容 409", async () => {
   const f = await fixture();
   const poRow = await f.order(), id = await f.draft(poRow.id), eventId = randomUUID();
