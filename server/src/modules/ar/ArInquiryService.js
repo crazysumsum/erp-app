@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { formatUnits, localDate, storedUnits } from "./arCommand.js";
 import { arError } from "./arErrors.js";
 
@@ -64,8 +65,10 @@ export class ArInquiryService {
     }
     if (query.outstandingOnly) where.push("status = 'CONFIRMED' AND outstanding_amount > 0");
     if (query.q) {
-      where.push(`(${["invoice_number", "opening_reference", "customer_code_snapshot", "customer_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
-      values.push(...Array(4).fill(prefix(query.q.trim() || query.q)));
+      const pattern = prefix(query.q.trim() || query.q);
+      const number = asciiPredicate("invoice_number LIKE ? ESCAPE '!'", pattern);
+      where.push(`(${number.sql} OR opening_reference LIKE ? ESCAPE '!' OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')`);
+      values.push(...number.params, pattern, pattern, pattern);
     }
     const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ar_invoices ${filter}`, values);
@@ -127,8 +130,10 @@ export class ArInquiryService {
       if (query[field] !== undefined) { where.push(`receipt_date ${operator} ?`); values.push(localDate(query[field], field)); }
     }
     if (query.q) {
-      where.push(`(${["receipt_number", "reference", "customer_code_snapshot", "customer_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
-      values.push(...Array(4).fill(prefix(query.q)));
+      const pattern = prefix(query.q);
+      const number = asciiPredicate("receipt_number LIKE ? ESCAPE '!'", pattern);
+      where.push(`(${number.sql} OR reference LIKE ? ESCAPE '!' OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')`);
+      values.push(...number.params, pattern, pattern, pattern);
     }
     const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ar_receipts ${filter}`, values);

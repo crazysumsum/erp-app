@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { formatUnits, localDate, storedUnits } from "./apCommand.js";
 import { apError } from "./apErrors.js";
 import { invoiceUnitPrice, sourceId } from "./apInvoiceDraft.js";
@@ -79,8 +80,10 @@ export class ApInquiryService {
     }
     if (query.outstandingOnly) where.push("status = 'CONFIRMED'", "outstanding_amount > 0");
     if (query.q) {
-      where.push("(invoice_number LIKE ? ESCAPE '!' OR supplier_invoice_number LIKE ? ESCAPE '!' OR supplier_code_snapshot LIKE ? ESCAPE '!' OR supplier_name_snapshot LIKE ? ESCAPE '!')");
-      values.push(...Array(4).fill(prefix(query.q)));
+      const pattern = prefix(query.q);
+      const number = asciiPredicate("invoice_number LIKE ? ESCAPE '!'", pattern);
+      where.push(`(${number.sql} OR supplier_invoice_number LIKE ? ESCAPE '!' OR supplier_code_snapshot LIKE ? ESCAPE '!' OR supplier_name_snapshot LIKE ? ESCAPE '!')`);
+      values.push(...number.params, pattern, pattern, pattern);
     }
     const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ap_invoices ${filter}`, values);
@@ -140,8 +143,10 @@ export class ApInquiryService {
       if (query[field] !== undefined) { where.push(`payment_date ${operator} ?`); values.push(localDate(query[field], field)); }
     }
     if (query.q) {
-      where.push(`(${["payment_number", "reference", "supplier_code_snapshot", "supplier_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
-      values.push(...Array(4).fill(prefix(query.q)));
+      const pattern = prefix(query.q);
+      const number = asciiPredicate("payment_number LIKE ? ESCAPE '!'", pattern);
+      where.push(`(${number.sql} OR reference LIKE ? ESCAPE '!' OR supplier_code_snapshot LIKE ? ESCAPE '!' OR supplier_name_snapshot LIKE ? ESCAPE '!')`);
+      values.push(...number.params, pattern, pattern, pattern);
     }
     const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ap_payments ${filter}`, values);

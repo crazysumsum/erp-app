@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { businessMasterConflict } from "./businessMasterErrors.js";
 
 const CURRENCY_SORTS = Object.freeze({ code: "code", name: "name", status: "status", updatedAt: "updated_at" });
@@ -66,8 +67,10 @@ export class BusinessMasterRepository {
     const conditions = [];
     const params = [];
     if (input.q) {
-      conditions.push("(code LIKE ? ESCAPE '!' OR name LIKE ? ESCAPE '!')");
-      params.push(likePrefix(input.q), likePrefix(input.q));
+      const pattern = likePrefix(input.q);
+      const code = asciiPredicate("code LIKE ? ESCAPE '!'", pattern);
+      conditions.push(`(${code.sql} OR name LIKE ? ESCAPE '!')`);
+      params.push(...code.params, pattern);
     }
     if (input.status) { conditions.push("status = ?"); params.push(input.status); }
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -191,9 +194,14 @@ export class BusinessMasterRepository {
     const { page, pageSize, offset } = paging(input);
     const conditions = [];
     const params = [];
-    const filters = { entityType: "entity_type", entityKey: "entity_key", action: "action", actorUserId: "actor_user_id" };
+    const filters = { entityType: "entity_type", entityKey: "entity_key", actorUserId: "actor_user_id" };
     for (const [field, column] of Object.entries(filters)) {
       if (input[field] !== undefined && input[field] !== "") { conditions.push(`${column} = ?`); params.push(input[field]); }
+    }
+    if (input.action) {
+      const action = asciiPredicate("action = ?", input.action);
+      conditions.push(action.sql);
+      params.push(...action.params);
     }
     if (input.from !== undefined) { conditions.push("created_at >= ?"); params.push(input.from); }
     if (input.to !== undefined) { conditions.push("created_at <= ?"); params.push(input.to); }

@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { createHash } from "node:crypto";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
@@ -32,11 +33,25 @@ export function validateSalesAuditQuery(input={}) {
 }
 export function salesOrderWhere(query){
  const clauses=[],values=[];
- for(const [field,column] of [["number","sales_order_number"],["customerId","customer_id"],["warehouseId","fulfillment_warehouse_id"],["hasBackorder","has_backorder"]])if(query[field]!==undefined){clauses.push(`${column}=?`);values.push(query[field]);}
+ if(query.number!==undefined){const number=asciiPredicate("sales_order_number=?",query.number);clauses.push(number.sql);values.push(...number.params);}
+ for(const [field,column] of [["customerId","customer_id"],["warehouseId","fulfillment_warehouse_id"],["hasBackorder","has_backorder"]])if(query[field]!==undefined){clauses.push(`${column}=?`);values.push(query[field]);}
  for(const [field,column] of [["status","status"],["sourceType","source_type"]])if(query[field]){clauses.push(`${column} IN (${query[field].map(()=>"?").join(",")})`);values.push(...query[field]);}
- if(query.externalOrderId){clauses.push(`external_order_key_id IN (SELECT id FROM sales_external_order_keys WHERE external_order_id_hash=? AND BINARY external_order_id=BINARY ? AND is_order_archived=0${query.channelCode?" AND channel_code=?":""})`);values.push(createHash("sha256").update(query.externalOrderId).digest(),query.externalOrderId);if(query.channelCode)values.push(query.channelCode);}
- else if(query.channelCode){clauses.push("channel_code_snapshot=?");values.push(query.channelCode);}
- if(query.q){const escaped=query.q.replace(/[!%_]/gu,value=>`!${value}`);clauses.push("(sales_order_number=? OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!' OR customer_po_reference=?)");values.push(query.q,`${escaped}%`,`%${escaped}%`,query.q);}
+ if(query.externalOrderId){
+  const channel=query.channelCode ? asciiPredicate("channel_code=?",query.channelCode) : null;
+  clauses.push(`external_order_key_id IN (SELECT id FROM sales_external_order_keys WHERE external_order_id_hash=? AND BINARY external_order_id=BINARY ? AND is_order_archived=0${channel?" AND "+channel.sql:""})`);
+  values.push(createHash("sha256").update(query.externalOrderId).digest(),query.externalOrderId);
+  if(channel) values.push(...channel.params);
+ } else if(query.channelCode){
+  const channel=asciiPredicate("channel_code_snapshot=?",query.channelCode);
+  clauses.push(channel.sql);
+  values.push(...channel.params);
+ }
+ if(query.q){
+  const escaped=query.q.replace(/[!%_]/gu,value=>`!${value}`);
+  const number=asciiPredicate("sales_order_number=?",query.q);
+  clauses.push(`(${number.sql} OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!' OR customer_po_reference=?)`);
+  values.push(...number.params,`${escaped}%`,`%${escaped}%`,query.q);
+ }
  for(const [prefix,column] of [["orderDate","order_date"],["updated","updated_at"]])for(const [suffix,operator] of [["From",">="],["To","<="]])if(query[prefix+suffix]!==undefined){clauses.push(`${column}${operator}?`);values.push(query[prefix+suffix]);}
  return {where:clauses.length?` WHERE ${clauses.join(" AND ")}`:"",values};
 }
@@ -75,7 +90,8 @@ export class SalesInquiryService{
  listOutstanding(request){return this.list({...request,outstanding:true});}
  async listAudit({claims,input={}}) {
   const query=validateSalesAuditQuery(input),clauses=[],values=[];
-  for(const [key,column] of [["targetType","target_type"],["targetId","target_id"],["actorId","actor_user_id"],["action","action"]])if(query[key]!==undefined){clauses.push(`${column}=?`);values.push(query[key]);}
+  if(query.action!==undefined){const action=asciiPredicate("action=?",query.action);clauses.push(action.sql);values.push(...action.params);}
+  for(const [key,column] of [["targetType","target_type"],["targetId","target_id"],["actorId","actor_user_id"]])if(query[key]!==undefined){clauses.push(`${column}=?`);values.push(query[key]);}
   for(const [key,op] of [["occurredFrom",">="],["occurredTo","<="]])if(query[key]!==undefined){clauses.push(`occurred_at${op}?`);values.push(query[key]);}
   const where=clauses.length?" WHERE "+clauses.join(" AND "):"",direction=query.descending?"DESC":"ASC";
   return this.database.withTransaction(async tx=>{

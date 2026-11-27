@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { purchasingError } from "./purchasingErrors.js";
@@ -22,10 +23,11 @@ export class ReceivingLookupService {
 
   purchaseOrders({ claims, q }) {
     const like = term(q);
+    const number = like && asciiPredicate("po_number LIKE ? ESCAPE '!'", like);
     return this.#read(claims, async (tx) => {
       const [rows] = await tx.query(`SELECT id, po_number, status, supplier_code_snapshot, supplier_name_snapshot, version FROM purchase_orders
-        WHERE status IN ('CONFIRMED', 'PARTIALLY_RECEIVED') AND has_outstanding = 1${like ? " AND (po_number LIKE ? ESCAPE '!' OR supplier_code_snapshot LIKE ? ESCAPE '!' OR supplier_name_snapshot LIKE ? ESCAPE '!')" : ""}
-        ORDER BY id DESC LIMIT ?`, [...(like ? [like, like, like] : []), MAX_ROWS]);
+        WHERE status IN ('CONFIRMED', 'PARTIALLY_RECEIVED') AND has_outstanding = 1${like ? ` AND (${number.sql} OR supplier_code_snapshot LIKE ? ESCAPE '!' OR supplier_name_snapshot LIKE ? ESCAPE '!')` : ""}
+        ORDER BY id DESC LIMIT ?`, [...(like ? [...number.params, like, like] : []), MAX_ROWS]);
       return { items: rows.map((row) => ({ id: Number(row.id), number: row.po_number, status: row.status, supplierCode: row.supplier_code_snapshot,
         supplierName: row.supplier_name_snapshot, version: Number(row.version) })) };
     });

@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
 import { normalizeFulfillmentQueueQuery, encodeFulfillmentQueueCursor, projectFulfillmentQueueLine } from "./fulfillmentQueueQuery.js";
@@ -28,9 +29,10 @@ export function fulfillmentQueuePageQuery(query) {
     if (query[key] !== undefined) { clauses.push(`${column}=?`); values.push(query[key]); }
   }
   if (query.hasActiveWork !== undefined) clauses.push((query.hasActiveWork ? "" : "NOT ") + activeWork);
+  const number = asciiPredicate("o.sales_order_number=?", query.q ?? "");
   if (query.q) {
-    clauses.push("(o.sales_order_number=? OR o.customer_code_snapshot LIKE ? ESCAPE '!')");
-    values.push(query.q, query.q.replace(/[!%_]/gu, value => "!" + value) + "%");
+    clauses.push(`(${number.sql} OR o.customer_code_snapshot LIKE ? ESCAPE '!')`);
+    values.push(...number.params, query.q.replace(/[!%_]/gu, value => "!" + value) + "%");
   }
   for (const [key, operator] of [["requestedDateFrom", ">="], ["requestedDateTo", "<="]]) if (query[key] !== undefined) { clauses.push(`o.requested_delivery_date ${operator} ?`); values.push(query[key]); }
   // Include both available work and corrupt facts; fully claimed Sales caches cannot conceal Inventory drift.
@@ -44,7 +46,7 @@ export function fulfillmentQueuePageQuery(query) {
       LEFT JOIN inventory_operation_requests op ON op.id=r.create_operation_id LEFT JOIN inventory_operation_requests reserve_root ON reserve_root.id=m.inventory_operation_id
       WHERE m.sales_order_line_id=eligible.id AND (${reservationMismatch("eligible", "o")}))))`);
   const keys = query.q ? ["numberPriority", ...sorts[query.sortBy]] : sorts[query.sortBy];
-  const selectedColumns = { ...columns, numberPriority: "(CASE WHEN o.sales_order_number=? THEN 0 ELSE 1 END)" };
+  const selectedColumns = { ...columns, numberPriority: `(CASE WHEN ${number.sql} THEN 0 ELSE 1 END)` };
   const descending = key => key !== "numberPriority" && query.descending;
   const after = query.after && { ...query.after, numberPriority: query.after.salesOrderNumber === query.q ? 0 : 1 };
   if (query.after) {
@@ -53,18 +55,18 @@ export function fulfillmentQueuePageQuery(query) {
       const terms = [], args = [];
       for (const prior of keys.slice(0, index)) {
         terms.push(`${selectedColumns[prior]} <=> ?`);
-        if (prior === "numberPriority") args.push(query.q);
+        if (prior === "numberPriority") args.push(...number.params);
         args.push(after[prior]);
       }
       const key = keys[index], column = selectedColumns[key], value = after[key];
-      if (key === "numberPriority") args.push(query.q);
+      if (key === "numberPriority") args.push(...number.params);
       if (value === null) { if (descending(key)) continue; terms.push(`${column} IS NOT NULL`); }
       else { terms.push(descending(key) && key === "requestedDeliveryDate" ? `(${column} < ? OR ${column} IS NULL)` : `${column} ${descending(key) ? "<" : ">"} ?`); args.push(value); }
       alternatives.push("(" + terms.join(" AND ") + ")"); values.push(...args);
     }
     clauses.push("(" + alternatives.join(" OR ") + ")");
   }
-  if (query.q) values.push(query.q);
+  if (query.q) values.push(...number.params);
   values.push(query.pageSize + 1);
   return { sql: `SELECT o.id FROM sales_orders o WHERE ${clauses.join(" AND ")} ORDER BY ${keys.map(key => selectedColumns[key] + " " + (descending(key) ? "DESC" : "ASC")).join(",")} LIMIT ?`, values };
 }

@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { randomUUID } from "node:crypto";
 import { formatDateForFile } from "../../services/time/timeFormat.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
@@ -119,11 +120,16 @@ export class SalesQuotationService {
       const effective = "CASE WHEN status='ISSUED' AND valid_until < ? THEN 'EXPIRED' ELSE status END";
       const clauses = [], values = [];
       if (query.customerId !== undefined) { clauses.push("customer_id=?"); values.push(query.customerId); }
-      if (query.number) { clauses.push("quotation_number=?"); values.push(query.number); }
+      if (query.number) {
+        const number = asciiPredicate("quotation_number=?", query.number);
+        clauses.push(number.sql);
+        values.push(...number.params);
+      }
       if (query.q) {
         const pattern = `%${query.q.replace(/[!%_]/gu, match => `!${match}`)}%`;
-        clauses.push("(quotation_number LIKE ? ESCAPE '!' OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')");
-        values.push(pattern, pattern, pattern);
+        const number = asciiPredicate("quotation_number LIKE ? ESCAPE '!'", pattern);
+        clauses.push(`(${number.sql} OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')`);
+        values.push(...number.params, pattern, pattern);
       }
       if (query.status) { clauses.push(`${effective} IN (${query.status.map(() => "?").join(",")})`); values.push(today, ...query.status); }
       for (const [prefix, column] of [["quotationDate", "quotation_date"], ["validUntil", "valid_until"]]) for (const [suffix, operator] of [["From", ">="], ["To", "<="]]) {

@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import {requireSalesActor} from "./salesAuthorization.js";
 import {salesError} from "./salesErrors.js";
 import {salesSourceHash} from "./salesImportPrecheck.js";
@@ -34,9 +35,10 @@ export class SalesImportQueryService {
  get({claims,id:jobId}){id(jobId);return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view");return toSalesImportSummary(await this.#job(tx,jobId),actor);});}
  orders({claims,id:jobId,input={}}){id(jobId);const query=validateSalesImportQuery(input,"orders");return this.database.withTransaction(async tx=>{
   await requireSalesActor(tx,claims,"sales.view");await this.#job(tx,jobId);const clauses=["i.import_job_id=?"],values=[jobId];
-  for(const field of ["status","channelCode"])if(query[field]!==undefined){clauses.push(`i.${field==="status"?"status":"channel_code"}=?`);values.push(query[field]);}
+  if(query.status!==undefined){clauses.push("i.status=?");values.push(query.status);}
+  if(query.channelCode!==undefined){const channel=asciiPredicate("i.channel_code=?",query.channelCode);clauses.push(channel.sql);values.push(...channel.params);}
   for(const [field,column] of [["sourceOrderKey","source_order_key"],["externalOrderId","external_order_id"]])if(query[field]!==undefined){clauses.push(`i.${column}_hash=? AND BINARY i.${column}=BINARY ?`);values.push(salesSourceHash(query[field]),query[field]);}
-  if(query.errorCode!==undefined){clauses.push("(i.result_code=? OR EXISTS (SELECT 1 FROM sales_intake_errors e WHERE e.intake_order_id=i.id AND e.error_code=?))");values.push(query.errorCode,query.errorCode);}
+  if(query.errorCode!==undefined){const error=asciiPredicate("(i.result_code=? OR EXISTS (SELECT 1 FROM sales_intake_errors e WHERE e.intake_order_id=i.id AND e.error_code=?))",query.errorCode,query.errorCode);clauses.push(error.sql);values.push(...error.params);}
   const where=" WHERE "+clauses.join(" AND "),[[count]]=await tx.query(`SELECT COUNT(*) AS total FROM sales_intake_orders i${where}`,values),[rows]=await tx.query(`SELECT i.id,i.source_order_key,i.channel_code,i.external_order_id,i.first_row_no,i.last_row_no,i.line_count,i.status,i.sales_order_id,i.sales_order_number,i.result_code,i.created_at,i.completed_at,k.is_order_archived
    FROM sales_intake_orders i LEFT JOIN sales_external_order_keys k ON k.id=i.external_order_key_id${where} ORDER BY ${sorts.orders[query.sortBy]} ${query.descending?"DESC":"ASC"},i.id ${query.descending?"DESC":"ASC"} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
   return page(rows.map(row=>({id:Number(row.id),sourceOrderKey:row.source_order_key,channelCode:row.channel_code,externalOrderId:row.external_order_id,firstRowNo:Number(row.first_row_no),lastRowNo:Number(row.last_row_no),lineCount:Number(row.line_count),status:row.status,salesOrderId:row.sales_order_id===null?null:Number(row.sales_order_id),salesOrderNumber:row.sales_order_number,isArchived:Boolean(row.is_order_archived),resultCode:row.result_code,createdAt:Number(row.created_at),completedAt:row.completed_at===null?null:Number(row.completed_at)})),count.total,query);

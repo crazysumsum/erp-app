@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { createHash } from "node:crypto";
 import { fulfillmentError } from "./fulfillmentErrors.js";
 const sorts=Object.freeze({lastBusinessUpdatedAt:"last_business_updated_at",createdAt:"created_at",updatedAt:"updated_at",fulfillmentNumber:"fulfillment_number",id:"id"});
@@ -36,7 +37,7 @@ export function fulfillmentListPageQuery(query,actorId,salesNumberOrderId=null){
   if(query.view==="myRecent"){clauses.push("f.created_by=?");values.push(actorId);}
   if(query.view==="exceptions")clauses.push("(f.has_short_pick=1 OR EXISTS(SELECT 1 FROM fulfillment_operation_requests o WHERE o.target_type='FULFILLMENT' AND o.target_id=f.id AND o.status='FAILED'))");
   for(const [field,column]of [["salesOrderId","sales_order_id"],["customerId","customer_id"],["warehouseId","warehouse_id"],["status","status"],["hasShortPick","has_short_pick"]])if(query[field]!==undefined){clauses.push(`f.${column}=?`);values.push(query[field]);}
-  if(query.q){clauses.push(salesNumberOrderId===null?"f.fulfillment_number=?":"(f.fulfillment_number=? OR f.sales_order_id=?)");values.push(query.q);if(salesNumberOrderId!==null)values.push(salesNumberOrderId);}
+  if(query.q){const number=asciiPredicate("f.fulfillment_number=?",query.q);clauses.push(salesNumberOrderId===null?number.sql:`(${number.sql} OR f.sales_order_id=?)`);values.push(...number.params);if(salesNumberOrderId!==null)values.push(salesNumberOrderId);}
   for(const [prefix,column]of [["created","created_at"],["picked","picked_at"]])for(const [suffix,operator]of [["From",">="],["To","<="]])if(query[prefix+suffix]!==undefined){clauses.push(`f.${column}${operator}?`);values.push(query[prefix+suffix]);}
   const column=sorts[query.sortBy],operator=query.descending?"<":">",direction=query.descending?"DESC":"ASC";
   if(query.after){clauses.push(`(f.${column}${operator}? OR (f.${column}=? AND f.id${operator}?))`);values.push(query.after.value,query.after.value,query.after.id);}

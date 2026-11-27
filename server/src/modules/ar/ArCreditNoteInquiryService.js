@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { localDate, storedUnits } from "./arCommand.js";
 import { arError } from "./arErrors.js";
 
@@ -43,8 +44,10 @@ export class ArCreditNoteInquiryService {
       values.push(localDate(query[field], field));
     }
     if (query.q) {
-      clauses.push("(credit_note_number LIKE ? ESCAPE '!' OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')");
-      values.push(...Array(3).fill(`${query.q.replaceAll("!", "!!").replaceAll("%", "!%").replaceAll("_", "!_")}%`));
+      const pattern = `${query.q.replaceAll("!", "!!").replaceAll("%", "!%").replaceAll("_", "!_")}%`;
+      const number = asciiPredicate("credit_note_number LIKE ? ESCAPE '!'", pattern);
+      clauses.push(`(${number.sql} OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')`);
+      values.push(...number.params, pattern, pattern);
     }
     const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ar_credit_notes ${where}`, values);

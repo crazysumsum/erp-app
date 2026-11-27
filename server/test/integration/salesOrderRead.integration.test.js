@@ -72,3 +72,30 @@ integrationTest("TC-019 SO actual HTTP response schemas, strict query and unauth
  const list=await request(`/api/v1/sales-orders?customerId=${f.customerId}&page=1&pageSize=10&status=DRAFT&sourceType=MANUAL&hasBackorder=false`);assert.equal(list.status,200);assert.equal(list.data.data.total,1);assert.equal(list.data.data.items[0].id,order.id);assert.equal((await request("/api/v1/sales-orders?sortBy=constructor")).status,400);assert.equal((await request("/api/v1/sales-orders?extra=1")).status,400);assert.equal((await request(`/api/v1/sales-orders/${order.id}`,false)).status,401);assert.equal((await request(`/api/v1/sales-orders/${Number.MAX_SAFE_INTEGER}`)).status,404);
  await f.db.execute("UPDATE users SET status='inactive' WHERE id=?",[f.userId]);assert.equal((await request(`/api/v1/sales-orders/${order.id}`)).status,403);
 });
+
+integrationTest("Sales lists find a quotation and order by the customer's Chinese name", async t => {
+  const f = await setup(t);
+  const customerName = `春田商行-${f.customerId}`;
+  await f.db.execute("UPDATE customers SET legal_name=?,legal_name_key=? WHERE id=?", [customerName,customerName,f.customerId]);
+  const { quotation } = await f.quotation.create({ claims: f.claims, input: f.input() });
+  const order = await create(f);
+  const version = await f.app.services.require("tokenRevocation").currentVersion(String(f.userId));
+  const token = await f.app.services.require("jwt").issue({
+    roles: f.claims.claimedRoles, permissions: f.claims.claimedPermissions
+  }, { subject: String(f.userId), version, authTime: Math.floor(f.now / 1000) });
+  const { url } = await f.app.start();
+  for (const [resource, document] of [["sales-quotations", quotation], ["sales-orders", order]]) {
+    for (const [filters, expected] of [
+      [{ q: customerName }, [document.id]], [{ q: document.number }, [document.id]],
+      [{ number: customerName }, []], [{ number: document.number }, [document.id]]
+    ]) {
+      const query = new URLSearchParams(filters);
+      const response = await fetch(`${url}/api/v1/${resource}?${query}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      assert.equal(response.status, 200, resource);
+      const { data } = await response.json();
+      assert.deepEqual(data.items.map(item => item.id), expected, resource);
+    }
+  }
+});

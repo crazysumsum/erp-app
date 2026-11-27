@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 
 const MAX_DETAIL_BYTES = 8192;
@@ -95,8 +96,16 @@ export class SupplierAuditLogService {
     if (to !== undefined) { conditions.push("occurred_at <= ?"); params.push(to); }
     if (String(actor).trim()) { conditions.push("actor_username LIKE ?"); params.push(`%${escapeLike(String(actor).trim())}%`); }
     if (String(target).trim()) { conditions.push("target_label LIKE ?"); params.push(`%${escapeLike(String(target).trim())}%`); }
-    if (action) { conditions.push("action = ?"); params.push(action); }
-    if (targetType) { conditions.push("target_type = ?"); params.push(targetType); }
+    if (action) {
+      const filter = asciiPredicate("action = ?", action);
+      conditions.push(filter.sql);
+      params.push(...filter.params);
+    }
+    if (targetType) {
+      const filter = asciiPredicate("target_type = ?", targetType);
+      conditions.push(filter.sql);
+      params.push(...filter.params);
+    }
     if (supplierId !== undefined) { conditions.push("supplier_id = ?"); params.push(supplierId); }
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const [totals] = await this.database.query(`SELECT COUNT(*) AS total FROM supplier_audit_logs ${where}`, params);

@@ -1,3 +1,4 @@
+import { asciiPredicate } from "../../services/mysqldatabase/asciiPredicate.js";
 import { randomUUID } from "node:crypto";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
@@ -46,7 +47,11 @@ export class ShipmentInquiryService {
    await this.#actor(tx);const where=[],values=[];
    for(const [key,column]of [["salesOrderId","sales_order_id"],["customerId","customer_id"],["warehouseId","warehouse_id"],["carrier","carrier_name"],["trackingNumber","tracking_number"]])if(query[key]!==undefined){where.push(`s.${column}=?`);values.push(query[key]);}
    if(query.status){where.push(`s.status IN (${query.status.map(()=>"?").join(",")})`);values.push(...query.status);}
-   if(query.q){const [[order]]=await tx.query("SELECT id FROM sales_orders WHERE sales_order_number=?",[query.q]);where.push(order?"(s.shipment_number=? OR s.sales_order_id=?)":"s.shipment_number=?");values.push(query.q);if(order)values.push(order.id);}
+   if(query.q){
+    const orderNumber=asciiPredicate("sales_order_number=?",query.q),shipmentNumber=asciiPredicate("s.shipment_number=?",query.q);
+    const [[order]]=await tx.query(`SELECT id FROM sales_orders WHERE ${orderNumber.sql}`,orderNumber.params);
+    where.push(order?`(${shipmentNumber.sql} OR s.sales_order_id=?)`:shipmentNumber.sql);values.push(...shipmentNumber.params);if(order)values.push(order.id);
+   }
    for(const [key,operator]of [["shipmentDateFrom",">="],["shipmentDateTo","<="]])if(query[key]){where.push(`s.shipment_date${operator}?`);values.push(query[key]);}
    const filter=where.length?" WHERE "+where.join(" AND "):"",[[count]]=await tx.query("SELECT COUNT(*) AS total FROM shipments s"+filter,values),direction=query.descending?"DESC":"ASC",column=SHIPMENT_SORTS[query.sortBy];
    const [rows]=await tx.query(`SELECT ${headerColumns},f.fulfillment_number,f.sales_order_id AS source_sales_order_id,f.customer_id AS source_customer_id,f.warehouse_id AS source_warehouse_id,f.sales_order_number_snapshot,f.customer_code_snapshot AS source_customer_code,f.customer_name_snapshot AS source_customer_name,f.warehouse_code_snapshot,f.warehouse_name_snapshot FROM shipments s JOIN fulfillments f ON f.id=s.fulfillment_id${filter} ORDER BY s.${column} ${direction}${column==="id"?"":`,s.id ${direction}`} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
