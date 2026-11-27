@@ -1844,6 +1844,7 @@ migration 為 additive，回滾以反向 migration 或停用 capability gate 進
 - 支援單／多detail部分或全部反向；同event replay一次，不同payload 409。
 - 成功後UI重讀GR／PO／Inventory facts；失敗保留輸入且不顯示假成功。
 - 應付 A1 與庫存成本入主幹後，先發布實物退貨，再發布收貨沖銷。退供與沖銷共用上限回歸 `5ee2b597` 留在沖銷 PR，應付佔用回歸 `e66028f3` 也在沖銷 PR 登記一次。
+- Decision E 與 `0131` 同一 PR 發布。部分沖銷後，應付按每行實收量減已沖銷量開票，排除零淨量行並拒絕全數沖銷的收貨單，保留歷史 BMD 及混合幣別驗證。
 
 ### Definition of Done
 該 Task 形成一個可審查的 atomic commit，focused tests 通過，沒有 skip 測試、降低 coverage、新增 suppressions 或 production fallback；API schema 使用 `additionalProperties:false`，寫入操作在提交點重驗權限、版本、狀態及 Provider 資料。 依賴：TASK-035。對應 mandatory 技術測試：TC-008, TC-001。
