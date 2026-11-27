@@ -3,7 +3,7 @@ export const statusColors={DRAFT:"grey",PICKING:"warning",PICKED:"positive",SHIP
 export function stockLocationLabel(row, warehouseCode) {
   if (!row?.binCode) return "庫位未能取得";
   const bin = warehouseCode ? `${warehouseCode}/${row.binCode}` : row.binCode;
-  const lot = row.lotNumber || (row.lotId ? "批號請查閱候選" : "無批次");
+  const lot = row.lotNumber || (row.lotId ? "批號請查閱候選" : "無批號");
   return `${bin} · ${lot}`;
 }
 export const timestamp=value=>new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia/Hong_Kong",dateStyle:"short",timeStyle:"short"}).format(new Date(value));

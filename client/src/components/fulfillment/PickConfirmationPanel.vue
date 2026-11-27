@@ -36,7 +36,7 @@ const pickItemLabel = row => {
  const line = pickLine(row);
  return line.lineNo ? `第 ${line.lineNo} 行 · ${line.skuCode}` : line.skuCode;
 };
-const columns=[{name:"sku",label:"SKU",field:"fulfillmentLineId",align:"left"},{name:"bin",label:"庫位",field:"binCode",align:"left"},{name:"lot",label:"批次",field:"lotNumber",align:"left"},{name:"expiry",label:"到期日",field:row=>row.expiryDate??"無到期日",align:"left"},{name:"available",label:"目前分配量",field:"availableBaseQuantity",align:"right"},{name:"actual",label:"實揀數量（基本單位）",field:"id",align:"right"}];
+const columns=[{name:"sku",label:"SKU",field:"fulfillmentLineId",align:"left"},{name:"bin",label:"庫位",field:"binCode",align:"left"},{name:"lot",label:"批號",field:"lotNumber",align:"left"},{name:"expiry",label:"到期日",field:row=>row.expiryDate??"無到期日",align:"left"},{name:"available",label:"目前分配量",field:"availableBaseQuantity",align:"right"},{name:"actual",label:"實揀數量（基本單位）",field:"id",align:"right"}];
 const rejectedColumns=[{name:"sequence",label:"原輸入次序",field:row=>`第 ${row.sequence} 筆`,align:"left"},{name:"quantity",label:"原實揀輸入",field:"pickedBaseQuantity",align:"right"},{name:"reason",label:"原短揀原因",field:"shortPickReason",align:"left"}];
 </script>
 <template><section v-if="operate&&(canPick||pending||rejectedDraft||unreadable)" aria-label="確認揀貨" class="q-mt-lg"><h2 class="text-h6">確認揀貨</h2><p>核對所有分配的實揀量。短揀必須填寫原因；全部為零時請使用取消履約工作。</p>

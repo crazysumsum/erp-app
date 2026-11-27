@@ -18,7 +18,7 @@ async function save(){if(stale.value)throw new Error("請先重新載入來源�
 </script>
 <template><div><h2 class="text-h6 q-ma-none q-mb-md">建立履約工作：{{ source.salesOrderNumber }}</h2><p>{{ source.customerCode }} — {{ source.customerName }}／{{ source.warehouseCode }} — {{ source.warehouseName }}</p>
  <q-banner v-if="stale" role="alert" class="bg-warning text-dark q-mb-md">來源已變更，輸入仍保留；請重新載入後核對數量。<template #action><q-btn flat label="重新載入來源" @click="emit('reload')" /></template></q-banner>
- <FormPanel :on-submit="save" v-slot="{submitting}"><fieldset class="fulfillment-create-fields q-pa-none q-ma-none" :disabled="submitting||uncertain" :inert="submitting||uncertain"><legend>選取 SO 行及 Base 單位數量</legend>
+ <FormPanel :on-submit="save" v-slot="{submitting}"><fieldset class="fulfillment-create-fields q-pa-none q-ma-none" :disabled="submitting||uncertain" :inert="submitting||uncertain"><legend>選取 SO 行及 基本單位數量</legend>
   <DataTable sticky-actions :rows="source.lines" :columns="columns" :initial-pagination="{page:1,rowsPerPage:100}"><template #bottom><span class="q-pa-sm">{{ source.lines.length }} 行</span></template>
    <template #body-cell-choose="{row}"><q-td><q-checkbox v-model="selected[row.id]" :aria-label="`選取 ${row.skuCode}`" :disable="row.fulfillableBaseQuantity==='0'" /></q-td></template>
    <template #body-cell-sku="{row}"><q-td>{{ row.skuCode }} — {{ row.skuName }}</q-td></template>

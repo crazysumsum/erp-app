@@ -31,17 +31,17 @@ async function send(input){
 async function submit(){
  if(props.disabled||!canCancel.value||stale.value)throw new Error("請重新載入目前資料後核對；原輸入仍保留");
  const actor=session.user.id,id=props.document.id,body=validate({eventId:crypto.randomUUID(),version:props.document.version,reason:fields.reason.trim(),goodsReturnedToOriginalBins:props.document.status==="PICKED"&&fields.returned});
- if(props.document.status!=="DRAFT"&&!body.reason||props.document.status==="PICKED"&&!body.goodsReturnedToOriginalBins)throw new Error("請填寫5至500字取消原因；已揀貨時必須確認貨物已放回原庫位及批次");
+ if(props.document.status!=="DRAFT"&&!body.reason||props.document.status==="PICKED"&&!body.goodsReturnedToOriginalBins)throw new Error("請填寫5至500字取消原因；已揀貨時必須確認貨物已放回原庫位及批號");
  if(!await confirm({title:"取消履約工作",message:"確認取消目前履約工作？成功後會釋放未完成的分配及履約計劃，並保留歷史。",okLabel:"確認取消履約工作"}))return;
  if(session.user?.id!==actor||props.document.id!==id||!canCancel.value||props.disabled)return;
  await send(body);if(error.value)throw new Error(error.value);
 }
 </script>
-<template><section v-if="operate&&(canCancel||pending||rejected||unreadable)" aria-label="取消履約工作" class="q-mt-lg"><h2 class="text-h6">取消履約工作</h2><p>取消後保留歷史。已揀貨時，必須先把貨物放回原庫位及批次，再確認取消。</p>
+<template><section v-if="operate&&(canCancel||pending||rejected||unreadable)" aria-label="取消履約工作" class="q-mt-lg"><h2 class="text-h6">取消履約工作</h2><p>取消後保留歷史。已揀貨時，必須先把貨物放回原庫位及批號，再確認取消。</p>
  <q-banner v-if="pending" role="status" class="bg-warning text-dark q-mb-md">原取消結果尚未確認，請沿用原操作確認，勿另建取消操作。<template #action><q-btn flat label="確認原取消操作結果" :loading="busy" @click="send(pending)" /></template></q-banner>
  <div v-if="error" ref="summary" role="alert" tabindex="-1"><q-banner class="bg-warning text-dark q-mb-md">{{ error }}</q-banner></div>
  <section v-if="rejected" aria-label="先前被拒絕的取消輸入" class="q-my-md"><p>原版本 {{ rejected.version }}；原取消原因：{{ rejected.reason||'未填寫' }}。原實物確認：{{ rejected.goodsReturnedToOriginalBins?'已確認':'未確認' }}。</p><p>原輸入保留供核對；重新載入後必須重新確認實物處理。</p><q-btn v-if="!pending&&!unreadable" flat label="重新載入目前履約資料" @click="emit('reload')" /></section>
- <FormPanel v-if="canCancel&&!unreadable" :on-submit="submit" v-slot="{submitting}"><fieldset class="fulfillment-cancel-fields" :disabled="disabled||busy||!!pending||submitting" :inert="disabled||busy||!!pending||submitting"><legend>取消原因及實物確認</legend><q-input v-model="fields.reason" label="取消原因" :hint="document.status==='DRAFT'?'選填；填寫時須5至500字':'必填5至500字'" type="textarea" maxlength="1000" outlined /><q-checkbox v-if="document.status==='PICKED'" v-model="fields.returned" label="確認貨物已放回原庫位及批次" /></fieldset><q-btn color="negative" type="submit" label="提交取消履約工作" :loading="busy||submitting" :disable="disabled||!!pending||stale" class="q-mt-md" /></FormPanel>
+ <FormPanel v-if="canCancel&&!unreadable" :on-submit="submit" v-slot="{submitting}"><fieldset class="fulfillment-cancel-fields" :disabled="disabled||busy||!!pending||submitting" :inert="disabled||busy||!!pending||submitting"><legend>取消原因及實物確認</legend><q-input v-model="fields.reason" label="取消原因" :hint="document.status==='DRAFT'?'選填；填寫時須5至500字':'必填5至500字'" type="textarea" maxlength="1000" outlined /><q-checkbox v-if="document.status==='PICKED'" v-model="fields.returned" label="確認貨物已放回原庫位及批號" /></fieldset><q-btn color="negative" type="submit" label="提交取消履約工作" :loading="busy||submitting" :disable="disabled||!!pending||stale" class="q-mt-md" /></FormPanel>
 </section></template>
 <style scoped>
 .fulfillment-cancel-fields { min-width: 0; border: 0; padding: 0; margin: 0; }

@@ -24,7 +24,7 @@ const reasonValid = computed(() => {
 const issueColumns = [
   { name: "sku", label: "SKU", field: "skuCode", align: "left" },
   { name: "bin", label: "原庫位", field: "binCode", align: "left" },
-  { name: "lot", label: "批次", field: row => row.lotNumber || "—", align: "left" },
+  { name: "lot", label: "批號", field: row => row.lotNumber || "—", align: "left" },
   { name: "quantity", label: "回補數量", field: row => `${row.issuedBaseQuantity} ${row.baseUomCode}`, align: "right" }
 ];
 let previewRequest, submitRequest, disposed = false;
