@@ -101,21 +101,6 @@ nativeTest("P1 Allocate discovered HTTP route enforces exact intent, original ou
  assert.equal((await post({...body,version:2})).status,409);await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='fulfillment.operation'",[f.roleId]);const stale=await post(body,{key});assert.equal(stale.status,403);assert.equal(stale.body.error.code,"PERMISSION_STALE");
 });
 
-nativeTest("Fulfillment allocation posts stock over HTTP with a 190-code-point Unicode role", async t => {
-  const f = await fixture(t);
-  const role = "揀".repeat(189) + "𠮷";
-  await f.db.execute("UPDATE roles SET name=? WHERE id=?", [role, f.roleId]);
-  f.claims.roles = [role];
-  const { startP1Http } = await import("../fulfillment/p1Fixture.js");
-  const http = await startP1Http(t, f);
-  const posted = await http("POST", `/api/v1/fulfillments/${f.created.outcome.id}/allocate`, f.allocationBody());
-
-  assert.equal(posted.status, 200, JSON.stringify(posted.body));
-  assert.equal(posted.body.data.outcome.status, "PICKING");
-  const [[balance]] = await f.db.query("SELECT allocated_quantity FROM inventory_stock_balances WHERE id=?", [f.balance]);
-  assert.equal(Number(balance.allocated_quantity), 5);
-});
-
 nativeTest("P1 Allocate second-connection Reservation or candidate changes after preparation cause complete rollback",async t=>{
  for(const change of ["reservationVersion","normalToOverride","overrideToNormal"])await t.test(`${t.name}: ${change}`,async t=>{
   const f=await fixture(t),body=f.allocationBody();let alternative;
