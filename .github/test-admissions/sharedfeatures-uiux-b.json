@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam approved UI/UX plan B on 2026-11-27. PM dcfcfd7e assigned these display changes and authorized updating existing text assertions. This proposal requires independent review and CI administrator registration.",
+  "decision": "Sam approved UI/UX plan B on 2026-11-27. PM dcfcfd7e assigned these display changes and authorized updating existing text assertions. This proposal requires independent review and CI administrator registration. TL 5cf940d2 requested automated financial display checks. PM 080004c3 approved their inclusion and the dialog and 404 copy changes.",
   "purpose": "Update expectations for Traditional Chinese labels, role and device wording and shared table pagination. Pin the affected test inputs.",
-  "data": "Same fixtures, pages, row counts and existing browser scenarios. Only the visible text expectations change.",
+  "data": "Existing UI fixtures remain the same. Five new Vitest cases use inline decimal strings only.",
   "concurrency": "Existing worker configuration and request concurrency.",
-  "repetitions": "Existing case counts and triggers.",
+  "repetitions": "Each of the five new cases runs once per existing client functional test invocation.",
   "thresholds": "Existing assertions, admission controls and coverage floors apply.",
   "trigger": "Existing functional discovery, including manual browser files only under their existing triggers.",
-  "cost": "No added jobs, cases or repetitions. Estimated incremental runner cost is negligible.",
+  "cost": "Five synchronous formatter cases on an existing worker. Estimated added duration below one second; no extra job.",
   "files": [
     {
       "path": "client/e2e/business-master/business-master.spec.js",
@@ -111,6 +111,12 @@
       "kind": "support"
     },
     {
+      "path": "client/src/framework/ui/PasswordReasonDialog.vue",
+      "mode": "100644",
+      "blob": "c5e9fec3fdd50d655e533dd326785282d7ff18c2",
+      "kind": "support"
+    },
+    {
       "path": "client/src/pages/ChangePasswordPage.vue",
       "mode": "100644",
       "blob": "8546686ab722772725726997eb600c1c3f3664cb",
@@ -137,6 +143,28 @@
         "頁面冇傳 #no-data 就用返 DataTable 自己嘅預設空狀態文案",
         "客戶端模式跟 loading prop：載入緊唔出空狀態文案",
         "頁面有傳 #no-data 就用返頁面自己嘅版本，唔會兩個一齊出"
+      ]
+    },
+    {
+      "path": "client/test/framework/ui/confirm.test.js",
+      "mode": "100644",
+      "blob": "615949346a4e091005d0a54a59624cc0bab7ba33",
+      "kind": "functional",
+      "cases": [
+        "用統一嘅刪除確認文案，帶埋主體名"
+      ]
+    },
+    {
+      "path": "client/test/framework/ui/numberFormat.test.js",
+      "mode": "100644",
+      "blob": "e70685ccc8eadb2faf4608e1609e965fa53ec4c5",
+      "kind": "functional",
+      "cases": [
+        "uses the currency precision unless the caller supplies its own",
+        "preserves source precision for unknown or unspecified currencies",
+        "keeps significant digits beyond the safe integer range",
+        "preserves nonnumeric text and labels missing values",
+        "removes only fractional trailing zeros"
       ]
     },
     {
