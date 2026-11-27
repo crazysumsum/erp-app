@@ -48,24 +48,25 @@ const binCode = (warehouseId, binId) => binCodes.value.get(binKey(warehouseId, b
 async function loadBinCodes(detail) {
   binLookupController = new AbortController();
   const { signal } = binLookupController;
-  const bins = new Map();
-  for (const line of detail.lines) {
-    bins.set(binKey(detail.sourceWarehouseId, line.sourceBinId), [detail.sourceWarehouseId, line.sourceBinId]);
-    if (line.destinationBinId) {
-      bins.set(binKey(detail.destinationWarehouseId, line.destinationBinId), [detail.destinationWarehouseId, line.destinationBinId]);
-    }
-  }
-  const entries = [...bins];
-  for (let start = 0; !signal.aborted && start < entries.length; start += 8) {
-    await Promise.all(entries.slice(start, start + 8).map(async ([key, [warehouseId, binId]]) => {
-      try {
-        const bin = await inventory.getBin(warehouseId, binId, { signal });
-        if (!signal.aborted) binCodes.value.set(key, bin.code);
-      } catch {
-        // Keep the rest of the transfer detail usable when a bin cannot be read.
+  const warehousesToRead = [
+    [detail.sourceWarehouseId, new Set(detail.lines.map(line => line.sourceBinId))],
+    [detail.destinationWarehouseId, new Set(detail.lines.map(line => line.destinationBinId).filter(Boolean))]
+  ];
+  await Promise.all(warehousesToRead.map(async ([warehouseId, missing]) => {
+    const rowsPerPage = 100;
+    try {
+      for (let page = 1; missing.size && !signal.aborted; page++) {
+        const { rows, rowsNumber } = await inventory.listBins(warehouseId, { page, rowsPerPage, status: "ALL", signal });
+        if (signal.aborted) return;
+        for (const bin of rows) {
+          if (missing.delete(bin.id)) binCodes.value.set(binKey(warehouseId, bin.id), bin.code);
+        }
+        if (!rows.length || page * rowsPerPage >= rowsNumber) return;
       }
-    }));
-  }
+    } catch {
+      // Keep the rest of the transfer detail usable when the bin list cannot be read.
+    }
+  }));
 }
 function syncUrl() {
   router.replace({ query: { number: number.value || undefined, status: status.value === "ALL" ? undefined : status.value,
@@ -198,7 +199,7 @@ onUnmounted(() => { detailGeneration++; binLookupController?.abort(); });
         <TransferReceive v-if="mode === 'receive' && selected" ref="receiver" :detail="selected" @saved="saved" @close="mode = ''" />
         <q-card-section v-if="mode === 'dispatch'">
           <h2 class="text-h6">整張出庫 {{ selected.number }}</h2>
-          <p>只可移動未保障 Reservation 的數量。整張過帳，不支援部分；提交時後端重新檢查庫存及鎖定。</p>
+          <p>調撥出庫後，庫存仍須足以保障已預留數量。整張過帳，不支援部分；提交時後端重新檢查庫存及鎖定。</p>
           <div v-if="summaryLoading" role="status">正在載入來源保障摘要…</div>
           <q-banner v-if="operationError" role="alert" class="bg-negative text-white">{{ operationError }}</q-banner>
           <p v-for="row in summaries" :key="row.skuId">{{ row.code }}：來源 {{ row.eligibleOnHand }} · 本單 {{ row.quantity }} · 已預留 {{ row.reserved }} · 可承諾 {{ row.atp }}</p>

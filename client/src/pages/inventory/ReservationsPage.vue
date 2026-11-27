@@ -135,7 +135,7 @@ onUnmounted(() => sourceController.abort());
   <div>
     <PageHeader subtitle="查看來源預留、數量變化及實際分配。" />
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-center">
-      <q-input class="col-12 col-sm-5 col-md-3" v-model="search" dense outlined debounce="300" clearable label="搜尋 SKU 或來源單號" />
+      <q-input class="col-12 col-sm-5 col-md-3" v-model="search" dense outlined debounce="300" clearable label="搜尋 SKU 或來源識別" />
       <q-select class="col-12 col-sm-4 col-md-2" v-model="status" dense outlined emit-value map-options :options="statuses" label="狀態" />
       <q-toggle class="col-12 col-sm-3" v-model="uncovered" label="只看未覆蓋" />
     </div>
