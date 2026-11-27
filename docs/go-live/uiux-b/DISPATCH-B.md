@@ -67,10 +67,9 @@
 - 庫存篩選（TL 65ffc42a）：Lot 歷史搜尋、操作者、來源單據。inventory-01 會逐欄列出缺哪個 API、需要什麼權限。
 - X-10 匯總（TL 5554f9e6）：上線前只做權限相容的倉庫，以及倉庫內的庫位。其餘照舊用精確 ID 篩選，不放寬權限。
 - 上線後要補的 API：
-  1. 客戶及倉庫的唯讀代碼和名稱查詢，給 sales.view 或 fulfillment.view 使用。
-  2. 供應商及採購員的歷史選項，給 purchasing.view 使用。
-  3. 庫存（inventory-01 890df7fe）的 SKU 代碼和名稱，含停用項目；Lot 歷史，含零餘額；操作者名稱，不需要 user.mgmt；以及跨模組來源單號。
-- 是否把第 1 項提前到上線前做，待 Sam 決定。
+  1. 供應商及採購員的歷史選項，給 purchasing.view 使用。
+  2. 庫存（inventory-01 890df7fe）：Lot 歷史，含零餘額；操作者名稱，不需要 user.mgmt；以及跨模組來源單號。
+- 客戶及倉庫查詢已由 Sam 決定提前到上線前做（見末節）。SKU 搜尋沿用既有的 /skus 及其權限（TL 580e1468），不需要新 API。
 - 採購的供應商及採購員歷史選項（TL 248e83b2）：需要開放給 purchasing.view 使用的 choices API，回傳代碼和名稱，並包含非 active 的記錄。
 - M-F1 批號（TL 09f39ec2）：preview 會鎖 Sales、allocation 及 Inventory balance，所以不自動呼叫。上線前首屏只顯示庫位。上線後在推薦 DTO 加 lotNumber。
 - AR/AP 出貨單及銷售單搜尋（Codex TL f0d844e2）：部分比對，以及沒有履約權限時取得出貨單號，都需要新 API。上線前沿用完整編號搜尋。
