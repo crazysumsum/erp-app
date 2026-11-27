@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "decision": "Sam extended the per-case functional suspension to production go-live in AGENTS.md (PR #395). The CI administrator requested exact preparation for A4 in agentmsg 63e2ccc2 and received the browser scope in ffc862f3. Exact non-author review and CI administrator registration precede the ordinary PR.",
+  "purpose": "Verify the accounts-payable browser path from confirmed receipt through supplier invoice, payment, allocation and cleared aging. Check supplier permissions, currency selection, validation, original-event recovery after refresh, account isolation, and browser and API errors.",
+  "data": "One private migrated MySQL schema and one localhost application. Three synthetic identities including a disabled bootstrap account, one supplier, one additional test currency, one SKU and UOM link, and one purchase order with one confirmed goods receipt line for HKD 325. The scenario also creates a no-PO draft and tests rejected payment data and one original-event replay.",
+  "concurrency": "One Playwright worker and one browser test. Intentional dropped responses verify one rejected and one committed request and their original-event retry.",
+  "repetitions": "1 per local invocation at each verification timezone.",
+  "thresholds": "The browser case passes, one committed payment exists after retry, allocation clears outstanding aging, and the browser records no unexpected AP API or console errors. Routine coverage floors stay the same.",
+  "trigger": "Explicit local functional validation using the dedicated Playwright config. Existing routine CI workflows, browser commands, discovery and worker counts are unchanged.",
+  "cost": "Preview end-to-end Playwright invocations took 13.5 seconds in UTC and 12.7 seconds in Asia/Hong_Kong, excluding MySQL initialization and migrations. The AP case adds no routine CI workload.",
+  "files": [
+    {
+      "path": "client/e2e/accounts-payable/ap-flow.spec.js",
+      "mode": "100644",
+      "blob": "39ec9bf08b7da2d20955300ca4ad2e148bcd89b7",
+      "kind": "functional",
+      "cases": [
+        "AP browser flow confirms a receipt-backed invoice, pays it and clears aging"
+      ]
+    },
+    {
+      "path": "client/e2e/accounts-payable/playwright.config.js",
+      "mode": "100644",
+      "blob": "f54aad89202d0fba48802f9faf380bd2fc865d81",
+      "kind": "functional",
+      "cases": [
+        "AP browser flow confirms a receipt-backed invoice, pays it and clears aging"
+      ]
+    }
+  ]
+}
