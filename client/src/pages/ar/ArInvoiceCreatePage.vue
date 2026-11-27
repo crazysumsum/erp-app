@@ -2,7 +2,7 @@
 export const page = { name: "ar-invoice-create", path: "/ar/invoices/new", title: "由出貨開立發票", requires: { permissions: ["ar.view", "ar.invoice.mgmt", "fulfillment.view"] } };
 </script>
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import ArCustomerFilter from "@/components/ar/ArCustomerFilter.vue";
@@ -17,10 +17,11 @@ const MAX_SHIPMENTS = 20;
 const route = useRoute(), router = useRouter(), session = useSessionStore();
 const command = useCommandEvent();
 const key = computed(() => `${session.user?.id}:ar-invoice-create`);
-const search = reactive({
-  customerId: typeof route.query.customerId === "string" && /^[1-9]\d*$/u.test(route.query.customerId) ? route.query.customerId : "",
-  q: "", shipmentDateFrom: "", shipmentDateTo: ""
+const linkedCustomerId = computed(() => {
+  const id = route.query.customerId;
+  return typeof id === "string" && /^[1-9]\d*$/u.test(id) ? id : "";
 });
+const search = reactive({ customerId: linkedCustomerId.value, q: "", shipmentDateFrom: "", shipmentDateTo: "" });
 const form = reactive({ invoiceDate: today(), dueDate: "", dueDateReason: "", notes: "" });
 const shipments = ref([]), selected = ref([]);
 const loading = ref(false), loadError = ref(""), submitError = ref(""), searched = ref(false);
@@ -50,6 +51,13 @@ async function find() {
     if (!signal.aborted) loading.value = false;
   }
 }
+watch(linkedCustomerId, (id) => {
+  if (route.name !== page.name) return;
+  search.customerId = id;
+  selected.value = [];
+  shipments.value = [];
+  if (searched.value || id) void find();
+});
 const customerOf = (id) => shipments.value.find((row) => row.id === id)?.customer;
 const selectedCustomer = computed(() => (selected.value.length ? customerOf(selected.value[0]) : null));
 // 一張發票只可以係同一客戶；幣別由 server 驗（出貨列表冇幣別）。

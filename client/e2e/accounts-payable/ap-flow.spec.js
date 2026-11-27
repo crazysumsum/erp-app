@@ -272,6 +272,14 @@ test("AP browser flow confirms a receipt-backed invoice, pays it and clears agin
     new URL(request.url()).searchParams.get("supplierId") === String(supplierId));
   await page.getByRole("button", { name: "搜尋已確認收貨" }).click();
   await filteredReceipts;
+  for (const purchaseOrderId of ["1", "2", null]) {
+    const request = page.waitForRequest((candidate) => new URL(candidate.url()).pathname === "/api/v1/goods-receipts");
+    await page.evaluate(async (id) => {
+      const router = document.getElementById("app").__vue_app__.config.globalProperties.$router;
+      await router.replace({ name: "ap-invoice-create", query: id ? { purchaseOrderId: id } : {} });
+    }, purchaseOrderId);
+    expect(new URL((await request).url()).searchParams.get("purchaseOrderId")).toBe(purchaseOrderId);
+  }
   await db.query("UPDATE suppliers SET status = 'active' WHERE id = ?", [supplierId]);
   await page.getByLabel("無採購單發票").check();
   await partyInput.fill(`AP-${tag}`);

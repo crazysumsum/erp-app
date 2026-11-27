@@ -23,10 +23,13 @@ const canSearchSuppliers = computed(() => session.permissions.includes("supplier
 const mode = ref(canReadReceipts.value ? "receipt" : "expense");
 const key = computed(() => `${session.user?.id}:ap-invoice-create`);
 const receiptSupplier = ref(null), expenseSupplier = ref(null);
-const linkedPurchaseOrderId = route.query.purchaseOrderId;
-const initialPurchaseOrderId = typeof linkedPurchaseOrderId === "string" && /^[1-9]\d*$/u.test(linkedPurchaseOrderId) ? linkedPurchaseOrderId : "";
-const purchaseOrderId = ref(initialPurchaseOrderId);
-const purchaseOrder = ref(initialPurchaseOrderId ? { id: initialPurchaseOrderId, number: "已套用採購單" } : null);
+const linkedPurchaseOrderId = computed(() => {
+  const id = route.query.purchaseOrderId;
+  return typeof id === "string" && /^[1-9]\d*$/u.test(id) ? id : "";
+});
+const linkedPurchaseOrder = (id) => id ? { id, number: "已套用採購單" } : null;
+const purchaseOrderId = ref(linkedPurchaseOrderId.value);
+const purchaseOrder = ref(linkedPurchaseOrder(linkedPurchaseOrderId.value));
 const form = reactive({ currencyCode: "", supplierInvoiceNumber: "", invoiceDate: today(), dueDate: "",
   dueDateReason: "", supplierTotalAmount: "", noPoReason: "", notes: "" });
 const expenses = ref([]);
@@ -73,6 +76,24 @@ async function find(page = 1, fromForm = false) {
     if (!signal.aborted) loading.value = false;
   }
 }
+
+watch(linkedPurchaseOrderId, (id) => {
+  if (route.name !== page.name) return;
+  const reload = searched.value || Boolean(id);
+  controller?.abort();
+  purchaseOrderId.value = id;
+  purchaseOrder.value = linkedPurchaseOrder(id);
+  receipts.value = [];
+  selected.clear();
+  invoiced.value.clear();
+  loadedFilters.value = {};
+  pageNumber.value = 1;
+  total.value = 0;
+  loading.value = false;
+  searched.value = false;
+  lookupError.value = "";
+  if (reload && mode.value === "receipt" && canReadReceipts.value) void find(1, true);
+});
 
 function blocked(row) {
   if (invoiced.value.has(String(row.id))) return "已在有效發票上";

@@ -29,7 +29,7 @@ async function filter(input, update) {
   }
 }
 
-const supplierLabel = (row) => [row?.supplierCode, row?.supplierName].filter(Boolean).join(" — ");
+const supplierLabel = (row) => row ? row.supplierCode + " — " + row.supplierName : "";
 </script>
 
 <template>

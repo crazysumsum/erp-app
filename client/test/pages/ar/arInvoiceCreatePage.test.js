@@ -22,9 +22,9 @@ const button = (label) => wrapper.findAll("button,a").find((node) => node.text()
 const rows = () => wrapper.findAll('[data-testid="ar-create-shipment"]');
 const check = async (index) => { await rows()[index].find('[role="checkbox"]').trigger("click"); await flushPromises(); };
 
-async function open() {
+async function open(path = "/ar/invoices/new") {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ ...createPage, component: Create }, { path: "/ar/invoices/:id", component: { render: () => h("p", "detail") } }] });
-  await router.push("/ar/invoices/new");
+  await router.push(path);
   await router.isReady();
   useSessionStore().user = { id: 1, permissions: PERMS, roles: [] };
   wrapper = mount({ render: () => h(RouterView) }, { global: { plugins: [Quasar, router] }, attachTo: document.body });
@@ -97,7 +97,8 @@ describe("AR 由出貨開立發票", () => {
   it("結果未確定：鎖住選擇，重試用同一個 eventId 同內容", async () => {
     ar.createInvoice.mockRejectedValueOnce(Object.assign(new Error("逾時"), { code: "TIMEOUT" }))
       .mockResolvedValueOnce({ id: 9, number: null, status: "DRAFT", version: 1, totalAmount: "10.0000", replayed: false });
-    await open();
+    const router = await open("/ar/invoices/new?customerId=1");
+    expect(shipment.listShipments).toHaveBeenLastCalledWith(expect.objectContaining({ customerId: "1" }));
     await check(0);
     await button("建立發票草稿").trigger("click");
     await flushPromises();
@@ -105,6 +106,13 @@ describe("AR 由出貨開立發票", () => {
     expect(button("搜尋已出貨").attributes("disabled")).toBeDefined();
     await check(1);
     expect(wrapper.text()).toContain("已選 1 張");
+    await router.replace("/ar/invoices/new?customerId=2");
+    await flushPromises();
+    expect(shipment.listShipments).toHaveBeenLastCalledWith(expect.objectContaining({ customerId: "2" }));
+    expect(wrapper.text()).toContain("已選 0 張");
+    await router.replace("/ar/invoices/new");
+    await flushPromises();
+    expect(shipment.listShipments.mock.lastCall[0]).not.toHaveProperty("customerId");
     await button("重試確認結果").trigger("click");
     await flushPromises();
     const [first, second] = ar.createInvoice.mock.calls.map(([body]) => body);
