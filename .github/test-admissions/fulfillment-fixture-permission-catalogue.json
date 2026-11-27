@@ -61,7 +61,7 @@
     {
       "path": "client/e2e/inventory-management/inventory-stocktakes.spec.js",
       "mode": "100644",
-      "blob": "30330b6bba0bc23830a9d35babafbf486b95280d",
+      "blob": "6efe31fd99fef9b3a12d06c828aab2ba18e221aa",
       "kind": "functional",
       "cases": [
         "ST040-B01 actual menu/login and VIEW OP ADJ Item-only roles separate reads and actions",

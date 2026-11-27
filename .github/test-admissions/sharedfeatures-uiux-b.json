@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "decision": "Sam approved UI/UX plan B on 2026-11-27. PM dcfcfd7e assigned these display changes and authorized updating existing text assertions. This proposal requires independent review and CI administrator registration.",
+  "purpose": "Update expectations for Traditional Chinese labels, role and device wording and shared table pagination. Pin the affected test inputs.",
+  "data": "Same fixtures, pages, row counts and existing browser scenarios. Only the visible text expectations change.",
+  "concurrency": "Existing worker configuration and request concurrency.",
+  "repetitions": "Existing case counts and triggers.",
+  "thresholds": "Existing assertions, admission controls and coverage floors apply.",
+  "trigger": "Existing functional discovery, including manual browser files only under their existing triggers.",
+  "cost": "No added jobs, cases or repetitions. Estimated incremental runner cost is negligible.",
+  "files": [
+    {
+      "path": "client/e2e/business-master/business-master.spec.js",
+      "mode": "100644",
+      "blob": "909b323dce004a841bb6f27eb141201493f0f32d",
+      "kind": "functional",
+      "cases": [
+        "TC-017 @technical 空清單有明確狀態"
+      ]
+    },
+    {
+      "path": "client/e2e/customer-management/customer-root.spec.js",
+      "mode": "100644",
+      "blob": "227c5d572c552ca862940e34c965f320ede12bf1",
+      "kind": "functional",
+      "cases": [
+        "@technical DEF-034002 typed Customer searches display the newest results and clearing restores rows",
+        "@technical DEF-034002 latest empty search survives an older ${olderOutcome} completing last"
+      ]
+    },
+    {
+      "path": "client/e2e/inventory-management/inventory-inquiries.spec.js",
+      "mode": "100644",
+      "blob": "6ce55e8eba8bec9dbf15e2b98d04f6ae2846a626",
+      "kind": "functional",
+      "cases": [
+        "TC-022 @technical loading failure retries, empty permissions fail closed"
+      ]
+    },
+    {
+      "path": "client/e2e/inventory-management/inventory-warehouses.spec.js",
+      "mode": "100644",
+      "blob": "56eeebe3c027cc8a46f3ae8840bb029a28e763b4",
+      "kind": "functional",
+      "cases": [
+        "TC-021 @technical view-only 與錯誤/空狀態明確"
+      ]
+    },
+    {
+      "path": "client/e2e/item-management/item-management.spec.js",
+      "mode": "100644",
+      "blob": "afe7f8811a1483b12dc360cefde5837863bc79a2",
+      "kind": "functional",
+      "cases": [
+        "UAT-001 search state survives refresh and empty results remain usable"
+      ]
+    },
+    {
+      "path": "client/e2e/sales-order-management/sales-phase1.spec.js",
+      "mode": "100644",
+      "blob": "4ac0cbb45b1ff3a558af3bba4e7eb6b0acdc7ac2",
+      "kind": "functional",
+      "cases": [
+        "TC-019 Viewer reads snapshots/current masters and cannot open Draft writes"
+      ]
+    },
+    {
+      "path": "client/e2e/supplier-management/supplier-list-filters.spec.js",
+      "mode": "100644",
+      "blob": "53f1c2803c1c0c74dee197c5d7b3cd6cb7bdf3b9",
+      "kind": "functional",
+      "cases": [
+        "@technical the list tells loading, empty and failed apart by its text (DEF-032)"
+      ]
+    },
+    {
+      "path": "client/e2e/supplier-management/uat/uat-cross-phase.spec.js",
+      "mode": "100644",
+      "blob": "f8772ae0be4943025e5d313e7d445764ee14564d",
+      "kind": "functional",
+      "cases": [
+        "@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768 and 1440 px; focus is visible, labels and errors are clear, states are not colour-only",
+        "@uat UAT-055 a VIEWER filters Audit by date, actor, action and target, pages through it, reads each entry's detail with sensitive values redacted and a request id"
+      ]
+    },
+    {
+      "path": "client/e2e/supplier-management/uat/uat-phase-001.spec.js",
+      "mode": "100644",
+      "blob": "afbacde1e13f0c6dbaa6cb479fa0bf27b983f6ab",
+      "kind": "functional",
+      "cases": [
+        "@uat UAT-020 a CLERK permanently deletes a never-activated Draft after re-authentication, and the delete stays traceable",
+        "@uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, without Archived by default and without bank plaintext",
+        "@uat UAT-054 the Supplier list tells loading, empty, failed and no-permission apart, and a failed load can be retried"
+      ]
+    },
+    {
+      "path": "client/e2e/supplier-management/uat/uat-phase-002.spec.js",
+      "mode": "100644",
+      "blob": "2ce75d821f3283ae8f7018434e62dd8958186085",
+      "kind": "functional",
+      "cases": [
+        "@uat UAT-010 with approval on a CLERK submits to APPROVER-A; the Supplier is Pending and the approver sees it in the queue",
+        "@uat UAT-040 a CLERK without settings permission is refused by the page and the API, and the value does not change"
+      ]
+    },
+    {
+      "path": "client/src/framework/ui/DataTable.vue",
+      "mode": "100644",
+      "blob": "c858c7282a3ac7fec50cead9a1f62c9fccd5ba51",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/ChangePasswordPage.vue",
+      "mode": "100644",
+      "blob": "8546686ab722772725726997eb600c1c3f3664cb",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/system/RolesPage.vue",
+      "mode": "100644",
+      "blob": "643db65922d5dd15d1d7185837ef3af3d150c052",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/system/UsersPage.vue",
+      "mode": "100644",
+      "blob": "0628186f603cf8d78563fc04df8f7f57582a08a3",
+      "kind": "support"
+    },
+    {
+      "path": "client/test/framework/ui/DataTable.test.js",
+      "mode": "100644",
+      "blob": "156b50aad31d0fdc960d176b4a5ab4fb696ff811",
+      "kind": "functional",
+      "cases": [
+        "頁面冇傳 #no-data 就用返 DataTable 自己嘅預設空狀態文案",
+        "客戶端模式跟 loading prop：載入緊唔出空狀態文案",
+        "頁面有傳 #no-data 就用返頁面自己嘅版本，唔會兩個一齊出"
+      ]
+    },
+    {
+      "path": "client/test/pages/suppliers/list.test.js",
+      "mode": "100644",
+      "blob": "1a9e80cc770516c2286975c4c2a9a17faad3547c",
+      "kind": "functional",
+      "cases": [
+        "TC-013 (LIST-006): tells a loading, an empty and a failed list apart, and retries a failed read"
+      ]
+    },
+    {
+      "path": "client/test/pages/system/roles.test.js",
+      "mode": "100644",
+      "blob": "e484944e1e1b7e2b5380578e4a0676ccd7853e88",
+      "kind": "functional",
+      "cases": [
+        "操作者自己冇嘅權限：checkbox 停用，附一句「你自己冇呢個權限」",
+        "ASSIGNMENT_STALE：重載角色清單，畫面顯示提示"
+      ]
+    },
+    {
+      "path": "client/test/pages/system/users.test.js",
+      "mode": "100644",
+      "blob": "62ddbfd792ea9270a4f828aa5913dcdcd945174b",
+      "kind": "functional",
+      "cases": [
+        "授唔出自己冇嘅角色：淨係得 user.mgmt 嘅人打開新增對話框，system-admin 個 checkbox 係停用嘅",
+        "ASSIGNMENT_STALE：重載呢個用戶最新嘅角色，畫面顯示提示，唔會靜靜哋失敗"
+      ]
+    }
+  ]
+}
