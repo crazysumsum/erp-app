@@ -149,7 +149,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     const search = clerk.getByPlaceholder("搜尋 Code、名稱、電話或電郵");
     await tabTo(clerk, search);
     await typeText(clerk, `no-such-supplier-${Date.now()}`);
-    await expect(clerk.getByText("冇資料")).toBeVisible();
+    await expect(clerk.getByText("沒有資料")).toBeVisible();
     mode = "fail";
     await clerk.keyboard.press("ControlOrMeta+a");
     await typeText(clerk, supplierCode);
@@ -363,7 +363,7 @@ test("@uat UAT-055 a VIEWER filters Audit by date, actor, action and target, pag
     if (to) await page.getByLabel("至").fill(to);
     await expect(page).toHaveURL(new RegExp(`from=${from}`, "u"));
     if (found) await expect(rows.filter({ hasText: "查看完整帳號" })).toHaveCount(1);
-    else await expect(page.getByText("冇資料")).toBeVisible();
+    else await expect(page.getByText("沒有資料")).toBeVisible();
   }
 
   // 開啟詳情：Supplier 詳情嘅變更紀錄有同一筆 reveal、同一個 Request ID。

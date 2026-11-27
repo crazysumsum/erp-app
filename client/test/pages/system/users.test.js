@@ -183,7 +183,7 @@ describe("pages/system/UsersPage.vue", () => {
         .findAll(".q-checkbox")
         .find((el) => el.text().includes("system-admin"));
 
-      expect(systemAdminOption.text()).toContain("你自己冇呢個權限");
+      expect(systemAdminOption.text()).toContain("你沒有此權限");
       expect(systemAdminOption.classes()).toContain("disabled");
     });
   });
@@ -315,7 +315,7 @@ describe("pages/system/UsersPage.vue", () => {
       await submitDialog(body, "儲存");
 
       expect(userService.get).toHaveBeenCalledTimes(2);
-      expect(body.text()).toContain("有人喺你之前已經改過");
+      expect(body.text()).toContain("其他人已變更");
     });
   });
 

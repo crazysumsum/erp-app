@@ -91,7 +91,7 @@ test("TC-021 @technical view-only 與錯誤/空狀態明確", async ({ page }) =
   await expect(page.getByRole("button", { name: "編輯倉庫 MAIN" })).toHaveCount(0);
   state.empty = true;
   await page.getByLabel("搜尋倉庫").fill("不存在");
-  await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
+  await expect(page.getByText("沒有資料", { exact: true })).toBeVisible();
 });
 
 test("TC-021 @technical 375px 以鍵盤順序選倉後進入庫位並可返回", async ({ page }) => {

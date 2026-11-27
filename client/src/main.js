@@ -1,5 +1,6 @@
 import { createPinia } from "pinia";
 import { Dialog, Loading, Notify, Quasar } from "quasar";
+import zhTW from "quasar/lang/zh-TW";
 import { createApp } from "vue";
 import App from "./App.vue";
 import { vCan } from "./framework/authorization/vCan.js";
@@ -47,6 +48,7 @@ function boot(pages) {
   app.use(Quasar, {
     // 只註冊真的會用到的：Notify 是操作結果提示，Dialog 是刪除確認，Loading 是
     // 全域載入遮罩。三者都是全域單例，Phase 6 會在它們上面包一層統一文案。
+    lang: zhTW,
     plugins: { Notify, Dialog, Loading }
   });
   app.directive("can", vCan);

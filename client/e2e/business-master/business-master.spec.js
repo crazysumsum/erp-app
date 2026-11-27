@@ -227,7 +227,7 @@ test("TC-017 @technical 清單 503 顯示中文錯誤並可重試", async ({ pag
 test("TC-017 @technical 空清單有明確狀態", async ({ page }) => {
   await installApi(page, { emptyCurrencies: true });
   await page.goto("/system/business-master/currencies");
-  await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
+  await expect(page.getByText("沒有資料", { exact: true })).toBeVisible();
 });
 
 test("TC-017 @technical 未登入使用者會導向登入頁", async ({ page }) => {

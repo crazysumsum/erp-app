@@ -1,3 +1,5 @@
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
+
 export const invoiceStatusLabels = Object.freeze({ DRAFT: "草稿", CONFIRMED: "已確認", VOID: "已作廢", CANCELLED: "已取消" });
 export const statusColors = Object.freeze({ DRAFT: "grey", CONFIRMED: "primary", VOID: "negative", CANCELLED: "negative" });
 export const receiptStatusLabels = Object.freeze({ DRAFT: "草稿", CONFIRMED: "已確認", CANCELLED: "已取消", VOID: "已作廢" });
@@ -17,7 +19,7 @@ export function money(value, decimalPlaces) {
 
 export function invoiceOutstandingText({ status, currencyCode, outstandingAmount, currencyDecimalPlaces }) {
   if (status === "VOID" || status === "CANCELLED") return "—";
-  return `${currencyCode} ${money(outstandingAmount, currencyDecimalPlaces)}`;
+  return `${currencyCode} ${formatMoney(money(outstandingAmount, currencyDecimalPlaces))}`;
 }
 
 /** quantity 係基本單位，unitPrice 係每銷售單位；整除先顯示銷售單位，否則顯示基本單位並註明單價單位。唔自己乘。 */
@@ -25,7 +27,7 @@ export function quantityText({ quantity, toBaseFactor, baseUomCode, salesUomCode
   if (/^\d+$/u.test(quantity) && BigInt(toBaseFactor) > 0n && BigInt(quantity) % BigInt(toBaseFactor) === 0n) {
     return `${BigInt(quantity) / BigInt(toBaseFactor)} ${salesUomCode} × ${unitPrice}`;
   }
-  return `${quantity} ${baseUomCode}（單價 ${unitPrice} 為每 ${salesUomCode}）`;
+  return `${formatQuantity(quantity)} ${baseUomCode}（單價 ${unitPrice} 為每 ${salesUomCode}）`;
 }
 
 /** 香港今日（YYYY-MM-DD）：業務日期唔可以喺未來，預設值要用業務時區。 */

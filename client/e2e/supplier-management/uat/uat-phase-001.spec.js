@@ -200,7 +200,7 @@ test("@uat UAT-020 a CLERK permanently deletes a never-activated Draft after re-
   await page.goto("/suppliers");
   await page.getByRole("checkbox", { name: "包括已封存" }).click();
   await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(draft.supplierCode);
-  await expect(page.getByText("冇資料")).toBeVisible();
+  await expect(page.getByText("沒有資料")).toBeVisible();
 
   await page.goto(`/suppliers/audit?target=${draft.supplierCode}`);
   const row = page.locator("tbody tr", { hasText: "永久刪除" });
@@ -335,12 +335,12 @@ test("@uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, witho
   await page.goto("/suppliers");
   await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
   await expect(page).toHaveURL(new RegExp(`q=${tag}`, "u"));
-  await expect(page.getByText(/of 22/u)).toBeVisible();
+  await expect(page.getByText(/共 22 列/u)).toBeVisible();
   await expect(page.getByText(`${tag}-22`)).toHaveCount(0);
   await evidence(page, testInfo, "search");
 
   await page.getByRole("checkbox", { name: "包括已封存" }).click();
-  await expect(page.getByText(/of 23/u)).toBeVisible();
+  await expect(page.getByText(/共 23 列/u)).toBeVisible();
   await page.getByRole("checkbox", { name: "包括已封存" }).click();
 
   await page.getByRole("columnheader", { name: /Code/u }).first().click();
@@ -516,13 +516,13 @@ test("@uat UAT-054 the Supplier list tells loading, empty, failed and no-permiss
 
   mode = "live";
   await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(`no-such-supplier-${Date.now()}`);
-  await expect(page.getByText("冇資料")).toBeVisible();
+  await expect(page.getByText("沒有資料")).toBeVisible();
   await evidence(page, testInfo, "empty");
 
   mode = "fail";
   await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill("UAT");
   await expect(page.getByRole("alert").filter({ hasText: "服務暫時無法使用，請稍後再試" })).toBeVisible();
-  await expect(page.getByText("冇資料")).toHaveCount(0);
+  await expect(page.getByText("沒有資料")).toHaveCount(0);
   await evidence(page, testInfo, "error");
   mode = "live";
   await page.getByRole("button", { name: "重試" }).click();
@@ -533,7 +533,7 @@ test("@uat UAT-054 the Supplier list tells loading, empty, failed and no-permiss
   const outsiderProblems = watchProblems(outsider);
   await outsider.goto("/suppliers");
   await expect(outsider).toHaveURL(/\/403$/u);
-  await expect(outsider.getByText("你冇權限查看呢一頁。")).toBeVisible();
+  await expect(outsider.getByText("你沒有權限查看此頁。")).toBeVisible();
   await evidence(outsider, testInfo, "no-permission");
   expect(outsiderProblems).toEqual([]);
 });

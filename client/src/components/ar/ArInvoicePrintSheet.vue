@@ -1,4 +1,5 @@
 <script setup>
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import { watchPostEffect } from "vue";
 import { money, quantityText } from "@/components/ar/arPresentation.js";
 
@@ -72,18 +73,18 @@ watchPostEffect((onCleanup) => {
             <td>{{ line.lineNo }}</td>
             <td>{{ line.skuCode }} — {{ line.skuName }}</td>
             <td>{{ quantityText(line) }}</td>
-            <td class="text-right">{{ money(line.lineAmount, invoice.currencyDecimalPlaces) }}</td>
+            <td class="text-right">{{ formatMoney(money(line.lineAmount, invoice.currencyDecimalPlaces)) }}</td>
             <td><div>{{ line.salesOrderNumber }}</div><div>{{ line.shipmentNumber }}</div></td>
           </tr>
         </tbody>
         <tfoot>
           <tr>
             <th scope="row" colspan="3" class="text-right">小計</th>
-            <td colspan="2" class="text-right">{{ invoice.currencyCode }} {{ money(invoice.totalAmount, invoice.currencyDecimalPlaces) }}</td>
+            <td colspan="2" class="text-right">{{ invoice.currencyCode }} {{ formatMoney(invoice.totalAmount, invoice.currencyCode, invoice.currencyDecimalPlaces) }}</td>
           </tr>
           <tr>
             <th scope="row" colspan="3" class="text-right">總額</th>
-            <td colspan="2" class="text-right text-weight-bold">{{ invoice.currencyCode }} {{ money(invoice.totalAmount, invoice.currencyDecimalPlaces) }}</td>
+            <td colspan="2" class="text-right text-weight-bold">{{ invoice.currencyCode }} {{ formatMoney(invoice.totalAmount, invoice.currencyCode, invoice.currencyDecimalPlaces) }}</td>
           </tr>
         </tfoot>
       </table>

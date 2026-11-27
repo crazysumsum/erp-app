@@ -208,13 +208,13 @@ test("ST040-B04 blank zero notFound and change-back are disjoint real persisted 
 test("ST040-B05 actual 200-row pager and persistent dirty Count refuse navigation then reload committed page", async ({ page }) => {
   for (let i = 0; i < 199; i++) await addSku(`PAGE-${randomUUID()}`, { stock: true });
   await login(page); const f = await counting(page); await openStocktake(page, f.header.id); const table = page.locator('[aria-label="點算行表格"]');
-  await table.getByRole("button", { name: "Next page", exact: true }).click(); await expect(table.getByText(/21–40 of 200/u)).toBeVisible();
+  await table.getByRole("button", { name: "下一頁", exact: true }).click(); await expect(table.getByText(/21〜40 列，共 200 列/u)).toBeVisible();
   await editCount(page, { quantity: 6 }); await expect(page.locator('[aria-label="點算行表格"]')).toHaveCount(0);
   let dialogs = 0; page.on("dialog", async dialog => { dialogs++; await dialog.dismiss(); });
   const changed = await page.evaluate(async () => { const router = document.querySelector("#app").__vue_app__.config.globalProperties.$router; await router.push({ path: "/inventory/stocktakes", query: { id: "99999999" } }); return router.currentRoute.value.query.id; });
   expect(changed).toBe(String(f.header.id)); expect(dialogs).toBe(1); await expect(page.getByLabel("實數（Base UOM）", { exact: true })).toHaveValue("6");
   page.removeAllListeners("dialog"); page.on("dialog", dialog => dialog.accept()); await page.getByRole("button", { name: "明確捨棄點算", exact: true }).click();
-  await expect(table.getByText(/21–40 of 200/u)).toBeVisible(); await table.getByRole("button", { name: "Next page", exact: true }).click(); await expect(table.getByText(/41–60 of 200/u)).toBeVisible();
+  await expect(table.getByText(/21〜40 列，共 200 列/u)).toBeVisible(); await table.getByRole("button", { name: "下一頁", exact: true }).click(); await expect(table.getByText(/41〜60 列，共 200 列/u)).toBeVisible();
   await editCount(page, { quantity: 6 }); const [[chosen]] = await db.query("SELECT id FROM inventory_stocktake_lines WHERE stocktake_id=? ORDER BY id LIMIT 1 OFFSET 40", [f.header.id]);
   await success(page, "saveStocktakeCounts", f.header.id, { source: source(f.header.id), lines: [{ lineId: Number(chosen.id), expectedVersion: 1, countedQuantity: 4 }] });
   expectedFailures.push({ path: `${ROOT}/${f.header.id}/counts/save`, status: 409 });
