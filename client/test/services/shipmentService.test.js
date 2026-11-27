@@ -8,14 +8,15 @@ it("Reversal only sends the whole-shipment command with its original event and r
  const eventId="c2e7f6b5-5b56-46f9-83cc-0ce21382bd8c";
  const body=Object.freeze({eventId,version:3,reason:"Incorrect shipment",goodsUnderCompanyControl:true,goodsReturnedToOriginalBins:true});
  const reversed={outcome:"REVERSED",shipment:{id:"9",status:"REVERSED",version:5}};
- const signal=new AbortController().signal;
+ const signal=new AbortController().signal,password="synthetic-confirmation";
  httpClient.post.mockResolvedValue(reversed);
- await expect(shipment.reverse("9",body,{signal})).resolves.toBe(reversed);
- expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/shipments/9/reverse",{idempotent:true,idempotencyKey:eventId,body,signal});
- expect(()=>shipment.reverse("9",{...body,goodsReturnedToOriginalBins:false})).toThrow(TypeError);
- expect(()=>shipment.reverse("9",{...body,quantity:"1"})).toThrow(TypeError);
+ await expect(shipment.reverse("9",body,{signal,password})).resolves.toBe(reversed);
+ expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/shipments/9/reverse",{idempotent:true,idempotencyKey:eventId,body:{...body,password},signal,signed:true});
+ expect(()=>shipment.reverse("9",body)).toThrow(TypeError);
+ expect(()=>shipment.reverse("9",{...body,goodsReturnedToOriginalBins:false},{password})).toThrow(TypeError);
+ expect(()=>shipment.reverse("9",{...body,quantity:"1"},{password})).toThrow(TypeError);
  httpClient.post.mockResolvedValue({...reversed,shipment:{...reversed.shipment,id:"10"}});
- await expect(shipment.reverse("9",body)).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
+ await expect(shipment.reverse("9",body,{password})).rejects.toMatchObject({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});
 });
 
 it("CLIENT-CONTRACT: Shipment wire identities, exact weight and malformed outcome rejection without resubmission",async()=>{
