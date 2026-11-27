@@ -133,17 +133,36 @@ test("a token older than the current version is revoked, the current one is not"
   const { service } = createService({ database });
   await service.initialize();
 
-  assert.equal(service.isRevoked({ sub: "42", ver: 2 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 2 }), true);
   // 邊界：ver === 目前版本 就是最新簽的那一批，必須放行。
-  assert.equal(service.isRevoked({ sub: "42", ver: 3 }), false);
-  assert.equal(service.isRevoked({ sub: "42", ver: 4 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 3 }), false);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 4 }), true);
   // 沒有被撤銷過的 subject 沒有列，等同版本 0。
-  assert.equal(service.isRevoked({ sub: "99", ver: 0 }), false);
+  assert.equal(await service.isRevoked({ sub: "99", ver: 0 }), false);
   // 沒有 sub 就沒有 key 可查。放行的話那個 token 對所有撤銷免疫，所以唯一
   // fail closed 的答案是當作已撤銷——與下面 ver 缺失同一條規則。
-  assert.equal(service.isRevoked({ ver: 3 }), true);
-  assert.equal(service.isRevoked({ sub: "", ver: 3 }), true);
-  assert.equal(service.isRevoked({ sub: "   ", ver: 3 }), true);
+  assert.equal(await service.isRevoked({ ver: 3 }), true);
+  assert.equal(await service.isRevoked({ sub: "", ver: 3 }), true);
+  assert.equal(await service.isRevoked({ sub: "   ", ver: 3 }), true);
+});
+
+test("S-06 confirms a newer persisted version and reuses it on the next request", async () => {
+  const database = fakeDatabase({ rows: [{ subject: "42", version: 3 }] });
+  const { service } = createService({ database });
+  await service.initialize();
+  database.state.rows[0].version = 4;
+  assert.equal(await service.isRevoked({ sub: "42", ver: 4 }), false);
+  const queryCount = database.state.queries.length;
+  assert.equal(await service.isRevoked({ sub: "42", ver: 4 }), false);
+  assert.equal(database.state.queries.length, queryCount);
+});
+
+test("S-06 rejects a version the database does not confirm", async () => {
+  const database = fakeDatabase({ rows: [{ subject: "42", version: 3 }] });
+  const { service } = createService({ database });
+  await service.initialize();
+  assert.equal(await service.isRevoked({ sub: "42", ver: 4 }), true);
+  assert.equal(service.snapshot.get("42"), 3);
 });
 
 test("a token without ver is treated as revoked", async () => {
@@ -157,13 +176,13 @@ test("a token without ver is treated as revoked", async () => {
   // 手工造的——放行的話它會天然免疫於所有撤銷，正是攻擊者想要的那種。
   //
   // 這也是換掉切線之後唯一的相容性斷點：部署當下所有既存 token 一起失效。
-  assert.equal(service.isRevoked({ sub: "42" }), true);
-  assert.equal(service.isRevoked({ sub: "42", ver: null }), true);
-  assert.equal(service.isRevoked({ sub: "42", ver: "3" }), true);
-  assert.equal(service.isRevoked({ sub: "42", ver: 1.5 }), true);
+  assert.equal(await service.isRevoked({ sub: "42" }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: null }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: "3" }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 1.5 }), true);
 
   // 從未撤銷過的人也一樣：沒有 ver 就是不合格的 token，跟有沒有被撤銷無關。
-  assert.equal(service.isRevoked({ sub: "99" }), true);
+  assert.equal(await service.isRevoked({ sub: "99" }), true);
 });
 
 // --- 撤銷寫入 ----------------------------------------------------------------
@@ -176,10 +195,10 @@ test("the first revocation takes a never-revoked subject from 0 to 1", async () 
   // 沒有列 = 版本 0，而簽發時拿到的也是 0，所以第一次撤銷就必須讓那些 token
   // 失效。DEFAULT 1 與「沒有列等於 0」這兩件事要在這裡對得起來。
   assert.equal(await service.currentVersion("42"), 0);
-  assert.equal(service.isRevoked({ sub: "42", ver: 0 }), false);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 0 }), false);
 
   assert.equal(await service.revoke("42"), 1);
-  assert.equal(service.isRevoked({ sub: "42", ver: 0 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 0 }), true);
 });
 
 test("revocation takes effect locally without waiting for the next refresh", async () => {
@@ -190,7 +209,7 @@ test("revocation takes effect locally without waiting for the next refresh", asy
   await service.revoke("42", { reason: "password changed" });
 
   // 發起撤銷的那個實例不該還要等一輪刷新才認得自己剛寫下的東西。
-  assert.equal(service.isRevoked({ sub: "42", ver: 7 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 7 }), true);
   assert.equal(service.snapshot.get("42"), 8);
 });
 
@@ -275,7 +294,7 @@ test("a failed refresh keeps serving the old snapshot and says how stale it is",
   assert.equal(await service.refresh(), false);
 
   // fail open：舊快照繼續服務。反過來會讓一次資料庫抖動變成全站登出。
-  assert.equal(service.isRevoked({ sub: "42", ver: 2 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 2 }), true);
 
   const entry = logger.entries.find(
     ({ event }) => event === "auth.revocation.refresh_failed"
@@ -329,7 +348,7 @@ test("fail open is time boxed: past the cap the snapshot stops counting", async 
   assert.equal(harness.service.snapshotUsable(), false);
 
   // 熔斷不動快照本身——切線還在，恢復之後不需要重建。
-  assert.equal(harness.service.isRevoked({ sub: "42", ver: 2 }), true);
+  assert.equal(await harness.service.isRevoked({ sub: "42", ver: 2 }), true);
 });
 
 test("failureMode open restores the unbounded behaviour", async () => {
@@ -404,13 +423,13 @@ test("a successful refresh picks up another instance's revocation", async () => 
   const { service } = createService({ database });
   await service.initialize();
 
-  assert.equal(service.isRevoked({ sub: "42", ver: 0 }), false);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 0 }), false);
 
   // 另一個實例寫進了資料庫。
   database.state.rows.push({ subject: "42", version: 1 });
   assert.equal(await service.refresh(), true);
 
-  assert.equal(service.isRevoked({ sub: "42", ver: 0 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 0 }), true);
 });
 
 test("the load query caps rows at maxCachedSubjects + 1, not the whole table", async () => {
@@ -485,7 +504,7 @@ test("a refresh that would exceed maxCachedSubjects fails open and leaves the ol
   // 舊快照原封不動，跟資料庫打不通時的 fail open 是同一條路徑。
   assert.equal(service.snapshot.get("42"), 3);
   assert.equal(service.loadedAtMs, loadedAtMs);
-  assert.equal(service.isRevoked({ sub: "42", ver: 2 }), true);
+  assert.equal(await service.isRevoked({ sub: "42", ver: 2 }), true);
 
   assert.ok(
     logger.entries.some(({ event }) => event === "auth.revocation.snapshot_oversized")

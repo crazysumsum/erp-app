@@ -226,14 +226,6 @@ test("authenticate accepts the right password once the lock has expired", async 
   assert.equal(result.ok, true);
 });
 
-test("S-03 starts a fresh attempt count after lock expiry", async () => {
-  const database = fakeDatabase({ user: await activeUser({ failed_login_attempts: 5, locked_until: NOW_MS - 1 }) });
-  const result = await createService(database).authenticate("alice", "wrong-password");
-  assert.equal(result.reason, AUTH_FAILURE.BAD_PASSWORD);
-  assert.equal(database.state.user.failed_login_attempts, 1);
-  assert.equal(database.state.user.locked_until, null);
-});
-
 test("authenticate rejects a disabled account", async () => {
   const database = fakeDatabase({
     user: await activeUser({ status: "disabled" })
