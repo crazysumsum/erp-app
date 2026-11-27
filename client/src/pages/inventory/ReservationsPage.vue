@@ -36,6 +36,7 @@ const selected = ref(null);
 const detailLoading = ref(false);
 const detailError = ref("");
 const showAllocation = ref(false);
+const allocationLocations = ref(new Map());
 const salesNumbers = ref(new Map());
 const pendingSalesNumbers = new Set();
 const sourceController = new AbortController();
@@ -127,6 +128,24 @@ async function copySource() {
   }
 }
 watch([status, uncovered], () => table.value?.reload());
+watch(() => selected.value?.allocations, async (allocations, _, onCleanup) => {
+  allocationLocations.value = new Map();
+  if (!allocations?.length) return;
+  const controller = new AbortController();
+  const { signal } = controller;
+  onCleanup(() => controller.abort());
+  for (const balanceId of new Set(allocations.map((allocation) => allocation.balanceId))) {
+    if (signal.aborted) break;
+    try {
+      const stock = await inventoryService.getStock(balanceId, { signal });
+      if (!signal.aborted && stock.balanceId === balanceId) {
+        allocationLocations.value.set(balanceId, { binCode: stock.bin?.code, lotNumber: stock.lot?.number });
+      }
+    } catch {
+      // An unavailable stock detail leaves the allocation and its quantities visible.
+    }
+  }
+});
 onMounted(() => { if (positive(route.query.id)) loadDetail(positive(route.query.id)); });
 onUnmounted(() => sourceController.abort());
 </script>
@@ -180,8 +199,8 @@ onUnmounted(() => sourceController.abort());
           <q-btn flat dense icon="content_copy" label="複製來源識別" @click="copySource" /></div>
         <h3 class="text-subtitle1 q-mb-sm">現有分配</h3>
         <div v-if="!selected.allocations.length" role="status" class="text-grey-7">尚無分配</div>
-        <q-list v-else bordered separator><q-item v-for="allocation in selected.allocations" :key="allocation.id">
-          <q-item-section>分配 #{{ allocation.id }} · 庫位 #{{ allocation.binId }} · 批號 #{{ allocation.lotId ?? '無批號' }} · {{ allocation.expiryDate || '無效期' }}</q-item-section>
+        <q-list v-else bordered separator><q-item v-for="(allocation, index) in selected.allocations" :key="allocation.id">
+          <q-item-section>第 {{ index + 1 }} 筆分配 · {{ allocationLocations.get(allocation.balanceId)?.binCode || '庫位未能取得' }} · {{ allocationLocations.get(allocation.balanceId)?.lotNumber || '無批號' }} · {{ allocation.expiryDate || '無效期' }}</q-item-section>
           <q-item-section side>未完成 {{ allocation.outstandingQuantity }} · {{ allocation.status }}</q-item-section>
         </q-item></q-list>
       </template>

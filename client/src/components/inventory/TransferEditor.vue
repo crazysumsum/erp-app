@@ -95,7 +95,7 @@ onUnmounted(() => { alive = false; binGeneration++; window.removeEventListener("
             outlined dense :label="`第 ${index + 1} 行來源庫位`" :disable="saving || !sourceWarehouseId" :loading="binLoading" />
           <q-select class="col-12 col-sm-4" v-model="line.stockStatus" :options="['AVAILABLE', 'QUARANTINED', 'DAMAGED']" outlined dense :label="`第 ${index + 1} 行庫存狀態`" :disable="saving" />
           <q-input class="col-12 col-sm-3" v-model.number="line.quantity" type="number" min="1" step="1" outlined dense :label="`第 ${index + 1} 行數量`"
-            :disable="saving" :error="!positive(line.quantity)" error-message="請輸入 基本單位 正整數" />
+            :disable="saving" :error="!positive(line.quantity)" error-message="請輸入基本單位正整數" />
         </div>
       </q-card-section>
     </q-card>
