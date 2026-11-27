@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam's 2026-11-19 seven-day ordinary functional CI arrangement, together with Fulfillment-owner fixture scope directed by TL b28203ee and PM 65d36c6d. Non-author Claude TL 8ad414ca accepted the exact two-file binary patch SHA256 4a31c04ca797bfe201a0febc44d30a027306bab11c11e692470dffdb5e758fdc. CI administrator independently verifies and registers the digest.",
+  "decision": "Sam's 2026-11-19 seven-day ordinary functional CI arrangement, together with Fulfillment-owner fixture scope directed by TL b28203ee and PM 65d36c6d. Non-author Claude TL 8ad414ca accepted the exact two-file binary patch SHA256 4a31c04ca797bfe201a0febc44d30a027306bab11c11e692470dffdb5e758fdc. CI administrator independently verifies and registers the digest. Inventory cost exact source 46d9685ac843094bc82d8193850e106f704b0f5a on merged main 9245e738dd946576e4097d3f4c89a43119dd5736 (PR #415). PM 9e41f325 and 834836b1 directed the common-base integrations, focused functional validation and receipt rebind. Sam directly approved the two costed Fulfillment cases in patch SHA-256 3f41665921abb6c8eb8b972a7fca7ea1474ed95f1b0c614ddad310d21a74ae90 and delegated comparable functional approvals to PM. TL cb68b5d2 reviewed that two-case patch. Trusted CI administrator registration is required for the exact candidate. Independent merge-only review: ed380775 applies to b8f386fa and its identical cost patch; the 46d9685a combined source was submitted to Claude TL in d1c7812a.",
   "purpose": "A partial-migration isolated fixture fills only missing canonical permission names and descriptions before the existing application startup verification. Preserve the original active 140-pin group and workload with one fixture blob updated. Bind the existing lifecycle registration test that shares the helper.",
   "data": "Existing fixtures, schemas, business rows, users, roles and grants unchanged. Only catalogue permission rows absent from the disposable partial-migration database are inserted. No production application or migration changes.",
   "concurrency": "Existing functional runner, shard and case concurrency unchanged.",
@@ -35,7 +35,7 @@
     {
       "path": "client/e2e/fulfillment-shipping-management/p2.spec.js",
       "mode": "100644",
-      "blob": "2fdcee23a5c84dd80b1a7775e232bf025b2666d5",
+      "blob": "cd43bc9a63ced2331b9d68827fa4a308e449ee02",
       "kind": "functional",
       "cases": [
         "BROWSER-SHIPMENT-HAPPY native two-line Draft cancel/recreate, Confirm and two A4 snapshot views at four widths",
@@ -616,7 +616,7 @@
     {
       "path": "server/test/fulfillment/inventoryNativeFixture.js",
       "mode": "100644",
-      "blob": "f614e0239078cf8bc405bf9ead053855b3b3ce6d",
+      "blob": "0faa280b6380013edb4ccf866ccf23f9277d56f0",
       "kind": "functional",
       "cases": [
         "Unchanged dependency of the approved ten REVERSE functional groups; no additional registration or capacity execution"
@@ -669,7 +669,7 @@
     {
       "path": "server/test/fulfillment/p1Fixture.js",
       "mode": "100644",
-      "blob": "934cbd3fe4104b80d84c5a6d97686bf5474c381a",
+      "blob": "2f67340e67f2d04ebc26839b1a093b3164399a65",
       "kind": "functional",
       "cases": [
         "Approved P2 Draft/Shipment/Confirm/Recovery finite functional fixture families; original P0/P1 fixture quantities and behavior unchanged"
@@ -747,10 +747,12 @@
       "kind": "functional",
       "cases": [
         "Existing approved case/helper ABI only, original scale/registrations/assertions/opt-in preserved.",
-        "P0 two native connections reject concurrent Issue admission and replay the committed event without duplicate effects"
+        "P0 two native connections reject concurrent Issue admission and replay the committed event without duplicate effects",
+        "Costed Fulfillment writes one immutable journal fact per leg and restores each original amount",
+        "Costed Fulfillment rejects historical uncosted share before restoring stock"
       ],
       "mode": "100644",
-      "blob": "eeb6075e6f714b795844b0dba62d68da8f5ca3ed"
+      "blob": "71f637018436fd27dc4a239021b1799efce11c57"
     },
     {
       "path": "server/test/integration/fulfillmentMasterData.integration.test.js",
@@ -1257,7 +1259,7 @@
     {
       "path": "server/test/integration/shipmentConfirmation.integration.test.js",
       "mode": "100644",
-      "blob": "43eb0656767a8a5ec9f55a2b37cc4faf52366ec2",
+      "blob": "64b3434f905c706d56bce16f63d5d529ef0a71de",
       "kind": "functional",
       "cases": [
         "LOOKUP-PARENT-ACTIVE: parent-bound active and default shipping choices",
@@ -1321,7 +1323,7 @@
     {
       "path": "server/test/integration/shipmentRecovery.integration.test.js",
       "mode": "100644",
-      "blob": "52bc8e4156b241997af2b51c5a0428e785093588",
+      "blob": "c9889b540684b21f288ac4b3245ba7b02582f89f",
       "kind": "functional",
       "cases": [
         "RECOVERY-LEASE: native deadlock, lock timeout, two-worker fence and renewal shutdown",

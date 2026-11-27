@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "decision": "Inventory cost exact source 46d9685ac843094bc82d8193850e106f704b0f5a on merged main 9245e738dd946576e4097d3f4c89a43119dd5736 (PR #415). PM 9e41f325 and 834836b1 directed the common-base integrations, focused functional validation and receipt rebind. Sam directly approved the two costed Fulfillment cases in patch SHA-256 3f41665921abb6c8eb8b972a7fca7ea1474ed95f1b0c614ddad310d21a74ae90 and delegated comparable functional approvals to PM. TL cb68b5d2 reviewed that two-case patch. Trusted CI administrator registration is required for the exact candidate. Independent merge-only review: ed380775 applies to b8f386fa and its identical cost patch; the 46d9685a combined source was submitted to Claude TL in d1c7812a.",
+  "purpose": "Verify exact HKD cost arithmetic and original correction shares, authorization, idempotency and atomic rollback. Preserve legacy Fulfillment and AR fixtures before cost activation and bind the real schema migration as an input.",
+  "data": "New costed Purchase and Return cases use synthetic small batches with up to two detail legs and a single SKU in the existing local fixture. Existing case sizes and the P1 browser setup are unchanged. Arithmetic and context tests use in-memory fixtures.",
+  "concurrency": "Existing finite two-caller SQL lock tests remain at two. No new runner or increased parallel work.",
+  "repetitions": "Once at each applicable existing functional run. Development checks run once per selected time zone.",
+  "thresholds": "Keep existing cases, assertions, caps, deadlines and coverage. Verify exact monetary totals, once-only entries, stable replay and no partial changes on authority or persistence failure.",
+  "trigger": "Retain existing functional CI discovery and P1 browser config. Purchase and Return native files still use the existing local INVENTORY_PURCHASE_TESTS opt-in; this receipt does not turn it on in CI. No workflow changes.",
+  "cost": "In-memory and existing functional workloads only, no performance or capacity run and no CI job added. Hosted incremental runtime is unmeasured.",
+  "files": [
+    {
+      "path": "client/e2e/fulfillment-shipping-management/p1.spec.js",
+      "mode": "100644",
+      "blob": "0c270fe440784ceb7aea5492a746742b0efa6fad",
+      "kind": "functional",
+      "cases": [
+        "Queue Create Allocate original-event recovery Pick and current A4 print use real persisted work",
+        "Fresh view-only principal reads current work and print with no operation controls"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0130_create_inventory_cost.js",
+      "mode": "100644",
+      "blob": "e21476e4691e8f70c719ae3e78aa0139301d2a91",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/test-support/inventoryPurchaseFixtures.js",
+      "mode": "100644",
+      "blob": "f374bb58e87282d93f15fc07894b162bfee787d2",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/test/fulfillment/applyLegacyFulfillmentMigrations.js",
+      "mode": "100644",
+      "blob": "6250c7855a584108f551e78189c1669bd872f2a8",
+      "kind": "functional",
+      "cases": [
+        "Pre-cost Fulfillment and AR isolated schema fixture setup"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentCreate.integration.test.js",
+      "mode": "100644",
+      "blob": "be885e1deab353827f8dc02e10c94fb7204ad279",
+      "kind": "functional",
+      "cases": [
+        "Create atomically persists DRAFT, real Claims, immutable history/audit and replay result without changing owner quantities",
+        "Concurrent same-SO Create cannot overclaim and leaves no failed operation or partial document",
+        "Concurrent same-event Create replays a single original result",
+        "Late audit failure rolls back header, lines, Claims, history and operation, retaining only legitimate sequence gaps",
+        "Stale SO version, native source drift reject without surviving private effects",
+        "Serial master or source snapshot rejects without creating a Claim",
+        "Replay returns the original outcome after the current document version changes",
+        "Different SO and SKU Create in the same Warehouse locks the Warehouse before every new Header FK",
+        "Discovered Create HTTP endpoint enforces strict body, fresh permission and both idempotency layers",
+        "Tentative members cannot reject a legal final single Claim behind 50 fully claimed mappings",
+        "Create returns original outcome separately from current detail and terminal SO quantities on replay",
+        "Current detail batches use one RR snapshot when another transaction edits between header and lines",
+        "Postcommit current-read failure preserves SUCCEEDED and same-event retry returns the original Create",
+        "Any second-line owner conflict prevents the whole Create; valid complete lines commit together"
+      ]
+    },
+    {
+      "path": "server/test/integration/fulfillmentQueue.integration.test.js",
+      "mode": "100644",
+      "blob": "8fdf999c76853d0e5d07fb17459a31d09ef5d5fa",
+      "kind": "functional",
+      "cases": [
+        "P1 Queue native projection is bounded, safe and read-only with an executable EXPLAIN",
+        "P1 Queue excludes fully claimed work and returns released capacity with correct active-work filters",
+        "P1 Queue excludes all ineligible SO states",
+        "P1 Queue actual source mismatch fails closed and records only safe diagnostic fields",
+        "P1 Queue revalidates fresh permission and refuses nested snapshots",
+        "P1 Queue keeps one coherent RR snapshot when a Claim commits between bounded IDs and child reads",
+        "P1 Queue actual keyset pages have no duplicates or gaps across NULL/ties and all supported sorts",
+        "P1 Queue discovery cannot hide negative actual availability behind fully claimed Sales projection",
+        "P1 Queue refuses terminal-positive Reservation and drifted original Sales root identity",
+        "P1 Queue actual discovered HTTP endpoint enforces authentication, view, strict query and safe response",
+        "P1 Queue exact SO number precedes colliding Customer prefix matches across keyset pages"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+      "mode": "100644",
+      "blob": "827d9d9822ff764d478e49a570d04841f2b0047e",
+      "kind": "functional",
+      "cases": [
+        "Purchase real HTTP/JWT receipt boundary",
+        "Purchase real HTTP/JWT/device/password partial reversal boundary and consumer FK order"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+      "mode": "100644",
+      "blob": "092cdd1ad3fbb7ed42daff1f7385d24dc83c1887",
+      "kind": "functional",
+      "cases": [
+        "Purchase batch costs the sealed PO price and replays without repricing",
+        "Purchase batch rejects missing or non-HKD locked price without inventory effects",
+        "Purchase cost journal failure rolls back both receipt details and the claimed event",
+        "Purchase native A04 completed replay returns original receipt without additional writes",
+        "Purchase native A05 same event changed payload rejects without effects",
+        "Purchase native A06 concurrent identical source commits only one result",
+        "Purchase native A07 concurrent conflicting source has one winner and no partial loser",
+        "Purchase native A08 second Audit fault rolls back first detail and all new identities",
+        "Purchase native A09 root completion fault rolls back completed members and movements",
+        "Purchase native A10 cross Warehouse batch resolves all Lots before Balance locks",
+        "Purchase native A11 DB-equivalent Lot numbers reject inconsistent dates atomically",
+        "Purchase native A12 DB binary collation keeps case-distinct Lots as distinct physical dimensions",
+        "Purchase native A13 current lifecycle drift requires reason but persists original commitment",
+        "Purchase native A14 stricter current minimum life requires exact evidence and fresh override",
+        "Purchase native A15 expired Lot cannot be admitted by minimum-life override",
+        "Purchase native A16 invalid later Bin rolls back root, all claims and Controls",
+        "Purchase native A17 authority revoked after claims is rechecked before stock writes",
+        "Purchase native A18 every source is claimed before Warehouse locking and no old single post is called",
+        "Purchase native A19 full 200-detail batch preserves every scalar result and consecutive balance",
+        "Purchase native A20 aggregate safe-integer overflow fails before any stock effect",
+        "Purchase native lookup returns only committed complete results and exact numeric member order",
+        "Purchase native lookup rejects current token version revocation",
+        "Purchase native lookup rechecks JWT expiry after Operation SELECT",
+        "Purchase native lookup rejects revoked purchasing.view without returning persisted result",
+        "Purchase native actual Warehouse lock wait rechecks committed permission revocation",
+        "Purchase native A01 single receipt persists linked Operation/Balance/Movement/Audit atomically",
+        "Purchase native A02 same bucket different PO lines has consecutive balances and input-order results",
+        "Purchase native A03 caller failure rolls back every Inventory effect including initial controls",
+        "Purchase native final receipt read cannot return after JWT expiry (replay=${replay})",
+        "Purchase native lookup uses independent snapshot while owner is uncommitted (commit=${commit})",
+        "Purchase native injected ${point} fault rolls back the complete batch"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+      "mode": "100644",
+      "blob": "1a5eeba087e3d2012ad2503423b6570c254ec6c3",
+      "kind": "functional",
+      "cases": [
+        "Purchase reversal native R01 fresh schema and rerun preserve generic full reversal uniqueness",
+        "Purchase cost reversals preserve cumulative half-up shares, drain and exact retry",
+        "Purchase cost reversal rejects an original ledger missing after activation",
+        "Purchase cost reversal keeps concurrent claims and cost shares within the original quantity",
+        "Purchase reversal native R04 repeated partial events, full depletion and exact terminal replay",
+        "Purchase reversal native R05 overdraw in second detail rolls back all claims and effects",
+        "Purchase reversal native R06 second Audit fault rolls back movements, links and balances",
+        "Purchase reversal native R07 caller failure after provider completion rolls back the entire batch",
+        "Purchase reversal native R08 original receipt Operation proof uses shared locks, never member-first exclusive",
+        "Purchase reversal native R09 Reserved coverage does not take late locks on unrelated Lots",
+        "Purchase reversal native R10 coverage sees new ineligible Lot committed while waiting, not a NULL expiry",
+        "Purchase reversal native R11 actual competing events cannot cumulatively exceed original quantity",
+        "Purchase reversal native R12 same-event concurrent submissions return identical results once",
+        "Purchase reversal native R15 per-Bucket allocated floor blocks an otherwise reversible quantity",
+        "Purchase reversal native R16 final Warehouse-SKU Reserved coverage cannot decrease",
+        "Purchase reversal native R17 expired original Lot may unwind without worsening existing uncovered Reserved",
+        "Purchase reversal native R18 low sale-life original Lot is excluded from Reserved eligibility",
+        "Purchase reversal native R19 current inactive SKU alone does not forbid unwinding original commitment",
+        "Purchase reversal native R20 original Movement cannot be claimed by another GR owner proof",
+        "Purchase reversal native R21 original Movement must match the exact original GR Detail",
+        "Purchase reversal native R22 second Operation completion failure rolls back every line and root",
+        "Purchase reversal native R23 full200-detail batch preserves input mapping and sequential shared-Bucket effects",
+        "Purchase reversal native R24 fresh read-only ABI query returns original committed results by GR and event",
+        "Purchase reversal native R25 changed quantity, reason or membership cannot reuse a committed event",
+        "Purchase reversal native R28 missing historical Balance is rejected without recreating stock",
+        "Purchase reversal native R29 generic full reversal cannot consume a new purchase batch Movement",
+        "Purchase reversal native R30 current tracking and base-UOM drift preserves original receipt policy and facts",
+        "Purchase reversal native R31 opposite multi-Warehouse original order serializes without losing either batch",
+        "Purchase reversal native R32 real Reservation committed during Warehouse wait protects current Reserved",
+        "Purchase reversal native R33 real Allocation committed during Warehouse wait protects the Bucket floor",
+        "Purchase reversal native R34 main Bin-lock reader fails closed on an active controlled lock fixture",
+        "Purchase reversal native R35 partial purchase provider rejects an actual legacy generic Receipt",
+        "Purchase reversal native R02 link constraints enforce positive, unique and real FK identity",
+        "Purchase reversal native R03 link UPDATE and DELETE remain immutable after rerun",
+        "Purchase reversal native ${id} ${name} revocation during actual Warehouse wait rolls back",
+        "Purchase reversal native ${id} second ${table} INSERT fault rolls back every effect"
+      ]
+    },
+    {
+      "path": "server/test/integration/inventoryReturnPosting.integration.test.js",
+      "mode": "100644",
+      "blob": "30e353255259e5ae63c4b951b113b03e8e348639",
+      "kind": "functional",
+      "cases": [
+        "Supplier return batch uses the original receipt cost and a repeated event returns the same movement IDs",
+        "Customer return preserves the original expired lot in quarantine and restores its ISSUE cost",
+        "Parallel customer returns observe the shared original cap after a real Warehouse lock wait",
+        "Supplier return cannot consume current Reserved coverage",
+        "${kind} return refuses a bin in another warehouse without physical or financial effects",
+        "Missing original ISSUE cost blocks customer return without stock or pool effects",
+        "Second cost entry failure rolls back both return lines, their operations, and audits"
+      ]
+    },
+    {
+      "path": "server/test/inventoryCostLedger.test.js",
+      "mode": "100644",
+      "blob": "3ac0542509eec80c92352f12b9a49d4a78b9f53d",
+      "kind": "functional",
+      "cases": [
+        "Inventory cost installation distinguishes an uninstalled schema and incomplete migration",
+        "Inventory shipment preflight confirms each original ISSUE and treats missing cost as a distinct result",
+        "Inventory shipment preflight rejects missing movements, foreign cost facts and uninstalled costing",
+        "Inventory shipment preflight rejects duplicate, unsafe, and nondecimal movement identifiers before SQL",
+        "Inventory cost basis uses a version-checked snapshot across correction kinds",
+        "Inventory cost pools are upserted and locked in one ascending SKU sequence",
+        "Inventory cost writes ledger rows in movement order and updates each locked pool once",
+        "Inventory cost rejects mismatched ledger and locked pool quantities before any write"
+      ]
+    },
+    {
+      "path": "server/test/inventoryCostMath.test.js",
+      "mode": "100644",
+      "blob": "b8ae3563e512a73c7cd0287999744f70c215f852",
+      "kind": "functional",
+      "cases": [
+        "Inventory cost parses fixed-decimal values without Number or silent rounding",
+        "Inventory receipt converts the locked purchase unit price and rounds per receipt line",
+        "Inventory original-value shares are cumulative and exactly recover rounding remainders",
+        "Inventory inbound movement adds accepted HKD value and preserves exact integer quantity",
+        "Inventory ordinary issue uses pooled value and full depletion takes every remainder",
+        "Inventory purchase and positive-adjustment reversals cap actual amount but retain the original share",
+        "Inventory cost rejects amount overflow, insufficient stock and inconsistent empty pools"
+      ]
+    },
+    {
+      "path": "server/test/inventoryPurchaseContext.test.js",
+      "mode": "100644",
+      "blob": "5c517f9cd8fda977cd85e07ae10b51bc98885752",
+      "kind": "functional",
+      "cases": [
+        "Purchase context authenticates exact route/intent in a real framework-owned transaction",
+        "Purchase context rejects forged, consumed and second-issued capsules",
+        "Purchase context binds original server request context/auth/route identities",
+        "Purchase context rejects mismatched route URL resource and authentication type",
+        "Purchase context rejects every changed line snapshot, actor or correlation after issue",
+        "Purchase context verifies exact locked Confirmed PO projection and detail membership",
+        "Purchase context requires active REPEATABLE READ, not a duck-typed or finished executor",
+        "Purchase context rechecks active user and changed permissions at decisive write/replay",
+        "Purchase context rechecks JWT expiry, token revocation, session expiry and request abort",
+        "Purchase context retains original time limits and rejects changed request after consume",
+        "Purchase reversal context seals original GR proof and fixed device-password route without inventory.view",
+        "Purchase reversal context rejects fake, reused, cross-kind and changed-intent capsules",
+        "Purchase reversal context rejects extra, missing, duplicate and mismatched owner projections",
+        "Purchase reversal context accepts terminal owner proof for replay but freezes it at issuance",
+        "Purchase reversal proof rejects same-cardinality duplicate and missing original detail",
+        "Purchase reversal context rejects wrong request identity, route, resource and auth strategy",
+        "Purchase reversal context rechecks device revocation, changed key and binding identity",
+        "Purchase reversal context rechecks permission, token and signature/session deadlines",
+        "Purchase receipt makes a private copy of verified cost inputs by source line",
+        "Purchase receipt rejects incomplete or duplicate private cost projections"
+      ]
+    },
+    {
+      "path": "server/test/inventoryReturnContext.test.js",
+      "mode": "100644",
+      "blob": "81d3f27b02e9d8ce2ccbcdde75a057e76dfff3a5",
+      "kind": "functional",
+      "cases": [
+        "Return context binds ${kind} source facts and current permission to active RR JWT",
+        "Return context rejects substituted source facts, changed intent and wrong auth route",
+        "Return context refuses revoked privileges and expired or replaced request contexts"
+      ]
+    }
+  ]
+}
