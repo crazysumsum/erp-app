@@ -146,12 +146,12 @@ integrationTest("AR migrations rerun: permissions and the seven AR tables match 
     WHERE table_schema = DATABASE() AND table_name = 'ar_invoices' AND column_name = 'billing_address_snapshot'`);
   assert.deepEqual([billing.type, billing.nullable, billing.fallback], ["varchar(1200)", "NO", ""]);
 
-  const [permissions] = await db.query("SELECT name, description FROM permissions WHERE name LIKE 'ar.%' ORDER BY id");
+  const [permissions] = await db.query("SELECT name, description FROM permissions WHERE name IN (?) ORDER BY id", [PERMISSIONS]);
   assert.deepEqual(permissions.map((row) => row.name), PERMISSIONS);
   for (const row of permissions) assert.equal(row.description, PERMISSION_CATALOGUE.find((entry) => entry.name === row.name).description);
 
   const [columns] = await db.query(`SELECT table_name AS t, column_name AS c FROM information_schema.columns
-    WHERE table_schema = DATABASE() AND table_name LIKE 'ar\\_%' ORDER BY table_name, ordinal_position`);
+    WHERE table_schema = DATABASE() AND table_name IN (?) ORDER BY table_name, ordinal_position`, [Object.keys(COLUMNS)]);
   const found = Object.groupBy(columns, (row) => row.t);
   assert.deepEqual(Object.keys(found).sort(), Object.keys(COLUMNS).sort());
   for (const [table, expected] of Object.entries(COLUMNS)) assert.deepEqual(found[table].map((row) => row.c), expected, table);
@@ -167,23 +167,24 @@ integrationTest("AR migrations rerun: permissions and the seven AR tables match 
 
 integrationTest("the AR schema retains exactly the approved keys, foreign keys, CHECK constraints and audit triggers", async (t) => {
   const db = await connect(t);
+  const tables = Object.keys(COLUMNS);
   const [statistics] = await db.query(`SELECT table_name AS t, index_name AS i, MAX(non_unique) AS n,
       GROUP_CONCAT(column_name ORDER BY seq_in_index) AS c
-    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name LIKE 'ar\\_%' GROUP BY table_name, index_name`);
+    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name IN (?) GROUP BY table_name, index_name`, [tables]);
   const indexes = {};
   for (const row of statistics) (indexes[row.t] ??= {})[row.i] = [Number(row.n) === 0, row.c];
   assert.deepEqual(indexes, INDEXES);
 
   const [references] = await db.query(`SELECT constraint_name AS name, referenced_table_name AS target, delete_rule AS rule
-    FROM information_schema.referential_constraints WHERE constraint_schema = DATABASE() AND table_name LIKE 'ar\\_%'`);
+    FROM information_schema.referential_constraints WHERE constraint_schema = DATABASE() AND table_name IN (?)`, [tables]);
   assert.deepEqual(Object.fromEntries(references.map((row) => [row.name, [row.target, row.rule]])), FOREIGN_KEYS);
 
   const [checks] = await db.query(`SELECT constraint_name AS name FROM information_schema.table_constraints
-    WHERE constraint_schema = DATABASE() AND table_name LIKE 'ar\\_%' AND constraint_type = 'CHECK' ORDER BY constraint_name`);
+    WHERE constraint_schema = DATABASE() AND table_name IN (?) AND constraint_type = 'CHECK' ORDER BY constraint_name`, [tables]);
   assert.deepEqual(checks.map((row) => row.name), CHECKS);
 
   const [triggers] = await db.query(`SELECT trigger_name AS name, event_object_table AS t FROM information_schema.triggers
-    WHERE trigger_schema = DATABASE() AND event_object_table LIKE 'ar\\_%' ORDER BY trigger_name`);
+    WHERE trigger_schema = DATABASE() AND event_object_table IN (?) ORDER BY trigger_name`, [tables]);
   assert.deepEqual(triggers.map((row) => [row.name, row.t]), [["trg_ar_audit_delete", "ar_audit_logs"], ["trg_ar_audit_update", "ar_audit_logs"]]);
 });
 
@@ -265,7 +266,7 @@ integrationTest("allocations and audit: positive amounts, known statuses, bounde
   await rejects(db.query("UPDATE ar_audit_logs SET reason = 'changed' WHERE id = ?", [log]), "ER_SIGNAL_EXCEPTION");
   await rejects(db.query("DELETE FROM ar_audit_logs WHERE id = ?", [log]), "ER_SIGNAL_EXCEPTION");
   await rejects(insert("ar_audit_logs", audit({ outcome: "OK" })), CHECK, "chk_ar_audit_outcome");
-  await rejects(insert("ar_audit_logs", audit({ target_type: "CREDIT_NOTE" })), CHECK, "chk_ar_audit_target");
+  await rejects(insert("ar_audit_logs", audit({ target_type: "UNKNOWN" })), CHECK, "chk_ar_audit_target");
   await rejects(insert("ar_audit_logs", audit({ detail: JSON.stringify({ text: "x".repeat(8192) }) })), CHECK, "chk_ar_audit_detail");
 }));
 

@@ -12,7 +12,7 @@
     {
       "path": "server/test/integration/arInvoiceFromShipments.integration.test.js",
       "mode": "100644",
-      "blob": "5987a574267e6e944d36d965232703ddac18c09e",
+      "blob": "2ed4df1f6b0e47c292b95295daa4798d262a745b",
       "kind": "functional",
       "cases": [
         "分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號",
@@ -50,7 +50,7 @@
     {
       "path": "server/test/ar/arShipmentFixture.js",
       "mode": "100644",
-      "blob": "e8f156117e39bab7f8b705ef1d130ccdb5b1fdfb",
+      "blob": "76235ba2efb0a8f661200c778e51701a08e9beeb",
       "kind": "functional",
       "cases": [
         "分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號",
