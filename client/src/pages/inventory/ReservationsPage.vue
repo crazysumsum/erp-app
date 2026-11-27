@@ -140,7 +140,7 @@ onUnmounted(() => sourceController.abort());
       <q-toggle class="col-12 col-sm-3" v-model="uncovered" label="只看未覆蓋" />
     </div>
     <section class="q-px-md q-pb-md" aria-labelledby="reservations-heading">
-      <h2 id="reservations-heading" class="text-h6 q-mt-none">預留清單</h2>
+      <h2 id="reservations-heading" class="text-h6 q-mt-none">庫存預留</h2>
       <DataTable ref="table" :fetch="fetchReservations" :columns="columns" :filter="search"
         :initial-pagination="pagination" row-key="id" sticky-actions>
         <template #body-cell-source="{ row }">
@@ -172,7 +172,7 @@ onUnmounted(() => sourceController.abort());
             :key="item[0]" flat bordered class="col-6 col-sm-3"><q-card-section class="q-pa-sm"><span class="text-caption text-grey-8">{{ item[0] }}</span><div class="text-h6">{{ item[0] }} {{ item[1] }}</div></q-card-section></q-card>
         </div>
         <q-banner v-if="selected.availability.uncoveredReserved > 0" role="status" class="bg-warning text-dark q-mb-md">
-          未覆蓋 {{ selected.availability.uncoveredReserved }}；請檢查可用庫存與到期批次，再決定補貨或調整來源單據。
+          未覆蓋 {{ selected.availability.uncoveredReserved }}；請檢查可用庫存與到期批號，再決定補貨或調整來源單據。
         </q-banner>
         <div class="row items-center q-gutter-sm q-mb-md"><span>來源：<router-link v-if="sourceNumber(selected.source)"
           :to="{ name: 'sales-order-detail', params: { id: salesOrderId(selected.source) } }">{{ sourceNumber(selected.source) }}</router-link>
@@ -181,7 +181,7 @@ onUnmounted(() => sourceController.abort());
         <h3 class="text-subtitle1 q-mb-sm">現有分配</h3>
         <div v-if="!selected.allocations.length" role="status" class="text-grey-7">尚無分配</div>
         <q-list v-else bordered separator><q-item v-for="allocation in selected.allocations" :key="allocation.id">
-          <q-item-section>分配 #{{ allocation.id }} · 庫位 #{{ allocation.binId }} · 批次 #{{ allocation.lotId ?? '無批次' }} · {{ allocation.expiryDate || '無效期' }}</q-item-section>
+          <q-item-section>分配 #{{ allocation.id }} · 庫位 #{{ allocation.binId }} · 批號 #{{ allocation.lotId ?? '無批號' }} · {{ allocation.expiryDate || '無效期' }}</q-item-section>
           <q-item-section side>未完成 {{ allocation.outstandingQuantity }} · {{ allocation.status }}</q-item-section>
         </q-item></q-list>
       </template>

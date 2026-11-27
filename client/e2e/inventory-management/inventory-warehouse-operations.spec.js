@@ -96,10 +96,10 @@ async function pick(page, label, option) {
 }
 async function chooseSku(page, index, sku) {
   const line = page.getByTestId(`transfer-line-${index}`);
-  await line.getByLabel(`第 ${index} 行 SKU Code`, { exact: true }).fill(sku.code);
+  await line.getByLabel(`第 ${index} 行 SKU 代碼`, { exact: true }).fill(sku.code);
   await line.getByRole("button", { name: "查找 SKU", exact: true }).click();
   await line.getByRole("button", { name: "選擇此 SKU", exact: true }).click();
-  if (sku.lotId) await pick(page, `第 ${index} 行批次`, "PW-LOT · 2030-12-31");
+  if (sku.lotId) await pick(page, `第 ${index} 行批號`, "PW-LOT · 2030-12-31");
 }
 async function newDraft(page, sku = fixture.plain, two = false) {
   await page.goto("/inventory/transfers"); await page.getByRole("button", { name: "新增調撥", exact: true }).click();
@@ -164,12 +164,12 @@ test("TASK-029 @technical no-Balance SKU remains selectable and insufficient Dis
 });
 test("TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely", async ({ page }) => {
   await newDraft(page); await page.getByRole("button", { name: "新增一行", exact: true }).click();
-  const line = page.getByTestId("transfer-line-2"); await line.getByLabel("第 2 行 SKU Code").fill("UNKNOWN");
+  const line = page.getByTestId("transfer-line-2"); await line.getByLabel("第 2 行 SKU 代碼").fill("UNKNOWN");
   expectedFailures.push({ path: "/api/v1/inventory/sku-lookup", status: 404 });
   await line.getByRole("button", { name: "查找 SKU", exact: true }).click(); await expect(line.getByRole("alert")).toBeVisible();
   await expect(page.getByLabel("第 1 行數量", { exact: true })).toHaveValue("3");
   await expect(page.getByRole("button", { name: "儲存草稿", exact: true })).toBeDisabled();
-  await page.getByLabel("第 1 行數量", { exact: true }).fill("0"); await expect(page.getByText("請輸入 Base UOM 正整數")).toBeVisible();
+  await page.getByLabel("第 1 行數量", { exact: true }).fill("0"); await expect(page.getByText("請輸入基本單位正整數")).toBeVisible();
   await app.services.require("tokenRevocation").revoke(String(fixture.manager.id), { reason: "task029_browser_owned_fixture" });
   expectedFailures.push({ path: "/api/v1/inventory/sku-lookup", status: 401 });
   page.once("dialog", dialog => dialog.accept());
@@ -184,7 +184,7 @@ test("TASK-029 @technical delayed real lookup cannot replace a newer explicitly 
   await page.route(url => url.origin === origin && url.pathname.endsWith("/sku-lookup") && url.searchParams.get("code") === fixture.plain.code,
     async route => { entered(); await gate; await pace(); await route.continue(); });
   const line = page.getByTestId("transfer-line-1");
-  await line.getByLabel("第 1 行 SKU Code").fill(fixture.plain.code); await line.getByRole("button", { name: "查找 SKU", exact: true }).click(); await started;
+  await line.getByLabel("第 1 行 SKU 代碼").fill(fixture.plain.code); await line.getByRole("button", { name: "查找 SKU", exact: true }).click(); await started;
   await expect(line.getByRole("status")).toHaveText("正在查找 SKU…");
   await chooseSku(page, 1, fixture.empty);
   const old = page.waitForResponse(response => new URL(response.url()).searchParams.get("code") === fixture.plain.code);
@@ -223,7 +223,7 @@ test("TASK-029 @technical Quarantined full receipt requires reason and destinati
 });
 test("TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 850 }); await newDraft(page);
-  const code = page.getByLabel("第 1 行 SKU Code", { exact: true }); await code.focus(); await page.keyboard.press("Enter");
+  const code = page.getByLabel("第 1 行 SKU 代碼", { exact: true }); await code.focus(); await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "選擇此 SKU", exact: true }).focus(); await page.keyboard.press("Enter");
   for (const width of [320, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 850 });

@@ -124,7 +124,7 @@ describe("TASK-017 Stock / Lot / Movement UI", () => {
       page: 2, expiryState: "EXPIRED", warehouseId: 1, signal: expect.any(AbortSignal)
     }));
     expect(wrapper.text()).toContain("已過期（-1 日）");
-    for (const label of ["現存", "可用", "隔離", "損壞"]) {
+    for (const label of ["在庫數量", "可用", "隔離數量", "損壞"]) {
       expect(wrapper.text()).toContain(label);
     }
   });

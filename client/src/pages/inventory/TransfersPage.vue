@@ -180,7 +180,7 @@ onUnmounted(() => { detailGeneration++; binLookupController?.abort(); });
           <q-btn v-if="selected.status === 'IN_TRANSIT'" color="primary" label="準備整張收貨" @click="mode = 'receive'" />
         </div>
         <q-list bordered separator><q-item v-for="line in selected.lines" :key="line.id"><q-item-section>
-          <q-item-label>{{ line.skuCode }} · {{ line.lotNumber || '無批次' }} · {{ line.expiryDate || '無效期' }}</q-item-label>
+          <q-item-label>{{ line.skuCode }} · {{ line.lotNumber || '無批號' }} · {{ line.expiryDate || '無效期' }}</q-item-label>
           <q-item-label>來源庫位 {{ binCode(selected.sourceWarehouseId, line.sourceBinId) }} →
             {{ line.destinationBinId ? `目的庫位 ${binCode(selected.destinationWarehouseId, line.destinationBinId)}` : '目的未入' }} ·
             {{ stockStatusLabel(line.dispatchStockStatus) }} → {{ stockStatusLabel(line.receiveStockStatus) || '未收貨' }}</q-item-label>
@@ -202,7 +202,7 @@ onUnmounted(() => { detailGeneration++; binLookupController?.abort(); });
           <p>調撥出庫後，庫存仍須足以保障已預留數量。整張過帳，不支援部分；提交時後端重新檢查庫存及鎖定。</p>
           <div v-if="summaryLoading" role="status">正在載入來源保障摘要…</div>
           <q-banner v-if="operationError" role="alert" class="bg-negative text-white">{{ operationError }}</q-banner>
-          <p v-for="row in summaries" :key="row.skuId">{{ row.code }}：來源 {{ row.eligibleOnHand }} · 本單 {{ row.quantity }} · 已預留 {{ row.reserved }} · 可承諾 {{ row.atp }}</p>
+          <p v-for="row in summaries" :key="row.skuId">{{ row.code }}：來源 {{ row.eligibleOnHand }} · 本單 {{ row.quantity }} · 已預留 {{ row.reserved }} · 可承諾數量 {{ row.atp }}</p>
           <q-btn v-if="operationError" flat label="重試摘要" @click="loadSummaries" />
           <div class="row justify-end q-gutter-sm"><q-btn flat label="返回詳情" :disable="busy" @click="closeDialog" />
             <q-btn color="primary" label="確認整張出庫" :loading="busy" :disable="summaryLoading || !!operationError || !summaries.length || busy" @click="change('dispatch')" /></div>

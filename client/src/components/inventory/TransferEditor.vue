@@ -50,7 +50,7 @@ watch(sourceWarehouseId, (_, previous) => {
   loadBins();
 }, { immediate: true });
 async function save() {
-  if (!valid.value || saving.value) throw new Error("請完成每行 SKU、批次、來源庫位及正整數數量，並選擇不同的來源／目的倉庫。");
+  if (!valid.value || saving.value) throw new Error("請完成每行 SKU、批號、來源庫位及正整數數量，並選擇不同的來源／目的倉庫。");
   saving.value = true;
   const payload = { idempotencyKey: commandId.value,
     source: { module: "INVENTORY", documentType: "TRANSFER", documentId, lineId: "", eventId: commandId.value },
@@ -75,7 +75,7 @@ onUnmounted(() => { alive = false; binGeneration++; window.removeEventListener("
 <template>
   <FormPanel :on-submit="save" class="q-pa-md">
     <h2 class="text-h6 q-mt-none">{{ detail ? `編輯 ${detail.number}` : '新增調撥草稿' }}</h2>
-    <p>每行請重新查找並選擇 SKU／批次。儲存只建立草稿，不扣庫存。</p>
+    <p>每行請重新查找並選擇 SKU／批號。儲存只建立草稿，不扣庫存。</p>
     <q-banner v-if="error" role="alert" class="bg-negative text-white q-mb-md">{{ error }}</q-banner>
     <div class="row q-col-gutter-sm">
       <q-select class="col-12 col-sm-6" v-model="sourceWarehouseId" :options="warehouses" option-value="id"
@@ -95,7 +95,7 @@ onUnmounted(() => { alive = false; binGeneration++; window.removeEventListener("
             outlined dense :label="`第 ${index + 1} 行來源庫位`" :disable="saving || !sourceWarehouseId" :loading="binLoading" />
           <q-select class="col-12 col-sm-4" v-model="line.stockStatus" :options="['AVAILABLE', 'QUARANTINED', 'DAMAGED']" outlined dense :label="`第 ${index + 1} 行庫存狀態`" :disable="saving" />
           <q-input class="col-12 col-sm-3" v-model.number="line.quantity" type="number" min="1" step="1" outlined dense :label="`第 ${index + 1} 行數量`"
-            :disable="saving" :error="!positive(line.quantity)" error-message="請輸入 Base UOM 正整數" />
+            :disable="saving" :error="!positive(line.quantity)" error-message="請輸入 基本單位 正整數" />
         </div>
       </q-card-section>
     </q-card>

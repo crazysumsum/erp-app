@@ -45,7 +45,7 @@ defineExpose({ canDiscard });
     <q-banner v-if="error" role="alert" class="bg-negative text-white q-mb-md">{{ error }}</q-banner>
     <q-card v-for="(line, index) in lines" :key="line.id" flat bordered class="q-mb-sm">
       <q-card-section>
-        <h3 class="text-subtitle1 q-mt-none">{{ detail.lines[index].skuCode }} · {{ detail.lines[index].lotNumber || '無批次' }} · 數量 {{ line.quantity }}</h3>
+        <h3 class="text-subtitle1 q-mt-none">{{ detail.lines[index].skuCode }} · {{ detail.lines[index].lotNumber || '無批號' }} · 數量 {{ line.quantity }}</h3>
         <div class="row q-col-gutter-sm">
           <q-select class="col-12 col-sm-6" v-model="line.destinationBinId" :options="bins" option-value="id" option-label="code" emit-value map-options
             outlined dense :label="`第 ${index + 1} 行目的庫位`" :loading="loading" :disable="saving" />

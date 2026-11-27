@@ -61,8 +61,8 @@ const canReverse = computed(() => canAdjust.value && !detailLoading.value && !de
     leg.groupId === detail.value.movement.groupId && positive(leg.bin?.binId)));
 
 const movementLabels = {
-  RECEIPT: "收貨", ISSUE: "出庫", OPENING: "期初庫存", BIN_MOVE: "庫位移動",
-  STATUS_TRANSFER: "庫存狀態轉換", ADJUSTMENT: "庫存調整", REVERSAL: "沖銷",
+  RECEIPT: "入庫", ISSUE: "出庫", OPENING: "期初", BIN_MOVE: "庫位移動",
+  STATUS_TRANSFER: "庫存狀態轉換", ADJUSTMENT: "調整", REVERSAL: "沖銷",
   TRANSFER_DISPATCH: "調撥出庫", TRANSFER_RECEIVE: "調撥收貨", STOCKTAKE_VARIANCE: "盤點差異",
   CUSTOMER_RETURN: "客戶退貨", SUPPLIER_RETURN: "供應商退貨"
 };
@@ -73,7 +73,7 @@ const columns = [
   { name: "direction", label: "方向／數量", field: "direction", align: "left" },
   { name: "sku", label: "SKU", field: (row) => row.sku.code, align: "left" },
   { name: "location", label: "位置", field: (row) => row.bin ? `${row.warehouse.code}/${row.bin.code}` : `${row.warehouse.code}/在途`, align: "left" },
-  { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left" },
+  { name: "lot", label: "批號", field: (row) => row.lot?.number ?? "無批號", align: "left" },
   { name: "status", label: "狀態", field: "stockStatus", align: "left", format: stockStatusLabel },
   { name: "source", label: "來源", field: (row) => `${row.source.module}/${row.source.documentType}/${row.source.documentId}`, align: "left" },
   { name: "actions", label: "操作", field: "movementId", align: "right" }
@@ -81,7 +81,7 @@ const columns = [
 const detailColumns = [
   { name: "movementId", label: "異動編號", field: "movementId", align: "left" },
   { name: "sku", label: "SKU", field: (row) => row.sku.code, align: "left" },
-  { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left" },
+  { name: "lot", label: "批號", field: (row) => row.lot?.number ?? "無批號", align: "left" },
   { name: "direction", label: "方向", field: "direction", align: "left", format: (value) => value === "IN" ? "入" : "出" },
   { name: "quantity", label: "數量", field: "quantity", align: "right" },
   { name: "location", label: "位置", field: (row) => row.bin ? `${row.warehouse.code}/${row.bin.code}` : `${row.warehouse.code}/在途`, align: "left" },
@@ -152,7 +152,7 @@ onUnmounted(() => { detailGeneration++; listController?.abort(); detailControlle
 <template>
   <div>
     <PageHeader subtitle="依時間追溯庫存異動、來源、同組明細與沖銷關聯。">
-      <template #actions><InventoryReportDownload label="匯出異動明細 CSV" filename="inventory-movements.csv" :load="exportMovements" /><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
+      <template #actions><InventoryReportDownload label="匯出異動明細 CSV" filename="inventory-movements.csv" :load="exportMovements" /><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批號與效期" to="/inventory/lots" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
       <q-input class="col-6 col-sm-3 col-md-2" v-model="postedFrom" dense outlined type="date" label="異動日期從" />
@@ -164,7 +164,7 @@ onUnmounted(() => { detailGeneration++; listController?.abort(); detailControlle
       <q-input class="col-6 col-sm-3 col-md-2" v-model="skuId" dense outlined inputmode="numeric" label="SKU ID" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="warehouseId" dense outlined inputmode="numeric" label="倉庫 ID" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="binId" dense outlined inputmode="numeric" label="庫位 ID" />
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="lotId" dense outlined inputmode="numeric" label="批次 ID" />
+      <q-input class="col-6 col-sm-3 col-md-2" v-model="lotId" dense outlined inputmode="numeric" label="批號 ID" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="actorId" dense outlined inputmode="numeric" label="操作者 ID" />
     </div>
     <section class="q-px-md q-pb-md" aria-labelledby="movements-heading">

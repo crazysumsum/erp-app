@@ -2,7 +2,7 @@
 export const page = {
   name: "inventory-lots",
   path: "/inventory/lots",
-  title: "批次與效期",
+  title: "批號與效期",
   requires: { permissions: ["inventory.view"] },
   menu: { group: "inventory", icon: "event", order: 30 }
 };
@@ -52,12 +52,12 @@ const expiryOptions = [
 const columns = [
   { name: "skuCode", label: "SKU", field: (row) => row.sku.code, align: "left", sortable: true },
   { name: "skuName", label: "名稱", field: (row) => row.sku.name, align: "left" },
-  { name: "lot", label: "批次", field: "lotNumber", align: "left", sortable: true },
+  { name: "lot", label: "批號", field: "lotNumber", align: "left", sortable: true },
   { name: "expiryDate", label: "效期狀態", field: "expiryDate", align: "left", sortable: true },
   { name: "firstReceiptDate", label: "首次收貨", field: "firstReceiptDate", align: "left", sortable: true },
-  { name: "totalOnHand", label: "現存", field: "totalOnHand", align: "right" },
+  { name: "totalOnHand", label: "在庫數量", field: "totalOnHand", align: "right" },
   { name: "availableOnHand", label: "可用", field: "availableOnHand", align: "right" },
-  { name: "quarantined", label: "隔離", field: "quarantined", align: "right" },
+  { name: "quarantined", label: "隔離數量", field: "quarantined", align: "right" },
   { name: "damaged", label: "損壞", field: "damaged", align: "right" }
 ];
 function filters() {
@@ -95,13 +95,13 @@ onUnmounted(() => controller?.abort());
 
 <template>
   <div>
-    <PageHeader subtitle="查看批次存量、已過期與低效期狀態。">
+    <PageHeader subtitle="查看批號存量、已過期與低效期狀態。">
       <template #actions><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="history" label="庫存異動" to="/inventory/movements" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
       <q-input class="col-6 col-sm-3 col-md-2" v-model="skuId" dense outlined inputmode="numeric" label="SKU ID" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="warehouseId" dense outlined inputmode="numeric" label="倉庫 ID" />
-      <q-input class="col-12 col-sm-6 col-md-2" v-model="lot" dense outlined debounce="300" label="批次" />
+      <q-input class="col-12 col-sm-6 col-md-2" v-model="lot" dense outlined debounce="300" label="批號" />
       <q-select class="col-12 col-sm-6 col-md-2" v-model="status" dense outlined emit-value map-options :options="statusOptions" label="庫存狀態" />
       <q-select class="col-12 col-sm-6 col-md-2" v-model="expiryState" dense outlined emit-value map-options :options="expiryOptions" label="效期" />
       <q-input v-if="expiryState === 'WITHIN_DAYS'" class="col-12 col-sm-6 col-md-2" v-model="withinDays" dense outlined inputmode="numeric" label="到期日數" />
@@ -109,7 +109,7 @@ onUnmounted(() => controller?.abort());
       <q-input class="col-6 col-sm-3 col-md-2" v-model="expiryTo" dense outlined type="date" label="效期到" />
     </div>
     <section class="q-px-md q-pb-md" aria-labelledby="lots-heading">
-      <h2 id="lots-heading" class="text-h6 q-mt-none">批次清單</h2>
+      <h2 id="lots-heading" class="text-h6 q-mt-none">批號清單</h2>
       <DataTable ref="table" :fetch="fetchLots" :columns="columns" :initial-pagination="initialPagination" row-key="lotId">
         <template #body-cell-skuName="{ value }"><EllipsisCell :text="value" max-width="220px" /></template>
         <template #body-cell-lot="{ value }"><EllipsisCell :text="value" max-width="180px" /></template>

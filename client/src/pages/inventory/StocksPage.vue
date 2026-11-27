@@ -61,7 +61,7 @@ const statusOptions = [
 ];
 const availabilityOptions = [
   { label: "全部存量", value: "ALL" }, { label: "有庫存", value: "IN_STOCK" },
-  { label: "無庫存", value: "NO_STOCK" }, { label: "可承諾為零", value: "ZERO_ATP" }
+  { label: "無庫存", value: "NO_STOCK" }, { label: "可承諾數量為零", value: "ZERO_ATP" }
 ];
 const expiryOptions = [
   { label: "全部效期", value: "ALL" }, { label: "未過期", value: "UNEXPIRED" },
@@ -70,11 +70,11 @@ const expiryOptions = [
 const aggregateColumns = [
   { name: "skuCode", label: "SKU", field: (row) => row.sku.code, align: "left", sortable: true },
   { name: "skuName", label: "名稱", field: (row) => row.sku.name, align: "left", sortable: true },
-  { name: "totalOnHand", label: "總現存", field: "totalOnHand", align: "right", sortable: true },
+  { name: "totalOnHand", label: "總在庫數量", field: "totalOnHand", align: "right", sortable: true },
   { name: "availableOnHand", label: "可用", field: "availableOnHand", align: "right", sortable: true },
   { name: "reserved", label: "已預留", field: "reserved", align: "right" },
-  { name: "atp", label: "可承諾", field: "atp", align: "right" },
-  { name: "quarantined", label: "隔離", field: "quarantined", align: "right" },
+  { name: "atp", label: "可承諾數量", field: "atp", align: "right" },
+  { name: "quarantined", label: "隔離數量", field: "quarantined", align: "right" },
   { name: "damaged", label: "損壞", field: "damaged", align: "right" },
   { name: "inTransit", label: "在途", field: "inTransit", align: "right" },
   { name: "actions", label: "操作", field: (row) => row.sku.skuId, align: "right" }
@@ -82,10 +82,10 @@ const aggregateColumns = [
 const bucketColumns = [
   { name: "warehouse", label: "倉庫", field: (row) => row.warehouse.code, align: "left", sortable: true },
   { name: "bin", label: "庫位", field: (row) => row.bin.code, align: "left", sortable: true },
-  { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left", sortable: true },
+  { name: "lot", label: "批號", field: (row) => row.lot?.number ?? "無批號", align: "left", sortable: true },
   { name: "expiryDate", label: "效期", field: (row) => row.lot?.expiryDate ?? "—", align: "left", sortable: true },
   { name: "stockStatus", label: "狀態", field: "stockStatus", align: "left", sortable: true },
-  { name: "onHand", label: "現存", field: "onHand", align: "right", sortable: true },
+  { name: "onHand", label: "在庫數量", field: "onHand", align: "right", sortable: true },
   { name: "allocated", label: "已分配", field: "allocated", align: "right" },
   { name: "available", label: "可分配", field: "bucketFree", align: "right", sortable: true }
 ];
@@ -177,18 +177,18 @@ onUnmounted(() => { aggregateController?.abort(); bucketController?.abort(); sum
 
 <template>
   <div>
-    <PageHeader subtitle="先查看 SKU 庫存摘要，再按倉庫、庫位、批次和狀態查看明細。">
+    <PageHeader subtitle="先查看 SKU 庫存摘要，再按倉庫、庫位、批號和狀態查看明細。">
       <template #actions>
         <InventoryReportDownload label="匯出結存數量 CSV" filename="inventory-stocks.csv" :load="exportStocks" />
-        <q-btn flat icon="event" label="批次與效期" to="/inventory/lots" />
+        <q-btn flat icon="event" label="批號與效期" to="/inventory/lots" />
         <q-btn flat icon="history" label="庫存異動" to="/inventory/movements" />
       </template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
-      <q-input class="col-12 col-sm-6 col-md-3" v-model="search" dense outlined debounce="300" clearable label="搜尋 SKU Code、名稱或條碼"><template #prepend><q-icon name="search" /></template></q-input>
+      <q-input class="col-12 col-sm-6 col-md-3" v-model="search" dense outlined debounce="300" clearable label="搜尋 SKU 代碼、名稱或條碼"><template #prepend><q-icon name="search" /></template></q-input>
       <q-input class="col-6 col-sm-3 col-md-2" v-model="warehouseId" dense outlined inputmode="numeric" label="倉庫 ID" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="binId" dense outlined inputmode="numeric" label="庫位 ID" />
-      <q-input class="col-12 col-sm-6 col-md-2" v-model="lot" dense outlined debounce="300" label="批次" />
+      <q-input class="col-12 col-sm-6 col-md-2" v-model="lot" dense outlined debounce="300" label="批號" />
       <q-select class="col-12 col-sm-6 col-md-3" v-model="status" dense outlined emit-value map-options :options="statusOptions" label="庫存狀態" />
       <q-select class="col-12 col-sm-6 col-md-3" v-model="availability" dense outlined emit-value map-options :options="availabilityOptions" label="存量" />
       <q-select class="col-12 col-sm-6 col-md-3" v-model="expiryState" dense outlined emit-value map-options :options="expiryOptions" label="效期" />
@@ -211,8 +211,8 @@ onUnmounted(() => { aggregateController?.abort(); bucketController?.abort(); sum
       <q-banner v-if="summaryError" role="alert" class="bg-negative text-white q-mb-md">{{ summaryError }} <template #action><q-btn flat label="重試摘要" @click="loadSummary" /></template></q-banner>
       <div class="row q-col-gutter-sm q-mb-md" aria-label="SKU 數量摘要">
         <q-card v-for="item in [
-          ['現存', selectedSku.totalOnHand], ['可用', selectedSku.availableOnHand],
-          ['已預留', selectedSku.reserved], ['可承諾', selectedSku.atp], ['隔離', selectedSku.quarantined],
+          ['在庫數量', selectedSku.totalOnHand], ['可用', selectedSku.availableOnHand],
+          ['已預留', selectedSku.reserved], ['可承諾數量', selectedSku.atp], ['隔離數量', selectedSku.quarantined],
           ['損壞', selectedSku.damaged], ['在途', selectedSku.inTransit]
         ]" :key="item[0]" flat bordered class="col-6 col-sm-3 col-lg"><q-card-section class="q-pa-sm"><div class="text-caption text-grey-8">{{ item[0] }}</div><div class="text-h6">{{ item[1] ?? '—' }}</div></q-card-section></q-card>
       </div>

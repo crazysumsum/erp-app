@@ -38,7 +38,7 @@ async function loadLots(sku = props.modelValue.sku) {
     if (current !== generation) return;
     lots.value.push(...response.rows); lotPage.value = page; lotTotal.value = response.rowsNumber;
   } catch (cause) {
-    if (current === generation) error.value = cause.message || "無法載入批次，請重試。";
+    if (current === generation) error.value = cause.message || "無法載入批號，請重試。";
   } finally { if (current === generation) lotLoading.value = false; }
 }
 function select() {
@@ -54,7 +54,7 @@ onUnmounted(() => { generation++; });
   <div>
     <div class="row q-col-gutter-sm items-start">
       <q-input class="col-12 col-sm-8" :model-value="code" @update:model-value="changeCode" outlined dense
-        :label="`第 ${lineNumber} 行 SKU Code`" :disable="disabled" clearable @keydown.enter.prevent="lookup" />
+        :label="`第 ${lineNumber} 行 SKU 代碼`" :disable="disabled" clearable @keydown.enter.prevent="lookup" />
       <div class="col-12 col-sm-4"><q-btn outline color="primary" label="查找 SKU" :disable="!validCode || disabled || loading" :loading="loading" @click="lookup" /></div>
     </div>
     <div v-if="loading" role="status" class="q-mt-sm">正在查找 SKU…</div>
@@ -67,10 +67,10 @@ onUnmounted(() => { generation++; });
     <template v-if="modelValue.sku && modelValue.sku.trackingPolicy !== 'none'">
       <q-select class="q-mt-sm" :model-value="modelValue.lotId" :options="lots" option-value="lotId"
         :option-label="lot => `${lot.lotNumber} · ${lot.expiryDate || '無效期'}`" emit-value map-options outlined dense clearable
-        :label="`第 ${lineNumber} 行批次`" :disable="disabled" :loading="lotLoading"
+        :label="`第 ${lineNumber} 行批號`" :disable="disabled" :loading="lotLoading"
         @update:model-value="emit('update:modelValue', { sku: modelValue.sku, lotId: $event }); emit('dirty')" />
-      <div v-if="!lotLoading && !lots.length" role="status" class="q-mt-sm">尚無可選批次，不能儲存此行。</div>
-      <q-btn v-if="lots.length < lotTotal || !lots.length" flat label="載入批次" :disable="disabled" :loading="lotLoading" @click="loadLots()" />
+      <div v-if="!lotLoading && !lots.length" role="status" class="q-mt-sm">尚無可選批號，不能儲存此行。</div>
+      <q-btn v-if="lots.length < lotTotal || !lots.length" flat label="載入批號" :disable="disabled" :loading="lotLoading" @click="loadLots()" />
     </template>
   </div>
 </template>

@@ -92,7 +92,7 @@ test("TC-022 @technical Stock URL state, keyboard drill-down and distinct quanti
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "SKU-3 Widget 的庫存明細" })).toBeVisible();
   await expect(page.getByText("已過期 2026-09-27")).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "現存", exact: true })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "在庫數量", exact: true })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "已分配" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "可分配" })).toBeVisible();
   await expect(page).toHaveURL(/skuId=3/);
@@ -107,7 +107,7 @@ test("TC-022 @technical loading failure retries, empty permissions fail closed",
   await page.getByRole("button", { name: "重試" }).click();
   await expect(page.getByText("SKU-3", { exact: true })).toBeVisible();
   state.aggregateEmpty = true;
-  await page.getByLabel("搜尋 SKU Code、名稱或條碼").fill("不存在");
+  await page.getByLabel("搜尋 SKU 代碼、名稱或條碼").fill("不存在");
   await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
   expect(state.unexpected).toEqual([]);
 
@@ -141,7 +141,7 @@ for (const width of [375, 768, 1024, 1440]) {
   test(`TC-022 @technical ${width}px inquiry pages remain usable without body overflow`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await installApi(page);
-    for (const [path, heading] of [["/inventory/stocks", "庫存總覽"], ["/inventory/lots", "批次與效期"], ["/inventory/movements", "庫存異動"]]) {
+    for (const [path, heading] of [["/inventory/stocks", "庫存總覽"], ["/inventory/lots", "批號與效期"], ["/inventory/movements", "庫存異動"]]) {
       await page.goto(path);
       await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
