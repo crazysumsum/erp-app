@@ -4,6 +4,7 @@ import {
   assertLastActiveAdminPreserved,
   assertNoPermissionEscalation,
   lastAdminProtectedError,
+  SYSTEM_ADMIN_ROLE,
   newlyGrantedPermissions
 } from "../authorization/adminGuard.js";
 import { assertActorFresh, loadPermissionNamesForUser, loadRoleNamesForUser } from "../authorization/directoryLookups.js";
@@ -344,7 +345,7 @@ export class UserAdminService {
       });
       const target = await this.#requireUser(connection, id);
 
-      await this.#assertCanManageAccount(connection, actor, id);
+      const currentRoleNames = await this.#assertCanManageAccount(connection, actor, id);
 
       if (target.status !== "active") {
         return this.#toSummary(target);
@@ -353,7 +354,6 @@ export class UserAdminService {
       // 純函式的預檢查用「這個帳號現在還算不算 active admin」建模成一次角色
       // 變更：currentRoleNames 是他現在的角色，nextRoleNames 給空陣列——停用
       // 之後他不再能以任何身份行動，效果等同角色被拔光。
-      const currentRoleNames = await loadRoleNamesForUser(connection, id);
       const otherActiveAdminCount = await this.#otherActiveAdminCount(connection, id);
       assertLastActiveAdminPreserved({
         currentRoleNames,
@@ -603,11 +603,23 @@ export class UserAdminService {
 
   async #assertCanManageAccount(connection, actor, targetId) {
     // Both callers use SERIALIZABLE so the checked grants stay current through the write.
-    // Delegating a bank permission does not grant control of the account that holds it.
+    const targetRoles = await loadRoleNamesForUser(connection, targetId);
+    if (targetRoles.includes(SYSTEM_ADMIN_ROLE) && !actor.roles.includes(SYSTEM_ADMIN_ROLE)) {
+      throw new ApplicationError("Managing a system-admin account requires the system-admin role", {
+        code: "PERMISSION_ESCALATION_DENIED",
+        publicCode: "PERMISSION_ESCALATION_DENIED",
+        statusCode: 403,
+        publicMessage: "只有系統管理員可以管理此帳號"
+      });
+    }
+
     assertNoPermissionEscalation({
+      actorRoles: actor.roles,
       actorPermissions: actor.permissions,
-      grantedPermissions: await loadPermissionNamesForUser(connection, targetId)
+      grantedPermissions: await loadPermissionNamesForUser(connection, targetId),
+      delegationTargetIsActor: Number(targetId) === Number(actor.id)
     });
+    return targetRoles;
   }
 
   async #requireUser(connection, id) {
