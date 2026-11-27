@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam extended the functional-case approval suspension through go-live in PR #395. PM 07edcfa6 and 855144b7 authorized the TASK-036/037 scope on 2026-11-26. PM fde02d88 and 0b316242 directed the exact ordinary merge and admission handoff. Source e88e94f59e676ce1b803053422779232729bf57b on main a79d737682525021b6acfb40f534e3a84e0b484e. Non-author review and trusted CI digest registration apply.",
+  "decision": "Sam extended the functional-case approval suspension through go-live in PR #395. PM 07edcfa6 and 855144b7 authorized the TASK-036/037 scope on 2026-11-26. PM fde02d88 and 0b316242 directed the exact ordinary merge and admission handoff. Source e88e94f59e676ce1b803053422779232729bf57b on main a79d737682525021b6acfb40f534e3a84e0b484e. Non-author review and trusted CI digest registration apply. 依 TL 安全審核 S-05（PM 711aaf1e、26da249d）。Exact functional source ca060d9f80654bc6f6c93c31797c4ab58680be31. Existing registered cases and routine workflow unchanged.",
   "purpose": "Verify the strict whole-shipment reversal contract, invoice and return prerequisites, cost-fenced Recovery and the browser operation and access flows.",
   "data": "Each of five native cases seeds one private sales order, one warehouse and one shipment. Fixtures use one line or two lines with a maximum of three stock balances, including one zero-picked line. Schema checks use in-memory commands. Each private browser case uses one shipped synthetic order.",
   "concurrency": "Existing server CI discovery and shards are unchanged. Each native test uses its own schema and bounded operations on one shipment. The explicit local Playwright config uses one worker and zero retries.",
@@ -23,7 +23,7 @@
     {
       "path": "client/e2e/fulfillment-shipping-management/reversal.validation.mjs",
       "mode": "100644",
-      "blob": "a43a5a1a166e6112708ad9e0b0b52086b6d34429",
+      "blob": "2b472553447c5b30eb42cf658e7a50adbb46b3d8",
       "kind": "functional",
       "cases": [
         "native reversal dialog handles stale versions, real return occupancy and the final shipment and print status",
@@ -34,7 +34,7 @@
     {
       "path": "server/test/fulfillment/shipmentReversalSchemas.test.js",
       "mode": "100644",
-      "blob": "08684ea48f9b99bb4ffcff0536e77ac4fc2b89c8",
+      "blob": "06d8714a3007f4a3fd9416f1476dc9bfbcb1fa8a",
       "kind": "functional",
       "cases": [
         "Shipment Reverse command accepts only one whole shipment and both confirmations",
