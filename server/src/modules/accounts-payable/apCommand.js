@@ -7,7 +7,7 @@ const invalid = (field) => apError("AP_INPUT_INVALID", { field });
 const EVENT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const AMOUNT = /^\d{1,15}(?:\.\d{1,4})?$/u;
 const MAX_SEQUENCE = 999999;
-const PREFIX = Object.freeze({ INVOICE: "APV", PAYMENT: "PMT" });
+const PREFIX = Object.freeze({ INVOICE: "APV", PAYMENT: "PMT", CREDIT_NOTE: "SCN", REFUND: "SRF" });
 
 // ---- 輸入驗證：錯誤只帶欄位路徑，不帶值 ----
 
@@ -73,7 +73,7 @@ export function formatUnits(units) {
 
 // ---- 編號 ----
 
-/** 年度流水號（APV-YYYY-000001／PMT-YYYY-000001）。年度取確認當刻的本地日期；取號時鎖該年該類的一列。 */
+/** 年度流水號。年度取確認當刻的本地日期；取號時鎖該年該類的一列。 */
 export async function nextDocumentNumber(tx, { documentType, time, nowMs }) {
   const year = Number(time.fileDate(time.at(nowMs)).slice(0, 4));
   await tx.execute(`INSERT INTO ap_document_sequences (document_type, business_year, updated_at) VALUES (?, ?, ?)

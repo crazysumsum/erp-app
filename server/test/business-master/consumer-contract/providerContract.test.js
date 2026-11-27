@@ -187,7 +187,11 @@ test("TC-020 all six absent consumer modules report explicit NOT_INSTALLED, neve
 });
 
 test("TC-020 AR impact fails closed when the schema probe omits the credit table count", async () => {
-  const database = { async query() { return [[{ present: 0 }]]; } };
+  const database = {
+    async query(sql) {
+      return [[sql.includes("'ar_credit_notes'") ? { present: 0 } : { present: 0, credit_present: 0 }]];
+    }
+  };
   const admin = createBusinessMasterAdminService(factoryServices(database));
 
   await assert.rejects(admin.impactRegistry.preview({

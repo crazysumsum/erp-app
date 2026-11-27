@@ -75,7 +75,9 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "returns.customer.mgmt", description: "建立、取消及過帳客戶退貨" }),
   Object.freeze({ name: "returns.supplier.mgmt", description: "建立、取消及過帳退回供應商" }),
   Object.freeze({ name: "ar.credit.mgmt", description: "管理應收貸項單及貸項核銷" }),
-  Object.freeze({ name: "ar.refund.mgmt", description: "管理客戶退款記錄" })
+  Object.freeze({ name: "ar.refund.mgmt", description: "管理客戶退款記錄" }),
+  Object.freeze({ name: "ap.credit.mgmt", description: "管理應付貸項單及核銷" }),
+  Object.freeze({ name: "ap.refund.mgmt", description: "管理供應商退款" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

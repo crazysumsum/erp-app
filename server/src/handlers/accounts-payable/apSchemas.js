@@ -1,6 +1,8 @@
 import { ApCommandRunner } from "../../modules/accounts-payable/apCommand.js";
 import { apError } from "../../modules/accounts-payable/apErrors.js";
 import { ApInquiryService } from "../../modules/accounts-payable/ApInquiryService.js";
+import { ApCreditNoteInquiry } from "../../modules/accounts-payable/ApCreditNoteInquiry.js";
+import { ApCreditNoteService } from "../../modules/accounts-payable/ApCreditNoteService.js";
 import { ApInvoiceService } from "../../modules/accounts-payable/ApInvoiceService.js";
 import { ApPaymentService, PAYMENT_METHODS } from "../../modules/accounts-payable/ApPaymentService.js";
 import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMasterProvider.js";
@@ -11,6 +13,7 @@ import { readSupplierInvoiceSourcesInTransaction } from "../../modules/purchasin
 export const AP_VIEW_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ap.view"] } });
 export const AP_PAYMENT_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ap.payment.mgmt"] } });
 export const AP_INVOICE_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ap.invoice.mgmt"] } });
+export const AP_CREDIT_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ap.credit.mgmt"] } });
 
 const object = (properties, required = Object.keys(properties)) => ({ type: "object", required, additionalProperties: false, properties });
 export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
@@ -70,8 +73,31 @@ export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
     quantity: { type: "string", pattern: "^\\d+$" }, poUnitPrice: AMOUNT, poLineAmount: AMOUNT, invoiceUnitPrice: NULLABLE_AMOUNT,
     lineAmount: AMOUNT, amountOverrideReason: TEXT, description: TEXT }) },
   allocations: { type: "array", items: object({ id: ID, paymentId: ID, paymentNumber: NULLABLE_TEXT, paymentDate: DATE, amount: AMOUNT,
-    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) }
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) },
+  creditAllocations: { type: "array", items: object({ id: ID, creditNoteId: ID, creditNoteNumber: NULLABLE_TEXT, creditDate: DATE,
+    amount: AMOUNT, status: { enum: ["ACTIVE", "UNAPPLIED"] }, isOrigin: { type: "boolean" }, createdAt: TIME }) }
 }));
+
+const CREDIT_AMOUNTS = { totalAmount: AMOUNT, appliedAmount: AMOUNT, refundedAmount: AMOUNT, availableAmount: AMOUNT };
+const CREDIT_SUMMARY = {
+  id: ID, number: NULLABLE_TEXT, status: INVOICE_STATUS, version: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT,
+  supplierId: ID, supplierCode: TEXT, supplierName: TEXT, currencyCode: CURRENCY, currencyDecimalPlaces: { type: "integer", minimum: 0, maximum: 4 },
+  supplierCreditReference: TEXT, supplierReturnId: NULLABLE_SOURCE_ID, creditDate: DATE, ...CREDIT_AMOUNTS
+};
+export const CREDIT_LIST_QUERY = Object.freeze(object({ ...PAGE, invoiceId: ID, status: INVOICE_STATUS, supplierId: ID, currencyCode: CURRENCY }, []));
+export const CREDIT_LIST_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100, items: object(CREDIT_SUMMARY) },
+  total: { type: "integer", minimum: 0 }, ...PAGE }));
+export const CREDIT_DETAIL_RESPONSE = Object.freeze(object({
+  ...CREDIT_SUMMARY, reason: TEXT, notes: TEXT, voidReason: TEXT, createdByLabel: TEXT, confirmedByLabel: TEXT, voidedByLabel: TEXT,
+  createdAt: TIME, confirmedAt: NULLABLE_TIME, voidedAt: NULLABLE_TIME, allowedActions: actions("update", "confirm", "cancel", "allocate", "void"),
+  lines: { type: "array", items: object({ id: ID, lineNo: ID, invoiceLineId: ID, supplierReturnLineId: NULLABLE_SOURCE_ID,
+    baseQuantity: NULLABLE_SOURCE_ID, amount: AMOUNT, description: TEXT }) },
+  allocations: { type: "array", items: object({ id: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT, amount: AMOUNT,
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, isOrigin: { type: "boolean" }, createdByLabel: TEXT, createdAt: TIME,
+    unappliedByLabel: TEXT, unappliedAt: NULLABLE_TIME, allowedActions: actions("unapply") }) }
+}));
+export const CREDIT_COMMAND_RESPONSE = Object.freeze(object({ ...COMMAND, ...CREDIT_AMOUNTS, allocationId: ID },
+  [...Object.keys(COMMAND), ...Object.keys(CREDIT_AMOUNTS)]));
 export const INVOICE_COMMAND_RESPONSE = Object.freeze(object({ ...COMMAND, status: INVOICE_STATUS, totalAmount: AMOUNT }));
 export const INVOICED_RECEIPTS_QUERY = Object.freeze(object({ goodsReceiptIds: { type: "string", pattern: "^[1-9]\\d{0,19}(,[1-9]\\d{0,19}){0,99}$" } }));
 export const INVOICED_RECEIPTS_RESPONSE = Object.freeze(object({ items: { type: "array", items: object({
@@ -116,4 +142,13 @@ export function apInvoiceService(services) {
 
 export function apInquiryService(services) {
   return new ApInquiryService({ database: services.require("mysqldatabase"), time: services.require("time") });
+}
+
+export function apCreditService(services) {
+  const database = services.require("mysqldatabase"), time = services.require("time");
+  return new ApCreditNoteService({ commands: new ApCommandRunner({ database, time }), time });
+}
+
+export function apCreditInquiry(services) {
+  return new ApCreditNoteInquiry({ database: services.require("mysqldatabase") });
 }

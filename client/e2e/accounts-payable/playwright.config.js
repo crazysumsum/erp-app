@@ -16,6 +16,7 @@ export default defineConfig({
   testDir: ".",
   testMatch: "ap-flow.spec.js",
   workers: 1,
+  retries: 0,
   timeout: 120_000,
   expect: { timeout: 10_000 },
   outputDir: path.join(output, "ap-browser"),
