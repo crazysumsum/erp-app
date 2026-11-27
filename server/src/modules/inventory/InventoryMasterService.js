@@ -185,6 +185,37 @@ export class InventoryMasterService {
     return { items: rows.map((row) => warehouseProjection(row)), total: Number(count.total), page, pageSize };
   }
 
+  async listWarehouseReferences(input = {}) {
+    const { page, pageSize, status, search } = pageInput({ status: "ALL", pageSize: 20, ...input }, WAREHOUSE_SORTS, "code");
+    const offset = (page - 1) * pageSize;
+    if (pageSize > 50 || !Number.isSafeInteger(offset)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "page" });
+    const where = [];
+    const params = [];
+    if (status !== "ALL") {
+      where.push("status = ?");
+      params.push(status);
+    }
+    if (search) {
+      const escaped = search.replace(/[!%_\\]/gu, "!$&");
+      const term = `%${escaped}%`;
+      where.push("(warehouse_code LIKE ? ESCAPE '!' OR warehouse_name LIKE ? ESCAPE '!')");
+      params.push(term, term);
+    }
+    const clause = where.length ? ` WHERE ${where.join(" AND ")}` : "";
+    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM inventory_warehouses${clause}`, params);
+    const [rows] = await this.database.query(
+      `SELECT id, warehouse_code, warehouse_name, status FROM inventory_warehouses${clause}
+        ORDER BY warehouse_code ASC, id ASC LIMIT ? OFFSET ?`,
+      [...params, pageSize, offset]
+    );
+    return {
+      items: rows.map((row) => ({ id: Number(row.id), code: row.warehouse_code, name: row.warehouse_name, status: row.status })),
+      total: Number(count.total),
+      page,
+      pageSize
+    };
+  }
+
   async getWarehouse(warehouseId) {
     const id = positiveId(warehouseId, "warehouseId");
     const [[row]] = await this.database.query("SELECT * FROM inventory_warehouses WHERE id = ?", [id]);
