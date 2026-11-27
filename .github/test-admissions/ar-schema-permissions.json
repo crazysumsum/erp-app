@@ -117,7 +117,7 @@
     {
       "path": "server/test/permissionCatalogueConventions.test.js",
       "mode": "100644",
-      "blob": "4dbe2a47f4f67dd8fb650bdf378535124c6c5b35",
+      "blob": "5dbd022cce4f06ddfd5469e6a34ea66c6587e837",
       "kind": "functional",
       "cases": [
         "every permission a handler demands exists in the catalogue",
