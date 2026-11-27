@@ -72,7 +72,7 @@ test("@uat UAT-010 with approval on a CLERK submits to APPROVER-A; the Supplier 
   // 「待我審批」只係指派畀自己嘅（REV-120 L-2）。
   const { page: other } = await as("APPROVER-B");
   await other.goto("/suppliers/approvals");
-  await expect(other.getByText("冇資料").or(other.locator("tbody tr").first())).toBeVisible();
+  await expect(other.getByText("沒有資料").or(other.locator("tbody tr").first())).toBeVisible();
   await expect(other.locator("tbody tr", { hasText: code })).toHaveCount(0);
   expect(approverProblems).toEqual([]);
   await page.goto(`/suppliers/audit?target=${code}`);
@@ -231,7 +231,7 @@ test("@uat UAT-040 a CLERK without settings permission is refused by the page an
 
   await page.goto("/suppliers/settings");
   await expect(page).toHaveURL(/\/403$/u);
-  await expect(page.getByText("你冇權限查看呢一頁。")).toBeVisible();
+  await expect(page.getByText("你沒有權限查看此頁。")).toBeVisible();
   await evidence(page, testInfo, "forbidden");
   // 用 CLERK 自己嘅正確密碼：拒絕要嚟自權限，唔係密碼錯（REV-120 H-1）。
   expect(await moduleCall(page, "/src/services/supplierSettings.js", "update",

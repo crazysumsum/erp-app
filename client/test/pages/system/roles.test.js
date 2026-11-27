@@ -189,7 +189,7 @@ describe("pages/system/RolesPage.vue", () => {
       await flushPromises();
 
       const userMgmtCheckbox = body.findAll(".q-checkbox").find((el) => el.text().includes("user.mgmt"));
-      expect(userMgmtCheckbox.text()).toContain("你自己冇呢個權限");
+      expect(userMgmtCheckbox.text()).toContain("你沒有此權限");
       expect(userMgmtCheckbox.classes()).toContain("disabled");
     });
 
@@ -213,7 +213,7 @@ describe("pages/system/RolesPage.vue", () => {
       await submitDialog(body, "儲存");
 
       expect(roleService.list).toHaveBeenCalledTimes(2);
-      expect(body.text()).toContain("有人喺你之前已經改過");
+      expect(body.text()).toContain("其他人已變更");
     });
   });
 

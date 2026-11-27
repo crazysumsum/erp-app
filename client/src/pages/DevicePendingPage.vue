@@ -25,20 +25,20 @@ const COPY = {
   DEVICE_PENDING_APPROVAL: {
     icon: "hourglass_top",
     colour: "warning",
-    title: "呢台設備等緊審批",
-    body: "你嘅帳號同密碼冇問題。基於保安要求，每一台新設備都要經管理員批准先可以使用系統。請聯絡管理員，批准之後再登入一次即可。"
+    title: "此設備正等待審批",
+    body: "帳號及密碼已通過驗證。請聯絡管理員核准此設備，再重新登入。"
   },
   DEVICE_REJECTED: {
     icon: "block",
     colour: "negative",
-    title: "呢台設備嘅申請已被拒絕",
-    body: "管理員拒絕咗呢台設備嘅綁定申請。如果你認為係誤會，請直接聯絡管理員。"
+    title: "此設備的申請已被拒絕",
+    body: "管理員已拒絕此設備的綁定申請。如有疑問，請聯絡管理員。"
   },
   DEVICE_REVOKED: {
     icon: "gpp_bad",
     colour: "negative",
-    title: "呢台設備已被停用",
-    body: "呢台設備嘅存取權已被撤銷。如果你仍然需要喺呢台機使用系統，請聯絡管理員重新批准。"
+    title: "此設備已停用",
+    body: "此設備的存取權已被撤銷。如需繼續使用，請聯絡管理員重新核准。"
   }
 };
 
@@ -73,7 +73,7 @@ function backToLogin() {
     </q-card-section>
 
     <q-card-section v-if="deviceId">
-      <div class="text-caption text-grey-7">設備編號（報畀管理員對認）</div>
+      <div class="text-caption text-grey-7">設備編號（供管理員核對）</div>
       <!-- 淨係顯示頭 16 個字元：足夠喺兩台待審設備之間分辨，而完整嘅
            thumbprint 對人嚟講讀唔到亦記唔到。 -->
       <div class="text-caption">{{ deviceId.slice(0, 16) }}…</div>

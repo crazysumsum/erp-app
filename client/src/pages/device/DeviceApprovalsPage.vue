@@ -45,7 +45,7 @@ async function act(row, { verb, label }) {
   // 一台設備長期存取權，值得多呢一步確認。一個對話框同時做埋確認同收密碼。
   const password = await promptPassword({
     title: `${label}設備`,
-    message: `確定要${label}「${row.username}」嘅設備「${row.label || "未命名"}」？請輸入你的密碼確認。`,
+    message: `確定要${label}「${row.username}」的設備「${row.label || "未命名"}」？請輸入你的密碼確認。`,
     okLabel: label
   });
 
@@ -74,7 +74,7 @@ const reject = (row) => act(row, { verb: "reject", label: "拒絕" });
 
 <template>
   <div>
-    <PageHeader title="設備審批" subtitle="每一台新設備都要經人手批准先可以使用系統" />
+    <PageHeader title="設備審批" subtitle="新設備須經管理員核准後才可使用系統" />
 
     <div class="q-px-md q-pb-md">
     <DataTable ref="table" :fetch="fetchPending" :columns="columns" row-key="id" sticky-actions>

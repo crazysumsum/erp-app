@@ -170,7 +170,7 @@ describe("DataTable", () => {
     const wrapper = mountDataTable({ fetch: fetchFn, columns });
     await flushPromises();
 
-    expect(wrapper.text()).toContain("冇資料");
+    expect(wrapper.text()).toContain("沒有資料");
   });
 
   // DEF-032：QTable 喺冇 row 嘅時候一律出 #no-data，連載入緊同讀取失敗都係，
@@ -184,26 +184,26 @@ describe("DataTable", () => {
     const wrapper = mount(DataTable, { props: { fetch: fetchFn, columns }, slots, global: { plugins: [Quasar] } });
     await flushPromises();
     expect(wrapper.text()).toContain("載入中…");
-    expect(wrapper.text()).not.toMatch(/冇資料|搵唔到任何訂單/);
+    expect(wrapper.text()).not.toMatch(/沒有資料|搵唔到任何訂單/);
 
     reject(new Error("讀取失敗"));
     await flushPromises();
     expect(wrapper.text()).toContain("讀取失敗");
-    expect(wrapper.text()).not.toMatch(/冇資料|搵唔到任何訂單|載入中/);
+    expect(wrapper.text()).not.toMatch(/沒有資料|搵唔到任何訂單|載入中/);
 
     fetchFn.mockResolvedValueOnce({ rows: [], rowsNumber: 0 });
     await wrapper.find('button[aria-label="重試"]').trigger("click");
     await flushPromises();
-    expect(wrapper.text()).toMatch(slots ? /搵唔到任何訂單/ : /冇資料/);
+    expect(wrapper.text()).toMatch(slots ? /搵唔到任何訂單/ : /沒有資料/);
     expect(wrapper.text()).not.toContain("載入中");
   });
 
   it("客戶端模式跟 loading prop：載入緊唔出空狀態文案", async () => {
     const wrapper = mountDataTable({ columns, rows: [], loading: true });
     expect(wrapper.text()).toContain("載入中…");
-    expect(wrapper.text()).not.toContain("冇資料");
+    expect(wrapper.text()).not.toContain("沒有資料");
     await wrapper.setProps({ loading: false });
-    expect(wrapper.text()).toContain("冇資料");
+    expect(wrapper.text()).toContain("沒有資料");
   });
 
   it("頁面自己嘅 #no-data 照樣收到 QTable 嘅 scope（filter、message）", async () => {
@@ -226,7 +226,7 @@ describe("DataTable", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("搵唔到任何訂單");
-    expect(wrapper.text()).not.toContain("冇資料");
+    expect(wrapper.text()).not.toContain("沒有資料");
   });
 
   // 每頁筆數揀項一定要傳埋落 QTable：漏咗嘅話 QTable 會用返自己內建嗰套

@@ -70,7 +70,7 @@ function isRoleAssignable(role) {
 
 const roleOptions = computed(() =>
   roles.value.map((role) => ({
-    label: isRoleAssignable(role) ? role.name : `${role.name}（你自己冇呢個權限）`,
+    label: isRoleAssignable(role) ? role.name : `${role.name}（你沒有此權限）`,
     value: role.id,
     disable: !isRoleAssignable(role)
   }))
@@ -182,7 +182,7 @@ async function submitRolesAssignment() {
       rolesDialogUser.value = fresh;
       const freshIds = fresh.roles.map((role) => role.id);
       expectedRoleIds.value = freshIds;
-      rolesDialogError.value = "有人喺你之前已經改過呢個用戶嘅角色，畫面已經更新做最新一組，請重新選擇。";
+      rolesDialogError.value = "其他人已變更此用戶的角色。畫面已更新，請重新選擇。";
     }
     throw error;
   }
@@ -387,7 +387,7 @@ async function toggleStatus(row) {
                 label="確認初始密碼"
                 type="password"
                 filled
-                :rules="[(val) => val === createForm.newUserPassword || '同「初始密碼」不一致']"
+                :rules="[(val) => val === createForm.newUserPassword || '與初始密碼不一致']"
               />
               <q-option-group v-model="createForm.roleIds" type="checkbox" :options="roleOptions" />
               <q-separator />
@@ -396,7 +396,7 @@ async function toggleStatus(row) {
                 label="你的密碼"
                 type="password"
                 filled
-                hint="用嚟確認係你本人操作"
+                hint="請輸入你的密碼以確認身分"
               />
 
               <div class="row justify-end q-gutter-sm">
@@ -502,7 +502,7 @@ async function toggleStatus(row) {
                 label="確認新密碼"
                 type="password"
                 filled
-                :rules="[(val) => val === resetForm.newUserPassword || '同「新密碼」不一致']"
+                :rules="[(val) => val === resetForm.newUserPassword || '與新密碼不一致']"
               />
               <q-input
                 v-model="resetForm.reason"

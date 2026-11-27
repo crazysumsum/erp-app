@@ -127,7 +127,7 @@ const permissionOptions = computed(() =>
   permissions.value.map((permission) => ({
     label: isPermissionGrantable(permission)
       ? `${permission.name} — ${permission.description}`
-      : `${permission.name} — ${permission.description}（你自己冇呢個權限）`,
+      : `${permission.name} — ${permission.description}（你沒有此權限）`,
     value: permission.id,
     disable: !isPermissionGrantable(permission)
   }))
@@ -168,7 +168,7 @@ async function submitPermissionsAssignment() {
         permissionsDialogRole.value = fresh;
         expectedPermissionIds.value = permissionIdsOf(fresh);
       }
-      permissionsDialogError.value = "有人喺你之前已經改過呢個角色嘅權限，畫面已經更新做最新一組，請重新選擇。";
+      permissionsDialogError.value = "其他人已變更此角色的權限。畫面已更新，請重新選擇。";
     }
     throw error;
   }

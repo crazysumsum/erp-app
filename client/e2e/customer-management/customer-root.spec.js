@@ -369,12 +369,12 @@ test("@technical DEF-034002 typed Customer searches display the newest results a
   await expect(detail).toBeVisible();
   await search.fill("No matching customer");
   await expect(page).toHaveURL(/q=No\+matching\+customer(?:&|$)/u);
-  await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
+  await expect(page.getByText("沒有資料", { exact: true })).toBeVisible();
   await expect(detail).toHaveCount(0);
   await search.clear();
   await expect(page).not.toHaveURL(/[?&]q=/u);
   await expect(detail).toBeVisible();
-  await expect(page.getByText("冇資料", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("沒有資料", { exact: true })).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 
@@ -414,11 +414,11 @@ for (const olderOutcome of ["success", "error"]) {
     await olderRequested.promise;
     await search.fill("No match");
     await expect(page).toHaveURL(/q=No\+match(?:&|$)/u);
-    await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
+    await expect(page.getByText("沒有資料", { exact: true })).toBeVisible();
     releaseOlder.resolve();
     await Promise.all(olderCompletions);
     await page.evaluate(() => new Promise((resolve) => { requestAnimationFrame(() => requestAnimationFrame(resolve)); }));
-    await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
+    await expect(page.getByText("沒有資料", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "查看 CUS-007 詳情" })).toHaveCount(0);
     await expect(page.getByText("Earlier search failed", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "重試", exact: true })).toHaveCount(0);

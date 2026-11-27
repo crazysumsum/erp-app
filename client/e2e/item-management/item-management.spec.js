@@ -209,7 +209,7 @@ test.describe.serial("Item Management executable UAT", () => {
     const search = page.getByPlaceholder("搜尋 SKU Code、條碼或名稱");
     await search.fill(`${marker}-missing`);
     await expect(page).toHaveURL(new RegExp(`q=${marker}-missing`));
-    await expect(page.getByText("冇資料")).toBeVisible();
+    await expect(page.getByText("沒有資料")).toBeVisible();
     await page.reload();
     await expect(search).toHaveValue(`${marker}-missing`);
   });

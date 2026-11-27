@@ -108,13 +108,13 @@ test("TC-022 @technical loading failure retries, empty permissions fail closed",
   await expect(page.getByText("SKU-3", { exact: true })).toBeVisible();
   state.aggregateEmpty = true;
   await page.getByLabel("搜尋 SKU Code、名稱或條碼").fill("不存在");
-  await expect(page.getByText("冇資料", { exact: true })).toBeVisible();
+  await expect(page.getByText("沒有資料", { exact: true })).toBeVisible();
   expect(state.unexpected).toEqual([]);
 
   const denied = await page.context().newPage();
   await installApi(denied, { permissions: [] });
   await denied.goto("/inventory/stocks");
-  await expect(denied.getByRole("heading", { name: "冇權限" })).toBeVisible();
+  await expect(denied.getByRole("heading", { name: "沒有權限" })).toBeVisible();
   await denied.close();
 });
 

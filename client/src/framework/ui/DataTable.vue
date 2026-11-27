@@ -61,7 +61,7 @@ const pagination = ref(
   props.initialPagination ?? {
     page: 1,
     rowsPerPage: appConfig.defaultPageSize,
-    rowsNumber: 0,
+    ...(isServerMode.value ? { rowsNumber: 0 } : {}),
     sortBy: null,
     descending: false
   }
@@ -154,7 +154,7 @@ onMounted(() => {
         <div v-if="displayLoading" class="full-width text-center text-grey-7 q-pa-lg">載入中…</div>
         <template v-else-if="!error">
           <slot name="no-data" v-bind="slotProps">
-            <div class="full-width text-center text-grey-7 q-pa-lg">冇資料</div>
+            <div class="full-width text-center text-grey-7 q-pa-lg">沒有資料</div>
           </slot>
         </template>
       </template>

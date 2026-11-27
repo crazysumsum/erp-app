@@ -31,7 +31,7 @@ const newPassword = ref("");
 const confirmPassword = ref("");
 
 const required = (val) => !!val || "必填";
-const confirmMatches = (val) => val === newPassword.value || "同「新密碼」唔一致";
+const confirmMatches = (val) => val === newPassword.value || "與新密碼不一致";
 
 async function submit() {
   const result = await userService.changeOwnPassword({
@@ -60,7 +60,7 @@ function cancel() {
       <q-card-section>
         <h1 class="text-h6 q-ma-none">{{ forced ? "首次登入必須修改密碼" : "修改密碼" }}</h1>
         <div v-if="forced" class="text-caption text-grey-7">
-          管理員為你設定咗初始密碼，第一次登入要先換一個只有你自己知道嘅密碼。
+          首次登入須更換管理員設定的初始密碼。請設定只有你知道的新密碼。
         </div>
       </q-card-section>
 

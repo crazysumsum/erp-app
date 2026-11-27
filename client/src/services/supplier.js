@@ -29,8 +29,9 @@ export default {
   },
 
   /** `filters`：status、currencyCode、paymentTermId、missing*、includeArchived、created／updated 範圍（epoch ms）；空值唔送。 */
-  list({ page, rowsPerPage, sortBy, descending, filter, ...filters }) {
+  list({ page, rowsPerPage, sortBy, descending, filter, signal, ...filters }) {
     return httpClient.get("/api/v1/suppliers", {
+      signal,
       params: { page, pageSize: rowsPerPage, q: filter || undefined, ...listFilters(filters), sortBy: sortBy || undefined, descending }
     }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
