@@ -5,6 +5,7 @@ export const page={name:"fulfillment-queue",path:"/fulfillment/queue",title:"履
 import {computed,reactive,ref,toRaw,watch} from "vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import FulfillmentPagination from "@/components/fulfillment/FulfillmentPagination.vue";
 import {can} from "@/framework/authorization/can.js";
 import {useSessionStore} from "@/stores/session.js";
 import fulfillment,{fulfillmentFailure} from "@/services/fulfillment.js";
@@ -37,15 +38,15 @@ const columns=[{name:"number",label:"銷售訂單",field:"salesOrderNumber",alig
    <div class="col-12 col-md-4"><q-select v-model="filters.salesOrderStatus" label="訂單狀態" :options="['CONFIRMED','PARTIALLY_FULFILLED'].map(value=>({value,label:statusLabels[value]}))" emit-value map-options clearable outlined dense /></div>
    <div class="col-6 col-md-3"><q-input v-model="filters.requestedDateFrom" type="date" label="要求送貨日期由" outlined dense /></div><div class="col-6 col-md-3"><q-input v-model="filters.requestedDateTo" type="date" label="要求送貨日期至" outlined dense /></div>
    <div class="col-6 col-md-3"><q-select v-model="filters.hasBackorder" label="欠貨" :options="[{value:'true',label:'有欠貨'},{value:'false',label:'沒有欠貨'}]" emit-value map-options clearable outlined dense /></div><div class="col-6 col-md-3"><q-select v-model="filters.hasActiveWork" label="已有進行中工作" :options="[{value:'true',label:'有'},{value:'false',label:'沒有'}]" emit-value map-options clearable outlined dense /></div>
-   <div class="col-6 col-md-4"><q-select v-model="filters.sortBy" label="排序" :options="[{value:'requestedDeliveryDate',label:'要求送貨日期'},{value:'orderDate',label:'訂單日期'},{value:'salesOrderNumber',label:'銷售訂單編號'}]" emit-value map-options outlined dense /></div><div class="col-6 col-md-3"><q-select v-model="filters.descending" label="排序方向" :options="[{value:false,label:'升序'},{value:true,label:'降序'}]" emit-value map-options outlined dense /></div><div class="col-6 col-md-2"><q-select v-model="filters.pageSize" label="每頁筆數" :options="[20,50,100]" outlined dense /></div>
+   <div class="col-6 col-md-4"><q-select v-model="filters.sortBy" label="排序" :options="[{value:'requestedDeliveryDate',label:'要求送貨日期'},{value:'orderDate',label:'訂單日期'},{value:'salesOrderNumber',label:'銷售訂單編號'}]" emit-value map-options outlined dense /></div><div class="col-6 col-md-3"><q-select v-model="filters.descending" label="排序方向" :options="[{value:false,label:'升序'},{value:true,label:'降序'}]" emit-value map-options outlined dense /></div>
   </div><div class="row q-gutter-sm q-my-md"><q-btn color="primary" label="搜尋" @click="apply(filters)" /><q-btn flat label="清除篩選" @click="apply({})" /></div>
   <q-banner v-if="error" role="alert" class="bg-warning text-dark q-mb-md">{{ error }}<template #action><q-btn flat label="重新載入" @click="load" /></template></q-banner>
   <DataTable :key="route.fullPath" :rows="data.items" :columns="columns" :loading="loading" sticky-actions :initial-pagination="{page:1,rowsPerPage:100}">
    <template #body-cell-status="{row}"><q-td><q-badge :color="statusColors[row.salesOrderStatus]" :label="statusLabels[row.salesOrderStatus]" /></q-td></template>
    <template #body-cell-summary="{row}"><q-td><q-expansion-item :label="`查看 ${row.lines.length} 行數量`"><div v-for="line in row.lines" :key="line.id" class="q-pa-sm">{{ line.skuCode }}：訂購 {{ line.orderedBaseQuantity }}／已預留 {{ line.reservedOutstandingBaseQuantity }}／欠貨 {{ line.backorderedBaseQuantity }}／已履約 {{ line.fulfilledBaseQuantity }}／已計劃 {{ line.activeClaimedBaseQuantity }}／可履約 {{ line.fulfillableBaseQuantity }}</div></q-expansion-item><span>{{ row.hasActiveWork?'有進行中工作':'沒有進行中工作' }}</span></q-td></template>
    <template #body-cell-actions="{row}"><q-td><q-btn v-if="operate" flat label="建立履約工作" :aria-label="`建立履約工作：${row.salesOrderNumber}`" :disable="loading||!!pending||journalUnreadable" @click="selected=row" /><span v-else>僅供查詢</span></q-td></template>
-   <template #no-data><p v-if="!error" role="status">{{ Object.keys(route.query).length?'沒有符合篩選條件的可履約訂單':'目前沒有可履約訂單' }}</p></template>
-   <template #bottom><div class="row items-center q-gutter-sm q-pa-sm"><span>第 {{ data.page }} 頁・本頁 {{ data.items.length }} 筆</span><q-btn v-if="data.page>1" flat label="返回第一頁" :disable="loading" @click="first" /><q-btn flat label="下一頁" :disable="loading||!data.hasMore" @click="next" /></div></template>
+   <template #no-data><div class="full-width"><p v-if="!error" role="status">{{ Object.keys(route.query).length?'沒有符合篩選條件的可履約訂單':'目前沒有可履約訂單' }}</p><FulfillmentPagination v-model="filters.pageSize" :result="data" :loading="loading" @back="first" @next="next" /></div></template>
+   <template #bottom><FulfillmentPagination v-model="filters.pageSize" :result="data" :loading="loading" @back="first" @next="next" /></template>
   </DataTable>
  </section><q-dialog :model-value="!!selected" persistent @update:model-value="value=>{if(!value)selected=null}"><q-card style="width: 1200px; max-width: 96vw"><q-card-section><FulfillmentCreatePanel v-if="selected" :source="selected" :on-save="save" :draft="rejectedDraft" :uncertain="!!pending" @saved="saved" @reload="reloadSource" /></q-card-section><q-card-actions align="right"><q-btn flat label="關閉建立視窗" @click="selected=null" /></q-card-actions></q-card></q-dialog>
 </div></template>
