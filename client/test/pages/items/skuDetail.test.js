@@ -248,6 +248,29 @@ describe("pages/items/SkuDetailPage.vue", () => {
     expect(itemService.activateSku).toHaveBeenCalledWith(10, { reason: "重新上架", version: 1 });
   });
 
+  it("SKU 啟用被拒：顯示逐條原因並可關閉對話框", async () => {
+    promptReason.mockResolvedValue("重新上架測試");
+    itemService.activateSku.mockRejectedValueOnce({
+      code: "ITEM_NOT_ACTIVATABLE",
+      message: "資料尚未符合啟用條件",
+      details: { issues: [
+        { field: "categoryId", message: "商品必須屬於一個啟用中的末端分類" },
+        { field: "shelfLifeDays", message: "追蹤政策為效期時，保存期限必須是正整數" }
+      ] }
+    });
+    const { body } = await mountPage({ sku: { ...SKU, status: "inactive" } });
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "啟用").trigger("click");
+    await flushPromises();
+    const dialog = body.get(".q-dialog");
+    expect(dialog.findAll("li").map((row) => row.text())).toEqual([
+      "商品必須屬於一個啟用中的末端分類", "追蹤政策為效期時，保存期限必須是正整數"
+    ]);
+    await dialog.findAll("button").find((btn) => btn.text() === "關閉").trigger("click");
+    await flushPromises();
+    expect(body.find(".q-dialog li").exists()).toBe(false);
+  });
+
   it("父 Item 未 Active：唔顯示「啟用」（就算 SKU 本身係 Inactive）", async () => {
     const { body } = await mountPage({
       sku: { ...SKU, status: "inactive", item: { ...SKU.item, status: "draft" } }

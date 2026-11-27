@@ -14,10 +14,11 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import { can } from "@/framework/authorization/can.js";
 import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
-import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
+import { itemActivationIssueMessages, mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import SkuEditor from "@/components/items/SkuEditor.vue";
 import AttributeValueList from "@/components/items/AttributeValueList.vue";
 import ItemMediaPanel from "@/components/items/ItemMediaPanel.vue";
+import SkuActivationIssuesDialog from "@/components/items/SkuActivationIssuesDialog.vue";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -215,6 +216,7 @@ const showDeactivate = computed(() => sku.value?.status === "active");
 const showDiscontinue = computed(() => sku.value && ["active", "inactive"].includes(sku.value.status));
 const showArchive = computed(() => sku.value && ["draft", "inactive", "discontinued"].includes(sku.value.status));
 const showRestore = computed(() => sku.value?.status === "archived");
+const activationIssues = ref([]);
 
 async function runLifecycleAction(action, successVerb) {
   try {
@@ -225,7 +227,10 @@ async function runLifecycleAction(action, successVerb) {
     if (error.code === "VERSION_CONFLICT") {
       sku.value = await itemService.getSku(skuId.value);
     }
-    notifyError(error.message || "操作失敗");
+    activationIssues.value = itemActivationIssueMessages(error);
+    if (activationIssues.value.length === 0) {
+      notifyError(error.message || "操作失敗");
+    }
   }
 }
 
@@ -453,6 +458,8 @@ async function releaseBarcodeFlow({ id, barcode, version }) {
         />
       </template>
     </div>
+
+    <SkuActivationIssuesDialog v-model="activationIssues" />
 
     <q-dialog v-model="showCodeChangeDialog" persistent>
       <q-card style="min-width: 420px">
