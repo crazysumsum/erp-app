@@ -500,7 +500,7 @@ integrationTest("S1: an unpaid confirmed AP invoice blocks archive and names the
     await h.db.execute("UPDATE ap_invoices SET allocated_amount = 5, outstanding_amount = 0 WHERE id = ?", [invoice.insertId]);
     const changed = await lifecycle("code/change", id, { supplierCode: `AP-I2-${t}`, reason: REASON, version: 1 });
     assert.deepEqual([changed.status, changed.code], [409, "SUPPLIER_REFERENCED"]);
-    assert.deepEqual(changed.json.error.details.references, { 應付發票及付款: 1 });
+    assert.deepEqual(changed.json.error.details.references, { 應付文件: 1 });
     assert.equal((await row(id)).supplier_code, `AP-I-${t}`);
 
     const archived = await lifecycle("archive", id, { version: 1, reason: REASON });
@@ -526,7 +526,7 @@ integrationTest("S1: a historical AP payment alone locks the Code and reports th
     const deleted = await lifecycle("delete", id, { version: 1, reason: REASON });
     for (const result of [changed, deleted]) {
       assert.deepEqual([result.status, result.code], [409, "SUPPLIER_REFERENCED"], result.text);
-      assert.deepEqual(result.json.error.details.references, { 應付發票及付款: 1 });
+      assert.deepEqual(result.json.error.details.references, { 應付文件: 1 });
     }
     const stored = await row(id);
     assert.deepEqual([stored.supplier_code, stored.status, Number(stored.version)], [`AP-P-${t}`, "draft", 1]);

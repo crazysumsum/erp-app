@@ -23,6 +23,17 @@ export default {
     return httpClient.get("/api/v1/ap-payments", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getPayment(id, { signal } = {}) { return httpClient.get(`/api/v1/ap-payments/${id}`, { signal }); },
+  listCreditNotes({ signal, ...query } = {}) {
+    return httpClient.get("/api/v1/ap-credit-notes", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+  getCreditNote(id, { signal } = {}) { return httpClient.get(`/api/v1/ap-credit-notes/${id}`, { signal }); },
+  createCreditNote(payload) { return write("/api/v1/ap-credit-notes", payload); },
+  updateCreditNote(id, payload) { return write(`/api/v1/ap-credit-notes/${id}/update`, payload); },
+  confirmCreditNote(id, payload) { return write(`/api/v1/ap-credit-notes/${id}/confirm`, payload); },
+  cancelCreditNote(id, payload) { return write(`/api/v1/ap-credit-notes/${id}/cancel`, payload); },
+  voidCreditNote(id, payload) { return write(`/api/v1/ap-credit-notes/${id}/void`, payload); },
+  allocateCreditNote(id, payload) { return write(`/api/v1/ap-credit-notes/${id}/allocations`, payload); },
+  unapplyCreditNote(id, allocationId, payload) { return write(`/api/v1/ap-credit-notes/${id}/allocations/${allocationId}/unapply`, payload); },
   createPayment(payload) { return write("/api/v1/ap-payments", payload); },
   confirmPayment(id, payload) { return write(`/api/v1/ap-payments/${id}/confirm`, payload); },
   cancelPayment(id, payload) { return write(`/api/v1/ap-payments/${id}/cancel`, payload); },

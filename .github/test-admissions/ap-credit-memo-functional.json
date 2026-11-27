@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "decision": "Sam extended ordinary functional admission until production go-live in AGENTS.md (PR #395). PM d4ddb65a authorized the AP Credit Memo integration and functional verification. CI administrator codex-erp-app-ci-01 confirmed new scope ownership in f16ef314. The unchanged migration scope was reviewed in e90452ba at f44b9b0d. Program candidate 867bef55958e1dadd381ca6cd029d967101142d8.",
+  "purpose": "Verify exact supplier credit limits, transactional effects of credit application and reversal, invoice void protection, permissions, cash allocation compatibility, and event replay after a rolled-back draft write.",
+  "data": "Two in-memory cases and four integration cases using one synthetic HTTP/MySQL application, two AP identities, one supplier per integration case, at most two invoices and three invoice lines per case, and one controlled draft write failure. The two migration files define the required disposable schema.",
+  "concurrency": "Existing functional workers. AP cases within a file execute serially; one deterministic failure injection and same-event recovery.",
+  "repetitions": "1 per ordinary functional CI execution.",
+  "thresholds": "All cases pass and assert exact amounts, permissions, rollback and replay. Existing coverage floors apply.",
+  "trigger": "Existing server functional CI discovery on ordinary PR and main workflows. No additional jobs, dispatches or browser jobs.",
+  "cost": "New case timings total about 1.4 seconds locally, excluding shared fixture setup. GitHub runner cost is unmeasured.",
+  "files": [
+    {
+      "path": "server/test/accounts-payable/apCreditDraft.test.js",
+      "mode": "100644",
+      "blob": "63ee2ed4d3b2f15be0f571ffbdfb6a6bd69f0217",
+      "kind": "functional",
+      "cases": [
+        "Credit caps distribute the original rounded total by remainder, then by original line number",
+        "Credit line limits include prior confirmed amounts and repeated invoice-line references"
+      ]
+    },
+    {
+      "path": "server/test/integration/apCreditNotes.integration.test.js",
+      "mode": "100644",
+      "blob": "cb4e3a3c94b87554ae8eab17b6d02449665982bf",
+      "kind": "functional",
+      "cases": [
+        "AP credits apply the original cap and reverse only their own invoice effects",
+        "AP credit HTTP endpoints separate permissions and keep invoice cash allocations distinct",
+        "AP invoice void also detects confirmed credits without an origin allocation",
+        "A deadlock reported while writing AP credit lines rolls back the header and event, allowing retry"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0136_seed_ap_credit_permissions.js",
+      "mode": "100644",
+      "blob": "3e723fe805c86b7741c6b8ba21868f58a0b27704",
+      "kind": "support"
+    },
+    {
+      "path": "server/database/migrations/0137_create_ap_credit_tables.js",
+      "mode": "100644",
+      "blob": "6fa611772d61c29bc96a5db4f56ad9615d9bb246",
+      "kind": "support"
+    }
+  ]
+}
