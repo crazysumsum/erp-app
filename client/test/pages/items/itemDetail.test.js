@@ -241,6 +241,53 @@ describe("pages/items/ItemDetailPage.vue", () => {
     expect(itemService.activateItem).toHaveBeenCalledWith(1, { skuIds: [10], reason: "首次上架啟用", version: 1 });
   });
 
+  it("商品啟用被拒：在原對話框逐條顯示啟用問題，再試時清除舊問題", async () => {
+    const draftItem = { ...ITEM, status: "draft", skus: [{ ...ITEM.skus[0], status: "draft" }] };
+    itemService.activateItem.mockRejectedValueOnce({
+      code: "ITEM_NOT_ACTIVATABLE",
+      message: "資料尚未符合啟用條件",
+      details: { issues: [
+        { field: "uoms", message: "SKU 必須有基本單位" },
+        { field: "uoms", message: "SKU 必須有預設銷售單位" }
+      ] }
+    }).mockRejectedValueOnce({ code: "SERVICE_UNAVAILABLE", message: "服務暫時無法使用" });
+    const { body } = await mountPage({ item: draftItem });
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "啟用").trigger("click");
+    const dialog = body.get(".q-dialog");
+    await dialog.get("textarea").setValue("首次上架啟用");
+    const submit = dialog.findAll("button").find((btn) => btn.text() === "啟用");
+    await submit.trigger("click");
+    await flushPromises();
+
+    expect(dialog.findAll("li").map((row) => row.text())).toEqual([
+      "SKU 必須有基本單位", "SKU 必須有預設銷售單位"
+    ]);
+    expect(dialog.get("textarea").element.value).toBe("首次上架啟用");
+
+    await submit.trigger("click");
+    await flushPromises();
+    expect(dialog.text()).toContain("服務暫時無法使用");
+    expect(dialog.findAll("li")).toHaveLength(0);
+  });
+
+  it("商品詳情的 SKU 列啟用被拒時顯示啟用問題", async () => {
+    promptReason.mockResolvedValue("重新上架測試");
+    itemService.activateSku.mockRejectedValueOnce({
+      code: "ITEM_NOT_ACTIVATABLE",
+      message: "資料尚未符合啟用條件",
+      details: { issues: [{ field: "shelfLifeDays", message: "追蹤政策為效期時，保存期限必須是正整數" }] }
+    });
+    const { body } = await mountPage({ item: { ...ITEM, skus: [{ ...ITEM.skus[0], status: "inactive" }] } });
+
+    await body.findAll(".q-btn").find((btn) => btn.attributes("aria-label")?.includes("VITC-90")).trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item__section").find((el) => el.text() === "啟用").trigger("click");
+    await flushPromises();
+
+    expect(body.get(".q-dialog li").text()).toBe("追蹤政策為效期時，保存期限必須是正整數");
+  });
+
   it("停產商品：用 promptPassword({ requireReason: true })", async () => {
     promptPassword.mockResolvedValue({ reason: "業務決定停產", password: "hunter2" });
     itemService.discontinueItem.mockResolvedValue({ ...ITEM, status: "discontinued", version: 2 });
