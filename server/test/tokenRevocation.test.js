@@ -165,6 +165,17 @@ test("S-06 rejects a version the database does not confirm", async () => {
   assert.equal(service.snapshot.get("42"), 3);
 });
 
+test("S-06 reports service unavailable when a newer version cannot be confirmed", async t => {
+  const database = fakeDatabase({ rows: [{ subject: "42", version: 3 }] });
+  const { service } = createService({ database });
+  await service.initialize();
+  t.mock.method(database, "query", async () => { throw new Error("database unavailable"); });
+  await assert.rejects(service.isRevoked({ sub: "42", ver: 4 }), {
+    statusCode: 503, code: "REVOCATION_UNAVAILABLE", publicCode: "SERVICE_UNAVAILABLE"
+  });
+  assert.equal(service.snapshot.get("42"), 3);
+});
+
 test("a token without ver is treated as revoked", async () => {
   const database = fakeDatabase({
     rows: [{ subject: "42", version: 3 }]
