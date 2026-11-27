@@ -12,7 +12,7 @@
     {
       "path": "client/test/services/arReceipts.test.js",
       "mode": "100644",
-      "blob": "37c02a5c00904873ec5129e8fc3d3b119d8c40f2",
+      "blob": "bc88f11583232b9c91ea4efa317465410040553e",
       "kind": "functional",
       "cases": [
         "收款命令用 body.eventId 做 Idempotency-Key，路徑同契約一致",
