@@ -5,12 +5,13 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import {confirm} from "@/framework/ui/confirm.js";
 import {useSessionStore} from "@/stores/session.js";
 import fulfillment,{fulfillmentFailure} from "@/services/fulfillment.js";
+import {stockLocationLabel} from "./fulfillmentPresentation.js";
 import {loadPickScope,buildPickIntent,validatePickIntent,isDefinitivePickRejection} from "./fulfillmentPickModel.js";
 const props=defineProps({document:{type:Object,required:true}}),emit=defineEmits(["saved","reload"]),session=useSessionStore();
 const scope=ref(null),loading=ref(false),busy=ref(false),error=ref(""),errorSummary=ref(null),pending=ref(null),rejectedDraft=ref(null),unreadable=ref(false),stale=ref(false),amounts=reactive({}),reasons=reactive({});let controller;
 watch(error,value=>{if(value)nextTick(()=>errorSummary.value?.focus());});
 const operate=computed(()=>session.permissions.includes("fulfillment.operation")),canPick=computed(()=>operate.value&&props.document.allowedActions.includes("pickConfirm")),storageKey=()=>`fulfillment.pickConfirm:${session.user?.id}:${props.document.id}`;
-const draftKey=()=>`fulfillment.pickDraft:${session.user?.id}:${props.document.id}`,rejectedRows=computed(()=>rejectedDraft.value?.lines.flatMap(line=>line.allocations.map(row=>({...row,fulfillmentLineId:line.fulfillmentLineId,shortPickReason:line.shortPickReason})))??[]);
+const draftKey=()=>`fulfillment.pickDraft:${session.user?.id}:${props.document.id}`,rejectedRows=computed(()=>rejectedDraft.value?.lines.flatMap(line=>line.allocations.map(row=>({...row,shortPickReason:line.shortPickReason}))).map((row,index)=>({...row,sequence:index+1}))??[]);
 function restore(){controller?.abort();scope.value=null;loading.value=false;busy.value=false;error.value="";pending.value=null;rejectedDraft.value=null;unreadable.value=false;stale.value=false;for(const key of Object.keys(amounts))delete amounts[key];for(const key of Object.keys(reasons))delete reasons[key];if(!operate.value)return;try{const raw=sessionStorage.getItem(storageKey()),draft=sessionStorage.getItem(draftKey());if(raw)pending.value=validatePickIntent(JSON.parse(raw));if(draft)rejectedDraft.value=validatePickIntent(JSON.parse(draft));}catch{unreadable.value=true;error.value="無法讀取已保存的原揀貨操作；請保留此頁並聯絡管理員";}}
 watch([()=>props.document.id,()=>session.user?.id,()=>session.permissions.join('|')],restore,{immediate:true});onBeforeUnmount(()=>controller?.abort());
 async function load(){controller?.abort();controller=new AbortController();const signal=controller.signal;loading.value=true;error.value="";try{const result=await loadPickScope(fulfillment.getFulfillment,props.document.id,props.document.version,signal);if(signal.aborted)return;scope.value=result;stale.value=false;for(const row of result.allocations)amounts[row.id]??=row.availableBaseQuantity;}catch(e){if(!signal.aborted)error.value=e.code==="FULFILLMENT_PICK_SCOPE_INVALID"?e.message:fulfillmentFailure(e).message;}finally{if(!signal.aborted)loading.value=false;}}
@@ -30,8 +31,13 @@ async function send(input){
  }finally{if(session.user?.id===actor&&props.document.id===id)busy.value=false;}
 }
 async function submit(){if(stale.value||!canPick.value)throw new Error("請重新載入目前資料後核對；原輸入仍保留");const actor=session.user.id,id=props.document.id,body=buildPickIntent(scope.value,amounts,reasons,crypto.randomUUID());if(!await confirm({title:"確認揀貨",message:`確認已核對 ${scope.value.allocations.length} 筆分配的實揀數量及短揀原因？`,okLabel:"確認揀貨"}))return;if(session.user?.id!==actor||props.document.id!==id||!canPick.value)return;await send(body);if(error.value)throw new Error(error.value);}
-const columns=[{name:"sku",label:"SKU",field:"fulfillmentLineId",align:"left"},{name:"id",label:"分配 ID",field:"id",align:"left"},{name:"bin",label:"庫位",field:"binCode",align:"left"},{name:"lot",label:"批次",field:"lotNumber",align:"left"},{name:"expiry",label:"到期日",field:row=>row.expiryDate??"無到期日",align:"left"},{name:"available",label:"目前分配量",field:"availableBaseQuantity",align:"right"},{name:"actual",label:"實揀數量（Base）",field:"id",align:"right"}];
-const rejectedColumns=[{name:"line",label:"原履約行 ID",field:"fulfillmentLineId",align:"left"},{name:"allocation",label:"原分配 ID",field:"fulfillmentAllocationId",align:"left"},{name:"quantity",label:"原實揀輸入",field:"pickedBaseQuantity",align:"right"},{name:"reason",label:"原短揀原因",field:"shortPickReason",align:"left"}];
+const pickLine = row => scope.value.lines.find(line => line.id === row.fulfillmentLineId);
+const pickItemLabel = row => {
+ const line = pickLine(row);
+ return line.lineNo ? `第 ${line.lineNo} 行 · ${line.skuCode}` : line.skuCode;
+};
+const columns=[{name:"sku",label:"SKU",field:"fulfillmentLineId",align:"left"},{name:"bin",label:"庫位",field:"binCode",align:"left"},{name:"lot",label:"批次",field:"lotNumber",align:"left"},{name:"expiry",label:"到期日",field:row=>row.expiryDate??"無到期日",align:"left"},{name:"available",label:"目前分配量",field:"availableBaseQuantity",align:"right"},{name:"actual",label:"實揀數量（基本單位）",field:"id",align:"right"}];
+const rejectedColumns=[{name:"sequence",label:"原輸入次序",field:row=>`第 ${row.sequence} 筆`,align:"left"},{name:"quantity",label:"原實揀輸入",field:"pickedBaseQuantity",align:"right"},{name:"reason",label:"原短揀原因",field:"shortPickReason",align:"left"}];
 </script>
 <template><section v-if="operate&&(canPick||pending||rejectedDraft||unreadable)" aria-label="確認揀貨" class="q-mt-lg"><h2 class="text-h6">確認揀貨</h2><p>核對所有分配的實揀量。短揀必須填寫原因；全部為零時請使用取消履約工作。</p>
  <q-banner v-if="pending" role="status" class="bg-warning text-dark q-mb-md">原揀貨結果尚未確認，輸入已鎖定；請沿用原操作確認結果。<template #action><q-btn flat label="確認原揀貨操作結果" :loading="busy" @click="send(pending)" /></template></q-banner>
@@ -40,7 +46,7 @@ const rejectedColumns=[{name:"line",label:"原履約行 ID",field:"fulfillmentLi
  <q-btn v-if="canPick&&!pending&&!unreadable" flat :label="scope?'重新載入完整揀貨明細':'載入完整揀貨明細'" :loading="loading" :disable="busy" @click="load" />
  <div v-if="loading" role="status" aria-busy="true"><q-skeleton type="rect" height="120px" /><span>正在讀取完整分配，請稍候</span></div>
  <FormPanel v-if="scope" :on-submit="submit" v-slot="{submitting}"><p>原資料版本 {{ scope.version }}；目前頁面版本 {{ document.version }}。重新載入不會靜默調整已輸入數量。</p><fieldset class="fulfillment-pick-fields" :disabled="busy||!!pending||unreadable||submitting" :inert="busy||!!pending||unreadable||submitting"><legend>實揀數量及短揀原因</legend>
-  <DataTable :rows="scope.allocations" :columns="columns" :initial-pagination="{page:1,rowsPerPage:100}"><template #body-cell-sku="{row}"><q-td>{{ scope.lines.find(line=>line.id===row.fulfillmentLineId).skuCode }}</q-td></template><template #body-cell-actual="{row}"><q-td><q-input v-model="amounts[row.id]" :aria-label="`實揀數量：分配 ${row.id}`" label="實揀數量" inputmode="numeric" maxlength="16" dense outlined /></q-td></template></DataTable>
+  <DataTable :rows="scope.allocations" :columns="columns" :initial-pagination="{page:1,rowsPerPage:100}"><template #body-cell-sku="{row}"><q-td>{{ pickItemLabel(row) }}</q-td></template><template #body-cell-actual="{row}"><q-td><q-input v-model="amounts[row.id]" :aria-label="`實揀數量：${pickItemLabel(row)} · ${stockLocationLabel(row, document.warehouse?.code)}`" label="實揀數量" inputmode="numeric" maxlength="16" dense outlined /></q-td></template></DataTable>
   <q-input v-for="line in scope.lines" :key="line.id" v-model="reasons[line.id]" :label="`短揀原因：${line.skuCode}`" hint="短揀時填寫5至500字" type="textarea" maxlength="1000" outlined class="q-mt-sm" />
  </fieldset><q-btn color="primary" type="submit" label="提交確認揀貨" :loading="submitting||busy" :disable="!!pending||unreadable||stale||loading||!canPick" class="q-mt-md" /></FormPanel>
 </section></template>

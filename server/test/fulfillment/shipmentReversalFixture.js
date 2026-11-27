@@ -18,7 +18,18 @@ import { up as archiveUp,FULFILLMENT_ARCHIVE_TABLES } from "../../database/migra
 export const reversalTables=["sales_orders","sales_order_lines","sales_order_line_reservations","sales_operation_requests","sales_order_status_history","sales_audit_logs","inventory_reservations","inventory_stock_controls","inventory_stock_balances","inventory_allocations","inventory_movements","inventory_operation_requests","inventory_audit_logs","fulfillments","fulfillment_lines","fulfillment_line_reservation_claims","fulfillment_allocations","fulfillment_status_history","fulfillment_audit_logs","fulfillment_operation_requests","shipments","shipment_lines","shipment_issue_details","shipment_status_history","shipment_reversals","shipment_reversal_details"];
 export const inventoryTables=["inventory_reservations","inventory_stock_controls","inventory_stock_balances","inventory_allocations","inventory_movements","inventory_operation_requests","inventory_audit_logs"];
 export const fixtureRegistry=Object.freeze({version:"NO_DOWNSTREAM_MODULES_V1",returns:"NO_PROVIDER_REQUIRED",invoicing:"NO_PROVIDER_REQUIRED"});
-export async function facts(f,tables=reversalTables){const result={};for(const table of tables)result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;}
+export async function facts(f, tables = reversalTables) {
+ const result = {};
+ for (const table of tables) {
+  const stockBalances = table === "inventory_stock_balances";
+  const projection = stockBalances ? "*, DATE_FORMAT(fifo_anchor_date, '%Y-%m-%d') AS fifo_anchor_calendar_date" : "*";
+  const [rows] = await f.db.query(`SELECT ${projection} FROM ${table} ORDER BY id`);
+  result[table] = stockBalances
+   ? rows.map(({fifo_anchor_calendar_date, ...row}) => ({...row, fifo_anchor_date: fifo_anchor_calendar_date}))
+   : rows;
+ }
+ return result;
+}
 export async function sequence(f){return (await f.db.query("SELECT * FROM fulfillment_document_sequences ORDER BY id"))[0];}
 export async function supportFacts(f){
  const tables=["users","roles","permissions","user_roles","role_permissions","fr_schema_migrations","currencies","supplier_settings","customer_settings","customers","customer_addresses","customer_address_purposes","inventory_warehouses","item_uoms","items","item_categories","item_brands","item_skus","item_sku_uoms","inventory_bins","inventory_lots","sales_archive_batches","sales_archive_order_manifests",...FULFILLMENT_ARCHIVE_TABLES.map(spec=>spec.table)],result={};
@@ -146,8 +157,7 @@ export function assertCommittedReversal(before,after,f){
  for(const row of added("inventory_operation_requests")){assert.equal(row.source_module,"FULFILLMENT");assert.equal(row.source_document_id,f.shipmentId);assert.equal(id(row.actor_user_id),id(f.userId));assert.equal(row.source_event_id,f.command.eventId);assert.equal(row.correlation_id,f.started.correlationId);assert.equal(row.request_id,f.started.correlationId);assert.notEqual(row.completed_at,null);}
  for(const row of added("inventory_audit_logs")){assert.equal(row.action,"movement.reverse");assert.equal(row.outcome,"SUCCEEDED");assert.equal(row.correlation_id,f.started.correlationId);assert.ok(movements.some(movement=>String(movement.operation_request_id)===String(row.operation_request_id)));}
  for(const table of ["sales_order_status_history","sales_audit_logs","fulfillment_status_history","fulfillment_audit_logs","shipment_status_history"])for(const row of added(table)){assert.equal(row.event_id,f.command.eventId);assert.equal(String(row.actor_user_id),String(f.userId));}
- const date=value=>value instanceof Date?value.toISOString().slice(0,10):value;
- for(const balance of before.inventory_stock_balances){const actual=after.inventory_stock_balances.find(row=>String(row.id)===String(balance.id)),legs=issues.filter(row=>String(row.inventory_balance_id)===String(balance.id));assert.equal(date(actual.fifo_anchor_date),legs.length&&Number(balance.on_hand_quantity)===0?f.options.time.fileDate():date(balance.fifo_anchor_date));}
+ for(const balance of before.inventory_stock_balances){const actual=after.inventory_stock_balances.find(row=>String(row.id)===String(balance.id)),legs=issues.filter(row=>String(row.inventory_balance_id)===String(balance.id));assert.equal(actual.fifo_anchor_date,legs.length&&Number(balance.on_hand_quantity)===0?f.options.time.fileDate():balance.fifo_anchor_date);}
 }
 
 export function mapperData(){

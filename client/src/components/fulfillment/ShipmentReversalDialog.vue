@@ -187,7 +187,7 @@ async function submit() {
       :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-white text-dark'" @close="closePreview" @cancel="busy && $event.preventDefault()">
       <h2 :id="titleId" class="text-h6 q-mt-none">沖銷出貨 {{ document.number }}</h2>
       <p>只適用於仍由公司控制的錯誤出貨。貨物已交給客戶時，請辦理客戶退貨。</p>
-      <p>沖銷會回補整張出貨單的原庫位與預留，並更新 Sales Order 已履約數量。需要再次出貨時，請重新履約。</p>
+      <p>沖銷會回補整張出貨單的原庫位與預留，並更新 銷售訂單的已履約數量。需要再次出貨時，請重新履約。</p>
       <p v-if="error" ref="dialogError" role="alert" tabindex="-1">{{ error }}</p>
       <p v-if="loading" role="status">正在核對出貨及原庫位明細…</p>
       <p v-if="busy" role="status">正在提交，請稍候。</p>

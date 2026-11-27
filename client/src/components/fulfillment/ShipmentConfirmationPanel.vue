@@ -35,7 +35,7 @@ async function loadSource(){
 async function submit(){
  if(!allowed.value||props.disabled||busy.value||dialogOpen.value||!source.value||reference.value||unreadable.value)return;
  const actor=session.user?.id,id=props.document.id,version=props.document.version,current=generation;
- dialogOpen.value=true;let accepted;try{accepted=await confirm({title:"確認出貨",message:"確認以上全部實揀數量及送貨資料？成功後會原子扣減庫存並同步 Sales，不能再次出貨。",okLabel:"確認全部出貨"});}finally{dialogOpen.value=false;}if(!accepted)return;
+ dialogOpen.value=true;let accepted;try{accepted=await confirm({title:"確認出貨",message:"確認以上全部實揀數量及送貨資料？確認後會扣減庫存並更新訂單的出貨數量。同一張出貨單只能確認一次。",okLabel:"確認全部出貨"});}finally{dialogOpen.value=false;}if(!accepted)return;
  if(actor!==session.user?.id||id!==props.document.id||version!==props.document.version||current!==generation||!allowed.value||props.disabled||busy.value||reference.value||unreadable.value)return;
  const original=shipmentOriginalReference(crypto.randomUUID()),key=storageKey();busy.value=true;error.value="";
  try{try{sessionStorage.setItem(key,JSON.stringify(original));}catch{unreadable.value=true;error.value="無法保存原確認識別碼，請允許分頁儲存後再試。";return;}
