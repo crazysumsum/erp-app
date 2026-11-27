@@ -20,6 +20,13 @@ import {
 } from "./customerSchemas.js";
 
 const IDEMPOTENT = Object.freeze({ enabled: true });
+const CUSTOMER_SEARCH_QUERY = Object.freeze({
+  ...CUSTOMER_LIST_QUERY,
+  properties: {
+    ...CUSTOMER_LIST_QUERY.properties,
+    q: { ...CUSTOMER_LIST_QUERY.properties.q, not: { pattern: "\\u0000" } }
+  }
+});
 
 function actorInput(req) {
   return {
@@ -47,7 +54,7 @@ class CustomerHandler extends BaseRequestHandler {
 
 export class ListCustomersHandler extends CustomerHandler {
   static handlerName = "listCustomers";
-  static api = { method: "GET", path: "/api/v1/customers", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: EMPTY, query: CUSTOMER_LIST_QUERY }, responseSchema: { 200: CUSTOMER_LIST_RESPONSE } };
+  static api = { method: "GET", path: "/api/v1/customers", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: EMPTY, query: CUSTOMER_SEARCH_QUERY }, responseSchema: { 200: CUSTOMER_LIST_RESPONSE } };
   async execute(req) { return this.response(await this.customer.list({ ...actorInput(req), ...req.input.query })); }
 }
 
