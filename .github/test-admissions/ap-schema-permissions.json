@@ -1,22 +1,23 @@
 {
   "version": 1,
-  "decision": "Functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). PM merge preparation 8bfa9840 and CI administrator owner confirmation 620c4d86 apply to A1 candidate 7c6194bcc8ea4441b848d0ddb829ea541ac34c27. Claude TL independently reviewed the A1 functional candidate 7c6194bcc8ea4441b848d0ddb829ea541ac34c27 (agentmsg 68ff2d9d).",
-  "purpose": "Verify the seven approved AP tables, the four permissions and their system-admin grants, goods receipt references and reservations, invoice and payment balance constraints, immutable audit records, and the installed Business Master impact checker.",
-  "data": "Two cases on the ordinary migrated MySQL fixture. The first reads schema and grants. The second inserts up to two synthetic invoices, two payments, a receipt-line reservation and one audit row in a rolled-back transaction, and probes rejected writes with foreign key checks disabled only on that connection.",
+  "decision": "Functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). PM merge preparation 8bfa9840 and CI administrator owner confirmation 620c4d86 apply to A1 candidate 7c6194bcc8ea4441b848d0ddb829ea541ac34c27. Claude TL independently reviewed the A1 functional candidate 7c6194bcc8ea4441b848d0ddb829ea541ac34c27 (agentmsg 68ff2d9d). AP Credit Memo integration on main 51316c5e follows the same Sam #395 functional decision and PM d4ddb65a. CI administrator codex-erp-app-ci-01 confirmed this existing owner in f16ef314 for program candidate 867bef55958e1dadd381ca6cd029d967101142d8.",
+  "purpose": "Verify eleven AP tables, six permissions and their system-admin grants, receipt and return references, invoice, payment, credit and refund constraints, immutable audit records, and the AP Business Master impact checker.",
+  "data": "Three cases on the ordinary migrated MySQL fixture. One reads schema and grants. The second inserts bounded synthetic invoice, payment, reservation and audit rows in a rolled-back transaction. The third inserts up to four valid credits, two refunds, one credit line and one credit application, plus document sequences and audit samples. Constraint probes disable foreign keys only on their own connection, then roll back.",
   "concurrency": "Serial, one connection per case.",
   "repetitions": "1",
-  "thresholds": "Both cases pass. Exact schema, authorization, constraint, audit and checker assertions. Existing coverage floors remain in place.",
+  "thresholds": "All three cases pass. Exact schema, authorization, balances, constraint, numbering, audit and checker assertions. Existing coverage floors remain in place.",
   "trigger": "Existing ci.yml functional server MySQL shards for admitted PRs and main. Same discovery, workers, jobs and schedule.",
-  "cost": "Two added serial cases in the existing shard. Combined related local validation ran 26 cases in 9 to 10 seconds per timezone. CI time has not been measured.",
+  "cost": "Three serial cases in the existing shard. The three took 0.13–0.14 seconds together on upgraded isolated local databases. CI time has not been measured.",
   "files": [
     {
       "path": "server/test/integration/apMigrations.integration.test.js",
       "mode": "100644",
-      "blob": "594d5888e30a98907865495924642dca267ca95c",
+      "blob": "5fb531bdb8d638a278518eae637b8fcb369208b5",
       "kind": "functional",
       "cases": [
-        "AP installs exactly seven tables and grants the four permissions only to system-admin",
-        "AP balances, invoice reservations, and audit immutability survive direct SQL writes"
+        "AP installs exactly eleven tables and grants the six permissions only to system-admin",
+        "AP balances, invoice reservations, and audit immutability survive direct SQL writes",
+        "AP credit and refund tables enforce amounts and accept their sequence and audit types"
       ]
     },
     {
@@ -34,7 +35,7 @@
     {
       "path": "server/src/modules/authorization/permissionCatalogue.js",
       "mode": "100644",
-      "blob": "2de6138f7cbdcec7df4cc1733da6cb9a5093b6c3",
+      "blob": "9785c7ab92845ce58bac577c6a021b89dd8d7f44",
       "kind": "support"
     }
   ]
