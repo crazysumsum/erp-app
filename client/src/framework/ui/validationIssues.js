@@ -90,3 +90,12 @@ export function unmatchedFieldErrors(fieldErrors, knownFields) {
     .filter(([field]) => !knownFields.has(field))
     .map(([field, message]) => ({ field, message }));
 }
+
+export function itemActivationIssueMessages(error) {
+  if (error.code !== "ITEM_NOT_ACTIVATABLE" || !Array.isArray(error.details?.issues)) {
+    return [];
+  }
+  return error.details.issues
+    .map((issue) => issue?.message)
+    .filter((message) => typeof message === "string" && message.trim());
+}
