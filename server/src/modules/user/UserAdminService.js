@@ -4,9 +4,10 @@ import {
   assertLastActiveAdminPreserved,
   assertNoPermissionEscalation,
   lastAdminProtectedError,
+  SYSTEM_ADMIN_ROLE,
   newlyGrantedPermissions
 } from "../authorization/adminGuard.js";
-import { assertActorFresh, loadRoleNamesForUser } from "../authorization/directoryLookups.js";
+import { assertActorFresh, loadPermissionNamesForUser, loadRoleNamesForUser } from "../authorization/directoryLookups.js";
 import { hashPassword } from "./passwordHash.js";
 import { assertPasswordChanged, assertPasswordStrength } from "./passwordPolicy.js";
 
@@ -344,6 +345,8 @@ export class UserAdminService {
       });
       const target = await this.#requireUser(connection, id);
 
+      const currentRoleNames = await this.#assertCanManageAccount(connection, actor, id);
+
       if (target.status !== "active") {
         return this.#toSummary(target);
       }
@@ -351,7 +354,6 @@ export class UserAdminService {
       // 純函式的預檢查用「這個帳號現在還算不算 active admin」建模成一次角色
       // 變更：currentRoleNames 是他現在的角色，nextRoleNames 給空陣列——停用
       // 之後他不再能以任何身份行動，效果等同角色被拔光。
-      const currentRoleNames = await loadRoleNamesForUser(connection, id);
       const otherActiveAdminCount = await this.#otherActiveAdminCount(connection, id);
       assertLastActiveAdminPreserved({
         currentRoleNames,
@@ -416,7 +418,7 @@ export class UserAdminService {
       });
 
       return this.#toSummary({ ...target, status: "disabled" });
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   /**
@@ -564,6 +566,7 @@ export class UserAdminService {
       });
       const target = await this.#requireUserWithHash(connection, id);
 
+      await this.#assertCanManageAccount(connection, actor, id);
       await assertPasswordChanged(normalizedPassword, target.password_hash);
 
       // 重設密碼的前提通常是舊密碼已經不可信，那麼舊 session 也一樣不可信。
@@ -593,10 +596,31 @@ export class UserAdminService {
       });
 
       return { id: Number(id) };
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   // --- 內部 ------------------------------------------------------------------
+
+  async #assertCanManageAccount(connection, actor, targetId) {
+    // Both callers use SERIALIZABLE so the checked grants stay current through the write.
+    const targetRoles = await loadRoleNamesForUser(connection, targetId);
+    if (targetRoles.includes(SYSTEM_ADMIN_ROLE) && !actor.roles.includes(SYSTEM_ADMIN_ROLE)) {
+      throw new ApplicationError("Managing a system-admin account requires the system-admin role", {
+        code: "PERMISSION_ESCALATION_DENIED",
+        publicCode: "PERMISSION_ESCALATION_DENIED",
+        statusCode: 403,
+        publicMessage: "只有系統管理員可以管理此帳號"
+      });
+    }
+
+    assertNoPermissionEscalation({
+      actorRoles: actor.roles,
+      actorPermissions: actor.permissions,
+      grantedPermissions: await loadPermissionNamesForUser(connection, targetId),
+      delegationTargetIsActor: Number(targetId) === Number(actor.id)
+    });
+    return targetRoles;
+  }
 
   async #requireUser(connection, id) {
     const [rows] = await connection.query(
@@ -613,7 +637,7 @@ export class UserAdminService {
 
   async #requireUserWithHash(connection, id) {
     const [rows] = await connection.query(
-      "SELECT id, username, password_hash FROM users WHERE id = ?",
+      "SELECT id, username, password_hash FROM users WHERE id = ? FOR UPDATE",
       [id]
     );
 
