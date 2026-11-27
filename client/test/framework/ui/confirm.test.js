@@ -69,7 +69,7 @@ describe("confirmDelete", () => {
     expect(Dialog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "刪除確認",
-        message: "確定要刪除「訂單 #1」？呢個操作唔可以復原。",
+        message: "確定要刪除「訂單 #1」？此操作無法復原。",
         ok: expect.objectContaining({ label: "刪除" })
       })
     );

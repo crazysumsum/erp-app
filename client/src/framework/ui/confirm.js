@@ -28,7 +28,7 @@ export function confirm({ title = "確認", message, okLabel = "確認", cancelL
 export function confirmDelete(subject) {
   return confirm({
     title: "刪除確認",
-    message: `確定要刪除「${subject}」？呢個操作唔可以復原。`,
+    message: `確定要刪除「${subject}」？此操作無法復原。`,
     okLabel: "刪除"
   });
 }

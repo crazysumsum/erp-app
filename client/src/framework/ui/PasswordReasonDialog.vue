@@ -26,7 +26,7 @@ const reason = ref("");
 const password = ref("");
 
 const reasonRule = (val) =>
-  (val.length >= 5 && val.length <= 190) || "請輸入 5–190 字元，講清楚為什麼要做呢個操作";
+  (val.length >= 5 && val.length <= 190) || "請輸入 5–190 字元，說明進行此操作的原因";
 const passwordRule = (val) => val.length > 0 || "必填";
 
 async function submit() {
