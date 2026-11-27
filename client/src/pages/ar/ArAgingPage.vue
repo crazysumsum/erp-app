@@ -6,6 +6,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import AgingCsvDownload from "@/components/aging/AgingCsvDownload.vue";
+import ArCustomerFilter from "@/components/ar/ArCustomerFilter.vue";
 import { money } from "@/components/ar/arPresentation.js";
 import ar from "@/services/ar.js";
 
@@ -45,7 +46,7 @@ function exportCsv({ signal }) { return ar.exportAging({ ...appliedQuery.value, 
     <PageHeader subtitle="今日現況：按到期日的逾期日數分桶，只計已確認而仍有未收額的發票。不同幣別分開合計，不可相加；未核銷的收款餘額不在此表。" />
     <div class="q-px-md q-pb-md">
       <div class="row q-col-gutter-md">
-        <div class="col-12 col-sm-6 col-md-4"><q-input v-model="filters.customerId" label="客戶 ID" hint="數字 ID" mask="################" outlined dense @keyup.enter="apply" /></div>
+        <div class="col-12 col-sm-6 col-md-4"><ArCustomerFilter v-model="filters.customerId" :rows="report?.items" @submit="apply" /></div>
         <div class="col-12 col-sm-6 col-md-4"><q-input v-model="filters.currencyCode" label="貨幣代碼" hint="例如 HKD" mask="AAA" outlined dense @keyup.enter="apply" /></div>
       </div>
       <div class="row q-gutter-sm q-mt-md">

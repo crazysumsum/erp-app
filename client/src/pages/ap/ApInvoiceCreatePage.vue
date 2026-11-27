@@ -3,8 +3,9 @@ export const page = { name: "ap-invoice-create", path: "/ap/invoices/new", title
 </script>
 <script setup>
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import ReferencePicker from "@/framework/ui/ReferencePicker.vue";
 import ApCurrencyPicker from "@/components/ap/ApCurrencyPicker.vue";
 import ApExpenseRows from "@/components/ap/ApExpenseRows.vue";
 import ApSupplierPicker from "@/components/ap/ApSupplierPicker.vue";
@@ -15,14 +16,17 @@ import { useSessionStore } from "@/stores/session.js";
 import ap from "@/services/ap.js";
 import purchasing from "@/services/purchasing.js";
 
-const router = useRouter(), session = useSessionStore();
+const route = useRoute(), router = useRouter(), session = useSessionStore();
 const command = useCommandEvent();
 const canReadReceipts = computed(() => session.permissions.includes("purchasing.view"));
 const canSearchSuppliers = computed(() => session.permissions.includes("supplier.view"));
 const mode = ref(canReadReceipts.value ? "receipt" : "expense");
 const key = computed(() => `${session.user?.id}:ap-invoice-create`);
 const receiptSupplier = ref(null), expenseSupplier = ref(null);
-const filter = reactive({ purchaseOrderId: "" });
+const linkedPurchaseOrderId = route.query.purchaseOrderId;
+const initialPurchaseOrderId = typeof linkedPurchaseOrderId === "string" && /^[1-9]\d*$/u.test(linkedPurchaseOrderId) ? linkedPurchaseOrderId : "";
+const purchaseOrderId = ref(initialPurchaseOrderId);
+const purchaseOrder = ref(initialPurchaseOrderId ? { id: initialPurchaseOrderId, number: "已套用採購單" } : null);
 const form = reactive({ currencyCode: "", supplierInvoiceNumber: "", invoiceDate: today(), dueDate: "",
   dueDateReason: "", supplierTotalAmount: "", noPoReason: "", notes: "" });
 const expenses = ref([]);
@@ -40,12 +44,20 @@ onBeforeUnmount(() => controller?.abort());
 watch(mode, () => { error.value = ""; });
 watch(expenseSupplier, (row) => { form.currencyCode = row?.defaultCurrencyCode ?? ""; });
 
+async function searchPurchaseOrders(query, signal) {
+  const { rows } = await purchasing.listPurchaseOrders({ page: 1, rowsPerPage: 20, filter: query, signal });
+  return rows;
+}
+
 async function find(page = 1, fromForm = false) {
   controller?.abort();
   controller = new AbortController();
   const { signal } = controller;
   loading.value = true; lookupError.value = ""; searched.value = true;
-  if (fromForm) loadedFilters.value = { ...filter, supplierId: canSearchSuppliers.value ? receiptSupplier.value?.id : undefined };
+  if (fromForm) loadedFilters.value = {
+    purchaseOrderId: canReadReceipts.value ? purchaseOrder.value?.id : purchaseOrderId.value,
+    supplierId: canSearchSuppliers.value ? receiptSupplier.value?.id : undefined
+  };
   try {
     const { rows, rowsNumber } = await purchasing.listGoodsReceipts({ ...loadedFilters.value, page, rowsPerPage: pageSize, status: "CONFIRMED", signal });
     const hits = await ap.listInvoicedReceipts(rows.map(({ id }) => id), { signal });
@@ -133,7 +145,9 @@ async function submit() {
       <template v-if="mode === 'receipt'">
         <form role="search" method="get" class="row items-start q-gutter-md q-mb-md" @submit.prevent="find(1, true)">
             <ApSupplierPicker v-if="canSearchSuppliers" v-model="receiptSupplier" label="篩選供應商" :disable="locked" class="col-12 col-sm-4" />
-            <q-input v-model="filter.purchaseOrderId" name="purchaseOrderId" label="篩選採購單 ID" inputmode="numeric" pattern="[1-9][0-9]*" :disable="locked" outlined dense />
+            <ReferencePicker v-if="canReadReceipts" v-model="purchaseOrder" label="篩選採購單" hint="輸入完整採購單號或供應商名稱。"
+              :search="searchPurchaseOrders" :option-label="(row) => [row?.number, row?.supplierName].filter(Boolean).join(' — ')" :disable="locked" class="col-12 col-sm-4" />
+            <q-input v-else v-model="purchaseOrderId" name="purchaseOrderId" label="篩選採購單 ID" inputmode="numeric" pattern="[1-9][0-9]*" :disable="locked" outlined dense />
             <q-btn type="submit" label="搜尋已確認收貨" flat :loading="loading" :disable="locked" />
         </form>
         <p v-if="!canSearchSuppliers" class="text-grey-8">依供應商篩選需要「查看供應商」權限。</p>

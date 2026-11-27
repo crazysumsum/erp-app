@@ -3,8 +3,9 @@ export const page = { name: "ar-invoice-create", path: "/ar/invoices/new", title
 </script>
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import ArCustomerFilter from "@/components/ar/ArCustomerFilter.vue";
 import { today } from "@/components/ar/arPresentation.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
@@ -13,10 +14,13 @@ import ar from "@/services/ar.js";
 import shipment from "@/services/shipment.js";
 
 const MAX_SHIPMENTS = 20;
-const router = useRouter(), session = useSessionStore();
+const route = useRoute(), router = useRouter(), session = useSessionStore();
 const command = useCommandEvent();
 const key = computed(() => `${session.user?.id}:ar-invoice-create`);
-const search = reactive({ customerId: "", q: "", shipmentDateFrom: "", shipmentDateTo: "" });
+const search = reactive({
+  customerId: typeof route.query.customerId === "string" && /^[1-9]\d*$/u.test(route.query.customerId) ? route.query.customerId : "",
+  q: "", shipmentDateFrom: "", shipmentDateTo: ""
+});
 const form = reactive({ invoiceDate: today(), dueDate: "", dueDateReason: "", notes: "" });
 const shipments = ref([]), selected = ref([]);
 const loading = ref(false), loadError = ref(""), submitError = ref(""), searched = ref(false);
@@ -85,7 +89,7 @@ const retry = () => submit();
         <template #action><q-btn flat label="重試確認結果" :loading="busy" @click="retry" /></template>
       </q-banner>
       <div class="row q-col-gutter-md">
-        <div class="col-12 col-sm-6 col-md-3"><q-input v-model="search.customerId" label="客戶 ID" hint="數字 ID，可在客戶詳情頁查看" mask="################" :disable="locked" outlined dense @keyup.enter="find" /></div>
+        <div class="col-12 col-sm-6 col-md-3"><ArCustomerFilter v-model="search.customerId" :disable="locked" @submit="find" /></div>
         <div class="col-12 col-sm-6 col-md-3"><q-input v-model="search.q" label="出貨單號或銷售單號" hint="須輸入完整編號" maxlength="190" :disable="locked" outlined dense @keyup.enter="find" /></div>
         <div class="col-6 col-md-3"><q-input v-model="search.shipmentDateFrom" label="出貨日期由" type="date" stack-label :disable="locked" outlined dense /></div>
         <div class="col-6 col-md-3"><q-input v-model="search.shipmentDateTo" label="出貨日期至" type="date" stack-label :disable="locked" outlined dense /></div>

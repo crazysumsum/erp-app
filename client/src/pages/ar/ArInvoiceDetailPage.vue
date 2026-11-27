@@ -80,7 +80,7 @@ const overview = computed(() => {
 });
 const lineColumns = [
   { name: "lineNo", label: "行", field: "lineNo", align: "left" },
-  { name: "sku", label: "SKU", field: "skuName", align: "left" },
+  { name: "sku", label: "SKU 代碼／名稱", field: "skuName", align: "left" },
   { name: "quantity", label: "數量 × 單價", field: "quantity", align: "left" },
   { name: "lineAmount", label: "行金額", field: "lineAmount", align: "right" },
   { name: "shipmentId", label: "出貨單號", field: "shipmentId", align: "left" }

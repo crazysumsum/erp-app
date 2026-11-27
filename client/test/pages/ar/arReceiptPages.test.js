@@ -16,6 +16,7 @@ import List, { page as listPage } from "@/pages/ar/ArReceiptsPage.vue";
 import Create, { page as createPage } from "@/pages/ar/ArReceiptCreatePage.vue";
 import Detail, { page as detailPage } from "@/pages/ar/ArReceiptDetailPage.vue";
 import Aging, { page as agingPage } from "@/pages/ar/ArAgingPage.vue";
+import ReferencePicker from "@/framework/ui/ReferencePicker.vue";
 import { useSessionStore } from "@/stores/session.js";
 
 const invoice = (id, outstanding, extra = {}) => ({ id, number: `INV-2026-00000${id}`, status: "CONFIRMED", version: 2, customerId: 3, customerCode: "C3", customerName: "客戶3", currencyCode: "HKD",
@@ -244,7 +245,7 @@ describe("AR 帳齡表", () => {
     totals: [
       { currencyCode: "HKD", invoiceCount: 2, notDue: "10.0000", days1To30: "5.5000", days31To60: "0.0000", days61To90: "0.0000", over90: "0.0000", total: "15.5000" },
       { currencyCode: "JPY", invoiceCount: 1, notDue: "0.0000", days1To30: "0.0000", days31To60: "0.0000", days61To90: "0.0000", over90: "900.0000", total: "900.0000" }] });
-    const router = await open("/ar/aging?currencyCode=HKD&evil=1");
+    const router = await open("/ar/aging?currencyCode=HKD&evil=1", [...VIEW, "customer.view"]);
     expect(ar.getAging).toHaveBeenCalledWith(expect.objectContaining({ currencyCode: "HKD" }));
     expect(ar.getAging.mock.calls[0][0]).not.toHaveProperty("evil");
     expect(wrapper.findAll('[data-testid="ar-aging-row"]')).toHaveLength(2);
@@ -254,7 +255,7 @@ describe("AR 帳齡表", () => {
     expect(totals[0]).toContain("15.50");
     expect(totals[1]).toContain("900");
     expect(wrapper.text()).not.toContain("915");
-    await input("客戶 ID").setValue("3");
+    wrapper.findComponent(ReferencePicker).vm.$emit("update:modelValue", { id: 3, code: "C3", name: "客戶3" });
     await button("查詢").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toMatchObject({ customerId: "3", currencyCode: "HKD" });
