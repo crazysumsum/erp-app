@@ -54,7 +54,7 @@ onMounted(loadOptions);
     <div class="col-12 col-md-6">
       <q-input
         v-model="model.supplierCode"
-        label="Supplier Code *"
+        label="供應商代碼 *"
         outlined
         dense
         maxlength="64"
@@ -65,7 +65,7 @@ onMounted(loadOptions);
     <div class="col-12 col-md-6">
       <q-input
         v-model="model.supplierName"
-        label="Supplier Name *"
+        label="供應商名稱 *"
         outlined
         dense
         maxlength="190"
@@ -90,8 +90,8 @@ onMounted(loadOptions);
         :options="currencyOptions"
         emit-value
         map-options
-        label="Default Currency *"
-        aria-label="Default Currency *"
+        label="預設貨幣 *"
+        aria-label="預設貨幣 *"
         outlined
         dense
         :loading="loadingOptions"

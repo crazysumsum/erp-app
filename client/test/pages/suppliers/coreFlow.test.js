@@ -66,7 +66,7 @@ describe("Supplier Core client smoke flow", () => {
     expect(supplierService.getById).toHaveBeenCalledWith(7);
     expect(body.text()).toContain("SUP-007 — Evergreen Trading");
     expect(body.text()).not.toContain("編輯一般資料");
-    expect(body.text()).not.toContain("受控修正 Supplier Code");
+    expect(body.text()).not.toContain("受控修正供應商代碼");
     wrapper.unmount();
   });
 });

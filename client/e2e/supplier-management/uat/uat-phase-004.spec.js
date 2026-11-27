@@ -195,7 +195,7 @@ test("@uat UAT-036 an old purchase order keeps its Currency and Term snapshot af
   // Supplier 呢邊嘅步驟：改預設幣別（要原因）同付款條件，詳情即刻係新值。
   await page.goto(`/suppliers/${supplier.id}`);
   await page.getByRole("button", { name: "編輯一般資料" }).click();
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await page.getByRole("option", { name: /^USD/u }).click();
   await page.getByRole("combobox", { name: "預設付款條件（選填）" }).click();
   await page.getByRole("option", { name: /^UAT NET30/u }).click();
@@ -318,7 +318,7 @@ test("@uat UAT-043 an export holds no full Bank data or ciphertext, guards formu
   // 07 寫 VIEWER，但設計 §6.9 嘅匯出要 supplier.mgmt：VIEWER 冇入口、直接叫亦以權限被拒。
   const { page: viewerPage, account: viewer } = await as("VIEWER");
   await viewerPage.goto("/suppliers");
-  await expect(viewerPage.getByPlaceholder("搜尋 Code、名稱、電話或電郵")).toBeVisible();
+  await expect(viewerPage.getByPlaceholder("搜尋代碼、名稱、電話或電郵")).toBeVisible();
   await expect(viewerPage.getByRole("button", { name: "匯出 CSV" })).toHaveCount(0);
   const refused = await moduleCall(viewerPage, "/src/services/supplier.js", "exportCsv", { filter: tag, password: viewer.password });
   // Route 嘅權限拒絕喺 client 係 `403 Forbidden`（同 UAT-040）；VIEWER 嘅正確密碼已經過咗重新認證。
@@ -329,7 +329,7 @@ test("@uat UAT-043 an export holds no full Bank data or ciphertext, guards formu
     const problems = watchProblems(exporter.page);
     await exporter.page.goto("/suppliers");
     // 篩選到得一個；scratch database 入面有其他 test 嘅 Supplier，冇篩選嘅話匯出會多過一行。
-    await exporter.page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
+    await exporter.page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(tag);
     await expect(exporter.page.locator("tbody tr")).toHaveCount(1);
     const csvText = await downloadText(exporter.page, async () => {
       await exporter.page.getByRole("button", { name: "匯出 CSV" }).click();

@@ -23,7 +23,7 @@ const DETAIL = {
   createdAt: 100, updatedAt: 200, addresses: [], contacts: [], identifiers: [], bankAccounts: [], warnings: []
 };
 
-const WARNING = "此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
+const WARNING = "此供應商正在審批中，修改代碼、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
 const NOTICE = "原審批申請已失效，供應商回到草稿，需要重新提交審批";
 
 let currentWrapper;
@@ -73,7 +73,7 @@ describe("Supplier general editor", () => {
     const { body } = await mountPage();
     expect(body.text()).toContain("資料完整度提示（不影響啟用）");
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
-    await field(body, "Supplier Name *").setValue("Updated Supplier");
+    await field(body, "供應商名稱 *").setValue("Updated Supplier");
     await field(body, "備註（選填）").setValue("Updated note");
     await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
@@ -92,7 +92,7 @@ describe("Supplier general editor", () => {
     expect(supplierService.paymentTermOptions).toHaveBeenCalled();
     const options = (label) => currentWrapper.findAllComponents(QSelect).find((select) => select.props("label") === label)
       .props("options").map(({ label: text, value }) => ({ text, value }));
-    expect(options("Default Currency *")).toEqual([{ text: "HKD — Hong Kong Dollar", value: "HKD" }, { text: "USD — US Dollar", value: "USD" }]);
+    expect(options("預設貨幣 *")).toEqual([{ text: "HKD — Hong Kong Dollar", value: "HKD" }, { text: "USD — US Dollar", value: "USD" }]);
     expect(options("預設付款條件（選填）")).toEqual([{ text: "NET30 — Net 30", value: 9 }]);
   });
 
@@ -100,7 +100,7 @@ describe("Supplier general editor", () => {
     supplierService.update.mockRejectedValue(Object.assign(new Error("付款條款目前不可用"), { code: "PAYMENT_TERM_NOT_ACTIVE", status: 409, details: { id: 5 } }));
     const { body } = await mountPage();
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
-    await field(body, "Supplier Name *").setValue("Renamed Supplier");
+    await field(body, "供應商名稱 *").setValue("Renamed Supplier");
     await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
     const term = body.findAll(".q-field").find((item) => item.text().includes("預設付款條件（選填）"));
@@ -169,19 +169,19 @@ describe("Supplier general editor", () => {
     const { body } = await mountPage();
     supplierService.getById.mockResolvedValue({ ...DETAIL, supplierName: "Other User Value", version: 3 });
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
-    await field(body, "Supplier Name *").setValue("My Preserved Draft");
+    await field(body, "供應商名稱 *").setValue("My Preserved Draft");
     await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
     expect(body.text()).toContain("輸入仍然保留");
-    expect(field(body, "Supplier Name *").element.value).toBe("My Preserved Draft");
+    expect(field(body, "供應商名稱 *").element.value).toBe("My Preserved Draft");
     expect(body.text()).toContain("最新版本 3");
   });
 
   it("uses a separate password-and-reason flow for controlled Supplier Code correction", async () => {
     supplierService.changeCode.mockResolvedValue({ ...DETAIL, supplierCode: "SUP-NEW", version: 3 });
     const { body } = await mountPage();
-    await body.findAll("button").find((button) => button.text().includes("受控修正 Supplier Code")).trigger("click");
-    await field(body, "新 Supplier Code *").setValue("SUP-NEW");
+    await body.findAll("button").find((button) => button.text().includes("受控修正供應商代碼")).trigger("click");
+    await field(body, "新供應商代碼 *").setValue("SUP-NEW");
     await field(body, "修正原因 *").setValue("Correct onboarding typo");
     await field(body, "目前密碼 *").setValue("secret");
     await body.findAll("button").find((button) => button.text().includes("確認修正")).trigger("click");
@@ -196,7 +196,7 @@ describe("Supplier general editor", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { body, router } = await mountPage();
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
-    await field(body, "Supplier Name *").setValue("Dirty Supplier");
+    await field(body, "供應商名稱 *").setValue("Dirty Supplier");
     await router.push("/suppliers");
     await flushPromises();
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining("未儲存"));
@@ -215,7 +215,7 @@ describe("Supplier general editor", () => {
     };
     expect(unload()).toBe(false);
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
-    await field(body, "Supplier Name *").setValue("Dirty Supplier");
+    await field(body, "供應商名稱 *").setValue("Dirty Supplier");
     expect(unload()).toBe(true);
   });
 
@@ -225,22 +225,22 @@ describe("Supplier general editor", () => {
     supplierService.changeCode.mockResolvedValue({ ...pending, supplierCode: "SUP-NEW", status: "draft", version: 3, approvalInvalidated: true });
     const { body } = await mountPage(pending);
     expect(body.text()).not.toContain(WARNING);
-    await body.findAll("button").find((button) => button.text().includes("受控修正 Supplier Code")).trigger("click");
+    await body.findAll("button").find((button) => button.text().includes("受控修正供應商代碼")).trigger("click");
     await flushPromises();
     expect(body.find(".q-dialog").text()).toContain(WARNING);
-    await field(body, "新 Supplier Code *").setValue("SUP-NEW");
+    await field(body, "新供應商代碼 *").setValue("SUP-NEW");
     await field(body, "修正原因 *").setValue("Correct onboarding typo");
     await field(body, "目前密碼 *").setValue("secret");
     await body.findAll("button").find((button) => button.text().includes("確認修正")).trigger("click");
     await flushPromises();
-    expect(notifyWarning).toHaveBeenLastCalledWith(`Supplier Code 已修正為 SUP-NEW。${NOTICE}`);
+    expect(notifyWarning).toHaveBeenLastCalledWith(`供應商代碼已修正為 SUP-NEW。${NOTICE}`);
 
     currentWrapper.unmount();
     document.body.innerHTML = "";
     const again = await mountPage(pending);
     await again.body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
     expect(again.body.text()).toContain(WARNING);
-    await field(again.body, "Supplier Name *").setValue("Renamed");
+    await field(again.body, "供應商名稱 *").setValue("Renamed");
     await again.body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
     expect(notifyWarning).toHaveBeenLastCalledWith(`供應商 SUP-007 的一般資料已更新。${NOTICE}`);
@@ -252,7 +252,7 @@ describe("Supplier general editor", () => {
     const { body } = await mountPage();
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
     expect(body.text()).not.toContain(WARNING);
-    await field(body, "Supplier Name *").setValue("Renamed");
+    await field(body, "供應商名稱 *").setValue("Renamed");
     await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
     expect(notifySuccess).toHaveBeenLastCalledWith("供應商 SUP-007 的一般資料已更新");

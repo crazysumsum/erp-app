@@ -167,7 +167,7 @@ describe("pages/suppliers/SupplierSettingsPage.vue", () => {
     });
     expect(body.text()).toContain("未就緒");
     expect(body.text()).toContain("HKD 基準貨幣尚未就緒");
-    expect(body.text()).toContain("Business Master 權限尚未種入");
+    expect(body.text()).toContain("業務主檔權限尚未種入");
     expect(body.text()).not.toContain("資料表尚未建立");
   });
 
@@ -180,7 +180,7 @@ describe("pages/suppliers/SupplierSettingsPage.vue", () => {
 
     const denied = await mountPage({ permissions: ["supplier.settings"] });
     expect(denied.body.text()).not.toContain("前往管理貨幣");
-    expect(denied.body.text()).toContain("需要 Business Master 檢視權限");
+    expect(denied.body.text()).toContain("需要業務主檔檢視權限");
   });
 
   it("a readiness failure does not take the toggle down with it", async () => {

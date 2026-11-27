@@ -153,7 +153,7 @@ async function submit(activate) {
 
 <template>
   <div>
-    <PageHeader subtitle="只需 Supplier Code、Supplier Name 及有效貨幣即可先儲存；其他資料可稍後補充。" />
+    <PageHeader subtitle="只需供應商代碼、供應商名稱及有效貨幣即可先儲存；其他資料可稍後補充。" />
 
     <main class="q-pa-md" style="max-width: 900px">
       <q-banner v-if="created" class="bg-positive text-white q-mb-md" rounded role="status">
@@ -210,10 +210,10 @@ async function submit(activate) {
       <div class="row q-gutter-sm q-mt-lg">
         <q-btn
           color="secondary"
-          label="儲存 Draft"
+          label="儲存草稿"
           :loading="submitting"
           :disable="Boolean(created) && !dirty"
-          :aria-label="submitting ? '儲存 Draft 中' : '儲存 Draft'"
+          :aria-label="submitting ? '正在儲存草稿' : '儲存草稿'"
           @click="submit(false)"
         />
         <q-btn

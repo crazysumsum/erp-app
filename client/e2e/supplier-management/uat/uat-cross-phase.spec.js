@@ -108,10 +108,10 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     const problems = watchProblems(clerk, { allow: [{ status: 400, path: "/api/v1/suppliers/duplicates/check" },
       { status: 400, path: "/api/v1/suppliers/create" }, { status: 503, path: "/api/v1/suppliers" }] });
     await clerk.goto("/suppliers/new");
-    const code = clerk.getByLabel("Supplier Code *");
+    const code = clerk.getByLabel("供應商代碼 *");
     await tabTo(clerk, code);
     await expectFocusVisible(clerk, code, `${width}px Supplier Code`);
-    await tabTo(clerk, clerk.getByRole("button", { name: "儲存 Draft" }));
+    await tabTo(clerk, clerk.getByRole("button", { name: "儲存草稿" }));
     await press(clerk, "Enter");
     await expect(code).toHaveAttribute("aria-invalid", "true");
     // 錯誤訊息掛喺欄位嘅 aria-describedby：讀屏讀得到，亦講得出錯咗乜。
@@ -124,9 +124,9 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     const supplierCode = unique(`K${width}`);
     await tabTo(clerk, code);
     await typeText(clerk, supplierCode);
-    await tabTo(clerk, clerk.getByLabel("Supplier Name *"));
+    await tabTo(clerk, clerk.getByLabel("供應商名稱 *"));
     await typeText(clerk, `UAT-047 Keyboard ${supplierCode}`);
-    await chooseByKeyboard(clerk, clerk.getByRole("combobox", { name: "Default Currency *" }), /^HKD/u, { shows: "HKD" });
+    await chooseByKeyboard(clerk, clerk.getByRole("combobox", { name: "預設貨幣 *" }), /^HKD/u, { shows: "HKD" });
     await tabTo(clerk, clerk.getByRole("button", { name: "直接啟用" }));
     await press(clerk, "Enter");
     // 建立結果用 role=status 講出嚟，狀態係文字，唔只靠顏色。
@@ -146,7 +146,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await expect(clerk.getByText("載入中…")).toBeVisible();
     await expect(clerk.getByText("載入中…")).toBeHidden({ timeout: 15_000 });
     mode = "live";
-    const search = clerk.getByPlaceholder("搜尋 Code、名稱、電話或電郵");
+    const search = clerk.getByPlaceholder("搜尋代碼、名稱、電話或電郵");
     await tabTo(clerk, search);
     await typeText(clerk, `no-such-supplier-${Date.now()}`);
     await expect(clerk.getByText("冇資料")).toBeVisible();
@@ -225,7 +225,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     // ---- PHASE-004：CLERK 用鍵盤匯出（密碼確認後下載）。 ----
     const exportProblems = watchProblems(clerk);
     await clerk.goto("/suppliers");
-    await tabTo(clerk, clerk.getByPlaceholder("搜尋 Code、名稱、電話或電郵"));
+    await tabTo(clerk, clerk.getByPlaceholder("搜尋代碼、名稱、電話或電郵"));
     await typeText(clerk, supplierCode);
     await expect(clerk.locator("tbody tr", { hasText: supplierCode })).toHaveCount(1);
     await tabTo(clerk, clerk.getByRole("button", { name: "匯出 CSV" }));

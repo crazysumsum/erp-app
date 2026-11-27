@@ -54,7 +54,7 @@ onMounted(loadOptions);
         v-model="model.defaultCurrencyCode"
         :options="currencyOptions"
         emit-value map-options outlined dense :loading="loading"
-        label="Default Currency *" aria-label="Default Currency *"
+        label="預設貨幣 *" aria-label="預設貨幣 *"
         :error="!!props.fieldError('defaultCurrencyCode')"
         :error-message="props.fieldError('defaultCurrencyCode')"
         @update:model-value="selectCurrency"

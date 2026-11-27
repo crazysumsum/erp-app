@@ -118,7 +118,7 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
   });
 
   it("tells the identifier panel that the Supplier is Pending, so its dialogs warn of the invalidation (DEF-044, HD-139 A)", async () => {
-    const warning = "此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
+    const warning = "此供應商正在審批中，修改代碼、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
     const openCreate = async (status) => {
       const { wrapper, body } = await mountPage({ permissions: ["supplier.view", "supplier.mgmt"], detail: { ...DETAIL, status } });
       await body.findAll(".q-tab").find((item) => item.text().includes("識別資料")).trigger("click");

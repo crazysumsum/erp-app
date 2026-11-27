@@ -13,17 +13,17 @@ test("@uat UAT-001 a CLERK creates a Draft from code, name and currency, finds i
   const name = `UAT-001 Evergreen ${code}`;
 
   await page.goto("/suppliers/new");
-  await page.getByLabel("Supplier Code *").fill(code);
-  await page.getByLabel("Supplier Name *").fill(name);
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByLabel("供應商代碼 *").fill(code);
+  await page.getByLabel("供應商名稱 *").fill(name);
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await page.getByRole("option", { name: /^HKD/u }).click();
-  await page.getByRole("button", { name: "儲存 Draft" }).click();
+  await page.getByRole("button", { name: "儲存草稿" }).click();
   await expect(page.getByText(`供應商 ${code} 已建立`)).toBeVisible();
   await expect(page.getByText("狀態：草稿")).toBeVisible();
   await evidence(page, testInfo, "created");
 
   await page.goto("/suppliers");
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(code);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(code);
   const row = page.locator("tbody tr", { hasText: code });
   await expect(row).toHaveCount(1);
   await expect(row).toContainText(name);
@@ -52,17 +52,17 @@ test("@uat UAT-002 a CLERK cannot create a second Supplier whose Code differs on
   const problems = watchProblems(page, { allow: [{ status: 409, path: "/api/v1/suppliers/create" }] });
 
   await page.goto("/suppliers/new");
-  await page.getByLabel("Supplier Code *").fill(existing.supplierCode.toLowerCase());
-  await page.getByLabel("Supplier Name *").fill("UAT-002 Another Name");
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByLabel("供應商代碼 *").fill(existing.supplierCode.toLowerCase());
+  await page.getByLabel("供應商名稱 *").fill("UAT-002 Another Name");
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await page.getByRole("option", { name: /^HKD/u }).click();
-  await page.getByRole("button", { name: "儲存 Draft" }).click();
+  await page.getByRole("button", { name: "儲存草稿" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "這個 Supplier Code 已被使用" }).first()).toBeVisible();
   await expect(page.getByText("已建立")).toHaveCount(0);
   await evidence(page, testInfo, "refused");
 
   await page.goto("/suppliers");
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(existing.supplierCode);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(existing.supplierCode);
   await expect(page.locator("tbody tr", { hasText: existing.supplierCode })).toHaveCount(1);
   await expect(page.getByText("UAT-002 Another Name")).toHaveCount(0);
   expect(problems).toEqual([]);
@@ -75,9 +75,9 @@ test("@uat UAT-006 a CLERK corrects an unreferenced Draft's Code after re-authen
   const next = unique("UAT006");
 
   await page.goto(`/suppliers/${draft.id}`);
-  await page.getByRole("button", { name: "受控修正 Supplier Code" }).click();
+  await page.getByRole("button", { name: "受控修正供應商代碼" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("新 Supplier Code *").fill(next);
+  await dialog.getByLabel("新供應商代碼 *").fill(next);
   await dialog.getByLabel("修正原因 *").fill("UAT-006 typo in the code");
   // 重新認證係真嘅：錯密碼唔改（REV-115 L-4）。
   await dialog.getByLabel("目前密碼 *").fill(`${clerk.password}-wrong`);
@@ -199,7 +199,7 @@ test("@uat UAT-020 a CLERK permanently deletes a never-activated Draft after re-
   await expect(page.getByRole("link", { name: "返回供應商列表" }).or(page.getByRole("button", { name: "返回供應商列表" }))).toBeVisible();
   await page.goto("/suppliers");
   await page.getByRole("checkbox", { name: "包括已封存" }).click();
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(draft.supplierCode);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(draft.supplierCode);
   await expect(page.getByText("冇資料")).toBeVisible();
 
   await page.goto(`/suppliers/audit?target=${draft.supplierCode}`);
@@ -255,11 +255,11 @@ test("@uat UAT-003 a same-name Supplier with another Code is warned about first,
   const code = unique("UAT003");
 
   await page.goto("/suppliers/new");
-  await page.getByLabel("Supplier Code *").fill(code);
-  await page.getByLabel("Supplier Name *").fill(name);
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByLabel("供應商代碼 *").fill(code);
+  await page.getByLabel("供應商名稱 *").fill(name);
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await page.getByRole("option", { name: /^HKD/u }).click();
-  await page.getByRole("button", { name: "儲存 Draft" }).click();
+  await page.getByRole("button", { name: "儲存草稿" }).click();
   await expect(page.getByText("找到名稱近似的供應商，請確認這不是重複建檔")).toBeVisible();
   await expect(page.getByText(`${first.supplierCode} — ${name}`)).toBeVisible();
   await expect(page.getByText("已建立")).toHaveCount(0);
@@ -270,7 +270,7 @@ test("@uat UAT-003 a same-name Supplier with another Code is warned about first,
   await evidence(page, testInfo, "created");
 
   await page.goto("/suppliers");
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(name);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(name);
   await expect(page.locator("tbody tr", { hasText: name })).toHaveCount(2);
   await page.goto(`/suppliers/audit?target=${code}`);
   const created = page.locator("tbody tr", { hasText: "新增供應商" });
@@ -333,7 +333,7 @@ test("@uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, witho
   const { page } = await as("VIEWER");
   const problems = watchProblems(page);
   await page.goto("/suppliers");
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(tag);
   await expect(page).toHaveURL(new RegExp(`q=${tag}`, "u"));
   await expect(page.getByText(/of 22/u)).toBeVisible();
   await expect(page.getByText(`${tag}-22`)).toHaveCount(0);
@@ -351,7 +351,7 @@ test("@uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, witho
   await evidence(page, testInfo, "sorted-page-2");
 
   await page.goto("/suppliers");
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(phone);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(phone);
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await expect(page.locator("tbody tr")).toContainText(`${tag}-05`);
   await page.getByRole("link", { name: `查看 ${tag}-05 詳情` }).click();
@@ -375,14 +375,14 @@ test("@uat UAT-008 two browsers save the same version: the second gets a conflic
     await tab.goto(`/suppliers/${supplier.id}`);
     await tab.getByRole("button", { name: "編輯一般資料" }).click();
   }
-  await page.getByLabel("Supplier Name *").fill("UAT-008 saved by A");
+  await page.getByLabel("供應商名稱 *").fill("UAT-008 saved by A");
   await page.getByRole("button", { name: "儲存一般資料" }).click();
   await expect(page.getByText("版本 2")).toBeVisible();
 
-  await other.getByLabel("Supplier Name *").fill("UAT-008 typed by B");
+  await other.getByLabel("供應商名稱 *").fill("UAT-008 typed by B");
   await other.getByRole("button", { name: "儲存一般資料" }).click();
   await expect(other.getByText(/供應商已被其他人修改（最新版本 2）/u)).toBeVisible();
-  await expect(other.getByLabel("Supplier Name *")).toHaveValue("UAT-008 typed by B");
+  await expect(other.getByLabel("供應商名稱 *")).toHaveValue("UAT-008 typed by B");
   await evidence(other, testInfo, "conflict-b");
 
   await other.reload();
@@ -468,7 +468,7 @@ test("@uat UAT-042 a VIEWER cannot write from the UI, by URL or by request, and 
   await expect(viewerPage.getByRole("button", { name: "新增供應商" }).or(viewerPage.getByRole("link", { name: "新增供應商" }))).toHaveCount(0);
   await viewerPage.goto(`/suppliers/${supplier.id}`);
   await expect(viewerPage.getByText(supplier.supplierCode).first()).toBeVisible();
-  for (const label of ["編輯一般資料", "受控修正 Supplier Code", "啟用", "永久刪除", "封存"]) {
+  for (const label of ["編輯一般資料", "受控修正供應商代碼", "啟用", "永久刪除", "封存"]) {
     await expect(viewerPage.getByRole("button", { name: label, exact: true })).toHaveCount(0);
   }
   await evidence(viewerPage, testInfo, "viewer-detail");
@@ -515,12 +515,12 @@ test("@uat UAT-054 the Supplier list tells loading, empty, failed and no-permiss
   await expect(page.getByText("載入中…")).toBeHidden({ timeout: 15_000 });
 
   mode = "live";
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(`no-such-supplier-${Date.now()}`);
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill(`no-such-supplier-${Date.now()}`);
   await expect(page.getByText("冇資料")).toBeVisible();
   await evidence(page, testInfo, "empty");
 
   mode = "fail";
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill("UAT");
+  await page.getByPlaceholder("搜尋代碼、名稱、電話或電郵").fill("UAT");
   await expect(page.getByRole("alert").filter({ hasText: "服務暫時無法使用，請稍後再試" })).toBeVisible();
   await expect(page.getByText("冇資料")).toHaveCount(0);
   await evidence(page, testInfo, "error");
@@ -558,7 +558,7 @@ test("@uat UAT-031 forms offer only Active currencies and terms, an old inactive
   const problems = watchProblems(page);
 
   await page.goto("/suppliers/new");
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await expect(page.getByRole("option", { name: /^HKD/u })).toBeVisible();
   await expect(page.getByRole("option", { name: new RegExp(`^${inactiveCurrency}`, "u") })).toHaveCount(0);
   await page.keyboard.press("Escape");
@@ -571,8 +571,8 @@ test("@uat UAT-031 forms offer only Active currencies and terms, an old inactive
   await page.goto(`/suppliers/${supplier.id}`);
   await expect(page.getByText(inactiveCurrency).first()).toBeVisible();
   await page.getByRole("button", { name: "編輯一般資料" }).click();
-  await expect(page.locator(".q-field", { hasText: "Default Currency *" })).toContainText(inactiveCurrency);
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await expect(page.locator(".q-field", { hasText: "預設貨幣 *" })).toContainText(inactiveCurrency);
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await expect(page.getByRole("option", { name: new RegExp(`^${inactiveCurrency}`, "u") })).toHaveCount(0);
   await evidence(page, testInfo, "edit-keeps-old-value");
   await page.keyboard.press("Escape");

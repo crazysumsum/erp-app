@@ -140,7 +140,7 @@ async function submit() {
           <q-card-section class="q-pt-none">
             <q-banner class="bg-warning text-dark q-mb-md" rounded>
               供應商：{{ supplier.supplierCode }} — {{ supplier.supplierName }}。完成後狀態：{{ shown?.target }}。
-              現有交易及稽核歷史會保留；永久刪除只允許從未引用的 Draft。
+              現有交易及稽核歷史會保留；永久刪除只允許從未引用的草稿。
               <span v-if="selected?.device">此操作還要求已核准裝置。</span>
             </q-banner>
             <q-banner v-if="errorMessage" class="bg-negative text-white q-mb-md" rounded role="alert">

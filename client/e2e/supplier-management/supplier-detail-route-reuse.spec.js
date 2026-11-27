@@ -143,7 +143,7 @@ async function answerConfirm(page, answer) {
 
 async function startEditWithDraft(page) {
   await page.getByRole("button", { name: "編輯一般資料" }).click();
-  const name = page.getByLabel("Supplier Name");
+  const name = page.getByLabel("供應商名稱");
   await expect(name).toHaveValue("Evergreen Trading");
   await name.fill("Evergreen Trading (draft)");
 }
@@ -165,7 +165,7 @@ test("@technical a half-edited form does not survive the move to another supplie
   // 編輯面板收起來了：沒有東西可以把 7 號的輸入用 8 號的 id 提交出去。
   await expect(page.getByRole("button", { name: "儲存一般資料" })).toHaveCount(0);
   await page.getByRole("button", { name: "編輯一般資料" }).click();
-  await expect(page.getByLabel("Supplier Name")).toHaveValue("Northwind Supply");
+  await expect(page.getByLabel("供應商名稱")).toHaveValue("Northwind Supply");
   expect(problems).toEqual([]);
 });
 
@@ -185,7 +185,7 @@ test("@technical refusing the prompt keeps both the supplier and the draft", asy
   expect(page.url()).toContain("/suppliers/7");
   expect(calls.some((call) => call.path === "/api/v1/suppliers/8")).toBe(false);
   // 問完之後照食咗人哋啲輸入，比唔問更差。
-  await expect(page.getByLabel("Supplier Name")).toHaveValue("Evergreen Trading (draft)");
+  await expect(page.getByLabel("供應商名稱")).toHaveValue("Evergreen Trading (draft)");
   expect(problems).toEqual([]);
 });
 

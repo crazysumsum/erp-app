@@ -32,7 +32,7 @@ const SCOPES = Object.freeze([
 ]);
 
 const FIELD_LABEL = Object.freeze({
-  supplierCode: "Supplier Code",
+  supplierCode: "供應商代碼",
   supplierName: "名稱",
   displayName: "顯示名稱",
   defaultCurrencyCode: "預設貨幣",
@@ -41,7 +41,7 @@ const FIELD_LABEL = Object.freeze({
 });
 
 const columns = Object.freeze([
-  { name: "supplierCode", label: "Supplier Code", field: "supplierCode", align: "left" },
+  { name: "supplierCode", label: "供應商代碼", field: "supplierCode", align: "left" },
   { name: "supplierName", label: "名稱", field: "supplierName", align: "left" },
   { name: "requester", label: "提交人", field: (row) => row.requester?.displayName || row.requester?.username || "—", align: "left" },
   { name: "assignedApprover", label: "審批人", field: (row) => row.assignedApprover?.displayName || row.assignedApprover?.username || "未指派", align: "left" },

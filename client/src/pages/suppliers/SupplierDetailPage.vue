@@ -303,7 +303,7 @@ async function submitCodeChange() {
     supplier.value = updated;
     loadForm(updated);
     showCodeDialog.value = false;
-    notifySaved(`Supplier Code 已修正為 ${updated.supplierCode}`, updated);
+    notifySaved(`供應商代碼已修正為 ${updated.supplierCode}`, updated);
   } catch (changeError) {
     codeForm.password = "";
     if (changeError.code === "VERSION_CONFLICT") {
@@ -311,9 +311,9 @@ async function submitCodeChange() {
       try { supplier.value = await supplierService.getById(supplier.value.id); } catch { /* Preserve current display and draft. */ }
       codeError.value = `供應商已更新至版本 ${supplier.value.version}；修正草稿已保留，請重新確認。`;
     } else {
-      codeError.value = changeError.message || "修正 Supplier Code 失敗";
+      codeError.value = changeError.message || "修正供應商代碼失敗";
     }
-    notifyError(changeError.message || "修正 Supplier Code 失敗");
+    notifyError(changeError.message || "修正供應商代碼失敗");
   } finally {
     codeSubmitting.value = false;
   }
@@ -404,7 +404,7 @@ function childCount(rows) {
           <q-tab-panel name="overview" class="q-pa-none">
             <div class="row q-gutter-sm q-mb-md">
               <q-btn v-if="canManage && !editing && supplier.status !== 'archived'" color="primary" label="編輯一般資料" @click="startEdit" />
-              <q-btn v-if="canManage && !editing && supplier.status !== 'archived'" outline color="negative" label="受控修正 Supplier Code" @click="openCodeDialog" />
+              <q-btn v-if="canManage && !editing && supplier.status !== 'archived'" outline color="negative" label="受控修正供應商代碼" @click="openCodeDialog" />
             </div>
 
             <q-list v-if="!editing" bordered separator>
@@ -435,10 +435,10 @@ function childCount(rows) {
                 </q-banner>
                 <div class="row q-col-gutter-md">
                   <div class="col-12 col-md-6">
-                    <q-input :model-value="supplier.supplierCode" label="Supplier Code" outlined dense readonly hint="一般編輯不可修改；請使用獨立受控修正功能。" />
+                    <q-input :model-value="supplier.supplierCode" label="供應商代碼" outlined dense readonly hint="一般編輯不可修改；請使用獨立受控修正功能。" />
                   </div>
                   <div class="col-12 col-md-6">
-                    <q-input v-model="form.supplierName" label="Supplier Name *" outlined dense maxlength="190" :error="!!fieldError('supplierName')" :error-message="fieldError('supplierName')" />
+                    <q-input v-model="form.supplierName" label="供應商名稱 *" outlined dense maxlength="190" :error="!!fieldError('supplierName')" :error-message="fieldError('supplierName')" />
                   </div>
                   <div class="col-12 col-md-6">
                     <q-input v-model="form.displayName" label="顯示名稱" outlined dense maxlength="190" :error="!!fieldError('displayName')" :error-message="fieldError('displayName')" />
@@ -504,14 +504,14 @@ function childCount(rows) {
       <q-card style="width: min(560px, 94vw)">
         <q-form @submit.prevent="submitCodeChange">
           <input class="reauth-username" type="text" autocomplete="username" :value="session.user?.username ?? ''" tabindex="-1" aria-hidden="true">
-        <q-card-section><div class="text-h6">受控修正 Supplier Code</div></q-card-section>
+        <q-card-section><div class="text-h6">受控修正供應商代碼</div></q-card-section>
         <q-card-section class="q-pt-none">
           <q-banner class="bg-warning text-dark q-mb-md" rounded>
             只允許未被任何交易或設定引用的供應商。修正後舊交易快照不會被改寫，操作會留下原因及稽核記錄。
           </q-banner>
           <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
           <q-banner v-if="codeError" class="bg-negative text-white q-mb-md" rounded role="alert">{{ codeError }}</q-banner>
-          <q-input v-model="codeForm.supplierCode" label="新 Supplier Code *" outlined dense maxlength="64" autofocus />
+          <q-input v-model="codeForm.supplierCode" label="新供應商代碼 *" outlined dense maxlength="64" autofocus />
           <q-input v-model="codeForm.reason" label="修正原因 *" type="textarea" outlined dense maxlength="500" class="q-mt-md" hint="最少 5 個字元" />
           <q-input v-model="codeForm.password" label="目前密碼 *" type="password" outlined dense maxlength="1024" class="q-mt-md" autocomplete="current-password" />
         </q-card-section>

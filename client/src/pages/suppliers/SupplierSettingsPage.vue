@@ -52,7 +52,7 @@ const missingParts = computed(() => {
   return [
     { ready: readiness.value.schemaReady, label: "資料表尚未建立或版本不符" },
     { ready: readiness.value.hkdReady, label: "HKD 基準貨幣尚未就緒" },
-    { ready: readiness.value.permissionsReady, label: "Business Master 權限尚未種入" }
+    { ready: readiness.value.permissionsReady, label: "業務主檔權限尚未種入" }
   ].filter((part) => !part.ready).map((part) => part.label);
 });
 
@@ -67,7 +67,7 @@ async function loadReadiness() {
   } catch (error) {
     // 依賴狀態讀唔到唔應該令成頁死——開關本身同 Business Master 無關。
     readiness.value = null;
-    readinessError.value = error.message || "無法讀取 Business Master 狀態";
+    readinessError.value = error.message || "無法讀取業務主檔狀態";
   }
 }
 
@@ -181,7 +181,7 @@ async function toggleApproval(next) {
         </q-card-section>
         <q-card-section class="q-pt-none">
           <p class="text-body2 q-mb-sm">
-            這兩項主資料由 Business Master 擁有，供應商模組只讀取與引用，不在這裡新增或修改。
+            這兩項主資料由業務主檔擁有，供應商模組只讀取與引用，不在這裡新增或修改。
           </p>
 
           <p v-if="readinessError" class="text-body2 text-negative q-mb-sm">{{ readinessError }}</p>
@@ -209,7 +209,7 @@ async function toggleApproval(next) {
             />
           </div>
           <p v-else class="text-caption text-grey-8 q-mb-none">
-            需要 Business Master 檢視權限才能開啟管理頁面。
+            需要業務主檔檢視權限才能開啟管理頁面。
           </p>
         </q-card-section>
       </q-card>

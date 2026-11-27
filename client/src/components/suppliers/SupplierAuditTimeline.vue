@@ -82,7 +82,7 @@ const columns = [
   { name: "actorUsername", label: "操作者", field: "actorUsername", align: "left" },
   { name: "action", label: "動作", field: "action", align: "left" },
   { name: "target", label: "對象", field: "targetLabel", align: "left" },
-  { name: "requestId", label: "Request ID", field: "requestId", align: "left" },
+  { name: "requestId", label: "請求編號", field: "requestId", align: "left" },
   { name: "reason", label: "原因", field: "reason", align: "left" },
   { name: "detail", label: "內容", field: "detail", align: "left" }
 ];

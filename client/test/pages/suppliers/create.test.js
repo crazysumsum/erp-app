@@ -61,9 +61,9 @@ function input(body, label) {
 }
 
 async function fillRequired(wrapper, body) {
-  await input(body, "Supplier Code *").setValue(" SUP-041 ");
-  await input(body, "Supplier Name *").setValue(" Evergreen Trading ");
-  const currency = wrapper.findAllComponents(QSelect).find((select) => select.props("label") === "Default Currency *");
+  await input(body, "供應商代碼 *").setValue(" SUP-041 ");
+  await input(body, "供應商名稱 *").setValue(" Evergreen Trading ");
+  const currency = wrapper.findAllComponents(QSelect).find((select) => select.props("label") === "預設貨幣 *");
   currency.vm.$emit("update:modelValue", "HKD");
   await flushPromises();
 }
@@ -92,7 +92,7 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
     await fillRequired(wrapper, body);
 
-    await wrapper.find('button[aria-label="儲存 Draft"]').trigger("click");
+    await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
     await flushPromises();
 
     expect(supplierService.create).toHaveBeenCalledWith(expect.objectContaining({
@@ -109,7 +109,7 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     expect(notifySuccess).toHaveBeenCalled();
     // UAT 前核對：建立後要有去詳情嘅連結；未改表單前唔可以再撳建立（避免以同一 Code 重複送出）。
     expect(body.findAll("a").find((link) => link.text() === "前往供應商詳情").attributes("href")).toBe("/suppliers/41");
-    expect(wrapper.find('button[aria-label="儲存 Draft"]').attributes("disabled")).toBeDefined();
+    expect(wrapper.find('button[aria-label="儲存草稿"]').attributes("disabled")).toBeDefined();
   });
 
   it("requires explicit confirmation before creating a possible duplicate", async () => {
@@ -133,7 +133,7 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
   it("TC-123 (UI-003): prompts before leaving a dirty form", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { body, router } = await mountPage();
-    await input(body, "Supplier Name *").setValue("Evergreen Trading");
+    await input(body, "供應商名稱 *").setValue("Evergreen Trading");
 
     await router.push("/suppliers");
     await flushPromises();
@@ -153,7 +153,7 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
       return event.defaultPrevented;
     };
     expect(unload()).toBe(false);
-    await input(body, "Supplier Name *").setValue("Evergreen Trading");
+    await input(body, "供應商名稱 *").setValue("Evergreen Trading");
     expect(unload()).toBe(true);
   });
 

@@ -52,9 +52,9 @@ test("@uat UAT-010 with approval on a CLERK submits to APPROVER-A; the Supplier 
   const code = unique("UAT010");
 
   await page.goto("/suppliers/new");
-  await page.getByLabel("Supplier Code *").fill(code);
-  await page.getByLabel("Supplier Name *").fill(`UAT-010 ${code}`);
-  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByLabel("供應商代碼 *").fill(code);
+  await page.getByLabel("供應商名稱 *").fill(`UAT-010 ${code}`);
+  await page.getByRole("combobox", { name: "預設貨幣 *" }).click();
   await page.getByRole("option", { name: /^HKD/u }).click();
   await page.getByRole("combobox", { name: "審批人" }).click();
   await page.getByRole("option", { name: /uat-approver-a/u }).click();
@@ -167,8 +167,8 @@ test("@uat UAT-014 an approval-significant edit invalidates the Pending request;
   await clerkPage.goto(`/suppliers/${supplier.id}`);
   await clerkPage.getByRole("button", { name: "編輯一般資料" }).click();
   // 設計 §7.4：修改待審批嘅 Supplier 之前講明原申請會失效；儲存之後講明已經失效（DEF-044）。
-  await expect(clerkPage.getByText("此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效")).toBeVisible();
-  await clerkPage.getByLabel("Supplier Name *").fill(`${supplier.supplierName} renamed`);
+  await expect(clerkPage.getByText("此供應商正在審批中，修改代碼、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效")).toBeVisible();
+  await clerkPage.getByLabel("供應商名稱 *").fill(`${supplier.supplierName} renamed`);
   await clerkPage.getByRole("button", { name: "儲存一般資料" }).click();
   await expect(clerkPage.getByText("原審批申請已失效，供應商回到草稿，需要重新提交審批")).toBeVisible();
   await expect(statusBadge(clerkPage)).toHaveText("草稿");

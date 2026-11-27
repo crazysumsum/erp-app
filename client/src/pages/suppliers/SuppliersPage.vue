@@ -81,7 +81,7 @@ const table = ref(null);
 const exporting = ref(false);
 
 const columns = [
-  { name: "supplierCode", label: "Supplier Code", field: "supplierCode", align: "left", sortable: true },
+  { name: "supplierCode", label: "供應商代碼", field: "supplierCode", align: "left", sortable: true },
   { name: "supplierName", label: "供應商名稱", field: "supplierName", align: "left", sortable: true },
   { name: "displayName", label: "顯示名稱", field: "displayName", align: "left" },
   { name: "defaultCurrencyCode", label: "貨幣", field: "defaultCurrencyCode", align: "left" },
@@ -213,7 +213,7 @@ async function exportSuppliers() {
     <div class="q-px-md q-pb-md row q-gutter-sm items-center">
       <q-input
         v-model="searchText"
-        dense outlined debounce="300" placeholder="搜尋 Code、名稱、電話或電郵"
+        dense outlined debounce="300" placeholder="搜尋代碼、名稱、電話或電郵"
         style="width: 300px"
         @update:model-value="table?.reload()"
       ><template #prepend><q-icon name="search" /></template></q-input>

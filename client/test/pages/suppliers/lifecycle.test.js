@@ -210,7 +210,7 @@ describe("Supplier lifecycle actions", () => {
     expect(dialog.text()).toContain("SUP-007 — Evergreen");
     expect(dialog.text()).toContain(`完成後狀態：${target}`);
     expect(dialog.text()).toContain("現有交易及稽核歷史會保留");
-    expect(dialog.text()).toContain("永久刪除只允許從未引用的 Draft");
+    expect(dialog.text()).toContain("永久刪除只允許從未引用的草稿");
     expect(dialog.text().includes("已核准裝置")).toBe(device);
     expect(field(body, "原因 *").exists()).toBe(true);
     expect(field(body, "目前密碼 *").exists()).toBe(true);

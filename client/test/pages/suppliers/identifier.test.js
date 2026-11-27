@@ -20,7 +20,7 @@ const IDENTIFIERS = [{
   identifierValue: "T-456", notes: "", canDelete: false, version: 2, updatedAt: 90
 }];
 
-const WARNING = "此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
+const WARNING = "此供應商正在審批中，修改代碼、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
 const NOTICE = "原審批申請已失效，供應商回到草稿，需要重新提交審批";
 
 function mountPanel({ canManage = true, identifiers = IDENTIFIERS, approvalPending = false } = {}) {

@@ -120,7 +120,7 @@ async function openDetail(page) {
 async function pickFirstCurrency(page) {
   const option = page.getByRole("option").first();
   await expect(async () => {
-    if (!(await option.isVisible())) await page.getByLabel("Default Currency *").first().click();
+    if (!(await option.isVisible())) await page.getByLabel("預設貨幣 *").first().click();
     await expect(option).toBeVisible({ timeout: 1000 });
   }).toPass();
   await option.click();
@@ -284,8 +284,8 @@ test("@technical the create page offers an approver only when the policy is on, 
   const lookup = state.calls.find((call) => call.path === "/api/v1/supplier-approvers");
   expect(lookup.query).toMatchObject({ excludeUserId: String(REQUESTER.id) });
 
-  await page.getByLabel("Supplier Code *").fill("SUP-900");
-  await page.getByLabel("Supplier Name *").fill("Keyboard Trading");
+  await page.getByLabel("供應商代碼 *").fill("SUP-900");
+  await page.getByLabel("供應商名稱 *").fill("Keyboard Trading");
   await pickFirstCurrency(page);
 
   await page.getByLabel("審批人", { exact: true }).click();
@@ -306,8 +306,8 @@ test("@technical with the policy off the create page shows no selector and sends
   await expect(page.getByRole("heading", { name: "啟用審批" })).toHaveCount(0);
   expect(state.calls.some((call) => call.path === "/api/v1/supplier-approvers")).toBe(false);
 
-  await page.getByLabel("Supplier Code *").fill("SUP-901");
-  await page.getByLabel("Supplier Name *").fill("No Approval Trading");
+  await page.getByLabel("供應商代碼 *").fill("SUP-901");
+  await page.getByLabel("供應商名稱 *").fill("No Approval Trading");
   await pickFirstCurrency(page);
   await page.getByRole("button", { name: /直接啟用/u }).click();
   await expect(page.getByText("已建立")).toBeVisible();
