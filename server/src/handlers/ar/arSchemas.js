@@ -8,19 +8,20 @@ import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessM
 import { CustomerLookupService } from "../../modules/customer/CustomerLookupService.js";
 import { readInvoiceSourcesInTransaction } from "../../modules/fulfillment/readInvoiceSourcesInTransaction.js";
 
-// 三個權限互不繼承：查看、發票管理、收款及核銷管理。
+// 各應收權限互不繼承。
 export const AR_VIEW_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.view"] } });
 export const AR_INVOICE_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.invoice.mgmt"] } });
 export const AR_RECEIPT_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.receipt.mgmt"] } });
+export const AR_OPENING_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.opening.mgmt"] } });
 
-const object = (properties, required = Object.keys(properties)) => ({ type: "object", required, additionalProperties: false, properties });
+export const object = (properties, required = Object.keys(properties)) => ({ type: "object", required, additionalProperties: false, properties });
 export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
-const ID = { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER };
-const TEXT = { type: "string" }, NULLABLE_TEXT = { type: ["string", "null"] }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
-const AMOUNT = { type: "string", pattern: "^\\d+\\.\\d{4}$" }, DATE = { type: "string", format: "date" }, CURRENCY = { type: "string", pattern: "^[A-Z]{3}$" };
-const PAGE = { page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 } };
+export const ID = { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER };
+export const TEXT = { type: "string" }, NULLABLE_TEXT = { type: ["string", "null"] }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
+export const AMOUNT = { type: "string", pattern: "^\\d+\\.\\d{4}$" }, DATE = { type: "string", format: "date" }, CURRENCY = { type: "string", pattern: "^[A-Z]{3}$" };
+export const PAGE = { page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 } };
 const RECEIPT_STATUSES = ["DRAFT", "CONFIRMED", "CANCELLED", "VOID"];
-const actions = (...names) => ({ type: "array", uniqueItems: true, items: { enum: names } });
+export const actions = (...names) => ({ type: "array", uniqueItems: true, items: { enum: names } });
 
 export const ID_PARAMS = Object.freeze(object({ id: ID }));
 export const ALLOCATION_PARAMS = Object.freeze(object({ id: ID, allocationId: ID }));
@@ -38,7 +39,7 @@ export const RECEIPT_LIST_RESPONSE = Object.freeze(object({ items: { type: "arra
   total: { type: "integer", minimum: 0 }, ...PAGE }));
 export const RECEIPT_DETAIL_RESPONSE = Object.freeze(object({
   ...RECEIPT_SUMMARY, notes: TEXT, voidReason: TEXT, createdByLabel: TEXT, confirmedByLabel: TEXT, confirmedAt: NULLABLE_TIME, voidedByLabel: TEXT, voidedAt: NULLABLE_TIME,
-  allocations: { type: "array", items: object({ id: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT, invoiceDate: TEXT, dueDate: TEXT, invoiceTotalAmount: AMOUNT,
+  allocations: { type: "array", items: object({ id: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT, invoiceOpeningReference: NULLABLE_TEXT, invoiceDate: TEXT, dueDate: TEXT, invoiceTotalAmount: AMOUNT,
     invoiceOutstandingAmount: AMOUNT, amount: AMOUNT, status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdByLabel: TEXT, createdAt: TIME, unappliedByLabel: TEXT,
     unappliedAt: NULLABLE_TIME, allowedActions: actions("unapply") }) }
 }));
@@ -54,22 +55,38 @@ export const INVOICE_LIST_QUERY = Object.freeze(object({ ...PAGE, status: { enum
 // 逗號分隔的出貨 ID，最多 100 個。
 export const INVOICED_SHIPMENTS_QUERY = Object.freeze(object({ shipmentIds: { type: "string", pattern: "^[1-9]\\d{0,15}(,[1-9]\\d{0,15}){0,99}$" } }));
 const INVOICE_SUMMARY = {
-  id: ID, number: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, customerId: ID, customerCode: TEXT, customerName: TEXT, currencyCode: CURRENCY,
+  id: ID, number: NULLABLE_TEXT, openingReference: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, customerId: ID, customerCode: TEXT, customerName: TEXT, currencyCode: CURRENCY,
   currencyDecimalPlaces: { type: "integer", minimum: 0, maximum: 4 }, invoiceDate: TEXT, dueDate: TEXT, totalAmount: AMOUNT, allocatedAmount: AMOUNT,
   outstandingAmount: AMOUNT, createdAt: TIME, updatedAt: TIME, allowedActions: actions("confirm", "cancel", "void")
 };
 export const INVOICE_LIST_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100, items: object(INVOICE_SUMMARY) },
   total: { type: "integer", minimum: 0 }, ...PAGE }));
 export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
-  ...INVOICE_SUMMARY, paymentTermCode: TEXT, paymentTermName: TEXT, dueDateOverridden: { type: "boolean" }, dueDateReason: TEXT, notes: TEXT, voidReason: TEXT,
+  ...INVOICE_SUMMARY, paymentTermCode: TEXT, paymentTermName: TEXT, hasBillingAddressSnapshot: { type: "boolean" },
+  dueDateOverridden: { type: "boolean" }, dueDateReason: TEXT, notes: TEXT, voidReason: TEXT,
   createdByLabel: TEXT, confirmedByLabel: TEXT, confirmedAt: NULLABLE_TIME, voidedByLabel: TEXT, voidedAt: NULLABLE_TIME,
   lines: { type: "array", items: object({ id: ID, lineNo: ID, shipmentId: ID, shipmentLineId: ID, salesOrderId: ID, salesOrderLineId: ID, skuCode: TEXT, skuName: TEXT,
     baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID, quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT }) },
   allocations: { type: "array", items: object({ id: ID, receiptId: ID, receiptNumber: NULLABLE_TEXT, receiptDate: TEXT, amount: AMOUNT,
-    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) }
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) },
+  creditAllocations: { type: "array", items: object({ id: ID, creditNoteId: ID, creditNoteNumber: NULLABLE_TEXT, creditDate: TEXT, amount: AMOUNT,
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, isOrigin: { type: "boolean" }, createdAt: TIME }) }
+}));
+export const INVOICE_PRINT_RESPONSE = Object.freeze(object({
+  number: TEXT, customerName: TEXT, billingAddress: { type: "array", items: TEXT },
+  currencyCode: CURRENCY, currencyDecimalPlaces: { type: "integer", minimum: 0, maximum: 4 },
+  invoiceDate: TEXT, dueDate: TEXT, paymentTermCode: TEXT, paymentTermName: TEXT, totalAmount: AMOUNT,
+  issuerName: TEXT, issuerHeader: TEXT, paymentInstructions: TEXT, footer: TEXT,
+  lines: { type: "array", items: object({
+    lineNo: ID, skuCode: TEXT, skuName: TEXT, baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID,
+    quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT, shipmentNumber: TEXT, salesOrderNumber: TEXT
+  }) }
 }));
 export const INVOICE_COMMAND_RESPONSE = Object.freeze(object({ id: ID, number: NULLABLE_TEXT, status: { enum: INVOICE_STATUSES }, version: ID, totalAmount: AMOUNT,
   replayed: { type: "boolean" } }, ["id", "number", "status", "version", "replayed"]));
+export const OPENING_CUSTOMER_QUERY = Object.freeze(object({ code: { type: "string", minLength: 1, maxLength: 64 } }));
+export const OPENING_CUSTOMER_RESPONSE = Object.freeze(object({ customerId: ID, customerCode: TEXT, customerName: TEXT, active: { type: "boolean" } }));
+export const OPENING_INVOICE_RESPONSE = Object.freeze(object({ ...INVOICE_COMMAND_RESPONSE.properties, customerCode: TEXT, customerName: TEXT }));
 export const INVOICED_SHIPMENTS_RESPONSE = Object.freeze(object({ items: { type: "array", maxItems: 100,
   items: object({ shipmentId: ID, invoiceId: ID, invoiceNumber: NULLABLE_TEXT, invoiceStatus: { enum: ["DRAFT", "CONFIRMED"] } }) } }));
 

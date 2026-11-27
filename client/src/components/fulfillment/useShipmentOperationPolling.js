@@ -3,8 +3,9 @@ import shipment,{shipmentDocumentId,shipmentOriginalReference,shipmentOperationR
 import {ApiError} from "@/framework/http/ApiError.js";
 
 const unavailable=()=>{throw new ApiError({code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});};
-const waiting=()=>({message:"原確認仍未完成，請保留操作識別碼並繼續查詢原結果。",action:"recover",preserveInput:true});
-export function useShipmentOperationPolling({reference,shipmentId,actorId}){
+export function useShipmentOperationPolling({reference,shipmentId,actorId,successStatus="SHIPPED"}){
+ const action=successStatus==="REVERSED"?"沖銷":"確認";
+ const waiting=()=>({message:`原${action}仍未完成，請保留操作識別碼並繼續查詢原結果。`,action:"recover",preserveInput:true});
  const operation=ref(null),error=ref(null),loading=ref(false),polling=ref(false),resolvedReference=ref(null);
  let timer,sessionTimer,controller,generation=0,disposed=false,scope=null,knownCorrelation=null,knownOperation=null,deadline=0,reads=0;
  function stop(){generation++;clearTimeout(timer);clearTimeout(sessionTimer);controller?.abort();loading.value=false;polling.value=false;}
@@ -15,11 +16,11 @@ export function useShipmentOperationPolling({reference,shipmentId,actorId}){
   try{
    const value=await shipment.getOperation(scope.eventId,{signal:active.signal});if(disposed||current!==generation||active.signal.aborted)return;
    if(value.eventId!==scope.eventId||knownCorrelation!==null&&value.correlationId!==knownCorrelation||knownOperation!==null&&shipmentDocumentId(value.operationId)!==knownOperation)unavailable();
-   if(value.status==="SUCCEEDED"&&(shipmentDocumentId(value.result?.id)!==scope.shipmentId||value.result.status!=="SHIPPED"||value.result.version<3))unavailable();
+   if(value.status==="SUCCEEDED"&&(shipmentDocumentId(value.result?.id)!==scope.shipmentId||value.result.status!==successStatus||value.result.version<(successStatus==="REVERSED"?5:3)))unavailable();
    if(value.status==="FAILED"&&value.publicErrorCode==="DATABASE_TRANSACTION_INDETERMINATE")unavailable();
    knownCorrelation=value.correlationId;knownOperation=shipmentDocumentId(value.operationId);resolvedReference.value=shipmentOriginalReference(scope.eventId,knownCorrelation);operation.value=value;
    if(value.status!=="IN_PROGRESS"){
-    stop();if(value.status==="FAILED"){const failure=shipmentFailure({status:409,code:value.publicErrorCode});error.value=failure.action==="recover"?{message:"這次確認未完成，請重新載入出貨單後核對。",action:"reload",preserveInput:true}:failure;}return;
+    stop();if(value.status==="FAILED"){const failure=shipmentFailure({status:409,code:value.publicErrorCode});error.value=failure.action==="recover"?{message:`這次${action}未完成，請重新載入出貨單後核對。`,action:"reload",preserveInput:true}:failure;}return;
    }
    timer=setTimeout(()=>read(current),2000);
   }catch(cause){if(current!==generation||active.signal.aborted)return;stop();error.value=cause?.status===404?waiting():shipmentFailure(cause);}

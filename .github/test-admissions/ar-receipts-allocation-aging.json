@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt.",
-  "purpose": "AR first phase, PR 2 of 3: receipts (draft, confirm, cancel, void), allocation and unapply, the receipt list and detail, and the aging report. Proves on real MySQL through real HTTP and JWT that amounts move correctly between receipt and invoices, that non-compliant allocations write nothing, that a void needs a reason and no active allocation, that aging buckets are exact at their boundary days, that the three permissions do not inherit, and that the same event_id returns the original result once.",
-  "data": "Integration file, 10 cases sharing one fixture (server/test/ar/arHttpFixture.js): 4 users, about 10 customers, 1 extra currency, about 40 ar_invoices rows written by SQL as fixtures and about 20 receipts created through the API. Unit file, 4 cases with inline values and fake connections.",
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt. G5 functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator codex-erp-app-ci-01 confirmed exact candidate fdef6ce2e28ea7152e43d164f8bcade778fdb59d, the active receipt ownership and the seven-case delta (agentmsg 2591579c). Codex TL independently reviewed that exact functional candidate (agentmsg f06e4b9a). The CI administrator registers the updated digests. AR aging CSV follows Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator confirmed pin ownership (620c4d86). Codex TL independently reviewed functional candidate 27e6963a59b7ba157ac53e5fa7fa4f758be2e489 (40bc380c). Inventory cost exact source 46d9685ac843094bc82d8193850e106f704b0f5a on merged main 9245e738dd946576e4097d3f4c89a43119dd5736 (PR #415). PM 9e41f325 and 834836b1 directed the common-base integrations, focused functional validation and receipt rebind. Sam directly approved the two costed Fulfillment cases in patch SHA-256 3f41665921abb6c8eb8b972a7fca7ea1474ed95f1b0c614ddad310d21a74ae90 and delegated comparable functional approvals to PM. TL cb68b5d2 reviewed that two-case patch. Trusted CI administrator registration is required for the exact candidate. Independent merge-only review: ed380775 applies to b8f386fa and its identical cost patch; the 46d9685a combined source was submitted to Claude TL in d1c7812a.",
+  "purpose": "AR first phase, PR 2 of 3: receipts (draft, confirm, cancel, void), allocation and unapply, the receipt list and detail, and the aging report. Proves on real MySQL through real HTTP and JWT that amounts move correctly between receipt and invoices, that non-compliant allocations write nothing, that a void needs a reason and no active allocation, that aging buckets are exact at their boundary days, that the three permissions do not inherit, and that the same event_id returns the original result once. G5 updates the shared HTTP fixture to supply a default bill-to purpose in the shipment helper and accept synthetic issuer configuration. Existing receipt and aging cases and their data are unchanged. One AR aging CSV HTTP case checks read authorization, applied customer and currency filters, exact currency totals, formula-safe cells and a header-only empty result.",
+  "data": "Integration file, 10 cases sharing one fixture (server/test/ar/arHttpFixture.js): 4 users, about 10 customers, 1 extra currency, about 40 ar_invoices rows written by SQL as fixtures and about 20 receipts created through the API. Unit file, 4 cases with inline values and fake connections. The CSV case uses the same fixture, one additional synthetic customer and two invoices in the existing two test currencies.",
   "concurrency": "Serial, except one case that sends 2 concurrent allocation requests for the same receipt to show only one succeeds.",
   "repetitions": "1",
   "thresholds": "All cases pass; exact equality on amounts, statuses and versions; coverage floors unchanged; no timing threshold.",
   "trigger": "Existing ci.yml triggers and discovery only: the existing server MySQL integration shards and server test job. No new job, schedule or dispatch. No capacity or performance workload.",
-  "cost": "Local run: about 1.3 s for the integration file and under 0.1 s for the unit file; not measured in CI. No new job.",
+  "cost": "Local run: about 1.3 s for the integration file and under 0.1 s for the unit file; not measured in CI. No new job. The one new serial case uses the existing server shard. Related local validation ran 17 cases in about 16 seconds per timezone. CI time has not been measured.",
   "files": [
     {
       "path": "server/test/integration/arReceipts.integration.test.js",
       "mode": "100644",
-      "blob": "f76c8c6d14963798836b2d0da56e92624faeba01",
+      "blob": "0d79b56da203c9fbe56de4c71e36a9a5487120dc",
       "kind": "functional",
       "cases": [
         "收款草稿：建立後可讀，金額只收幣別小數位，未知客戶、欄位、方式及不符的 Idempotency-Key 都被拒絕而且不留資料",
@@ -24,13 +24,14 @@
         "帳齡表：按到期日分五桶，邊界日準確；只計已確認而仍有未收額的發票；按客戶及幣別分列，不同幣別不相加",
         "收款列表：新到舊、分頁、狀態、客戶、幣別、日期及前綴搜尋；非法查詢參數被拒絕",
         "權限：查看要 ar.view，收款及核銷命令要 ar.receipt.mgmt，兩者互不繼承；未登入一律 401",
-        "同一 eventId 重送：回原結果而且只生效一次；同一 eventId 用於不同內容或不同操作者是衝突；每個成功命令寫一行 Audit"
+        "同一 eventId 重送：回原結果而且只生效一次；同一 eventId 用於不同內容或不同操作者是衝突；每個成功命令寫一行 Audit",
+        "應收帳齡 CSV 沿用查閱權限、篩選及幣別小計，試算表欄位不執行公式"
       ]
     },
     {
       "path": "server/test/ar/arCommand.test.js",
       "mode": "100644",
-      "blob": "d10993706e906edc0c3560f4b6644f972bf11da5",
+      "blob": "ed625c7d5b81f218c74174f82a9c21e0a1e1533b",
       "kind": "functional",
       "cases": [
         "AR amounts are exact ten-thousandths, limited to the currency's decimal places, and never pass through Number",
@@ -42,7 +43,7 @@
     {
       "path": "server/test/ar/arHttpFixture.js",
       "mode": "100644",
-      "blob": "d8364ef5aea4f0cd8d03c46a54c266f980724ecd",
+      "blob": "74b53a762fb0e71f01695902e3bf55626cf8b258",
       "kind": "functional",
       "cases": [
         "Shared HTTP fixture for the AR integration files: 4 synthetic users, 1 extra currency, SQL helpers for customers and invoices; registers no case of its own"

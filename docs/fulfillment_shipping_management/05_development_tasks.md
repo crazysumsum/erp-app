@@ -2560,6 +2560,8 @@ Commit：`feat: atomically reverse shipment effects`。
 ### Approach
 預計變更範圍：reverse handler/schema、`ShipmentReversalRecoveryJob.js`、scheduler registry、Reverse API test、reversal recovery integration test。
 
+成本啟用後，Phase A 在持有出貨單鎖時預檢完整原 `ISSUE` 發出明細，最多 5,000 筆。同一張出貨單超過 5,000 筆發出明細時回 HTTP 503（`FULFILLMENT_DEPENDENCY_UNAVAILABLE`），不截斷明細或部分沖銷，出貨單維持 `SHIPPED`。此上限計算發出明細（庫存異動），和出貨商品行數分開計算。
+
 依賴：P3-T02。
 
 規格追溯：FR-REV-002、004、008～010；NFR一致性／恢復；Design §§5.3、5.5、12.2～12.4。

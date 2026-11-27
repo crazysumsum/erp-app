@@ -55,10 +55,25 @@ describe("TASK-024 審批及設定 client contract", () => {
   });
 });
 
+it("TASK-026 撤回確認、取消與結清送原採購版本、原因和 Idempotency-Key", async () => {
+  const payload = { eventId: "intent", version: 3, reason: "供應商確認不再到貨" };
+  for (const [method, path, body] of [
+    ["withdrawPurchaseOrderConfirmation", "confirmation/withdraw", payload],
+    ["cancelPurchaseOrder", "cancel", payload],
+    ["closePurchaseOrderRemaining", "close-remaining", { ...payload, lineIds: [11, 12] }]
+  ]) {
+    await purchasing[method](8, body);
+    expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/purchase-orders/8/${path}`, {
+      idempotent: true, idempotencyKey: "intent", body
+    });
+  }
+});
+
 describe("useCommandEvent", () => {
   const failure = (fields) => Object.assign(new Error("failed"), fields);
 
-  it.each([[{ code: "TIMEOUT" }], [{ code: "NETWORK_ERROR" }], [{ code: "TRANSACTION_OUTCOME_UNKNOWN" }], [{ code: "IDEMPOTENCY_IN_PROGRESS" }], [{ status: 503 }]])("結果未確定（%j）就保留原 payload 同 eventId", async (fields) => {
+  it.each([[{ code: "TIMEOUT" }], [{ code: "NETWORK_ERROR" }], [{ code: "TRANSACTION_OUTCOME_UNKNOWN" }],
+    [{ code: "IDEMPOTENCY_IN_PROGRESS" }], [{ code: "IDEMPOTENCY_RESULT_UNAVAILABLE" }], [{ status: 503 }]])("結果未確定（%j）就保留原 payload 同 eventId", async (fields) => {
     const command = useCommandEvent(), send = vi.fn().mockRejectedValueOnce(failure(fields)).mockResolvedValue("done");
     await expect(command.run({ notes: "第一次" }, send)).rejects.toThrow("failed");
     expect(command.isUncertain()).toBe(true);
@@ -76,6 +91,20 @@ describe("useCommandEvent", () => {
     expect(command.isUncertain()).toBe(false);
     await command.run({}, send);
     expect(new Set(send.mock.calls.map(([body]) => body.eventId)).size).toBe(3);
+  });
+
+  it("查到的完成結果只會結算同一筆未確定事件", async () => {
+    const command = useCommandEvent();
+    const send = vi.fn().mockRejectedValueOnce(failure({ code: "TIMEOUT" })).mockResolvedValue("done");
+    await expect(command.run({}, send, "receipt")).rejects.toThrow("failed");
+    const [{ eventId }] = send.mock.calls[0];
+    expect(command.confirmCompleted("receipt", "other-event")).toBe(false);
+    expect(command.confirmCompleted("other-key", eventId)).toBe(false);
+    expect(command.isUncertain("receipt")).toBe(true);
+    expect(command.confirmCompleted("receipt", eventId)).toBe(true);
+    expect(command.isUncertain("receipt")).toBe(false);
+    await command.run({}, send, "receipt");
+    expect(send.mock.calls[1][0].eventId).not.toBe(eventId);
   });
 
   it("唔同 key 互不影響：新 key 唔用舊 intent，原 key 仍然未確定", async () => {

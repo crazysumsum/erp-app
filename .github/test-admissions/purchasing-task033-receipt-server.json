@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam's 2026-11-19 through 2026-11-26 Taipei functional admission decision (PM f3f4c3c8), requiring an ordinary PR, green functional CI and one non-author review. As requested by CI administrator b9ec4fd6, this successor carries all 56 classifications and workloads from inventory-opening-phase1-functional.json approved by digest bea42f9553d70446fbe5c8c3f7850c9779468c4a517d95a0a3619b2b65381865 at main 3f1b3ff431f4ac921b5d384bd6f8bcbaec9af7cd, refreshes five directly changed Purchasing support blobs, and adds the TASK-032 handler, posting service, test and workload note. AR retains the TC-012 pin. Existing source review: Claude TL 2d9e0739. The new exact candidate goes to non-author review and to the trusted CI administrator for admission. The PR #387 first-run C5 binary-log fixture correction uses the existing CI fixture administrator for trigger DDL without changing test registrations, assertions, application permissions or CI configuration. The corrected exact candidate is subject to independent review and CI administrator admission. TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending. Receives the functional-only 2026-11-19 through 2026-11-26 Taipei umbrella decision (Sam: 「暫停 7 天」, PM agentmsg f3f4c3c8); non-author review, green functional CI, and external administrator registration apply to this exact revision.",
-  "purpose": "TASK-029 Goods Receipt Draft create, update and cancel over real HTTP, JWT and MySQL: receivable-PO gate, full replace across UOM, warehouse, bin and status, typed refusals for foreign lines, wrong UOM, bin outside its warehouse, duplicate buckets, zero quantity and stale versions, the Inventory-bound reason byte rule, cancel only in DRAFT, permission, replay and the duplicate delivery-note warning; PO progress and Inventory unchanged. Carries the unchanged TASK-025 and TASK-028 cases; Opening parser, precheck and scoped atomic posting guard against invalid/double stock writes, stale Item codes and unsafe lot keys. TASK-032 adds HTTP/JWT/MySQL confirmation against real Inventory posting: atomic two-line posting, PO progress/history, procurement audit and full receipt, idempotent replay and event conflict, locked over-receipt and reasons, inactive or mismatched locations, rollback after posting or subsequent write failures, blocked supplier quarantine, invalid/empty lines and missing lot, permission/version/state refusals, SKU tracking drift and short-expiry authorization and evidence. Three TASK-033 real HTTP/MySQL cases verify operation owner and permission loss, receipt list/detail, and receivable PO/warehouse/bin lookups. TASK-037 adds a read-only outstanding PO route, checking delivery-date precedence, scope, paging, invalid filters and HTTP 401/403. Date bounds require outstanding quantity on a line whose delivery date is within range, using the PO header delivery date only when the line's delivery date is absent.",
-  "data": "TASK-029 file: 9 registrations sharing one application and pool; 2 users, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOMs, 2 warehouses, 3 bins; at most 3 POs, 2 GRs and 4 details per case, POs written by SQL; about 50 HTTP requests in the file, with the per-IP request limit raised for the test application only. TASK-025 and TASK-028 data unchanged. No fixture files; Opening routine adds 7 in-memory cases with at most 5,001 small lines in a parser-only count check, otherwise at most 6 lines. Explicit local suite only: 9 cases, one fresh isolated MySQL 26.7 schema, one warehouse, two bins, two SKUs and two actors, at most two positive rows per file. TASK-032: 9 registrations share one application and pool, with 3 users and 3 roles, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOM links, 2 warehouses and 3 bins. The file creates 9 two-line POs by SQL, 10 GR drafts by HTTP and issues 30 serial confirm requests. Per case: 1 PO, at most 2 GRs and 6 confirm requests; per request: at most 2 lines and 2 details. In-process fault stubs are restored in finally. C5 uses one short-lived DB_ADMIN fixture connection only to create and drop the same temporary PO progress trigger, with drop in finally and connection close after the case. All HTTP application SQL still runs under the original application account; the per-IP request limit applies to the test application only. All TASK-032 fixtures are inline. Extends the shared Confirm fixture with one receiving user/role and one temporary lapsed-permission user/role in C8. Adds five two-line POs, three drafts, three confirms and 19 sequential GET requests across three cases. A bin is made inactive and restored. No additional runner or fixture files. One new functional HTTP/MySQL registration reuses the existing two-user fixture and makes four single-line POs (confirmed, partially received, closed, cancelled), four create requests and eleven serial outstanding GET requests.",
-  "concurrency": "Within a case: 1, with no concurrent requests. Runner workers unchanged; Opening cases serial per file, one isolated database and HTTP app for the explicit local cases only.",
-  "repetitions": "1 per applicable existing run",
-  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold; Opening routine 7/7 and explicit local 9/9, both zero skips. All 9 TASK-032 cases must pass, including exact stock and PO effects, zero additional effect on replay or rejection, atomic rollback of injected faults, and persisted exception evidence. All three new cases and all inherited cases must pass, with existing coverage floors.",
-  "trigger": "The existing ci.yml triggers in the existing server jobs; no new job. Opening routine unit files use existing discovery; nine guarded native cases must be executed via explicit local server/scripts/inventoryOpening.integration.js. No CI job, discovery flag or workflow change. TASK-032 uses the existing server integration discovery and job.",
-  "cost": "Not measured. A 2026-11-19 local serial run of the 12 Purchasing integration files (107 cases) was history, not a promise. No capacity workload; Seven small Opening units with no database calls, no separate CI overhead measurement. Explicit local MySQL/HTTP suite took about 1.3 seconds after schema migration. No new non-functional workload. TASK-032 CI execution time has not been measured. This adds a serial functional suite without a timing or capacity workload. The TASK-037 HTTP registration is covered by the local isolated MySQL regression; CI duration is unmeasured. The single new HTTP case ran in 0.73 seconds locally.",
+  "decision": "The adopted main policy from PR #395 records Sam's 2026-11-24 Taipei decision to extend the functional per-case admission suspension until production go-live (PM c6bf4e42; original 2026-11-19 decision PM f3f4c3c8). Ordinary PR, green functional CI, non-author review and trusted CI administrator registration of the exact candidate still apply. This receipt retains the TASK-025/028/029/032/033/037 and Inventory Opening workloads and classifications, including the original 56 classifications approved by digest bea42f9553d70446fbe5c8c3f7850c9779468c4a517d95a0a3619b2b65381865 and G3 admitted by PR #396. Existing C5 uses only the CI fixture administrator for trigger DDL. The separate G1 AR receipts from PR #397 remain unmodified. Inventory quantity report source bfd1c2618664e2473a143e89fed6272968ceb909, tree f435a768b08a251024d0b0c89dc07f1be8a4b768, base b87794975596e5f338182d9ea1dcb18a33dd3a2e, source patch SHA-256 705b736adcad4d282bd5dc51116fb1d983b58e2835797ead5e1190fbb49079a4. Independent source review df5911fe and G3 merge review 736a9806 by Codex TL. Codex TL G1 exact merge-only review ede96cd0 passed with no Required findings on the source and independently verified 19 client cases, 32 server cases and one real Chromium/MySQL CSV case. The non-author review scope is the source delta; static receipt verification and external registration still belong to the CI administrator. CI administrator direction 8b1e1354 and PM direction ed54973a authorize preparation; registration and scheduling of this revision are separate. G5 functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator codex-erp-app-ci-01 confirmed exact candidate fdef6ce2e28ea7152e43d164f8bcade778fdb59d, the active receipt ownership and the seven-case delta (agentmsg 2591579c). Codex TL independently reviewed that exact functional candidate (agentmsg f06e4b9a). The CI administrator registers the updated digests. P1 follows Sam's functional-only suspension through production go-live (PR #395). PM d7529199 and CI administrator 5f813e19 confirmed preparation for the next release window at main f84843b5876773889a2e4bad48426a803444c3c2 and merge-only source head 0a550c4d2c710052f422ca6f6c5dc281739ea9e3. Only two functional cases are added to the existing server integration discovery. Independent review and CI administrator registration of this receipt precede the formal PR, after the natural functional CI for main f84843b5 passes. Purchase-order report follows Sam's functional-only suspension through production go-live (PR #395). PM 42e2bc34 and CI aa3997a1 direct preparation after P1 on actual main 3bb47ef2e7e45936f068328897f5ef23a716ff7b with reviewed report source merge 73f653a373118bf43290b64f121d6955677daedd. Independent review and CI administrator registration of the candidate receipts are required before an ordinary PR in the assigned window. UTC guard pin refresh (PM 0ebd80e1, independent TL review 07172877 of 32df5be88afde5c917f929020bc8b646de79188c, CI precheck 7428a38b). Existing Supplier migration cases TC-001, TC-005 and TC-006 explicitly launch their API child in test mode to retain both time zones. Their data, assertions and workload are unchanged. Historical BMD source fixture 0b11038f (PM c5e61a77; non-author TL 4bba87f5) retains all existing Purchasing cases. This receipt combines the independently reviewed BMD fixture and UTC Supplier migration pin in one 77-path receipt as directed by PM 5278b4f0 and CI 9b5ac626. Actual main is 105b1ee6f0aae8e6acaaa50bea1403bef5ac1f26 after PR #413; reviewed integration source is e53e236920ffa850d5e8cd338a13fb571afe3a76. CI administrator registration follows final independent review. Inventory cost exact source 46d9685ac843094bc82d8193850e106f704b0f5a on merged main 9245e738dd946576e4097d3f4c89a43119dd5736 (PR #415). PM 9e41f325 and 834836b1 directed the common-base integrations, focused functional validation and receipt rebind. Sam directly approved the two costed Fulfillment cases in patch SHA-256 3f41665921abb6c8eb8b972a7fca7ea1474ed95f1b0c614ddad310d21a74ae90 and delegated comparable functional approvals to PM. TL cb68b5d2 reviewed that two-case patch. Trusted CI administrator registration is required for the exact candidate. Independent merge-only review: ed380775 applies to b8f386fa and its identical cost patch; the 46d9685a combined source was submitted to Claude TL in d1c7812a. Receipt reversal third-window update under Sam's functional-only suspension through production go-live (PR #395), PM agentmsg 9eb437e2 and CI workload precheck 0ca59080. Main 7e2a2f70cb3058731ffa03c2100393f8297f74d9, source candidate fd621eccc51488d811fb8fad8db9dc5a8c036a84. Decision E agentmsg adf3a7df / 3ad2f864, d13fbd76 with 0131. Non-author signed review, exact digest registration by the trusted CI administrator and ordinary functional CI apply. Sam's functional case-admission suspension until go-live in AGENTS.md applies. PM 8a2e7ac1, 7909d49e, 3f76663b, d8980e85 and 6818b16f authorized this Unicode role fix, synthetic HTTP validation and Role create/rename assertions. The source-only head is 0b095df1d68fc132255431e8d9ec19011e4b5fe0 on actual main 44d25ebe34944b91e5e1248cbece0484548bb953. TL non-author exact review and trusted CI administrator registration are required. This copy has no registration authority.",
+  "purpose": "TASK-029 Goods Receipt Draft create, update and cancel over real HTTP, JWT and MySQL: receivable-PO gate, full replace across UOM, warehouse, bin and status, typed refusals for foreign lines, wrong UOM, bin outside its warehouse, duplicate buckets, zero quantity and stale versions, the Inventory-bound reason byte rule, cancel only in DRAFT, permission, replay and the duplicate delivery-note warning; PO progress and Inventory unchanged. Carries the unchanged TASK-025 and TASK-028 cases; Opening parser, precheck and scoped atomic posting guard against invalid/double stock writes, stale Item codes and unsafe lot keys. TASK-032 adds HTTP/JWT/MySQL confirmation against real Inventory posting: atomic two-line posting, PO progress/history, procurement audit and full receipt, idempotent replay and event conflict, locked over-receipt and reasons, inactive or mismatched locations, rollback after posting or subsequent write failures, blocked supplier quarantine, invalid/empty lines and missing lot, permission/version/state refusals, SKU tracking drift and short-expiry authorization and evidence. Three TASK-033 real HTTP/MySQL cases verify operation owner and permission loss, receipt list/detail, and receivable PO/warehouse/bin lookups. TASK-037 adds a read-only outstanding PO route, checking delivery-date precedence, scope, paging, invalid filters and HTTP 401/403. Date bounds require outstanding quantity on a line whose delivery date is within range, using the PO header delivery date only when the line's delivery date is absent. G3 checks version-bound one-way Opening close, strong authentication, durable replay, rollback with a failed success audit and visibility/disabled writes on LIVE and stale reconciliation. The Inventory report cases verify shared stock and movement filters, a stable maximum projection and rejection without partial output or data after a permission change or abort. G5 extends the global configuration normalization assertion to include the company section. The pinned company module reads environment variables; workload scale and case count are unchanged. P1 adds two exact cases for receipt source list filtering and purchase currency, and for confirmed source snapshots, current lock ownership and whole-batch rejection on ineligible, mixed-supplier or mixed-currency inputs. Refresh the existing purchase-order CSV support pins while preserving every current case and prior support pin. The existing P1 case models the BMD source as historical while retaining live HKD writer, lock, currency mismatch and receipt list assertions. Third window: Verify receipt reversals, current reads, vendor return shared limits and the Decision E net source.",
+  "data": "TASK-029 file: 9 registrations sharing one application and pool; 2 users, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOMs, 2 warehouses, 3 bins; at most 3 POs, 2 GRs and 4 details per case, POs written by SQL; about 50 HTTP requests in the file, with the per-IP request limit raised for the test application only. TASK-025 and TASK-028 data unchanged. No fixture files; Opening routine adds 7 in-memory cases with at most 5,001 small lines in a parser-only count check, otherwise at most 6 lines. Explicit local Opening suite: original 9 plus 5 new G3 cases, 14 total, one fresh isolated MySQL 26.7 schema, one warehouse, two bins, two SKUs and two actors, at most two positive rows per file. TASK-032: 9 registrations share one application and pool, with 3 users and 3 roles, 1 supplier, 1 item, 2 UOMs, 2 SKUs, 3 SKU-UOM links, 2 warehouses and 3 bins. The file creates 9 two-line POs by SQL, 10 GR drafts by HTTP and issues 30 serial confirm requests. Per case: 1 PO, at most 2 GRs and 6 confirm requests; per request: at most 2 lines and 2 details. In-process fault stubs are restored in finally. C5 uses one short-lived DB_ADMIN fixture connection only to create and drop the same temporary PO progress trigger, with drop in finally and connection close after the case. All HTTP application SQL still runs under the original application account; the per-IP request limit applies to the test application only. All TASK-032 fixtures are inline. Extends the shared Confirm fixture with one receiving user/role and one temporary lapsed-permission user/role in C8. Adds five two-line POs, three drafts, three confirms and 19 sequential GET requests across three cases. A bin is made inactive and restored. No additional runner or fixture files. One new functional HTTP/MySQL registration reuses the existing two-user fixture and makes four single-line POs (confirmed, partially received, closed, cancelled), four create requests and eleven serial outstanding GET requests. G3 separately adds three in-memory page cases proposed for routine client CI. Author and TL Playwright use a private synthetic schema and are local evidence only, outside this receipt. Inventory quantity reports add four in-memory functional server cases using the existing mocked inquiry executor. The 5,001 null placeholders exercise a rejection branch, with no physical query execution or data generation. The separate real browser case uses two synthetic opening rows and remains local only. P1 list case creates one PO and one GR draft and adds one actor without purchasing permission. The source case creates four POs and five GRs (three real HTTP confirmations in HKD, one synthetic confirmed historical BMD source with one positive receipt line, and one draft later cancelled), one opposing supplier and a second currency. A 21-ID request is an in-memory invalid input and writes no rows. No additional test registration in this receipt. Third window: The same two-SKU/two-warehouse fixture. Each added case uses one PO and one receipt with one or two details. Each HTTP race receives 12 units, attempts 8 versus 8, and then consumes the remaining 4.",
+  "concurrency": "Within a case: 1, with no concurrent requests. Runner workers unchanged; Opening cases serial per file, one isolated database and HTTP app for the explicit local cases only. G3 cases run serially in the existing explicit local script; no additional application worker, DB pool, or browser CI job. The four added assertions add no database connections, parallel requests or runner workers. The P1 source case holds one read transaction and tests one competing NOWAIT transaction at a time. Worker and runner settings are unchanged. Third window: At most two overlapping transactions in the four race executions. All other additions are serial.",
+  "repetitions": "1 per applicable existing run. The four report tests run once through existing functional discovery. Third window: Six additional executions per existing Node discovery, with the two lock orders executed once each.",
+  "thresholds": "All cases pass; coverage floors unchanged; no timing threshold; Opening requires 7 inherited routine unit cases plus 3 new G3 page cases, and 14/14 explicit local cases (original 9 plus new G3 5), all zero skips. All 9 TASK-032 cases must pass, including exact stock and PO effects, zero additional effect on replay or rejection, atomic rollback of injected faults, and persisted exception evidence. All three new cases and all inherited cases must pass, with existing coverage floors. All four added report cases pass, and all existing coverage and functional thresholds remain. Third window: See active AP and posted Returns rows despite an older RR snapshot; total inventory effects never exceed the confirmed quantity; preserve exact costing, operation replay, rollback and Decision E result.",
+  "trigger": "The existing ci.yml triggers in the existing server jobs; no new job. The existing discovery covers the Opening routine units and would cover the 3 G3 page cases after approval. The 14 guarded native cases (original 9 plus G3 5) run only via explicit local server/scripts/inventoryOpening.integration.js. No CI job, discovery flag or workflow change. TASK-032 uses the existing server integration discovery and job. Existing functional CI unit discovery for the four report cases. No new job, capacity case, scenario repetition or Playwright CI extent. The two P1 registrations each run once in the existing functional server integration discovery.",
+  "cost": "Not measured. A 2026-11-19 local serial run of the 12 Purchasing integration files (107 cases) was history, not a promise. No capacity workload; Seven small Opening units with no database calls, no separate CI overhead measurement. Historical original 9/9 explicit local MySQL/HTTP suite took about 1.3 seconds after schema migration. No new non-functional workload. TASK-032 CI execution time has not been measured. This adds a serial functional suite without a timing or capacity workload. The TASK-037 HTTP registration is covered by the local isolated MySQL regression; CI duration is unmeasured. The single new HTTP case ran in 0.73 seconds locally. G3 complete 14-case local MySQL/HTTP suite measured 2.60 s after migrations. Author client regression (47 cases including the three additions) ran in about 1.3 s locally. CI overhead not measured; no new job/capacity. The focused 23-case server file ran in 0.128 s locally including the original cases and startup. Incremental hosted CI time has not been measured. No new runner or capacity spending. P1 ran 40 affected MySQL cases per timezone in a disposable schema and rehearsed one existing Chromium flow per timezone outside CI. The incremental CI cost is unmeasured. Third window: About two seconds across the added confirmations in local author runs, including cold shared fixture initialization. CI impact unmeasured.",
   "files": [
     {
       "path": "docs/purchasing_receiving_management/00_module_manifest.json",
@@ -26,14 +26,14 @@
     {
       "path": "docs/purchasing_receiving_management/05_development_tasks.md",
       "mode": "100644",
-      "blob": "b74e68f0185ba4d3abf7f2d5c2835aced1433649",
+      "blob": "69d466ecd16c8c2a4af58e7ec01b850053c32c80",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/test/configuration.test.js",
       "mode": "100644",
-      "blob": "8e04431c6fb165ddddca9e34efad6e9434b6e17c",
+      "blob": "c2a91ab621700b297cf2cdf7643d9ba4d7f279be",
       "kind": "functional",
       "cases": [
         "global configuration validation normalizes every configuration section"
@@ -42,10 +42,12 @@
     {
       "path": "server/test/integration/supplierMigrationAcceptance.integration.test.js",
       "mode": "100644",
-      "blob": "526330e0c78e22fcade0c9a252b556090da021e5",
+      "blob": "b603b0928967c5326adc63850ea1dbb65fc8b09b",
       "kind": "functional",
       "cases": [
-        "TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts"
+        "TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts",
+        "TC-001 (MIG-001): the runner deploys every migration on an empty database and skips them all on a second run, Supplier creates no Currency or Payment Term schema of its own, and the server starts with both Supplier providers ready",
+        "TC-005 (MIG-005): each bad Supplier security or limit setting stops the server before it ever listens, including no Bank keys at all once the Bank table is deployed, and the error names the setting without its value"
       ]
     },
     {
@@ -343,7 +345,7 @@
     {
       "path": "server/src/modules/fulfillment/fulfillmentErrors.js",
       "mode": "100644",
-      "blob": "9b484bf898a15f0cd30052b1c17d0487d037f9e2",
+      "blob": "9582a81394652fc6db65711248a3be46557ab8a3",
       "kind": "support",
       "cases": []
     },
@@ -371,14 +373,14 @@
     {
       "path": "server/src/modules/inventory/inventoryConstants.js",
       "mode": "100644",
-      "blob": "0f1803f9ff87d3ec74881123ac3c43efd598926d",
+      "blob": "f95a71a1fceb64253bc0bfb7809edb154130a0d7",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/src/modules/inventory/inventoryErrors.js",
       "mode": "100644",
-      "blob": "2d4af96b21d18b3a084c639693f8d4a3471d3e67",
+      "blob": "7cbab14558bf54a9dae4711da7e686a76b04d9af",
       "kind": "support",
       "cases": []
     },
@@ -392,7 +394,7 @@
     {
       "path": "server/src/modules/inventory/inventoryPurchaseValidation.js",
       "mode": "100644",
-      "blob": "08db10a1f4b6f689213606c07f257d49a09daf0c",
+      "blob": "684e55ccfb5279e4738154f7f6c4172ae6b8a7a9",
       "kind": "support",
       "cases": []
     },
@@ -406,7 +408,7 @@
     {
       "path": "server/src/modules/inventory/inventoryValidation.js",
       "mode": "100644",
-      "blob": "c45a7c2632eb11cc58ab4b02b6ea0d89cff0f559",
+      "blob": "f305e06de35f8e7e3ab699ddab4a51524be10d9a",
       "kind": "support",
       "cases": []
     },
@@ -420,7 +422,7 @@
     {
       "path": "server/src/modules/purchasing/purchasingErrors.js",
       "mode": "100644",
-      "blob": "5370cc5a68fcefa61ab6c512cabb37a084227978",
+      "blob": "ddf4ede262c388ad4466f7a854d3a325d81f4dfb",
       "kind": "support",
       "cases": []
     },
@@ -472,14 +474,14 @@
     {
       "path": "server/src/modules/purchasing/GoodsReceiptService.js",
       "mode": "100644",
-      "blob": "e627a4e53bd64c875fb3599284c325009497b474",
+      "blob": "8950c1d13e10dc217ea0ba6676c60ac423ace242",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/src/handlers/purchasing/receivingSchemas.js",
       "mode": "100644",
-      "blob": "970381068174fdef2091455f8903aa7135f9fdfa",
+      "blob": "6ec6683efb6f74c8325c4e44b71cf72c0f79318d",
       "kind": "support",
       "cases": []
     },
@@ -507,21 +509,21 @@
     {
       "path": "server/src/modules/purchasing/PurchasingOperationService.js",
       "mode": "100644",
-      "blob": "7d8c59553f396e10972381ecd99d96aea9079273",
+      "blob": "0997154aae9ef8381e78bc9746f7885f95c10309",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/src/modules/purchasing/PurchasingAuditService.js",
       "mode": "100644",
-      "blob": "b3c67d3123a4debb5b3224fb5dac5a2d928ad509",
+      "blob": "3b5296e3da19d2f8f514ea3d0d66cecdcbdb8338",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/src/handlers/purchasing/purchasingSchemas.js",
       "mode": "100644",
-      "blob": "c5c9ad40839514ccc83fd2cfb6d6648ac7d5fd35",
+      "blob": "641ce807eb9cd6b36a2bc17ea36363d4136f974e",
       "kind": "support",
       "cases": []
     },
@@ -532,10 +534,12 @@
         "Opening CSV preserves batch fields and reports zero rows separately",
         "Opening CSV reports safe row and field errors and withholds all posting rows",
         "Opening CSV rejects missing or changed headers, invalid UTF-8 and malformed quoting",
-        "Opening CSV counts zero rows towards the 5000 data row limit"
+        "Opening CSV counts zero rows towards the 5000 data row limit",
+        "Costed opening requires its own header and preserves unit cost as an exact decimal",
+        "Costed opening rejects invalid precision, sign, blank costs and unrepresentable row amounts"
       ],
       "mode": "100644",
-      "blob": "3dbb31935b9f96358f83aae657593436144e5262"
+      "blob": "2a873f2cf39f1069a6940dc3c3c92f138e8a5d44"
     },
     {
       "path": "server/test/inventoryOpeningPrecheck.test.js",
@@ -560,10 +564,16 @@
         "Opening confirmation posts both rows once and rejects another file for the same position",
         "Opening confirmation rejects an active persistent Stocktake Bin lock without effects",
         "Opening rejects the complete snapshot if an Item SKU was renamed after precheck",
-        "Opening precheck enforces the normalized UTF-8 Lot lock key boundary"
+        "Opening precheck enforces the normalized UTF-8 Lot lock key boundary",
+        "G3 rejects stale, unsigned and wrong-password Go-Live intents without effects",
+        "G3 rolls back the singleton and claim if its success audit fails",
+        "G3 changes the singleton once after successful Opening and records actor, reason, time and audit",
+        "G3 LIVE blocks new upload and READY confirmation while retaining historical outcomes",
+        "G3 replays the exact event and refuses a changed or second event on a LIVE singleton",
+        "Opening rejects a pre-cost READY snapshot and rolls back when the cost journal write fails"
       ],
       "mode": "100644",
-      "blob": "f5bacdf38c25c5d9675f017edbc376accc38398e"
+      "blob": "ec78e5b52405cffba50a6296afeabecb9d65b6e1"
     },
     {
       "path": "server/database/migrations/0066_create_inventory_opening.js",
@@ -589,14 +599,14 @@
     {
       "path": "server/src/modules/purchasing/GoodsReceiptPostingService.js",
       "mode": "100644",
-      "blob": "28f237aa8a603ac6b48a3f0994eb0497fc72e7b2",
+      "blob": "e0556a25c8f90b75b8430ea0a8ec3e5a13cff8b9",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/test/integration/purchasingGoodsReceiptConfirm.integration.test.js",
       "mode": "100644",
-      "blob": "117bd1b61685542ecd3c649f700815643995ab17",
+      "blob": "5f61220bfa8e71059fdb5d202740f6e665e28f11",
       "kind": "functional",
       "cases": [
         "TASK-032 C1 確認兩行：一次 Inventory 過帳、GR CONFIRMED、PO progress 及狀態、history、Audit；收齊後 FULLY_RECEIVED（AC-036、AC-040）",
@@ -610,7 +620,15 @@
         "TASK-032 C10 剩餘效期不足：冇放行權限拒絕、有權冇原因拒絕、權限及原因齊就確認並標記效期放行（§3.6；Inventory 再驗）",
         "TASK-033 C8 按原 eventId 查確認結果：本人回 COMPLETED 及摘要；其他用戶、冇原命令權限、唔存在都係 404；格式錯 400（§2.7、§5.4）",
         "收貨單最小 list／detail GET：Draft 有編輯動作、確認後冇；detail 帶 lines／details 及 Inventory movement；list 按 PO 及狀態篩；錯 status 400、唔存在 404",
-        "收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403"
+        "收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403",
+        "P1 收貨清單以供應商、採購單及狀態合併篩選，回傳採購單幣別",
+        "P1 發票來源讀取確認收貨快照，序列化採購單及收貨鎖，拒絕不合資格的整批來源",
+        "沖銷等採購單鎖期間提交應付佔用時，以真 AP 當前讀取拒絕沖銷",
+        "沖銷等採購單鎖期間提交退供已過帳行時，以真 Returns 當前讀取限制沖銷數量",
+        "真 HTTP 收貨沖銷與退供競爭，${winnerKind} 先鎖單時合計仍不超實收",
+        "收貨沖銷部分與全部過帳可重送，已開票或退回超限時拒絕，稽核失敗整筆回滾",
+        "部分沖銷後應付來源只取正淨量，省略全數沖銷行並拒絕整張已沖銷",
+        "Goods receipt confirmation posts stock over HTTP with a 190-code-point Unicode role"
       ]
     },
     {
@@ -630,14 +648,14 @@
     {
       "path": "server/src/handlers/goods-receipts/listGoodsReceiptsHandler.js",
       "mode": "100644",
-      "blob": "5a163cb45ad72cd744616343fbff71371ed1a5b8",
+      "blob": "25ce7066ff335612b74212b6b80e9ee47dc1c514",
       "kind": "support",
       "cases": []
     },
     {
       "path": "server/src/handlers/purchasing-operations/getPurchasingOperationByEventHandler.js",
       "mode": "100644",
-      "blob": "32f5428308b7158d95996f77776a455b91ac6946",
+      "blob": "b01588d49c994d86416a0564f41947ff82e5dd8b",
       "kind": "support",
       "cases": []
     },
@@ -651,7 +669,7 @@
     {
       "path": "server/src/modules/purchasing/GoodsReceiptInquiryService.js",
       "mode": "100644",
-      "blob": "a650f93d362d3e1b7a4eda79b360e7867daddac1",
+      "blob": "41594147acbd7f14ca471f55a794cbe8378d8f3a",
       "kind": "support",
       "cases": []
     },
@@ -668,6 +686,95 @@
       "blob": "cd1d43b33b6d53c2242137f9eccb8b6eca4a98f5",
       "kind": "support",
       "cases": []
+    },
+    {
+      "path": "client/test/pages/inventory/inventoryOpeningGoLive.test.js",
+      "mode": "100644",
+      "blob": "766eacce7ea4bd96ae5c994005284cff3ae4e2e1",
+      "kind": "functional",
+      "cases": [
+        "G3 direct navigation reads LIVE and hides both Opening writes",
+        "G3 requires the signed version and uses its value for the one-way confirmation",
+        "G3 version conflict requires another status read and an explicit reconciliation version"
+      ]
+    },
+    {
+      "path": "client/src/pages/inventory/OpeningPage.vue",
+      "mode": "100644",
+      "blob": "017a9b43c0b529b4b2a13ffc1b10b2b30777ad3e",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/modules/inventory/InventoryInquiryService.js",
+      "mode": "100644",
+      "blob": "00e74a7cd2ff43ac51f01e768f3f01de26021cb4",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/src/handlers/inventory/reportHandlers.js",
+      "mode": "100644",
+      "blob": "42bdf1879fff9f54a8bd49f72ccb8770da47713f",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/test/inventoryInquiryService.test.js",
+      "mode": "100644",
+      "blob": "09136b30c82153566cf5442a84ce0282e51e1866",
+      "kind": "functional",
+      "cases": [
+        "TASK-027 Transfer list bounds filters/paging and excludes private columns",
+        "TASK-027 Transfer detail reads one transaction and scopes all children",
+        "TASK-027 Transfer query rejects unsafe filters, IDs, date ranges and sort injection",
+        "TASK-016 Stock inquiry uses bounded filters, exact search priority and explicit projections",
+        "TASK-023 Reservation list filters uncovered scope and returns an allowlisted quantity breakdown",
+        "TASK-023 Reservation detail scopes Allocation children and rejects unknown IDs",
+        "TASK-016 Stock inquiry rejects non-allowlisted sorting before querying",
+        "TASK-016 Stock filters bound lot, expiry and zero-ATP results without raw SQL input",
+        "TASK-016 Stock expiry and no-stock states generate distinct bounded predicates",
+        "TASK-016 rejects malformed inquiry filters before issuing a query",
+        "TASK-016 pagination rejects an offset that cannot be represented safely",
+        "TASK-016 Stock summary keeps ATP and status quantities separate",
+        "TASK-017 Stock aggregate list paginates complete SKU totals before bucket drill-down",
+        "TASK-016 Stock detail returns one bucket and recent source-linked movements",
+        "TASK-016 Lot inquiry applies expiry filters and reports current Base UOM totals",
+        "TASK-016 Movement inquiry keeps fixed history order and source snapshots",
+        "TASK-018 Movement count skips the operation join when no source filter needs it",
+        "TASK-016 Movement detail returns group legs and both reversal links",
+        "TASK-016 exact operation source lookup delegates without enumeration",
+        "Stock report shares inquiry filters, ignores paging, and reads at most 5001 rows",
+        "Movement report shares source and time filters without a total query",
+        "Reports reject an oversized result and never project partial data",
+        "Stock reports suppress data on an abort or a permission change after reading"
+      ]
+    },
+    {
+      "path": "client/src/pages/inventory/MovementsPage.vue",
+      "mode": "100644",
+      "blob": "49d19e6086a027aab1407118c9dde3e40d72a7fa",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "client/src/pages/inventory/StocksPage.vue",
+      "mode": "100644",
+      "blob": "a9fc7c4242a947b3999d04dddacfedf6715b1b97",
+      "kind": "support",
+      "cases": []
+    },
+    {
+      "path": "server/config/company.js",
+      "mode": "100644",
+      "blob": "f6afa6f0357a6b6140ea25c7b3b2062f4e857581",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/modules/purchasing/readSupplierInvoiceSourcesInTransaction.js",
+      "mode": "100644",
+      "blob": "565305b4b39214453aeace33cf20c603a619ec13",
+      "kind": "support"
     }
   ]
 }

@@ -2944,6 +2944,8 @@ Commit：`feat: recover interrupted sales confirmations`。
 
 規格追溯：FR-LIFE-001～014、AC 21～24；Design §7.6。
 
+跨模組契約：`ar-minimal-scope-20261119/SCOPE.md` §3.1「補強二（Sales）」；出貨後開票所讀取的商業欄位須維持不變，功能回歸見 PR #376。
+
 ### Acceptance criteria
 
 - [ ] Withdraw只限零fulfilled Confirmed並要求5～500字原因；release完成後才回Draft。

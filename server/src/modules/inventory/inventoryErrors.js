@@ -23,6 +23,9 @@ const definitions = [
   ["VERSION_CONFLICT", 409, "資料已被修改，請重新載入後再試"],
   ["CONCURRENT_OPERATION", 409, "同一庫存正在處理其他操作，請重試"],
   ["INVENTORY_SOURCE_CONFLICT", 409, "相同來源已用於不同庫存操作"],
+  ["INVENTORY_COST_SOURCE_MISSING", 409, "此異動缺少原始成本，無法過帳"],
+  ["INVENTORY_RECEIPT_CURRENCY_UNSUPPORTED", 409, "目前只可確認港幣收貨單"],
+  ["INVENTORY_RETURN_WAREHOUSE_MISMATCH", 409, "退貨庫位必須屬於原出貨或原收貨倉庫"],
   ["IDEMPOTENCY_CONFLICT", 409, "相同請求識別碼已用於不同內容"],
   ["PICK_SEQUENCE_REASON_REQUIRED", 409, "偏離建議揀貨次序時必須提供原因"],
   ["FEFO_OVERRIDE_REQUIRED", 409, "偏離先到期先出需要專門權限及原因"],
@@ -45,6 +48,7 @@ const definitions = [
   ["OPENING_STATE_CONFLICT", 409, "期初庫存工作狀態已改變"],
   ["OPENING_CLOSED", 403, "系統上線後不可再匯入期初庫存"],
   ["INVENTORY_RESOURCE_NOT_FOUND", 404, "找不到指定的庫存資料"],
+  ["INVENTORY_REPORT_TOO_LARGE", 422, "匯出上限為 5,000 筆，請收窄篩選條件後再試"],
   ["OPENING_RESULT_EXPIRED", 410, "期初庫存結果檔案已清理"],
   ["INVENTORY_DEPENDENCY_UNAVAILABLE", 503, "庫存服務所需資料暫時無法使用"]
 ];

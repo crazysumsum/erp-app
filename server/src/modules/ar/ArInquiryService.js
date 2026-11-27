@@ -9,17 +9,18 @@ const BUCKETS = ["notDue", "days1To30", "days31To60", "days61To90", "over90"];
 const BUCKET_SQL = ["d <= 0", "d BETWEEN 1 AND 30", "d BETWEEN 31 AND 60", "d BETWEEN 61 AND 90", "d > 90"]
   .map((condition, index) => `SUM(CASE WHEN ${condition} THEN outstanding_amount ELSE 0 END) AS ${BUCKETS[index]}`).join(", ");
 
-const INVOICE = `id, invoice_number, status, version, customer_id, customer_code_snapshot, customer_name_snapshot, currency_code, currency_decimal_places,
-  ${date("invoice_date")}, ${date("due_date")}, total_amount, allocated_amount, outstanding_amount, created_at, updated_at`;
+const INVOICE = `id, invoice_number, opening_reference, status, version, customer_id, customer_code_snapshot, customer_name_snapshot, currency_code, currency_decimal_places,
+  ${date("invoice_date")}, ${date("due_date")}, total_amount, allocated_amount, outstanding_amount, created_at, updated_at,
+  EXISTS (SELECT 1 FROM ar_credit_notes n WHERE n.invoice_id = ar_invoices.id AND n.status = 'CONFIRMED') AS has_confirmed_credit`;
 
 function invoiceActions(row, permissions) {
   if (!permissions.includes("ar.invoice.mgmt")) return [];
   if (row.status === "DRAFT") return ["confirm", "cancel"];
-  return row.status === "CONFIRMED" && storedUnits(row.allocated_amount) === 0n ? ["void"] : [];
+  return row.status === "CONFIRMED" && storedUnits(row.allocated_amount) === 0n && !Number(row.has_confirmed_credit) ? ["void"] : [];
 }
 
 const invoiceSummary = (row, permissions) => ({
-  id: Number(row.id), number: row.invoice_number, status: row.status, version: Number(row.version), customerId: Number(row.customer_id),
+  id: Number(row.id), number: row.invoice_number, openingReference: row.opening_reference, status: row.status, version: Number(row.version), customerId: Number(row.customer_id),
   customerCode: row.customer_code_snapshot, customerName: row.customer_name_snapshot, currencyCode: row.currency_code,
   currencyDecimalPlaces: Number(row.currency_decimal_places), invoiceDate: row.invoice_date, dueDate: row.due_date, totalAmount: row.total_amount,
   allocatedAmount: row.allocated_amount, outstandingAmount: row.outstanding_amount, createdAt: Number(row.created_at), updatedAt: Number(row.updated_at),
@@ -52,7 +53,7 @@ export class ArInquiryService {
     Object.assign(this, { database, time });
   }
 
-  /** 發票列表：新到舊。`outstandingOnly` 只列已確認而仍有未收額的發票（核銷時選取用）；`q` 以前綴找發票編號、客戶代碼或名稱。 */
+  /** 發票列表：新到舊。`outstandingOnly` 只列已確認而仍有未收額的發票（核銷時選取用）；`q` 以前綴找本系統或舊發票編號、客戶代碼或名稱。 */
   async listInvoices({ claims, query = {} }) {
     const { page = 1, pageSize = 20 } = query, where = [], values = [];
     for (const [field, column] of [["status", "status"], ["customerId", "customer_id"], ["currencyCode", "currency_code"]]) {
@@ -63,8 +64,8 @@ export class ArInquiryService {
     }
     if (query.outstandingOnly) where.push("status = 'CONFIRMED' AND outstanding_amount > 0");
     if (query.q) {
-      where.push(`(${["invoice_number", "customer_code_snapshot", "customer_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
-      values.push(...Array(3).fill(prefix(query.q)));
+      where.push(`(${["invoice_number", "opening_reference", "customer_code_snapshot", "customer_name_snapshot"].map((column) => `${column} LIKE ? ESCAPE '!'`).join(" OR ")})`);
+      values.push(...Array(4).fill(prefix(query.q.trim() || query.q)));
     }
     const filter = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ar_invoices ${filter}`, values);
@@ -73,18 +74,27 @@ export class ArInquiryService {
   }
 
   /** 發票詳情連同發票行及其核銷記錄。 */
-  async getInvoice({ claims, id }) {
-    const [[row]] = await this.database.query(`SELECT ${INVOICE}, payment_term_code_snapshot, payment_term_name_snapshot, due_date_overridden, due_date_reason, notes,
-      void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at FROM ar_invoices WHERE id = ?`, [id]);
+  getInvoice({ claims, id }) {
+    return this.database.withTransaction((tx) => this.#readInvoice(tx, claims, id), { isolationLevel: "REPEATABLE READ" });
+  }
+
+  async #readInvoice(tx, claims, id) {
+    const [[row]] = await tx.query(`SELECT ${INVOICE}, payment_term_code_snapshot, payment_term_name_snapshot, due_date_overridden, due_date_reason, notes,
+      void_reason, created_by_label, confirmed_by_label, confirmed_at, voided_by_label, voided_at,
+      billing_address_snapshot <> '' AS has_billing_address_snapshot FROM ar_invoices WHERE id = ?`, [id]);
     if (!row) throw arError("AR_INVOICE_NOT_FOUND");
-    const [lines] = await this.database.query(`SELECT id, line_no, shipment_id, shipment_line_id, sales_order_id, sales_order_line_id, sku_code_snapshot, sku_name_snapshot,
+    const [lines] = await tx.query(`SELECT id, line_no, shipment_id, shipment_line_id, sales_order_id, sales_order_line_id, sku_code_snapshot, sku_name_snapshot,
       base_uom_code_snapshot, sales_uom_code_snapshot, to_base_factor_snapshot, quantity, unit_price_snapshot, line_amount
       FROM ar_invoice_lines WHERE invoice_id = ? ORDER BY line_no`, [id]);
-    const [allocations] = await this.database.query(`SELECT a.id, a.receipt_id, a.amount, a.status, a.created_at, r.receipt_number, ${date("r.receipt_date", "receipt_date")}
+    const [allocations] = await tx.query(`SELECT a.id, a.receipt_id, a.amount, a.status, a.created_at, r.receipt_number, ${date("r.receipt_date", "receipt_date")}
       FROM ar_receipt_allocations a JOIN ar_receipts r ON r.id = a.receipt_id WHERE a.invoice_id = ? ORDER BY a.id`, [id]);
+    const [creditAllocations] = await tx.query(`SELECT a.id, a.credit_note_id, a.is_origin, a.amount, a.status, a.created_at,
+        n.credit_note_number, ${date("n.credit_date", "credit_date")}
+      FROM ar_credit_applications a JOIN ar_credit_notes n ON n.id = a.credit_note_id WHERE a.invoice_id = ? ORDER BY a.id`, [id]);
     const time = (value) => value === null ? null : Number(value);
     return {
       ...invoiceSummary(row, claims?.permissions ?? []), paymentTermCode: row.payment_term_code_snapshot, paymentTermName: row.payment_term_name_snapshot,
+      hasBillingAddressSnapshot: Number(row.has_billing_address_snapshot) === 1,
       dueDateOverridden: Boolean(row.due_date_overridden), dueDateReason: row.due_date_reason, notes: row.notes, voidReason: row.void_reason,
       createdByLabel: row.created_by_label, confirmedByLabel: row.confirmed_by_label, confirmedAt: time(row.confirmed_at), voidedByLabel: row.voided_by_label, voidedAt: time(row.voided_at),
       lines: lines.map((line) => ({ id: Number(line.id), lineNo: Number(line.line_no), shipmentId: Number(line.shipment_id), shipmentLineId: Number(line.shipment_line_id),
@@ -92,7 +102,10 @@ export class ArInquiryService {
         baseUomCode: line.base_uom_code_snapshot, salesUomCode: line.sales_uom_code_snapshot, toBaseFactor: Number(line.to_base_factor_snapshot),
         quantity: String(line.quantity), unitPrice: line.unit_price_snapshot, lineAmount: line.line_amount })),
       allocations: allocations.map((item) => ({ id: Number(item.id), receiptId: Number(item.receipt_id), receiptNumber: item.receipt_number, receiptDate: item.receipt_date,
-        amount: item.amount, status: item.status, createdAt: Number(item.created_at) }))
+        amount: item.amount, status: item.status, createdAt: Number(item.created_at) })),
+      creditAllocations: creditAllocations.map((item) => ({ id: Number(item.id), creditNoteId: Number(item.credit_note_id),
+        creditNoteNumber: item.credit_note_number, creditDate: item.credit_date, isOrigin: Boolean(item.is_origin), amount: item.amount,
+        status: item.status, createdAt: Number(item.created_at) }))
     };
   }
 
@@ -129,7 +142,7 @@ export class ArInquiryService {
       FROM ar_receipts WHERE id = ?`, [id]);
     if (!row) throw arError("AR_RECEIPT_NOT_FOUND");
     const [allocations] = await this.database.query(`SELECT a.id, a.invoice_id, a.amount, a.status, a.created_by_label, a.created_at, a.unapplied_by_label, a.unapplied_at,
-        i.invoice_number, ${date("i.invoice_date", "invoice_date")}, ${date("i.due_date", "due_date")}, i.total_amount, i.outstanding_amount
+        i.invoice_number, i.opening_reference, ${date("i.invoice_date", "invoice_date")}, ${date("i.due_date", "due_date")}, i.total_amount, i.outstanding_amount
       FROM ar_receipt_allocations a JOIN ar_invoices i ON i.id = a.invoice_id WHERE a.receipt_id = ? ORDER BY a.id`, [id]);
     const canUnapply = row.status === "CONFIRMED" && (claims?.permissions ?? []).includes("ar.receipt.mgmt");
     return {
@@ -137,7 +150,7 @@ export class ArInquiryService {
       confirmedByLabel: row.confirmed_by_label, confirmedAt: row.confirmed_at === null ? null : Number(row.confirmed_at),
       voidedByLabel: row.voided_by_label, voidedAt: row.voided_at === null ? null : Number(row.voided_at),
       allocations: allocations.map((item) => ({
-        id: Number(item.id), invoiceId: Number(item.invoice_id), invoiceNumber: item.invoice_number, invoiceDate: item.invoice_date, dueDate: item.due_date,
+        id: Number(item.id), invoiceId: Number(item.invoice_id), invoiceNumber: item.invoice_number, invoiceOpeningReference: item.opening_reference, invoiceDate: item.invoice_date, dueDate: item.due_date,
         invoiceTotalAmount: item.total_amount, invoiceOutstandingAmount: item.outstanding_amount, amount: item.amount, status: item.status,
         createdByLabel: item.created_by_label, createdAt: Number(item.created_at), unappliedByLabel: item.unapplied_by_label,
         unappliedAt: item.unapplied_at === null ? null : Number(item.unapplied_at), allowedActions: canUnapply && item.status === "ACTIVE" ? ["unapply"] : []

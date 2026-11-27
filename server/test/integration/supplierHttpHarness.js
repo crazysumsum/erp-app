@@ -118,7 +118,11 @@ export function createSupplierHarness(prefix, { database = {}, importRoot = null
           throw new Error(`read ${registered.length} api.registered entries but registration completed with ${completed.context.registeredApiCount}`);
         }
         return registered
-          .filter((api) => api.path.startsWith("/api/v1/supplier"))
+          .filter((api) => {
+            const namespace = api.path.split("/")[3];
+            // supplier-returns 係退貨模組；其他 Supplier 前綴仍然要同契約逐條核對。
+            return namespace === "suppliers" || (namespace?.startsWith("supplier-") && namespace !== "supplier-returns");
+          })
           .map((api) => ({ key: `${api.method.toUpperCase()} ${api.path}`, method: api.method.toUpperCase(), path: api.path,
             authType: api.authType, policies: api.authorizationPolicies, idempotent: api.idempotency?.enabled === true }));
       }

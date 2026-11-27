@@ -12,7 +12,12 @@ export default {
     return httpClient.get("/api/v1/ar-invoices", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getInvoice(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-invoices/${id}`, { signal }); },
+  getInvoicePrint(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-invoices/${id}/print`, { signal }); },
   createInvoice(payload) { return write("/api/v1/ar-invoices", payload); },
+  findOpeningCustomer(code, { signal } = {}) {
+    return httpClient.get("/api/v1/ar-opening-invoices/customer", { params: { code }, signal });
+  },
+  registerOpeningInvoice(payload) { return write("/api/v1/ar-opening-invoices", payload); },
   // 所問出貨之中已在有效發票上嘅；server 最多收 100 個 ID。
   listInvoicedShipments(shipmentIds, { signal } = {}) {
     if (!shipmentIds.length) return Promise.resolve([]);
@@ -22,6 +27,20 @@ export default {
     return httpClient.get("/api/v1/ar-receipts", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getReceipt(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-receipts/${id}`, { signal }); },
+  listCreditNotes({ signal, ...query } = {}) {
+    return httpClient.get("/api/v1/ar-credit-notes", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+  getCreditNote(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-credit-notes/${id}`, { signal }); },
+  listCreditReturnSources(invoiceId, { signal } = {}) {
+    return httpClient.get(`/api/v1/ar-credit-notes/sources/${invoiceId}/returns`, { signal }).then(({ items }) => items);
+  },
+  createCreditNote(payload) { return write("/api/v1/ar-credit-notes", payload); },
+  editCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/edit`, payload); },
+  confirmCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/confirm`, payload); },
+  cancelCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/cancel`, payload); },
+  voidCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/void`, payload); },
+  applyCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/applications`, payload); },
+  unapplyCreditNote(id, applicationId, payload) { return write(`/api/v1/ar-credit-notes/${id}/applications/${applicationId}/unapply`, payload); },
   createReceipt(payload) { return write("/api/v1/ar-receipts", payload); },
   confirmReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/confirm`, payload); },
   cancelReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/cancel`, payload); },
@@ -30,6 +49,10 @@ export default {
   unapplyAllocation(id, allocationId, payload) { return write(`/api/v1/ar-receipts/${id}/allocations/${allocationId}/unapply`, payload); },
   // 只做今日現況，唔分頁；唔同幣別唔可以相加。
   getAging({ signal, ...query } = {}) { return httpClient.get("/api/v1/ar-aging", { params: listParams(query), signal }); },
+  exportAging({ signal, ...query } = {}) {
+    const params = new URLSearchParams(listParams(query)).toString();
+    return httpClient.getBlob("/api/v1/ar-aging/export" + (params ? "?" + params : ""), { signal });
+  },
   confirmInvoice(id, payload) { return write(`/api/v1/ar-invoices/${id}/confirm`, payload); },
   cancelInvoice(id, payload) { return write(`/api/v1/ar-invoices/${id}/cancel`, payload); },
   voidInvoice(id, payload) { return write(`/api/v1/ar-invoices/${id}/void`, payload); }

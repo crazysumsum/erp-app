@@ -18,7 +18,8 @@ const COMMANDS = Object.freeze({
   CREATE_GOODS_RECEIPT: "GOODS_RECEIPT",
   UPDATE_GOODS_RECEIPT: "GOODS_RECEIPT",
   CANCEL_GOODS_RECEIPT: "GOODS_RECEIPT",
-  CONFIRM_GOODS_RECEIPT: "GOODS_RECEIPT"
+  CONFIRM_GOODS_RECEIPT: "GOODS_RECEIPT",
+  REVERSE_GOODS_RECEIPT: "REVERSAL"
 });
 // Lookup 要目前仍有原命令嘅權限（同各 route 嘅 policy 一致；§6.1 權限互不繼承）。
 const PO_WRITE = ["purchasing.mgmt"], DECISION = ["purchasing.view", "purchasing.approval"], RECEIVING = ["purchasing.view", "receiving.operation"];
@@ -27,12 +28,14 @@ const LOOKUP_PERMISSIONS = Object.freeze({
   APPROVE_PURCHASE_ORDER: DECISION, REJECT_PURCHASE_ORDER: DECISION, WITHDRAW_APPROVAL_PURCHASE_ORDER: PO_WRITE,
   WITHDRAW_CONFIRMATION_PURCHASE_ORDER: PO_WRITE, CANCEL_PURCHASE_ORDER: PO_WRITE, CLOSE_REMAINING_PURCHASE_ORDER: PO_WRITE,
   UPDATE_PURCHASING_SETTINGS: ["purchasing.settings"],
-  CREATE_GOODS_RECEIPT: RECEIVING, UPDATE_GOODS_RECEIPT: RECEIVING, CANCEL_GOODS_RECEIPT: RECEIVING, CONFIRM_GOODS_RECEIPT: RECEIVING
+  CREATE_GOODS_RECEIPT: RECEIVING, UPDATE_GOODS_RECEIPT: RECEIVING, CANCEL_GOODS_RECEIPT: RECEIVING, CONFIRM_GOODS_RECEIPT: RECEIVING,
+  REVERSE_GOODS_RECEIPT: ["purchasing.view", "inventory.adjust"]
 });
 const PO_STATUSES = ["DRAFT", "PENDING_APPROVAL", "CONFIRMED", "PARTIALLY_RECEIVED", "FULLY_RECEIVED", "CLOSED", "CANCELLED"];
 const GR_STATUSES = ["DRAFT", "CONFIRMED", "PARTIALLY_REVERSED", "REVERSED", "CANCELLED"];
 // 文件編號決定結果屬邊類：PO 或 GR（設計 §4.3、§4.14）。
-const DOCUMENTS = [{ type: "PO", pattern: /^PO-\d{6}-\d{6}$/u, statuses: PO_STATUSES }, { type: "GR", pattern: /^GR-\d{6}-\d{6}$/u, statuses: GR_STATUSES }];
+const DOCUMENTS = [{ type: "PO", pattern: /^PO-\d{6}-\d{6}$/u, statuses: PO_STATUSES }, { type: "GR", pattern: /^GR-\d{6}-\d{6}$/u, statuses: GR_STATUSES },
+  { type: "REVERSAL", pattern: /^GR-\d{6}-\d{6}-R\d{2,5}$/u, statuses: ["POSTED"] }];
 
 function identifier(value) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError("Invalid Purchasing operation identifier");
@@ -141,7 +144,7 @@ export class PurchasingOperationService {
 
   async complete(connection, { operationId, result, nowMs }) {
     const summary = safeResult(result);
-    const [resultType, resultId] = summary.id ? [summary.number.slice(0, 2), String(summary.id)] : ["SETTING", "1"];
+    const [resultType, resultId] = summary.id ? [DOCUMENTS.find(({ pattern }) => pattern.test(summary.number)).type, String(summary.id)] : ["SETTING", "1"];
     const [row] = await connection.execute(`UPDATE purchasing_operation_requests SET result_type = ?, result_id = ?, result_summary = ?,
       completed_at = ? WHERE id = ? AND completed_at IS NULL`, [resultType, resultId, JSON.stringify(summary), timestamp(nowMs), identifier(operationId)]);
     if (Number(row.affectedRows) !== 1) throw purchasingError("CONCURRENT_OPERATION");

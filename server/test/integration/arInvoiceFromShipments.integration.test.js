@@ -2,8 +2,9 @@
  * 開票與應收首期：由真實的 SHIPPED 出貨開票（SCOPE §1、§3），來源只經 Fulfillment 的 readInvoiceSourcesInTransaction。
  *
  * 每案用 Fulfillment 既有的 shipmentDraftFixture 在自己的隔離資料庫建立 1 張訂單（1 行，訂 5 件）及最多 2 張出貨
- * （3 件及 2 件），再在該資料庫跑 AR 的 0122、0123。全檔 2 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
- * 只會上一張發票，另一次 2 個並發的收款建立驗交易內不另佔連線。服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
+ * （3 件及 2 件），再在該資料庫跑所需 AR migrations。全檔 3 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
+ * 只會上一張發票，另一次 2 個並發的收款建立驗交易內不另佔連線。第三案用另一條連線驗證發票行的鎖及佔用釋放。
+ * 服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
  * 沒有容量或效能斷言。資料庫隨 fixture 丟棄。
  */
 import assert from "node:assert/strict";
@@ -11,20 +12,17 @@ import { randomUUID } from "node:crypto";
 import process from "node:process";
 import test from "node:test";
 
-import { up as issueSchema } from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
-import { up as seedArPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
-import { up as createArTables } from "../../database/migrations/0123_create_ar_tables.js";
-import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { ArCommandRunner } from "../../src/modules/ar/arCommand.js";
 import { ArInquiryService } from "../../src/modules/ar/ArInquiryService.js";
 import { ArInvoiceService } from "../../src/modules/ar/ArInvoiceService.js";
 import { ArReceiptService } from "../../src/modules/ar/ArReceiptService.js";
+import { findShipmentInvoiceClaimsInTransaction } from "../../src/modules/ar/findShipmentInvoiceClaimsInTransaction.js";
 import { BusinessMasterProvider } from "../../src/modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
 import { readInvoiceSourcesInTransaction } from "../../src/modules/fulfillment/readInvoiceSourcesInTransaction.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
-import { secondShipment } from "../ar/arShipmentFixture.js";
+import { migrateArShipmentFixture, secondShipment } from "../ar/arShipmentFixture.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
 
 const nativeTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -34,10 +32,9 @@ const code = (expected) => (error) => { assert.equal(error.code, expected, error
 /** 一張訂單（1 行，訂 5 件，行金額由呼叫方設定）及其第一張出貨草稿（3 件）；AR 表及權限已建立，操作者持有三個 ar.* 權限。 */
 async function arFixture(t, { lineAmount, unitPrice }) {
   const f = await shipmentDraftFixture(t);
-  await issueSchema(f.db);
-  await seedArPermissions(f.db);
-  await createArTables(f.db);
-  await addInvoiceLineSalesUom(f.db);
+  await migrateArShipmentFixture(f.db);
+  await f.s.insert("customer_address_purposes", { address_id: f.s.addressId, customer_id: f.s.customerId, purpose_code: "billing", is_default: 1,
+    created_at: f.s.now, updated_at: f.s.now });
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。
   const label = `ar_${randomUUID().slice(0, 12)}`, permissions = ["ar.invoice.mgmt", "ar.receipt.mgmt", "ar.view"];
   const userId = await f.s.insert("users", { username: label, password_hash: "synthetic-only", display_name: "AR synthetic", created_at: f.s.now, updated_at: f.s.now });
@@ -221,4 +218,44 @@ nativeTest("到期日由付款條款現行日數計算，可改而須原因；�
   const receipt = () => f.execute(() => a.receipts.create({ claims: a.claims, input: { eventId: randomUUID(), customerId: f.s.customerId, currencyCode: order.currency_code,
     receiptDate: TODAY, amount: "3.00", paymentMethod: "CASH" } }));
   assert.deepEqual((await Promise.all([receipt(), receipt()])).map((row) => row.status), ["DRAFT", "DRAFT"]);
+});
+
+nativeTest("出貨沖銷佔用查詢讀取原交易，保留草稿及確認佔用，取消和作廢後釋放", async (t) => {
+  const a = await arFixture(t, { lineAmount: "100.0000", unitPrice: "20.0000" });
+  const other = await secondShipment(a.f);
+  const shipmentIds = [String(other), String(a.first)];
+  const inTransaction = (isolationLevel, work) => a.f.execute(() => a.f.database.withTransaction(work, { isolationLevel }));
+  const claims = () => inTransaction("READ COMMITTED", async (tx) => {
+    await tx.query("SELECT id FROM shipments WHERE id IN (?, ?) ORDER BY id FOR UPDATE", shipmentIds);
+    return findShipmentInvoiceClaimsInTransaction(tx, { shipmentIds });
+  });
+  const expected = (count) => [
+    { shipmentId: shipmentIds[0], activeInvoiceLineCount: 0 },
+    { shipmentId: shipmentIds[1], activeInvoiceLineCount: count }
+  ];
+  await assert.rejects(findShipmentInvoiceClaimsInTransaction(a.f.database, { shipmentIds }), TypeError);
+  await inTransaction("REPEATABLE READ", async (tx) => {
+    await assert.rejects(findShipmentInvoiceClaimsInTransaction(tx, { shipmentIds }), TypeError);
+  });
+  await inTransaction("READ COMMITTED", async (tx) => {
+    await assert.rejects(findShipmentInvoiceClaimsInTransaction(tx, { shipmentIds: [shipmentIds[0], shipmentIds[0]] }), TypeError);
+  });
+  await a.ship(a.first);
+  assert.deepEqual(await claims(), expected(0));
+  const draft = await a.create([a.first]);
+  assert.deepEqual(await claims(), expected(1));
+  await a.act("cancel", draft.id, { version: draft.version });
+  assert.deepEqual(await claims(), expected(0));
+  const replacement = await a.create([a.first]);
+  const confirmed = await a.act("confirm", replacement.id, { version: replacement.version });
+  await inTransaction("READ COMMITTED", async (tx) => {
+    await tx.query("SELECT id FROM shipments WHERE id IN (?, ?) ORDER BY id FOR UPDATE", shipmentIds);
+    assert.deepEqual(await findShipmentInvoiceClaimsInTransaction(tx, { shipmentIds }), expected(1));
+    await assert.rejects(a.f.db.query("SELECT id FROM ar_invoice_lines WHERE invoice_id = ? FOR UPDATE NOWAIT", [confirmed.id]),
+      { code: "ER_LOCK_NOWAIT" });
+    const [headers] = await a.f.db.query("SELECT id FROM ar_invoices WHERE id = ? FOR UPDATE NOWAIT", [confirmed.id]);
+    assert.equal(headers.length, 1);
+  });
+  await a.act("void", confirmed.id, { version: confirmed.version, reason: REASON });
+  assert.deepEqual(await claims(), expected(0));
 });

@@ -8,6 +8,8 @@ import {
   validateInventoryStockStatus
 } from "../src/modules/inventory/inventoryValidation.js";
 
+import { normalizePurchaseReversal } from "../src/modules/inventory/inventoryPurchaseValidation.js";
+
 const EXPECTED_AUTHORIZATION = Object.freeze({
   purpose: "receipt.post",
   requiredCallerPermission: "receiving.operation"
@@ -111,6 +113,45 @@ test("Inventory internal command context accepts an identified service actor", (
 
   assert.equal(validated.actor.userId, null);
   assert.equal(validated.actor.serviceName, "receiving-worker");
+});
+
+test("Inventory accepts role names up to 190 Unicode code points and 760 UTF-8 bytes", () => {
+  const claimedRoles = ["銷售", "a".repeat(190), "倉".repeat(189) + "𠮷", "𠮷".repeat(190)];
+  assert.equal(Buffer.byteLength(claimedRoles[3], "utf8"), 760);
+  const input = command({ actor: { ...command().actor, claimedRoles } });
+
+  assert.deepEqual(validateInventoryCommandContext(transaction, input, EXPECTED_AUTHORIZATION).actor.claimedRoles,
+    claimedRoles);
+});
+
+test("Inventory still rejects invalid role names and keeps permission codes ASCII-only", () => {
+  const tooManyBytes = "𠮷".repeat(190) + "a";
+  assert.equal(Buffer.byteLength(tooManyBytes, "utf8"), 761);
+  for (const claimedRoles of [["倉".repeat(191)], [tooManyBytes], ["銷\n售"], ["倉\x7f務"], ["倉務", "倉務"], [""]]) {
+    const input = command({ actor: { ...command().actor, claimedRoles } });
+    assert.throws(() => validateInventoryCommandContext(transaction, input, EXPECTED_AUTHORIZATION), /claimedRoles/);
+  }
+  for (const claimedPermissions of [["receiving.operation", "補貨"], ["receiving.operation", "a".repeat(101)]]) {
+    const input = command({ actor: { ...command().actor, claimedRoles: ["warehouse-operator"], claimedPermissions } });
+    assert.throws(() => validateInventoryCommandContext(transaction, input, EXPECTED_AUTHORIZATION), /claimedPermissions/);
+  }
+});
+
+test("Purchase reversal accepts the same Unicode role names and retains its rejection field", () => {
+  const role = "𠮷".repeat(190);
+  const input = {
+    actor: { userId: 7, serviceName: "", claimedRoles: [role], claimedPermissions: ["purchasing.view", "inventory.adjust"] },
+    correlationId: "",
+    source: { documentId: "42", eventId: "00000000-0000-4000-8000-000000000001" },
+    goodsReceiptId: "42",
+    reasonText: "Correct original receipt",
+    lines: [{ sourceLineId: "1", originalSourceLineId: "1", originalMovementId: 12, baseQuantity: 1 }]
+  };
+  assert.deepEqual(normalizePurchaseReversal(input).actor.claimedRoles, [role]);
+  for (const claimedRoles of [[role + "a"], ["倉\n務"], [role, role]]) {
+    assert.throws(() => normalizePurchaseReversal({ ...input, actor: { ...input.actor, claimedRoles } }),
+      error => error.code === "INVENTORY_INPUT_INVALID" && error.details.field === "claimedRoles");
+  }
 });
 
 test("Inventory Lot input follows the current SKU tracking policy", () => {

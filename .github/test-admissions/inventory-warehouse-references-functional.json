@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "decision": "Issue #395; Sam approved the customer and warehouse lookups; PM agentmsg 56824a29 specifies one functional case per endpoint",
+  "purpose": "Verify the warehouse reference endpoint authorizes each approved role and returns only the four reference fields, including inactive warehouses",
+  "data": "Two synthetic warehouses (one active and one inactive) and four single-permission synthetic users in an isolated MySQL schema",
+  "concurrency": "One application and sequential HTTP requests",
+  "repetitions": "One case execution per matching routine functional test run",
+  "thresholds": "Three independently allowed permissions return exact 200 projections; one unrelated permission returns 403; literal search, stable paging, status filter and schema boundaries hold",
+  "trigger": "Existing routine native functional discovery; no new job, dispatch or performance workload",
+  "cost": "Observed about 1.27 seconds of case execution per local real MySQL 26.7.0 run in UTC and Asia/Hong_Kong, excluding shared runtime and migration initialization; CI critical-path impact unmeasured",
+  "files": [
+    {
+      "path": "server/test/integration/inventoryWarehouseReferences.integration.test.js",
+      "mode": "100644",
+      "blob": "08475ce6fc88c5d55ba59842e3d05c2e6c60fbe5",
+      "kind": "functional",
+      "cases": [
+        "Warehouse references let each permitted role search active and inactive warehouses without exposing master details"
+      ]
+    }
+  ]
+}

@@ -18,11 +18,23 @@ export default {
       .filter(([, value]) => value !== undefined && value !== null && value !== ""));
     return httpClient.get("/api/v1/purchase-orders", { params, signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
+  exportPurchaseOrders({ signal, ...query } = {}) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      for (const item of [value].flat()) {
+        if (item !== undefined && item !== null && item !== "") params.append(key, item);
+      }
+    }
+    return httpClient.getBlob(`/api/v1/purchase-orders/export?${params}`, { signal });
+  },
   getPurchaseOrder(id, { signal } = {}) { return httpClient.get(`/api/v1/purchase-orders/${id}`, { signal }); },
   createPurchaseOrder(payload) { return write("/api/v1/purchase-orders/create", payload); },
   updatePurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/update`, payload); },
   submitPurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/submit`, payload); },
   copyPurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/copy`, payload); },
+  withdrawPurchaseOrderConfirmation(id, payload) { return write(`/api/v1/purchase-orders/${id}/confirmation/withdraw`, payload); },
+  cancelPurchaseOrder(id, payload) { return write(`/api/v1/purchase-orders/${id}/cancel`, payload); },
+  closePurchaseOrderRemaining(id, payload) { return write(`/api/v1/purchase-orders/${id}/close-remaining`, payload); },
   // 回 { requireApproval, items }：提交對話框要知審批開唔開（HD-022 a）。
   lookupApprovers({ signal, ...params } = {}) { return httpClient.get("/api/v1/purchasing-lookups/approvers", { params, signal }); },
   listMyApprovals({ rowsPerPage, filter, signal, page, supplierId } = {}) {
@@ -46,6 +58,8 @@ export default {
   updateGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/update`, payload); },
   cancelGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/cancel`, payload); },
   confirmGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/confirm`, payload); },
+  previewGoodsReceiptReversal(id, { signal } = {}) { return httpClient.get(`/api/v1/goods-receipts/${id}/reversals/preview`, { signal }); },
+  reverseGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/reversals/create`, payload, { signed: true }); },
   getOperationByEvent(eventId, { signal } = {}) { return httpClient.get(`/api/v1/purchasing-operations/by-event/${eventId}`, { signal }); },
   lookupReceivablePurchaseOrders({ signal, ...params } = {}) { return receiving("purchase-orders", params, signal); },
   lookupReceivingWarehouses({ signal } = {}) { return receiving("warehouses", {}, signal); },

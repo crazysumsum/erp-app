@@ -5,12 +5,13 @@ import test, { after, before } from "node:test";
 import { createApplication } from "../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../src/modules/user/passwordHash.js";
+import { inventoryOperationHash } from "../src/modules/inventory/InventoryOperationService.js";
 import { up as openingMigration } from "../database/migrations/0066_create_inventory_opening.js";
 
 const enabled = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_OPENING_TESTS === "1";
 const native = (name, work) => test(name, { skip: !enabled, timeout: 30_000 }, work);
 const root = "/api/v1/inventory/opening";
-const header = "warehouseCode,binCode,skuCode,lotNumber,expiryDate,stockStatus,baseQuantity";
+const header = "warehouseCode,binCode,skuCode,lotNumber,expiryDate,stockStatus,baseQuantity,unitCostHkd";
 let app, db, origin, manager, viewer, managerDevice;
 
 async function actor(name, permissions) {
@@ -101,7 +102,8 @@ async function domainCounts() {
 
 async function request(suffix, token, rows) {
   const body = rows === undefined ? undefined : new FormData();
-  if (body) body.set("file", new Blob([[header, ...rows].join("\n")], { type: "text/csv" }), "opening.csv");
+  if (body) body.set("file", new Blob([[header, ...rows.map(row => row + ",2.05")].join("\n")],
+    { type: "text/csv" }), "opening.csv");
   const reply = await fetch(origin + root + suffix, { method: body ? "POST" : "GET", body,
     headers: token ? { Authorization: "Bearer " + token } : {} });
   return { status: reply.status, json: await reply.json() };
@@ -120,7 +122,10 @@ native("Opening upload saves normalized ready rows and detail returns the same r
   const job = upload.json.data;
   assert.deepEqual([job.status, job.readyRows, job.skippedRows, job.errors], ["READY", 1, [3], []]);
   const stored = (await db.execute("SELECT csv_row_number, normalized_input FROM inventory_opening_rows WHERE job_id=?", [job.id]))[0];
-  assert.deepEqual(stored.map(row => [row.csv_row_number, JSON.parse(typeof row.normalized_input === "string" ? row.normalized_input : JSON.stringify(row.normalized_input)).baseQuantity]), [[2, 4]]);
+  assert.deepEqual(stored.map(row => {
+    const input = typeof row.normalized_input === "string" ? JSON.parse(row.normalized_input) : row.normalized_input;
+    return [row.csv_row_number, input.baseQuantity, input.unitCostHkd];
+  }), [[2, 4, "2.0500"]]);
   const detail = await request("/jobs/" + job.id, manager);
   assert.equal(detail.status, 200, JSON.stringify(detail.json));
   assert.deepEqual(detail.json.data, job);
@@ -159,8 +164,11 @@ function confirmation(job) {
   return { eventId: randomUUID(), expectedVersion: job.version, reason: "Opening reconciliation", password: managerDevice.password };
 }
 
-async function confirm(job, body, { signed = true } = {}) {
-  const route = root + "/jobs/" + job.id + "/confirm";
+function confirm(job, body, options) {
+  return openingPost(root + "/jobs/" + job.id + "/confirm", body, options);
+}
+
+async function openingPost(route, body, { signed = true } = {}) {
   const headers = { Authorization: "Bearer " + manager, "Content-Type": "application/json" };
   if (signed) {
     const device = app.services.require("deviceBinding"), nonce = randomUUID(), timestamp = Date.now();
@@ -195,6 +203,7 @@ native("Opening confirmation rolls back both rows when the second movement link 
       [{ movement_id: null }, { movement_id: null }]);
     assert.deepEqual((await db.query("SELECT COUNT(*) total FROM inventory_operation_requests"))[0], [operations]);
     assert.deepEqual((await db.query("SELECT COUNT(*) total FROM inventory_audit_logs"))[0], [audit]);
+    assert.deepEqual(await costCounts(), [0, 0]);
   } finally {
     await db.query("DROP TRIGGER test_opening_second_link");
   }
@@ -224,7 +233,55 @@ native("Opening confirmation posts both rows once and rejects another file for t
   const [movements] = await db.query("SELECT movement_type,quantity,operation_request_id FROM inventory_movements ORDER BY quantity");
   assert.deepEqual(movements.map(row => [row.movement_type, Number(row.quantity), Number(row.operation_request_id)]),
     [["OPENING", 4, posted.json.data.operationId], ["OPENING", 6, posted.json.data.operationId]]);
+  const [costs] = await db.query(`SELECT ce.entry_kind, ce.unit_cost_source, ce.quantity_delta, ce.value_delta_hkd,
+    ce.pool_quantity_after, ce.pool_value_after_hkd, cp.costed_quantity, cp.value_hkd
+    FROM inventory_cost_entries ce JOIN inventory_movements m ON m.id=ce.movement_id AND m.sku_id=ce.sku_id
+    JOIN inventory_cost_pools cp ON cp.sku_id=m.sku_id
+    WHERE m.operation_request_id=? ORDER BY m.quantity`, [posted.json.data.operationId]);
+  assert.deepEqual(costs.map(row => Object.values(row)), [
+    ["OPENING", "OPENING_FILE", 4, "8.2000", 4, "8.2000", 4, "8.2000"],
+    ["OPENING", "OPENING_FILE", 6, "12.3000", 6, "12.3000", 6, "12.3000"]
+  ]);
+  assert.deepEqual(await costCounts(), [2, 2]);
   assert.equal(Number((await db.query("SELECT COUNT(*) count FROM inventory_audit_logs WHERE action='opening.post'"))[0][0].count), 1);
+});
+
+async function costCounts() {
+  const [[row]] = await db.query(`SELECT (SELECT COUNT(*) FROM inventory_cost_pools) pools,
+    (SELECT COUNT(*) FROM inventory_cost_entries) entries`);
+  return Object.values(row).map(Number);
+}
+
+native("Opening rejects a pre-cost READY snapshot and rolls back when the cost journal write fails", async () => {
+  const rows = ["W1,B2,SKU1,,,AVAILABLE,1"];
+  const original = (await request("/upload", manager, rows)).json.data;
+  assert.equal(original.status, "READY");
+  const [[stored]] = await db.query("SELECT normalized_input FROM inventory_opening_rows WHERE job_id=?", [original.id]);
+  const input = typeof stored.normalized_input === "string" ? JSON.parse(stored.normalized_input) : stored.normalized_input;
+  delete input.unitCostHkd;
+  const hash = inventoryOperationHash({ commandType: "OPENING_POST", payload: [input] });
+  await db.execute("UPDATE inventory_opening_rows SET normalized_input=? WHERE job_id=?", [JSON.stringify(input), original.id]);
+  await db.execute("UPDATE inventory_opening_jobs SET precheck_snapshot_hash=? WHERE id=?", [hash, original.id]);
+  const stale = await confirm(original, confirmation(original));
+  assert.equal(stale.status, 409, JSON.stringify(stale.json));
+  assert.equal(stale.json.error.code, "OPENING_PRECHECK_STALE");
+
+  const fresh = (await request("/upload", manager, rows)).json.data;
+  assert.equal(fresh.status, "READY");
+  const before = await domainCounts(), costs = await costCounts();
+  await db.query(`CREATE TRIGGER test_opening_journal BEFORE INSERT ON inventory_cost_entries
+    FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Synthetic opening journal failure'`);
+  try {
+    const failed = await confirm(fresh, confirmation(fresh));
+    assert.equal(failed.status, 500, JSON.stringify(failed.json));
+    assert.deepEqual(await domainCounts(), before);
+    assert.deepEqual(await costCounts(), costs);
+    const [[link]] = await db.query("SELECT movement_id FROM inventory_opening_rows WHERE job_id=?", [fresh.id]);
+    assert.equal(link.movement_id, null);
+    assert.equal((await request("/jobs/" + fresh.id, manager)).json.data.status, "READY");
+  } finally {
+    await db.query("DROP TRIGGER test_opening_journal");
+  }
 });
 
 native("Opening confirmation rejects an active persistent Stocktake Bin lock without effects", async () => {
@@ -297,4 +354,107 @@ native("Opening precheck enforces the normalized UTF-8 Lot lock key boundary", a
   const posted = await confirm(valid.json.data, confirmation(valid.json.data));
   assert.equal(posted.status, 200, JSON.stringify(posted.json));
   assert.equal(posted.json.data.status, "COMPLETED");
+});
+
+const goLive = (body, options) => openingPost("/api/v1/inventory/go-live", body, options);
+
+async function liveFacts() {
+  const [[control]] = await db.query("SELECT * FROM inventory_control WHERE id=1");
+  const [operations] = await db.query("SELECT id, completed_at FROM inventory_operation_requests WHERE command_type='INVENTORY_GO_LIVE'");
+  const [audits] = await db.query("SELECT actor_user_id, target_id, reason_text, operation_request_id FROM inventory_audit_logs WHERE action='inventory.go_live'");
+  return { control, operations, audits };
+}
+
+function liveIntent(control) {
+  return { eventId: randomUUID(), expectedVersion: control.version, reason: "Approved Inventory reconciliation", password: managerDevice.password };
+}
+
+native("G3 rejects stale, unsigned and wrong-password Go-Live intents without effects", async () => {
+  assert.equal((await request("/control", null)).status, 401);
+  assert.equal((await request("/control", viewer)).status, 403);
+  const status = await request("/control", manager);
+  assert.equal(status.status, 200, JSON.stringify(status.json));
+  const { control } = await liveFacts();
+  assert.deepEqual(status.json.data, { status: control.lifecycle_status, version: control.version });
+  const before = await liveFacts(), body = liveIntent(control);
+  assert.equal((await goLive(body, { signed: false })).json.error.code, "DEVICE_SIGNATURE_REQUIRED");
+  const wrongPassword = await goLive({ ...body, password: "incorrect synthetic password" });
+  assert.equal(wrongPassword.status, 403, JSON.stringify(wrongPassword.json));
+  assert.equal(wrongPassword.json.error.code, "PASSWORD_INVALID");
+  const stale = await goLive({ ...body, expectedVersion: control.version - 1 });
+  assert.equal(stale.status, 409, JSON.stringify(stale.json));
+  assert.equal(stale.json.error.code, "VERSION_CONFLICT");
+  assert.deepEqual(await liveFacts(), before);
+});
+
+native("G3 rolls back the singleton and claim if its success audit fails", async () => {
+  const before = await liveFacts();
+  await db.query(`CREATE TRIGGER test_inventory_go_live_audit BEFORE INSERT ON inventory_audit_logs
+    FOR EACH ROW BEGIN IF NEW.action='inventory.go_live' THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Synthetic Go-Live audit failure'; END IF; END`);
+  try {
+    const failed = await goLive(liveIntent(before.control));
+    assert.equal(failed.status, 500, JSON.stringify(failed.json));
+    assert.deepEqual(await liveFacts(), before);
+  } finally {
+    await db.query("DROP TRIGGER test_inventory_go_live_audit");
+  }
+});
+
+let liveBody, liveResult, readyBeforeLive, postedBeforeLive, priorOpeningBody;
+native("G3 changes the singleton once after successful Opening and records actor, reason, time and audit", async () => {
+  const source = await request("/upload", manager, ["W1,B2,SKU1,,,AVAILABLE,4"]);
+  assert.equal(source.status, 201, JSON.stringify(source.json));
+  postedBeforeLive = source.json.data;
+  priorOpeningBody = confirmation(postedBeforeLive);
+  assert.equal((await confirm(postedBeforeLive, priorOpeningBody)).status, 200);
+  const ready = await request("/upload", manager, ["W1,B1,SKU2,AFTER-LIVE,2027-01-01,AVAILABLE,4"]);
+  assert.equal(ready.status, 201, JSON.stringify(ready.json));
+  readyBeforeLive = ready.json.data;
+  assert.equal(readyBeforeLive.status, "READY");
+  const before = await liveFacts(), stock = await domainCounts();
+  liveBody = liveIntent(before.control);
+  const success = await goLive(liveBody);
+  assert.equal(success.status, 200, JSON.stringify(success.json));
+  liveResult = success.json.data;
+  const { control, operations, audits } = await liveFacts();
+  assert.deepEqual([liveResult.status, liveResult.version], ["LIVE", before.control.version + 1]);
+  assert.deepEqual(control, { id: 1, lifecycle_status: "LIVE", version: liveResult.version,
+    go_live_at: liveResult.postedAt, go_live_reason: liveBody.reason, go_live_by: audits[0].actor_user_id });
+  const [[actor]] = await db.query("SELECT id FROM users WHERE username='opening-manager'");
+  assert.equal(control.go_live_by, actor.id);
+  assert.deepEqual(operations, [{ id: liveResult.operationId, completed_at: liveResult.postedAt }]);
+  assert.deepEqual(audits, [{ actor_user_id: actor.id, target_id: 1, reason_text: liveBody.reason, operation_request_id: liveResult.operationId }]);
+  assert.deepEqual(await domainCounts(), stock);
+});
+
+native("G3 LIVE blocks new upload and READY confirmation while retaining historical outcomes", async () => {
+  const before = await domainCounts(), facts = await liveFacts();
+  const rejectedUpload = await request("/upload", manager, ["W1,B1,SKU2,AFTER-LIVE,2027-01-01,AVAILABLE,4"]);
+  assert.equal(rejectedUpload.status, 403, JSON.stringify(rejectedUpload.json));
+  assert.equal(rejectedUpload.json.error.code, "OPENING_CLOSED");
+  const rejectedConfirm = await confirm(readyBeforeLive, confirmation(readyBeforeLive));
+  assert.equal(rejectedConfirm.status, 403, JSON.stringify(rejectedConfirm.json));
+  assert.equal(rejectedConfirm.json.error.code, "OPENING_CLOSED");
+  assert.equal((await request("/jobs/" + readyBeforeLive.id, manager)).json.data.status, "READY");
+  const old = await confirm(postedBeforeLive, priorOpeningBody);
+  assert.equal(old.status, 200, JSON.stringify(old.json));
+  assert.equal(old.json.data.status, "COMPLETED");
+  assert.deepEqual((await request("/control", manager)).json.data, { status: "LIVE", version: liveResult.version });
+  assert.deepEqual(await domainCounts(), before);
+  assert.deepEqual(await liveFacts(), facts);
+});
+
+native("G3 replays the exact event and refuses a changed or second event on a LIVE singleton", async () => {
+  const before = await liveFacts();
+  const replay = await goLive(liveBody);
+  assert.equal(replay.status, 200, JSON.stringify(replay.json));
+  assert.deepEqual(replay.json.data, liveResult);
+  const changed = await goLive({ ...liveBody, reason: "Another signed reconciliation" });
+  assert.equal(changed.status, 409);
+  assert.equal(changed.json.error.code, "INVENTORY_SOURCE_CONFLICT");
+  const fresh = await goLive({ ...liveBody, eventId: randomUUID(), expectedVersion: liveResult.version });
+  assert.equal(fresh.status, 403);
+  assert.equal(fresh.json.error.code, "OPENING_CLOSED");
+  assert.deepEqual(await liveFacts(), before);
 });

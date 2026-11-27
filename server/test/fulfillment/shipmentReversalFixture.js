@@ -26,7 +26,7 @@ export async function supportFacts(f){
 }
 export const nativeActor=(f,work)=>f.context.storage.run({databaseTransaction:null,signal:null,auth:{claims:{sub:String(f.actor.userId),roles:f.actor.claimedRoles,permissions:f.actor.claimedPermissions}}},work);
 
-export async function reversalFixture(t,{twoLines=false,archives=false,noDownstream=false,preflightConfiguration=false}={}){
+export async function reversalFixture(t,{twoLines=false,archives=false,noDownstream=false,preflightConfiguration=false,beforeConfirm}={}){
  const f=twoLines?await p1Fixture(t,5,{preflightConfiguration}):await shipmentDraftFixture(t,{preflightConfiguration});
  const second=twoLines?await addSourceLine(f,5):null;
  await issueUp(f.db);
@@ -47,6 +47,7 @@ export async function reversalFixture(t,{twoLines=false,archives=false,noDownstr
   await f.s.insert("customer_address_purposes",{address_id:f.s.addressId,customer_id:f.s.customerId,purpose_code:"shipping",is_default:1,created_at:f.s.now,updated_at:f.s.now});
   draft=await f.execute(()=>new ShipmentService(options).createDraft(root.outcome.id,{eventId:randomUUID(),shippingAddressId:f.s.addressId,shippingAddressVersion:1,totalWeight:"1.25",weightUom:"KG"}));
  }else draft=await f.create(f.body());
+ if(beforeConfirm)await beforeConfirm(f);
  const confirmation=new ShipmentConfirmationService(options),originalEventId=randomUUID();
  const confirming=await f.execute(()=>confirmation.startConfirmation(draft.outcome.id,{eventId:originalEventId,version:1}));
  const shipped=await f.execute(()=>confirmation.completeConfirmation(confirming));assert.equal(shipped.outcome,"SHIPPED");
@@ -169,7 +170,9 @@ export async function boundReversalCleanup(work,timeoutMs){
 }
 export async function reversalRecoveryRuntime({applicationSource,eventId,shipmentId,restart=false}){
  const {createApplication}=await import("../../src/framework/application/createApplication.js");
- const app=await createApplication({configurationSource:applicationSource});
+ const app=await createApplication({configurationSource:applicationSource,serviceOptions:{
+  "job.fulfillmentReversalRecovery":{reversalServiceFactory:options=>new ShipmentReversalService(options)}
+ }});
  const database=app.services.require("mysqldatabase"),scheduler=app.services.require("scheduler"),name="fulfillment.reversalRecovery";
  const reached=Promise.withResolvers(),resume=Promise.withResolvers();
  const state={service:null,declared:false,missingIssue:false,loseTakeoverAck:false,cloneChecks:restart,dispatches:0,recoveries:[],proofs:[],takeovers:[],phaseBs:0,posts:0,preclaims:0,missingRows:0,cloneRefusals:0,ackLosses:0,destroys:0,releasesAfterAck:0,unknownOutcomes:[],phaseBReached:reached.promise,resumePhaseB:resume.resolve};
@@ -264,12 +267,7 @@ export async function reversalRecoveryRuntime({applicationSource,eventId,shipmen
    await app.start();
    assert.equal(database.config.transactionTimeoutMs,20000);assert.equal(database.config.connectionLimit,10);
    const refresh=scheduler.jobs.get("tokenRevocation.refresh");assert.equal(refresh?.enabled,true);assert.equal(refresh.intervalMs,30000);
-   assert.equal(scheduler.jobs.has(name),false,"No product activation");
-   const service=await app.services.resolve("job.fulfillmentReversalRecovery"),prepare=scheduler.prepareAndSchedule;
-   let prepared;
-   scheduler.prepareAndSchedule=function(candidate){const result=prepare.call(this,candidate);if(candidate.name===name)prepared=result;return result;};
-   try{scheduler.register(service);assert.ok(prepared);await prepared;}
-   finally{scheduler.prepareAndSchedule=prepare;}
+   const service=await app.services.resolve("job.fulfillmentReversalRecovery");
    job=scheduler.jobs.get(name);assert.ok(job?.enabled);const timer=scheduler.timers.get(name);assert.ok(timer);scheduler.clearTimer(timer);scheduler.timers.delete(name);
    return service;
   },

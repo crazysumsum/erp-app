@@ -73,14 +73,14 @@ describe("GoodsReceiptForm（TASK-030）", () => {
     await type("超收原因", "整箱多送");
     await pick(select("庫位 *")[0], 31);
     await button("確認收貨並入庫").trigger("click"); await wrapper.find("form").trigger("submit"); await flushPromises();
-    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("不能在系統內撤回") }));
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("日後如需更正，請另開沖銷單") }));
     expect(wrapper.vm.$.props.onConfirm).toHaveBeenCalledTimes(1);
     const lot = wrapper.findAll(".q-field").find((field) => field.find(".q-field__label").text().startsWith("批號"));
     expect(lot.text()).toContain("這個貨品必須填寫批號");
     expect(wrapper.find("[role=alert]").exists()).toBe(true);
   });
 
-  it("確認前彈出不可撤回的確認；取消就唔送", async () => {
+  it("確認前彈出更正方式提示；取消就唔送", async () => {
     const { onConfirm, onSave } = await mountForm();
     await pick(select("加入採購單行")[0], purchaseOrder.lines[0]);
     await type("數量", "1");

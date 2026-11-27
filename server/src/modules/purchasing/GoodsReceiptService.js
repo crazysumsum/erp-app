@@ -140,14 +140,14 @@ export class GoodsReceiptService {
 
   /** §8.5：只有 CONFIRMED／PARTIALLY_RECEIVED 而且最少一行仍有 outstanding 嘅 PO 先可以收貨。 */
   async #receivablePurchaseOrder(tx, purchaseOrderId, lock = "FOR SHARE") {
-    const [[po]] = await tx.query(`SELECT id, status, version, supplier_id, supplier_code_snapshot, supplier_name_snapshot
+    const [[po]] = await tx.query(`SELECT id, status, version, supplier_id, supplier_code_snapshot, supplier_name_snapshot, currency_code
       FROM purchase_orders WHERE id = ? ${lock}`, [purchaseOrderId]);
     if (!po) throw purchasingError("PURCHASE_ORDER_NOT_FOUND");
     if (!RECEIVABLE_PO.includes(po.status)) throw purchasingError("PO_STATE_CONFLICT");
     const [lines] = await tx.query(`SELECT id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, tracking_policy_snapshot, base_uom_id,
       base_uom_code_snapshot, purchase_sku_uom_id, purchase_uom_code_snapshot, uom_to_base_factor_snapshot, has_outstanding, closed_at,
       inventory_tracked_snapshot, minimum_receipt_life_days_snapshot, ordered_base_quantity, gross_received_base_quantity,
-      net_received_base_quantity, closed_remaining_base_quantity
+      net_received_base_quantity, closed_remaining_base_quantity, unit_price
       FROM purchase_order_lines WHERE purchase_order_id = ? ORDER BY id ${lock}`, [purchaseOrderId]);
     return { po, lines };
   }

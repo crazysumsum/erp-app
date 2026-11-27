@@ -65,6 +65,8 @@ describe("pages/HomePage.vue", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("首頁");
+    expect(wrapper.text()).toContain("請從側欄選單進入工作畫面。");
+    expect(wrapper.text()).not.toContain("開發環境");
   });
 });
 

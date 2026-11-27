@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "decision": "Functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator codex-erp-app-ci-01 confirmed the A3 workload and single receipt ownership in 7e1e5fd7 and requested exact preparation in 4899a69b. Codex TL independently checked the approved A3 delta at 6d7a8563c616eec5cd307200981b7542e68ac303 (agentmsg 1fb3c9b3). PM 8d6f4e43 and TL f16363f3 authorized the AP currency fixture correction after reproduced #422 DEF-036. Existing cases and functional scope are unchanged. Source a970b8346f15ef2137ea733c4c774ed585bb6f96. CI bfcfa70e verified the active owner and that the file is not a capacity entry.",
+  "purpose": "Verify AP payment idempotency and void history, eligibility and debt rechecks, atomic allocation and currency boundaries, a shared-invoice race, permissions and amount precision, payment-method evidence, and a consistent detail snapshot.",
+  "data": "Seven cases on one shared HTTP/MySQL application, three synthetic identities, eight suppliers and twelve invoices. The large-amount assertion uses two invoice rows to verify decimal aggregation.",
+  "concurrency": "Serial cases and existing workers. One two-request race for the same invoice and one controlled reader/writer interleaving.",
+  "repetitions": "1",
+  "thresholds": "All seven functional cases pass. Existing global 92/83/90 and 39 per-file coverage floors remain in place.",
+  "trigger": "Existing ci.yml functional server MySQL shards, discovery, workers and trigger scope. Same jobs and scheduler.",
+  "cost": "Local case durations sum to 1.045 seconds (UTC) and 1.074 seconds (Asia/Hong_Kong), excluding suite startup overhead. CI impact has not been measured.",
+  "files": [
+    {
+      "path": "server/test/integration/apPayments.integration.test.js",
+      "mode": "100644",
+      "blob": "62c05cede99ab64752aa606b8c58151e16982da4",
+      "kind": "functional",
+      "cases": [
+        "AP records payment against an archived supplier, replays commands, and retains void history",
+        "AP rechecks debt and supplier eligibility when creating and confirming a payment",
+        "AP allocation is atomic across invoices and later spends prepayments by supplier and currency",
+        "two payments competing for the same open invoice cannot allocate it twice",
+        "AP payment permissions, currency precision and aging totals above a single document limit",
+        "AP requires method evidence for new payments and blocks legacy drafts from taking a number without it",
+        "AP payment detail keeps one read snapshot across a concurrent allocation commit"
+      ]
+    }
+  ]
+}

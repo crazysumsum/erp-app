@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-24 extension of ordinary functional admission until production go-live (AGENTS.md, PR #395). PM assigned H2 in 75a82d15. Codex TL non-author review 4075de3e passed adffe8da63992daeb1c52805a223132e06ab13c4 with zero required findings. External digest registration belongs to the CI administrator.",
+  "purpose": "Prevent Item and SKU activation failures from hiding actionable validation messages in ITEM_NOT_ACTIVATABLE responses.",
+  "data": "Existing local Vue test mounts with one synthetic Item and SKU per case. In-memory mocked 422 and fallback error responses. No database, new fixtures, or network service.",
+  "concurrency": "Three ordinary client test cases using existing Vitest worker and job settings.",
+  "repetitions": "Once per normal functional client test run. No scheduled or repeated execution added.",
+  "thresholds": "Assert verbatim messages in response order, including same-field messages, error state reset on retry, and SKU dialog dismissal. Existing coverage floors and test assertions are unchanged.",
+  "trigger": "Routine functional client test discovery. Private Playwright verification stays outside CI. No workflow or capacity catalog changes.",
+  "cost": "Estimated under one second for the three cases. No new CI job. CI wall-clock impact has not been measured.",
+  "files": [
+    {
+      "path": "client/test/pages/items/itemDetail.test.js",
+      "mode": "100644",
+      "blob": "c7b4a29734e102f71eaef5529c624aa4808b5758",
+      "kind": "functional",
+      "cases": [
+        "商品啟用被拒：在原對話框逐條顯示啟用問題，再試時清除舊問題",
+        "商品詳情的 SKU 列啟用被拒時顯示啟用問題"
+      ]
+    },
+    {
+      "path": "client/test/pages/items/skuDetail.test.js",
+      "mode": "100644",
+      "blob": "5e5458b82ed069930364f6641169a994ca17bab9",
+      "kind": "functional",
+      "cases": [
+        "SKU 啟用被拒：顯示逐條原因並可關閉對話框"
+      ]
+    },
+    {
+      "path": "client/src/pages/items/ItemDetailPage.vue",
+      "mode": "100644",
+      "blob": "a13448f7248845bb32b158127bcc4ff8c96a94a7",
+      "kind": "support"
+    },
+    {
+      "path": "client/src/pages/items/SkuDetailPage.vue",
+      "mode": "100644",
+      "blob": "2b5ac7cf4dbecdba7cbbf430fb6db42404bf3977",
+      "kind": "support"
+    }
+  ]
+}

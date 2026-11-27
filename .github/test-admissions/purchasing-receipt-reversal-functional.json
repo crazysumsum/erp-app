@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "decision": "Receipt reversal third-window update under Sam's functional-only suspension through production go-live (PR #395), PM agentmsg 9eb437e2 and CI workload precheck 0ca59080. Main 7e2a2f70cb3058731ffa03c2100393f8297f74d9, source candidate fd621eccc51488d811fb8fad8db9dc5a8c036a84. Decision E agentmsg adf3a7df / 3ad2f864, d13fbd76 with 0131. Non-author signed review, exact digest registration by the trusted CI administrator and ordinary functional CI apply.",
+  "purpose": "Verify AP receipt occupation in an older RR snapshot and the reversal progress projection.",
+  "data": "One isolated migration-backed AP schema with one PO, receipt, detail and AP invoice. Each projection unit case uses one receipt and at most two details in memory.",
+  "concurrency": "Two overlapping transactions in the AP correctness case. Projection cases are serial.",
+  "repetitions": "One AP test and two projection tests, each discovered once per applicable workflow run.",
+  "thresholds": "Current reads see a newly committed AP occupation and identify release. Projection preserves the PO and receipt statuses and rejects wrong-detail, missing-evidence and exceeded-quantity inputs.",
+  "trigger": "Use the existing routine Node integration and unit discovery, with no new job, runner, trigger or capacity workload.",
+  "cost": "The local AP fixture case took about four seconds including its private schema migrations. The two projection unit assertions take milliseconds. CI runner time and critical path are unmeasured.",
+  "files": [
+    {
+      "path": "server/test/integration/apReceiptInvoiceClaims.integration.test.js",
+      "mode": "100644",
+      "blob": "40a2491b34d5d53d2aa330c0619d500bf8e2c3d6",
+      "kind": "functional",
+      "cases": [
+        "AP receipt invoice claims see the committed active line despite an earlier RR snapshot"
+      ]
+    },
+    {
+      "path": "server/test/purchasing/receiptReversalProgress.test.js",
+      "mode": "100644",
+      "blob": "559761b7092f2610984d126b7107be9cbb457442",
+      "kind": "functional",
+      "cases": [
+        "收貨沖銷投影重算收貨及採購淨量，完整沖銷回到已確認，人工結案維持結案",
+        "收貨沖銷拒絕跨收貨明細、缺少退回證據及退回與沖銷合計超限"
+      ]
+    },
+    {
+      "path": "server/src/modules/accounts-payable/hasActiveGoodsReceiptInvoiceInTransaction.js",
+      "mode": "100644",
+      "blob": "9e120c6bd0ee347637c78638a8c9c05d725755c2",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/modules/purchasing/receiptReversalProgress.js",
+      "mode": "100644",
+      "blob": "379a7ed8e4aedbd14d58f6c1e8dbcd6dd676772e",
+      "kind": "support"
+    }
+  ]
+}

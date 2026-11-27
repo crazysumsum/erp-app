@@ -1,22 +1,23 @@
 {
   "version": 1,
-  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt. FR-INV-008 follow-up uses the same suspension and adds functional assertions to an existing case. The follow-up author does not approve or register the receipt.",
-  "purpose": "AR first phase, PR 3 of 3: invoices from shipped shipments (draft, confirm, cancel, void), invoice list and detail, and the invoiced-shipments lookup. Proves on real MySQL that line amounts follow the approved remaining-pool rule in shipment order through Fulfillment's readInvoiceSourcesInTransaction, that a shipment line sits on one active invoice at a time and can be invoiced again after cancel or void, that a void needs a reason and no active allocation, that the due date follows the payment term unless changed with a reason, that dates cannot be in the future, and that invoice permissions do not inherit. FR-INV-008 checks the latest source shipment date when creating a draft and before confirmation and numbering. An older draft remains unchanged and can be cancelled; an invoice on the latest shipment date can be confirmed. A draft without any shipment source cannot be confirmed or numbered and can still be cancelled.",
-  "data": "arInvoiceFromShipments: 2 cases, each in its own isolated database built by the existing unchanged Fulfillment fixture shipmentDraftFixture (pinned by fulfillment-task036-event-recovery-functional.json): 1 sales order with 1 line of 5 units and at most 2 shipments; at most 6 invoices and 2 receipts per case. arInvoices: 3 cases using the AR HTTP fixture (pinned by ar-receipts-allocation-aging.json). The confirmation case uses one isolated fixture with one five-unit order line and two real shipments (three and two units). It creates the two valid drafts over HTTP and reuses the existing drafts without sources for rejection and cancellation. The permission case uses a separate isolated fixture with one five-unit order line, one real shipment and one real draft. About 15 invoice rows, one receipt and no concurrency in total. arInvoiceAmount: 2 unit cases with inline values. FR-INV-008 uses different dates on the same two shipments and one additional draft in the first case, backdated in MySQL to simulate a legacy row. Both cases stay within the listed limits.",
-  "concurrency": "Serial, except two places in one case that each send 2 concurrent commands on a 2-connection pool: two drafts for the same shipment (one succeeds) and two receipts (both succeed).",
+  "decision": "Sam, PM session on 2026-11-19: 「暫停 7 天」 to the PM's question 「是否暫停逐案測試准入 7 天，功能測試改為普通 PR 加功能 CI 加一次評審？」 (AGENTS.md, in force until the end of 2026-11-26), so these functional tests carry no per-case approval. Scope: Sam approved the AR first phase on 2026-11-19 (「批准，含作廢收款」 and 「確認」, relayed by the PM). The author (claude-erp-app-ar-01) does not approve this receipt. FR-INV-008 follow-up uses the same suspension and adds functional assertions to an existing case. The follow-up author does not approve or register the receipt. G1 uses Sam's 2026-11-24 extension 「延續到上線」 in AGENTS.md (#395). G1 functional candidate c0b02259763ec798ec67f644c1643da95e867797 was independently reviewed by codex-erp-app-tl-01 (agentmsg df386a3a); codex-erp-app-ci-01 confirmed the four affected receipts and test scope (agentmsg 30df4073). The author supplies the updated pins for external registration. G5 functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). CI administrator codex-erp-app-ci-01 confirmed exact candidate fdef6ce2e28ea7152e43d164f8bcade778fdb59d, the active receipt ownership and the seven-case delta (agentmsg 2591579c). Codex TL independently reviewed that exact functional candidate (agentmsg f06e4b9a). The CI administrator registers the updated digests. AR shipment invoice claims follows the same functional suspension through go-live (#395). PM agentmsg bc561a44 requests exact integration and independent review. The CI administrator verifies and registers the updated receipt.",
+  "purpose": "AR first phase, PR 3 of 3: invoices from shipped shipments (draft, confirm, cancel, void), invoice list and detail, and the invoiced-shipments lookup. Proves on real MySQL that line amounts follow the approved remaining-pool rule in shipment order through Fulfillment's readInvoiceSourcesInTransaction, that a shipment line sits on one active invoice at a time and can be invoiced again after cancel or void, that a void needs a reason and no active allocation, that the due date follows the payment term unless changed with a reason, that dates cannot be in the future, and that invoice permissions do not inherit. FR-INV-008 checks the latest source shipment date when creating a draft and before confirmation and numbering. An older draft remains unchanged and can be cancelled; an invoice on the latest shipment date can be confirmed. A draft without any shipment source cannot be confirmed or numbered and can still be cancelled. G1 applies 0126 in the existing two shipment cases and adds one real HTTP/MySQL case for opening invoices: authorization, validation, idempotent registration, active-reference uniqueness, void and re-registration, allocation, aging and audit. G5 checks stable print shipment references, billing-address and customer-name snapshots, draft preservation on a missing bill-to address, and company configuration including redaction and literal multiline values. The new shipment claim case verifies active READ COMMITTED, ordered shipment results including zero claims, a shared invoice-line lock without a header lock, and claim release after cancel or void.",
+  "data": "arInvoiceFromShipments: 2 cases, each in its own isolated database built by the existing unchanged Fulfillment fixture shipmentDraftFixture (pinned by fulfillment-task036-event-recovery-functional.json): 1 sales order with 1 line of 5 units and at most 2 shipments; at most 6 invoices and 2 receipts per case. arInvoices: 3 cases using the AR HTTP fixture (pinned by ar-receipts-allocation-aging.json). The confirmation case uses one isolated fixture with one five-unit order line and two real shipments (three and two units). It creates the two valid drafts over HTTP and reuses the existing drafts without sources for rejection and cancellation. The permission case uses a separate isolated fixture with one five-unit order line, one real shipment and one real draft. About 15 invoice rows, one receipt and no concurrency in total. arInvoiceAmount: 2 unit cases with inline values. FR-INV-008 uses different dates on the same two shipments and one additional draft in the first case, backdated in MySQL to simulate a legacy row. Both cases stay within the listed limits. The new G1 case uses the unchanged AR HTTP fixture pinned in ar-receipts-allocation-aging.json: four synthetic users and roles, one extra test currency, one customer, two opening invoices, one receipt and one allocation. G5 adds two serial MySQL cases with separate synthetic shipment fixtures, up to two shipments per order and at most two invoices and one added bill-to address in the print case. Two unit cases use inline synthetic issuer settings. The existing shipment-to-invoice fixture adds one default bill-to purpose. The new case uses a single existing isolated shipment fixture: one synthetic order and line, two shipments (one completed and one draft), one AR role and user, two invoices created in series and no receipts.",
+  "concurrency": "Serial, except two places in one case that each send 2 concurrent commands on a 2-connection pool: two drafts for the same shipment (one succeeds) and two receipts (both succeed). The new G1 case is serial. G5 adds no concurrent requests. The added claim case holds the shipment and invoice-line locks on one connection and checks the invoice row and header with NOWAIT on a second connection. It adds no workers, loops or concurrency to discovery.",
   "repetitions": "1",
   "thresholds": "All cases pass; exact equality on amounts, statuses, versions and numbers; coverage floors unchanged; no timing threshold.",
   "trigger": "Existing ci.yml triggers and discovery only: the existing server MySQL integration shards and server test job. No new job, schedule or dispatch. No capacity or performance workload.",
-  "cost": "FR-INV-008 local MySQL run: sum of test case durations about 3.1 s for arInvoiceFromShipments and 6.1 s for arInvoices, including two isolated HTTP databases. The unit cases take under 0.1 s. CI time not measured. No new job.",
+  "cost": "FR-INV-008 local MySQL run: sum of test case durations about 3.1 s for arInvoiceFromShipments and 6.1 s for arInvoices, including two isolated HTTP databases. The unit cases take under 0.1 s. CI time not measured. No new job. The new HTTP/MySQL case took 1.0 to 1.2 seconds locally in two timezones. CI time has not been measured. G5 adds two MySQL and two unit cases in the existing jobs. The related backend files (44 cases) ran in about 24 to 34 seconds locally per timezone. CI time has not been measured. One additional isolated MySQL correctness case with no timing threshold. CI time has not been measured.",
   "files": [
     {
       "path": "server/test/integration/arInvoiceFromShipments.integration.test.js",
       "mode": "100644",
-      "blob": "44ffa28e3fa88cc72e789fc45d83b8fe06d298b7",
+      "blob": "2ed4df1f6b0e47c292b95295daa4798d262a745b",
       "kind": "functional",
       "cases": [
         "分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號",
-        "到期日由付款條款現行日數計算，可改而須原因；沒有條款時必須輸入；兩個同時開同一張出貨的請求只有一個成功；權限在交易內重驗"
+        "到期日由付款條款現行日數計算，可改而須原因；沒有條款時必須輸入；兩個同時開同一張出貨的請求只有一個成功；權限在交易內重驗",
+        "出貨沖銷佔用查詢讀取原交易，保留草稿及確認佔用，取消和作廢後釋放"
       ]
     },
     {
@@ -49,11 +50,40 @@
     {
       "path": "server/test/ar/arShipmentFixture.js",
       "mode": "100644",
-      "blob": "e8f156117e39bab7f8b705ef1d130ccdb5b1fdfb",
+      "blob": "76235ba2efb0a8f661200c778e51701a08e9beeb",
       "kind": "functional",
       "cases": [
         "分兩次出貨的訂單行：金額按出貨次序由剩餘池計算；同一出貨不可重複開票；取消或作廢後可重開；確認取號",
         "發票確認取年度流水號；取消只限草稿；作廢須原因而且須先解除全部核銷，作廢後號碼保留並離開帳齡表"
+      ]
+    },
+    {
+      "path": "server/test/integration/arOpeningInvoices.integration.test.js",
+      "mode": "100644",
+      "blob": "7ca070d6c6e1cec784954d341ada35b6b6bb743a",
+      "kind": "functional",
+      "cases": [
+        "期初發票保留舊號、防重，作廢可重登，核銷後帳齡歸零"
+      ]
+    },
+    {
+      "path": "server/test/integration/arInvoicePrint.integration.test.js",
+      "mode": "100644",
+      "blob": "806f30303400239a388e2bede874a9f15b6f742b",
+      "kind": "functional",
+      "cases": [
+        "發票列印的來源編號逐張按出貨 ID 回傳，沖銷後仍可讀，缺來源拒絕",
+        "帳單地址缺失保留草稿，確認取號保存當時名稱及地址，之後重印只讀發票快照"
+      ]
+    },
+    {
+      "path": "server/test/ar/arInvoiceCompanyConfig.test.js",
+      "mode": "100644",
+      "blob": "35edd6cd6d1433ae67bb358ae09f6f33258f93c0",
+      "kind": "functional",
+      "cases": [
+        "發票的多行部署設定保存換行，付款資料在序列化設定時遮罩",
+        "公司設定缺省可啟動，名稱不可跨行，多行只接受換行控制字元"
       ]
     }
   ]

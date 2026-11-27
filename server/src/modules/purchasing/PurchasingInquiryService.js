@@ -1,7 +1,9 @@
+import { stringify } from "csv-stringify/sync";
 import { permissionStaleError } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { PurchasingOperationService } from "./PurchasingOperationService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
+import { guardSpreadsheetCell } from "../supplier/import/supplierCsvSchema.js";
 import { storedAmount } from "./moneyMath.js";
 import { purchasingError } from "./purchasingErrors.js";
 import { localDate, positiveId } from "./purchasingValidation.js";
@@ -19,6 +21,8 @@ const LINE_DELIVERY_DATE = "COALESCE(l.expected_delivery_date, po.expected_deliv
 const LINE_OVERDUE = `${LINE_OUTSTANDING} > 0 AND ${LINE_DELIVERY_DATE} < ?`;
 const PO_NUMBER = /^PO-\d{6}-\d{6}$/u;
 const MAX_SEARCH_IDS = 100; // 設計 §8.9：名稱搜尋最多 100 個 ID。
+const MAX_EXPORT_ROWS = 50_000;
+const EXPORT_COLUMNS = ["purchaseOrderNumber", "orderDate", "supplierCode", "supplierName", "status", "currencyCode", "totalAmount"];
 const date = (column) => `DATE_FORMAT(${column}, '%Y-%m-%d') AS ${column}`;
 const SUMMARY = `id, po_number, status, version, supplier_id, supplier_code_snapshot, supplier_name_snapshot, currency_code,
   currency_decimal_places_snapshot, ${date("order_date")},
@@ -112,6 +116,11 @@ function listWhere(query, search, scope = null, outstandingOnly = false) {
   return { where: clauses.length ? ` WHERE ${clauses.join(" AND ")}` : "", values };
 }
 
+function listOrderBy(query) {
+  const direction = query.descending ? "DESC" : "ASC";
+  return `po.${SORT[query.sortBy]} ${direction}, po.id ${direction}`;
+}
+
 function toPurchaseOrderSummary(row, progress, inactiveMaster, permissions) {
   const receiving = RECEIVING.includes(row.status);
   const risks = [...(receiving && Number(progress.overdue) === 1 ? ["OVERDUE"] : []), ...(Number(progress.over_received) === 1 ? ["OVER_RECEIVED"] : []),
@@ -186,9 +195,9 @@ function toPurchaseOrderDetail(row, lines, permissions, { approvals, pending, sn
  * 冇 GR 欄位（HD-017 3A）：張表由 TASK-027 加，到時先回，唔回假嘅空陣列。
  */
 export class PurchasingInquiryService {
-  constructor({ database, logger, time, suppliers }) {
-    if (!database || !logger || !time || !suppliers) throw new TypeError("PurchasingInquiryService requires all of its dependencies");
-    Object.assign(this, { database, logger, time, suppliers });
+  constructor({ database, logger, time, suppliers, audit }) {
+    if (!database || !logger || !time || !suppliers || !audit) throw new TypeError("PurchasingInquiryService requires all of its dependencies");
+    Object.assign(this, { database, logger, time, suppliers, audit });
   }
 
   async list({ claims, input = {}, outstandingOnly = false }) {
@@ -200,8 +209,7 @@ export class PurchasingInquiryService {
       ];
       const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null, overdueScope, outstandingOnly);
       const [[{ total }]] = await tx.query(`SELECT COUNT(*) AS total FROM purchase_orders po${where}`, values);
-      const direction = query.descending ? "DESC" : "ASC";
-      const [page] = await tx.query(`SELECT po.id FROM purchase_orders po${where} ORDER BY po.${SORT[query.sortBy]} ${direction}, po.id ${direction} LIMIT ? OFFSET ?`,
+      const [page] = await tx.query(`SELECT po.id FROM purchase_orders po${where} ORDER BY ${listOrderBy(query)} LIMIT ? OFFSET ?`,
         [...values, query.pageSize, (query.page - 1) * query.pageSize]);
       const result = { total: Number(total), page: query.page, pageSize: query.pageSize };
       if (!page.length) return { items: [], ...result };
@@ -222,6 +230,25 @@ export class PurchasingInquiryService {
       const progressById = new Map(progress.map((row) => [Number(row.purchase_order_id), row]));
       const inactiveIds = new Set(inactive.map((row) => Number(row.id)));
       return { items: ids.map((id) => toPurchaseOrderSummary(byId.get(id), progressById.get(id), inactiveIds.has(id), permissions)), ...result };
+    });
+  }
+
+  async exportPurchaseOrdersCsv({ claims, input = {}, context = {} }) {
+    const query = listQuery(input);
+    return this.database.withTransaction(async (tx) => {
+      const actor = await this.#actor(tx, claims);
+      const { where, values } = listWhere(query, query.q ? await this.#search(tx, query.q) : null);
+      const [rows] = await tx.query(`SELECT po.po_number, ${date("order_date")}, po.supplier_code_snapshot, po.supplier_name_snapshot,
+        po.status, po.currency_code, po.currency_decimal_places_snapshot, po.total_amount
+        FROM purchase_orders po${where} ORDER BY ${listOrderBy(query)} LIMIT ?`, [...values, MAX_EXPORT_ROWS + 1]);
+      if (rows.length > MAX_EXPORT_ROWS) throw purchasingError("PURCHASING_EXPORT_TOO_LARGE");
+      const records = rows.map(row => [row.po_number, row.order_date, row.supplier_code_snapshot, row.supplier_name_snapshot,
+        row.status, row.currency_code, storedAmount(row.total_amount, Number(row.currency_decimal_places_snapshot))].map(guardSpreadsheetCell));
+      const csv = stringify([EXPORT_COLUMNS, ...records], { bom: true, record_delimiter: "windows" });
+      await this.audit.record(tx, {
+        ...context, actor, action: "purchasing.exported", targetLabel: "purchase-orders", detail: { rowCount: rows.length }, nowMs: this.time.nowMs()
+      });
+      return csv;
     });
   }
 

@@ -74,6 +74,7 @@ describe("Supplier lifecycle actions", () => {
     await flushPromises();
     expect(supplierService.block).toHaveBeenCalledWith(7, { reason: "Fraud risk confirmed", password: "secret", version: 2 });
     expect(wrapper.emitted("updated")[0][0].status).toBe("blocked");
+    expect(notifySuccess).toHaveBeenCalledWith("供應商 SUP-007 已封鎖");
   });
 
   it("TC-124 (UI-004): keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT", async () => {
@@ -126,6 +127,7 @@ describe("Supplier lifecycle actions", () => {
     await body.find("form").trigger("submit");
     await flushPromises();
     expect(supplierService.archive).toHaveBeenCalledWith(7, { version: 2, reason: "UAT archive reason", password: "secret" });
+    expect(notifySuccess).toHaveBeenCalledWith("供應商 SUP-007 已封存");
   });
 
   it("reopening the activation dialog starts clean and cannot be confirmed before the policy is read (REV-119 L-2, L-4)", async () => {

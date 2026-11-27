@@ -1,3 +1,4 @@
+import { isValidClaimedRoleList } from "./claimedRoles.js";
 import { inventoryOperationHash } from "./InventoryOperationService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import { inventoryStringHasInvalidCharacters } from "./inventorySafeJson.js";
@@ -38,6 +39,11 @@ function claims(value, field) {
   const result = value.map(entry => text(entry, field, 1, 100, true));
   if (new Set(result).size !== result.length) throw inventoryError("INVENTORY_INPUT_INVALID", { field });
   return result;
+}
+
+function claimedRoles(value) {
+  if (!isValidClaimedRoleList(value)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "claimedRoles" });
+  return [...value];
 }
 
 function commitment(input, skuId) {
@@ -94,7 +100,7 @@ export function normalizePurchaseReceipt(input) {
   const actor = {
     userId: inventoryPositiveInteger(input.actor.userId, "actor.userId"),
     serviceName: text(input.actor.serviceName, "serviceName", 0, 0),
-    claimedRoles: claims(input.actor.claimedRoles, "claimedRoles"),
+    claimedRoles: claimedRoles(input.actor.claimedRoles),
     claimedPermissions: claims(input.actor.claimedPermissions, "claimedPermissions")
   };
   if (!["purchasing.view", "receiving.operation"].every(permission => actor.claimedPermissions.includes(permission))) {
@@ -143,7 +149,7 @@ export function normalizePurchaseReversal(input) {
   fields(input.source, ["documentId", "eventId"], "source");
   const actor = { userId: inventoryPositiveInteger(input.actor.userId, "actor.userId"),
     serviceName: text(input.actor.serviceName, "serviceName", 0, 0),
-    claimedRoles: claims(input.actor.claimedRoles, "claimedRoles"),
+    claimedRoles: claimedRoles(input.actor.claimedRoles),
     claimedPermissions: claims(input.actor.claimedPermissions, "claimedPermissions") };
   if (!["purchasing.view", "inventory.adjust"].every(permission => actor.claimedPermissions.includes(permission))) {
     throw inventoryError("PERMISSION_STALE");
