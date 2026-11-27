@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "decision": "依 TL 雙活審核 H-10；PM 525b0fc1，交 CI 管理員核定。",
+  "purpose": "H-10 functional verification.",
+  "data": "One empty, disposable database using the standard migrations. No additional business records.",
+  "concurrency": "Exactly two migration processes in one functional case. No throughput measurement.",
+  "repetitions": "One run per existing integration suite invocation.",
+  "thresholds": "Both processes finish successfully. Exactly one applies the complete ledger.",
+  "trigger": "Existing server functional integration discovery.",
+  "cost": "Estimated additional duration of a few seconds per integration suite invocation. No new job or schedule.",
+  "files": [
+    {
+      "path": "server/scripts/migrate.js",
+      "kind": "support",
+      "mode": "100644",
+      "blob": "9d1d80387ce7a72146fdbdc942b4ded92b70c946"
+    },
+    {
+      "path": "server/test/integration/migrationLock.integration.test.js",
+      "kind": "functional",
+      "mode": "100644",
+      "blob": "c74fb8a5d2bef785ac773c095bee5b2a6643cd7e",
+      "cases": [
+        "H-10 serializes two migration processes on a new database"
+      ]
+    }
+  ]
+}
