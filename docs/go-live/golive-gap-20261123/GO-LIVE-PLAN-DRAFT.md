@@ -61,7 +61,7 @@ UAT 後的合併（Claude TL 的建議，待 CI 管理員確認）：
 - 金鑰：正式及 UAT 環境的 `JWT_SECRET`、`SUPPLIER_BANK_*`、`CUSTOMER_BANK_*` 必須由部署負責人在部署時新生成（例如 `openssl rand`），不可沿用倉庫內任何出現過的值（CI 設定、`.env.example`、文件或測試資料內的值）。
 - 角色名稱（TL 11-27 裁定，中文角色名修正一併上線）：部署前在目標庫執行 `SELECT id FROM roles WHERE name REGEXP '[[:cntrl:]]';`，結果須為空；若有，先改名再部署。
 - 資料庫（請部署負責人核對，Claude TL 提出，未在正式環境條件下量度）：migration 會建立 trigger，MySQL 開啟 binlog 時須設 `log_bin_trust_function_creators` 或以有足夠權限的帳號執行；執行 migration 的管理帳號與應用程式帳號分開；MySQL 版本、字元集及定序與測試一致。
-- 應用程式設定：`FULFILLMENT_LIFECYCLE_ENABLED=true`（沒有它銷售的履約流程不可用）；`APP_TIME_ZONE` 明確設定（業務日期及發票年度編號都取這個時區）；JWT 密鑰、CORS 允許的來源、`NODE_ENV`；Customer 及 Supplier 的銀行金鑰要另存備份，遺失即已加密的銀行資料無法讀回。
+- 應用程式設定：`FULFILLMENT_LIFECYCLE_ENABLED=true`（沒有它銷售的履約流程不可用）；`AR_INVOICE_COMPANY_NAME`（應收發票列印的公司名稱；未設時列印只見「公司名稱尚未設定」，`.env.example` 目前未列，11-27 UI/UX 檢查發現）；`APP_TIME_ZONE` 明確設定（業務日期及發票年度編號都取這個時區）；JWT 密鑰、CORS 允許的來源、`NODE_ENV`；Customer 及 Supplier 的銀行金鑰要另存備份，遺失即已加密的銀行資料無法讀回。
 - 執行方式：單一還是多個應用程式實例（排程工作不可重複執行）；反向代理及 HTTPS、代理之後客戶端 IP 的取得；日誌目錄、輪替及磁碟空間；附件及匯入檔的目錄。
 - 第一個管理員：全新正式庫內第一個系統管理員帳號如何建立、第一部裝置由誰核准，寫成步驟並在預演時走一次。
 - 指定正副管理員；用戶分批完成首次登入、裝置核准及改密碼；演練一次緊急核准及撤銷。
