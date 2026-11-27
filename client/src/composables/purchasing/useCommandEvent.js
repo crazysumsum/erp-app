@@ -1,13 +1,13 @@
 import { computed, ref } from "vue";
 
-const UNCERTAIN = ["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "IDEMPOTENCY_IN_PROGRESS"];
+const UNCERTAIN = ["TIMEOUT", "NETWORK_ERROR", "TRANSACTION_OUTCOME_UNKNOWN", "IDEMPOTENCY_IN_PROGRESS", "IDEMPOTENCY_RESULT_UNAVAILABLE"];
 
 /**
  * Command 嘅 eventId 生命週期（§2.3），一個 key 一個 record。要放喺穩定嘅 owner（頁面），唔好放喺會被 v-if 卸載嘅 child。
  * Key 由 owner 綁 actor、PO 同目標（審批要連 approval ID）；`meta.action` 係呢個 record 嘅動作，同一 key 唔准換動作。
  * - 一個 key 同一時間只得一個 in-flight，亦唔准換動作：違反就 COMMAND_PENDING，唔發 HTTP。
  * - 從未未確定：成功或者明確拒絕都結算走 record，下次係新意圖。
- * - 一旦未確定：只有同一 record 成功（server replay 原結果）先解除；之後任何錯誤都證明唔到原交易失敗，保留原 eventId、payload 同 meta。
+ * - 一旦未確定：只在同一 event 重送或查詢確認成功後解除；之後嘅錯誤證明唔到原交易失敗，保留原 eventId、payload 同 meta。
  * - 只結算自己 call 開始時嘅同一個 record，睇結算當下嘅未確定狀態。
  * 冇自動重試，冇 reset。ponytail: record 只喺 owner 嘅 memory；owner 卸載或者整頁重新整理就冇，要等 TASK-033 嘅 eventId 查詢。
  */
@@ -53,10 +53,17 @@ export function useCommandEvent() {
     return { key, payload, meta: structuredClone(record.meta), uncertain: record.uncertain, inflight: record.inflight };
   }
   const pending = (key = "") => { const record = current(key); return record?.uncertain ? record : null; };
+  function confirmCompleted(key, eventId) {
+    const record = records.get(key);
+    if (!record?.uncertain || record.inflight || record.body.eventId !== eventId) return false;
+    records.delete(key);
+    touch();
+    return true;
+  }
   // 一定要先讀 changes：Map 初始係空，唔讀就冇依賴，computed 會永遠 cache 住空 array。
   const uncertainRecords = computed(() => {
     void changes.value;
     return [...records.keys()].map((key) => pending(key)).filter(Boolean);
   });
-  return { run, isUncertain, isBusy, current, pending, uncertainRecords };
+  return { run, isUncertain, isBusy, current, pending, uncertainRecords, confirmCompleted };
 }

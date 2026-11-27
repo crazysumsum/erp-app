@@ -480,3 +480,57 @@ integrationTest("TC-026/TC-033 (TL ruling 4): a cancelled purchase order still l
     await h.db.execute("DELETE FROM purchase_orders WHERE id = ?", [po]);
   }
 });
+
+integrationTest("S1: an unpaid confirmed AP invoice blocks archive and names the blocker, but a paid invoice only locks the Code", async () => {
+  const t = tag();
+  const id = await h.seedSupplier(`AP-I-${t}`, `AP invoice ${t}`, "active");
+  const now = Date.now();
+  const [invoice] = await h.db.query("INSERT INTO ap_invoices SET ?", [{
+    supplier_id: id, supplier_code_snapshot: `AP-I-${t}`, supplier_name_snapshot: `AP invoice ${t}`,
+    currency_code: "HKD", currency_decimal_places: 2, supplier_invoice_number: t,
+    invoice_date: "2026-11-24", due_date: "2026-11-24", status: "CONFIRMED",
+    total_amount: "5.0000", outstanding_amount: "5.0000", created_by_label: "S1 fixture", created_at: now, updated_at: now
+  }]);
+  try {
+    const blocked = await lifecycle("archive", id, { version: 1, reason: REASON });
+    assert.deepEqual([blocked.status, blocked.code, blocked.json.error?.details.references],
+      [409, "SUPPLIER_OPEN_FLOWS", { 未付應付發票: 1 }]);
+    assert.deepEqual([(await row(id)).status, Number((await row(id)).version)], ["active", 1]);
+
+    await h.db.execute("UPDATE ap_invoices SET allocated_amount = 5, outstanding_amount = 0 WHERE id = ?", [invoice.insertId]);
+    const changed = await lifecycle("code/change", id, { supplierCode: `AP-I2-${t}`, reason: REASON, version: 1 });
+    assert.deepEqual([changed.status, changed.code], [409, "SUPPLIER_REFERENCED"]);
+    assert.deepEqual(changed.json.error.details.references, { 應付發票及付款: 1 });
+    assert.equal((await row(id)).supplier_code, `AP-I-${t}`);
+
+    const archived = await lifecycle("archive", id, { version: 1, reason: REASON });
+    assert.equal(archived.status, 200, archived.text);
+    assert.equal((await row(id)).status, "archived");
+  } finally {
+    await h.db.execute("DELETE FROM ap_invoices WHERE id = ?", [invoice.insertId]);
+  }
+});
+
+integrationTest("S1: a historical AP payment alone locks the Code and reports the reference before permanent delete", async () => {
+  const t = tag();
+  const id = await h.seedSupplier(`AP-P-${t}`, `AP payment ${t}`, "draft");
+  const now = Date.now();
+  const [payment] = await h.db.query("INSERT INTO ap_payments SET ?", [{
+    supplier_id: id, supplier_code_snapshot: `AP-P-${t}`, supplier_name_snapshot: `AP payment ${t}`,
+    currency_code: "HKD", currency_decimal_places: 2, payment_date: "2026-11-24",
+    payment_method: "OTHER", status: "VOID", amount: "5.0000", available_amount: "0.0000",
+    created_by_label: "S1 fixture", created_at: now, updated_at: now
+  }]);
+  try {
+    const changed = await lifecycle("code/change", id, { supplierCode: `AP-P2-${t}`, reason: REASON, version: 1 });
+    const deleted = await lifecycle("delete", id, { version: 1, reason: REASON });
+    for (const result of [changed, deleted]) {
+      assert.deepEqual([result.status, result.code], [409, "SUPPLIER_REFERENCED"], result.text);
+      assert.deepEqual(result.json.error.details.references, { 應付發票及付款: 1 });
+    }
+    const stored = await row(id);
+    assert.deepEqual([stored.supplier_code, stored.status, Number(stored.version)], [`AP-P-${t}`, "draft", 1]);
+  } finally {
+    await h.db.execute("DELETE FROM ap_payments WHERE id = ?", [payment.insertId]);
+  }
+});

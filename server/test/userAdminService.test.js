@@ -960,3 +960,95 @@ test("resetPassword rejects a weak new password", async () => {
     { code: "PASSWORD_TOO_WEAK" }
   );
 });
+
+test("account administration checks all target permissions before changing credentials or status", async () => {
+  const holder = { actorId: 20, claimedRoles: ["staff"], claimedPermissions: ["user.mgmt"] };
+  const database = seedWithAdmin({
+    users: [
+      { id: 10, username: "admin", password_hash: "unchanged", status: "active" },
+      { id: 20, username: "manager", status: "active" }
+    ],
+    roles: [STAFF, { id: 3, name: "supervisor" }],
+    userRoles: [[10, 3], [10, STAFF.id], [20, STAFF.id]],
+    rolePermissions: [[STAFF.id, 100], [3, 101]]
+  });
+  const { service, tokenRevocation } = createService({ database });
+  const command = { ...holder, id: 10, reason: "管理權限檢查" };
+  const denied = { statusCode: 403, code: "PERMISSION_ESCALATION_DENIED" };
+  await assert.rejects(service.resetPassword({ ...command, newPassword: "Temporary-Test-123" }), denied);
+  await assert.rejects(service.disable(command), denied);
+  assert.equal(database.state.users.get(10).password_hash, "unchanged");
+  assert.equal(database.state.users.get(10).status, "active");
+  assert.deepEqual(tokenRevocation.revoked, []);
+  assert.deepEqual(database.state.auditRows, []);
+});
+
+test("only protected administrators can manage other accounts through delegated bank permissions", async () => {
+  const database = seedWithAdmin({
+    users: [
+      { id: 10, username: "admin", status: "active" },
+      { id: 20, username: "bank", status: "active", password_hash: await hashPassword("Previous-Test-123") },
+      { id: 30, username: "manager", status: "active" }
+    ],
+    roles: [SYSTEM_ADMIN, STAFF, { id: 3, name: "bank" }],
+    permissions: [{ id: 100, name: "user.mgmt" }, { id: 103, name: "customer.bank.view" }],
+    userRoles: [[10, SYSTEM_ADMIN.id], [20, 3], [30, STAFF.id]],
+    rolePermissions: [[SYSTEM_ADMIN.id, 100], [STAFF.id, 100], [3, 103]]
+  });
+  const { service, tokenRevocation } = createService({ database });
+  const command = { claimedPermissions: ["user.mgmt"], id: 20, reason: "帳號復原" };
+  const manager = { ...command, actorId: 30, claimedRoles: [STAFF.name] };
+  await assert.rejects(service.disable(manager), { code: "PERMISSION_ESCALATION_DENIED" });
+  await assert.rejects(service.resetPassword({ ...manager, newPassword: "Temporary-Test-123" }), {
+    code: "PERMISSION_ESCALATION_DENIED"
+  });
+  assert.deepEqual(tokenRevocation.revoked, []);
+  assert.deepEqual(database.state.auditRows, []);
+
+  const admin = { ...command, actorId: 10, claimedRoles: [SYSTEM_ADMIN.name] };
+  await service.resetPassword({ ...admin, newPassword: "Temporary-Test-123" });
+  assert.equal(database.state.users.get(20).must_change_password, 1);
+  assert.equal((await service.disable(admin)).status, "disabled");
+});
+
+test("matching permissions without the protected role cannot reset or disable a system administrator", async () => {
+  const database = seedWithAdmin({
+    users: [{ id: 10, username: "admin", status: "active" }, { id: 20, username: "manager", status: "active" }],
+    userRoles: [[10, SYSTEM_ADMIN.id], [20, STAFF.id]],
+    rolePermissions: [[SYSTEM_ADMIN.id, 100], [STAFF.id, 100]]
+  });
+  const { service, tokenRevocation } = createService({ database });
+  const command = { actorId: 20, claimedRoles: [STAFF.name], claimedPermissions: ["user.mgmt"], id: 10, reason: "權限對照" };
+  const denied = { statusCode: 403, code: "PERMISSION_ESCALATION_DENIED" };
+  await assert.rejects(service.resetPassword({ ...command, newPassword: "Temporary-Test-123" }), denied);
+  await assert.rejects(service.disable(command), denied);
+  assert.deepEqual(tokenRevocation.revoked, []);
+  assert.deepEqual(database.state.auditRows, []);
+});
+
+test("equal or higher permissions allow administration of a peer account", async () => {
+  const oldHash = await hashPassword("Previous-Test-123");
+  const manager = { id: 3, name: "manager" };
+  for (const hasExtraPermission of [false, true]) {
+    const rolePermissions = [[STAFF.id, 100], [manager.id, 100]];
+    if (hasExtraPermission) rolePermissions.push([manager.id, 101]);
+    const database = seedWithAdmin({
+      users: [
+        { id: 10, username: "manager", status: "active" },
+        { id: 20, username: "peer", status: "active", password_hash: oldHash }
+      ],
+      roles: [STAFF, manager],
+      userRoles: [[10, manager.id], [20, STAFF.id]],
+      rolePermissions
+    });
+    const { service } = createService({ database });
+    const command = {
+      actorId: 10, claimedRoles: [manager.name],
+      claimedPermissions: hasExtraPermission ? ["user.mgmt", "role.mgmt"] : ["user.mgmt"],
+      id: 20, reason: "管理用戶帳號"
+    };
+    await service.resetPassword({ ...command, newPassword: "Temporary-Test-123" });
+    assert.equal(database.state.users.get(20).must_change_password, 1);
+    assert.equal((await service.disable(command)).status, "disabled");
+  }
+});

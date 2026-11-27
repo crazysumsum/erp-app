@@ -10,8 +10,8 @@ import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import purchasing from "@/services/purchasing.js";
 import { receiptStatusColors, receiptStatusLabels } from "@/components/purchasing/goodsReceiptPresentation.js";
+import GoodsReceiptReversalDialog from "@/components/purchasing/GoodsReceiptReversalDialog.vue";
 
-// 收貨單詳情（TASK-034 最小形態）：表頭、風險標記、逐行明細及 Inventory movement；Draft 可去編輯或取消。首期冇沖銷。
 const route = useRoute(), cancelCommand = useCommandEvent();
 const receipt = ref(null), loading = ref(true), loadError = ref("");
 const id = computed(() => Number(route.params.id));
@@ -39,6 +39,11 @@ async function cancelDraft() {
     notifyError(cancelCommand.isUncertain(`${id.value}:cancel`) ? "取消結果尚未確認；請再按一次「取消收貨單」以原內容重試。" : failure.message || "取消失敗");
   }
 }
+
+async function reversalPosted(result) {
+  notifySuccess(`沖銷單 ${result.number} 已過帳。`);
+  await load();
+}
 </script>
 
 <template>
@@ -47,6 +52,7 @@ async function cancelDraft() {
       <template #actions>
         <q-btn v-if="receipt?.allowedActions.includes('update')" color="primary" label="編輯／確認" :to="`/purchasing/goods-receipts/${id}/edit`" />
         <q-btn v-if="receipt?.allowedActions.includes('cancel')" flat color="negative" label="取消收貨單" :loading="cancelCommand.isBusy(`${id}:cancel`)" @click="cancelDraft" />
+        <GoodsReceiptReversalDialog v-if="receipt && receipt.id === id" :key="id" :receipt="receipt" @posted="reversalPosted" />
         <q-btn flat label="返回列表" to="/purchasing/goods-receipts" />
       </template>
     </PageHeader>
@@ -61,6 +67,7 @@ async function cancelDraft() {
               <div class="col-12 col-sm-auto">收貨日期：{{ receipt.businessReceiptDate }}</div>
               <div class="col-12 col-sm-auto">送貨單號：{{ receipt.supplierDeliveryNote || "未填" }}</div>
               <div class="col-12 col-sm-auto">收貨數量（基本單位）：{{ receipt.totalReceivedBaseQuantity }}</div>
+              <div v-if="receipt.totalReversedBaseQuantity !== '0'" class="col-12 col-sm-auto">已沖銷（基本單位）：{{ receipt.totalReversedBaseQuantity }}</div>
             </div>
             <div class="row q-gutter-sm q-mt-sm" aria-label="風險標記">
               <q-chip v-if="receipt.hasOverReceipt" icon="warning" color="warning" text-color="dark" label="超收" />
@@ -85,12 +92,26 @@ async function cancelDraft() {
                     <q-item-label>{{ detail.receivedQuantity }} {{ detail.inputUomCode }}（基本 {{ detail.receivedBaseQuantity }}）→ {{ detail.warehouseCode }} / {{ detail.binCode }}・{{ STATUS[detail.stockStatus] ?? detail.stockStatus }}</q-item-label>
                     <q-item-label v-if="detail.lotNumber" caption>批號 {{ detail.lotNumber }}<template v-if="detail.expiryDate">・到期 {{ detail.expiryDate }}</template><template v-if="detail.expiryOverrideReason">・放行原因：{{ detail.expiryOverrideReason }}</template></q-item-label>
                     <q-item-label v-if="detail.inventoryMovementId" caption>庫存異動 #{{ detail.inventoryMovementId }}</q-item-label>
+                    <q-item-label v-if="detail.reversedBaseQuantity !== '0'" caption>已沖銷基本數量 {{ detail.reversedBaseQuantity }}</q-item-label>
                   </q-item-section>
                 </q-item>
               </q-list>
             </q-card-section>
           </q-card>
         </section>
+        <q-card v-if="receipt.reversals.length" flat bordered>
+          <q-card-section>
+            <h2 class="text-subtitle1 q-ma-none">沖銷紀錄</h2>
+            <q-list dense separator>
+              <q-item v-for="reversal in receipt.reversals" :key="reversal.id">
+                <q-item-section>
+                  <q-item-label>{{ reversal.number }} · 基本數量 {{ reversal.totalReversedBaseQuantity }}</q-item-label>
+                  <q-item-label caption>{{ new Date(reversal.confirmedAt).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" }) }} · {{ reversal.reason }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card-section>
+        </q-card>
       </template>
     </div>
   </div>

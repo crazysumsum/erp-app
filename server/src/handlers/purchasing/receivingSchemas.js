@@ -99,12 +99,13 @@ const HEADER_PROPERTIES = { id: ID, number: TEXT, status: { enum: ["DRAFT", "CON
 const strict = (properties) => ({ type: "object", required: Object.keys(properties), additionalProperties: false, properties });
 const GR_DETAIL = strict({ id: ID, detailNumber: ID, inputUomId: ID, inputUomCode: TEXT, receivedQuantity: TEXT, receivedBaseQuantity: BASE, warehouseId: ID,
   binId: ID, warehouseCode: TEXT, binCode: TEXT, lotNumber: TEXT, expiryDate: NTEXT, manufactureDate: NTEXT, stockStatus: TEXT, expiryOverrideReason: TEXT,
-  inventoryMovementId: NINT });
+  inventoryMovementId: NINT, reversedBaseQuantity: BASE });
 const GR_LINE = strict({ id: ID, purchaseOrderLineId: ID, lineNumber: ID, skuId: ID, skuCode: TEXT, skuName: TEXT, receivedBaseQuantity: BASE,
   overReceivedBaseQuantity: BASE, overReceiptReason: TEXT, skuExceptionReason: TEXT, skuWarningCodes: { type: "array", items: TEXT },
   details: { type: "array", items: GR_DETAIL } });
-export const GOODS_RECEIPT_LIST_RESPONSE = strict({ items: { type: "array", items: strict(HEADER_PROPERTIES) }, total: INT, page: ID,
+export const GOODS_RECEIPT_LIST_RESPONSE = strict({ items: { type: "array", items: strict({ ...HEADER_PROPERTIES, currencyCode: TEXT }) }, total: INT, page: ID,
   pageSize: { type: "integer", minimum: 1, maximum: 100 } });
 export const GOODS_RECEIPT_DETAIL_RESPONSE = strict({ ...HEADER_PROPERTIES, notes: TEXT, supplierStatusAtConfirm: TEXT, supplierExceptionReason: TEXT,
   createdByLabel: TEXT, updatedByLabel: TEXT, createdAt: INT, cancelledAt: NINT, cancelReason: TEXT,
-  allowedActions: { type: "array", items: { enum: ["update", "cancel", "confirm"] } }, lines: { type: "array", items: GR_LINE } });
+  totalReversedBaseQuantity: BASE, reversals: { type: "array", items: strict({ id: ID, number: TEXT, reason: TEXT, confirmedAt: INT, totalReversedBaseQuantity: BASE }) },
+  allowedActions: { type: "array", items: { enum: ["update", "cancel", "confirm", "reverse"] } }, lines: { type: "array", items: GR_LINE } });

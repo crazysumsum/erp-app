@@ -17,7 +17,7 @@ export class SupplierReferenceService {
       if (!Number.isInteger(count) || count < 0) {
         throw new TypeError(`Supplier reference checker ${checker.name} must return a non-negative integer`);
       }
-      references[checker.name] = count;
+      if (count > 0) references[checker.name] = count;
     }
     return {
       references,

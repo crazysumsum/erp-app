@@ -160,6 +160,8 @@ export const PURCHASE_ORDER_LIST_QUERY = Object.freeze({
 const queryValidator = new RequestValidator({ config: { enabled: true, allErrors: false, coerceTypes: true, useDefaults: false,
   removeAdditional: false, maxErrors: 1, includeErrorDetailsInResponse: false } });
 const validateList = queryValidator.compile({ query: PURCHASE_ORDER_LIST_QUERY }, "Purchase Order list query");
+const exportFilters = Object.fromEntries(Object.entries(PURCHASE_ORDER_LIST_QUERY.properties).filter(([key]) => key !== "page" && key !== "pageSize"));
+const validateExport = queryValidator.compile({ query: { ...PURCHASE_ORDER_LIST_QUERY, properties: exportFilters } }, "Purchase Order export query");
 const { page, pageSize, sortBy, descending, supplierId, buyerId, skuId, expectedDeliveryDateFrom, expectedDeliveryDateTo } = PURCHASE_ORDER_LIST_QUERY.properties;
 const validateOutstanding = queryValidator.compile({ query: { type: "object", additionalProperties: false,
   properties: { page, pageSize, sortBy, descending, supplierId, buyerId, skuId, expectedDeliveryDateFrom, expectedDeliveryDateTo, overdue: { type: "boolean" } }
@@ -173,9 +175,9 @@ export function myApprovalsRequest(req) {
   return { claims: req.auth.claims, input: request.input.query };
 }
 
-export function purchaseOrderListRequest(req, { outstandingOnly = false } = {}) {
+export function purchaseOrderListRequest(req, { outstandingOnly = false, exportOnly = false } = {}) {
   const request = { query: structuredClone(req.input.query) };
-  validated(outstandingOnly ? validateOutstanding : validateList, request, "query");
+  validated(exportOnly ? validateExport : outstandingOnly ? validateOutstanding : validateList, request, "query");
   const args = { claims: req.auth.claims, input: request.input.query };
   if (outstandingOnly) args.outstandingOnly = true;
   return args;
@@ -283,7 +285,10 @@ export function purchasingLookupService(services, logger) {
 
 export function purchasingInquiryService(services, logger) {
   const database = services.require("mysqldatabase"), time = services.require("time");
-  return new PurchasingInquiryService({ database, logger, time, suppliers: new SupplierLookupService({ database, logger, time }) });
+  const { auditDetailMaxBytes } = normalizePurchasingConfig(services.config?.purchasing);
+  return new PurchasingInquiryService({
+    database, logger, time, suppliers: new SupplierLookupService({ database, logger, time }), audit: new PurchasingAuditService({ auditDetailMaxBytes })
+  });
 }
 
 export function purchasingSettingsService(services, logger) {

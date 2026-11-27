@@ -2,8 +2,9 @@
  * 開票與應收首期：由真實的 SHIPPED 出貨開票（SCOPE §1、§3），來源只經 Fulfillment 的 readInvoiceSourcesInTransaction。
  *
  * 每案用 Fulfillment 既有的 shipmentDraftFixture 在自己的隔離資料庫建立 1 張訂單（1 行，訂 5 件）及最多 2 張出貨
- * （3 件及 2 件），再在該資料庫跑 AR 的 0122、0123。全檔 2 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
- * 只會上一張發票，另一次 2 個並發的收款建立驗交易內不另佔連線。服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
+ * （3 件及 2 件），再在該資料庫跑所需 AR migrations。全檔 3 案，每案 1 次；第二案有一次 2 個並發請求，驗同一張出貨
+ * 只會上一張發票，另一次 2 個並發的收款建立驗交易內不另佔連線。第三案用另一條連線驗證發票行的鎖及佔用釋放。
+ * 服務直接呼叫（隔離資料庫沒有 HTTP application）；HTTP、權限及查詢另見 arInvoices.integration.test.js。
  * 沒有容量或效能斷言。資料庫隨 fixture 丟棄。
  */
 import assert from "node:assert/strict";

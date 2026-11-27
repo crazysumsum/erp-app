@@ -23,7 +23,7 @@ function header(row) {
 
 /**
  * 收貨單最小 list／detail（設計 §5.3、§8.9 子集；PM 00108ad7：只做頁面要嘅欄位）。只讀，要 purchasing.view；
- * allowedActions 用交易內重讀嘅權限，唔信 JWT。Reversal、CSV、風險 filter 屬之後嘅 Task。
+ * allowedActions 用交易內重讀嘅權限，唔信 JWT。
  */
 export class GoodsReceiptInquiryService {
   constructor({ database }) {
@@ -41,12 +41,16 @@ export class GoodsReceiptInquiryService {
       where.push("gr.status = ?"); values.push(query.status);
     }
     if (query.purchaseOrderId !== undefined) { where.push("gr.purchase_order_id = ?"); values.push(positiveId(Number(query.purchaseOrderId), "purchaseOrderId")); }
+    if (query.supplierId !== undefined) {
+      where.push("gr.supplier_id = ?");
+      values.push(positiveId(Number(query.supplierId), "supplierId"));
+    }
     const clause = where.length ? ` WHERE ${where.join(" AND ")}` : "";
     return this.database.withTransaction(async (tx) => {
       await this.#actor(tx, claims);
       const [[{ total }]] = await tx.query(`SELECT COUNT(*) AS total FROM goods_receipts gr${clause}`, values);
-      const [rows] = await tx.query(`SELECT ${HEADER} ${FROM}${clause} ORDER BY gr.id DESC LIMIT ? OFFSET ?`, [...values, pageSize, (page - 1) * pageSize]);
-      return { items: rows.map(header), total: Number(total), page, pageSize };
+      const [rows] = await tx.query(`SELECT ${HEADER}, po.currency_code ${FROM}${clause} ORDER BY gr.id DESC LIMIT ? OFFSET ?`, [...values, pageSize, (page - 1) * pageSize]);
+      return { items: rows.map(row => ({ ...header(row), currencyCode: row.currency_code })), total: Number(total), page, pageSize };
     });
   }
 
@@ -54,17 +58,24 @@ export class GoodsReceiptInquiryService {
     positiveId(id, "id");
     return this.database.withTransaction(async (tx) => {
       const { permissions } = await this.#actor(tx, claims);
-      const [[row]] = await tx.query(`SELECT ${HEADER} ${FROM} WHERE gr.id = ?`, [id]);
+      const [[row]] = await tx.query(`SELECT ${HEADER}, gr.total_reversed_base_quantity ${FROM} WHERE gr.id = ?`, [id]);
       if (!row) throw purchasingError("GOODS_RECEIPT_NOT_FOUND");
       const [lines] = await tx.query(`SELECT id, purchase_order_line_id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, received_base_quantity,
         over_received_base_quantity, over_receipt_reason, sku_exception_reason, sku_warning_codes FROM goods_receipt_lines WHERE goods_receipt_id = ? ORDER BY line_number`, [id]);
       const [details] = await tx.query(`SELECT id, goods_receipt_line_id, detail_number, input_uom_id, input_uom_code_snapshot, received_quantity,
         received_base_quantity, warehouse_id, bin_id, warehouse_code_snapshot, bin_code_snapshot, lot_number, ${date("expiry_date")}, ${date("manufacture_date")},
-        stock_status, expiry_override_reason, inventory_movement_id FROM goods_receipt_details WHERE goods_receipt_id = ? ORDER BY detail_number`, [id]);
+        stock_status, expiry_override_reason, inventory_movement_id, reversed_base_quantity
+        FROM goods_receipt_details WHERE goods_receipt_id = ? ORDER BY detail_number`, [id]);
+      const [reversals] = await tx.query(`SELECT id, reversal_reference, reason, confirmed_at, total_reversed_base_quantity
+        FROM goods_receipt_reversals WHERE goods_receipt_id = ? ORDER BY reversal_sequence DESC`, [id]);
       const writable = row.status === "DRAFT" && ["purchasing.view", "receiving.operation"].every((name) => permissions.includes(name));
+      const reversible = ["CONFIRMED", "PARTIALLY_REVERSED"].includes(row.status) && permissions.includes("inventory.adjust");
       return { ...header(row), notes: row.notes, supplierStatusAtConfirm: row.supplier_status_at_confirm, supplierExceptionReason: row.supplier_exception_reason,
         createdByLabel: row.created_by_label, updatedByLabel: row.updated_by_label, createdAt: Number(row.created_at), cancelledAt: stamp(row.cancelled_at),
-        cancelReason: row.cancel_reason, allowedActions: writable ? ["update", "cancel", "confirm"] : [],
+        cancelReason: row.cancel_reason, totalReversedBaseQuantity: String(row.total_reversed_base_quantity),
+        allowedActions: writable ? ["update", "cancel", "confirm"] : reversible ? ["reverse"] : [],
+        reversals: reversals.map(reversal => ({ id: Number(reversal.id), number: reversal.reversal_reference, reason: reversal.reason,
+          confirmedAt: Number(reversal.confirmed_at), totalReversedBaseQuantity: String(reversal.total_reversed_base_quantity) })),
         lines: lines.map((line) => ({ id: Number(line.id), purchaseOrderLineId: Number(line.purchase_order_line_id), lineNumber: Number(line.line_number),
           skuId: Number(line.sku_id), skuCode: line.sku_code_snapshot, skuName: line.sku_name_snapshot, receivedBaseQuantity: String(line.received_base_quantity),
           overReceivedBaseQuantity: String(line.over_received_base_quantity), overReceiptReason: line.over_receipt_reason, skuExceptionReason: line.sku_exception_reason,
@@ -74,7 +85,8 @@ export class GoodsReceiptInquiryService {
             receivedQuantity: detail.received_quantity, receivedBaseQuantity: String(detail.received_base_quantity), warehouseId: Number(detail.warehouse_id),
             binId: Number(detail.bin_id), warehouseCode: detail.warehouse_code_snapshot, binCode: detail.bin_code_snapshot, lotNumber: detail.lot_number,
             expiryDate: detail.expiry_date, manufactureDate: detail.manufacture_date, stockStatus: detail.stock_status,
-            expiryOverrideReason: detail.expiry_override_reason, inventoryMovementId: stamp(detail.inventory_movement_id) })) })) };
+            expiryOverrideReason: detail.expiry_override_reason, inventoryMovementId: stamp(detail.inventory_movement_id),
+            reversedBaseQuantity: String(detail.reversed_base_quantity) })) })) };
     });
   }
 

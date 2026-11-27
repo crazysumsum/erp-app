@@ -4,6 +4,7 @@ import { inventoryNativeFixture } from "../fulfillment/inventoryNativeFixture.js
 import { assertOwnedOperationWait,gate } from "../fulfillment/inventoryConcurrency.js";
 import { InventoryFulfillmentService } from "../../src/modules/inventory/InventoryFulfillmentService.js";
 import { up as admissionUp } from "../../database/migrations/0092_create_fulfillment_operations_and_sequences.js";
+import { up as costingUp } from "../../database/migrations/0130_create_inventory_cost.js";
 import { componentReversalAdmission } from "../fulfillment/eventAdmissionComponentFixture.js";
 import { InventoryLookupService } from "../../src/modules/inventory/InventoryLookupService.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
@@ -31,6 +32,48 @@ async function fixture(t) {
   };
   return {...f,issue,service,command,allocated,invoke};
 }
+
+async function enableCostFixture(f, quantity=20, value="21.2003") {
+  await costingUp(f.db);
+  await f.db.execute("INSERT INTO fr_schema_migrations(name,applied_at) VALUES('migrations/0130_create_inventory_cost.js',1)");
+  await f.db.execute("INSERT INTO inventory_cost_pools(sku_id,costed_quantity,value_hkd,updated_at) VALUES(?,?,?,1)",[f.skuId,quantity,value]);
+  await f.db.execute(`INSERT INTO inventory_cost_entries(sku_id,entry_kind,quantity_delta,value_delta_hkd,
+    unit_cost_source,pool_quantity_after,pool_value_after_hkd,posted_at)
+    VALUES(?,'ENABLEMENT',?,?,'ENABLEMENT_FILE',?,?,1)`,[f.skuId,quantity,value,quantity,value]);
+}
+
+nativeTest("Costed Fulfillment writes one immutable journal fact per leg and restores each original amount",async t=>{
+  const f=await fixture(t);await enableCostFixture(f);
+  const issue=await f.withActor(tx=>f.invoke(tx,f.command(f.issue)),{isolationLevel:"READ COMMITTED",eventAdmissionId:EVENT});
+  const ids=issue.lines.flatMap(line=>line.reservations.flatMap(member=>member.allocations.map(leg=>leg.movementId)));
+  const [costs]=await f.db.query("SELECT id,movement_id,value_delta_hkd,entry_kind FROM inventory_cost_entries ORDER BY id");
+  assert.deepEqual(costs.slice(1).map(row=>[String(row.movement_id),row.value_delta_hkd,row.entry_kind]),
+    [[ids[0],"-5.3001","ISSUE"],[ids[1],"-5.3001","ISSUE"]]);
+  assert.deepEqual(await f.withActor(tx=>new InventoryLookupService(f).assertIssueCostAvailableInTransaction(tx,{movementIds:ids}),
+    {isolationLevel:"READ COMMITTED"}),{state:"AVAILABLE",costingEnabled:true});
+  const reverse=reverseInput(issue);
+  const receipt=await f.withActor(tx=>f.invoke(tx,f.command(reverse,REVERSE),"REVERSE"),{isolationLevel:"READ COMMITTED",eventAdmissionId:REVERSE});
+  assert.deepEqual(await f.withActor(tx=>f.invoke(tx,f.command(reverse,REVERSE),"REVERSE"),
+    {isolationLevel:"READ COMMITTED",eventAdmissionId:REVERSE}),receipt);
+  const [returned]=await f.db.query("SELECT original_entry_id,original_value_hkd,value_delta_hkd FROM inventory_cost_entries WHERE entry_kind='ISSUE_REVERSAL' ORDER BY id");
+  assert.deepEqual(returned.map(row=>Object.values(row)), [[costs[1].id,"5.3001","5.3001"],[costs[2].id,"5.3001","5.3001"]]);
+  const [[pool]]=await f.db.query("SELECT costed_quantity,value_hkd FROM inventory_cost_pools");
+  assert.deepEqual(Object.values(pool),[20,"21.2003"]);
+});
+
+nativeTest("Costed Fulfillment rejects historical uncosted share before restoring stock",async t=>{
+  const f=await fixture(t);
+  const issue=await f.withActor(tx=>f.invoke(tx,f.command(f.issue)),{isolationLevel:"READ COMMITTED",eventAdmissionId:EVENT});
+  await enableCostFixture(f,10,"10.6001");
+  const ids=issue.lines.flatMap(line=>line.reservations.flatMap(member=>member.allocations.map(leg=>leg.movementId)));
+  assert.deepEqual(await f.withActor(tx=>new InventoryLookupService(f).assertIssueCostAvailableInTransaction(tx,{movementIds:ids}),
+    {isolationLevel:"READ COMMITTED"}),{state:"MISSING",costingEnabled:true});
+  const before=(await f.db.query("SELECT * FROM inventory_stock_balances"))[0];
+  await assert.rejects(f.withActor(tx=>f.invoke(tx,f.command(reverseInput(issue),REVERSE),"REVERSE"),
+    {isolationLevel:"READ COMMITTED",eventAdmissionId:REVERSE}),{code:"INVENTORY_COST_SOURCE_MISSING"});
+  assert.deepEqual((await f.db.query("SELECT * FROM inventory_stock_balances"))[0],before);
+  assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM inventory_cost_entries"))[0][0].n),1);
+});
 
 nativeTest("P0 real Inventory batch Issue/Restore shares one Balance, replays immutable versions and restores only Reservation",async t=>{
   const f=await fixture(t);

@@ -12,7 +12,7 @@
     {
       "path": "server/test/integration/supplierHttpHarness.js",
       "mode": "100644",
-      "blob": "58c81b38333300f542820e9b164ac10f131d5545",
+      "blob": "b54293d252b2705795c14847aa17de04e9007c28",
       "kind": "functional",
       "cases": [
         "Supplier integration suites that build their app through createSupplierHarness (route list read from the system log)"

@@ -1,11 +1,23 @@
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import { rejectPublishedKeys } from "./framework/configuration/rejectPublishedKeys.js";
 
 dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
 
 let application;
 
 async function bootstrap() {
+  const { TZ: zone, NODE_ENV: environment } = process.env;
+  const offset = new Date().getTimezoneOffset();
+  if ((zone !== "UTC" && zone !== "Etc/UTC") || offset !== 0) {
+    const message = `Unsafe process time zone (TZ=${zone ?? "<unset>"}, getTimezoneOffset()=${offset} minutes). ` +
+      "MySQL DATE values can shift by a day. Set TZ=UTC and configure the business time zone with APP_TIME_ZONE=Asia/Hong_Kong.";
+    if (environment !== "test" && environment !== "development") throw new Error(message);
+    console.warn(message);
+  }
+
+  if (environment !== "test" && environment !== "development") rejectPublishedKeys(process.env);
+
   const [{ createApplication }, { registerProcessLifecycle }] = await Promise.all([
     import("./framework/application/createApplication.js"),
     import("./framework/application/processLifecycle.js")
