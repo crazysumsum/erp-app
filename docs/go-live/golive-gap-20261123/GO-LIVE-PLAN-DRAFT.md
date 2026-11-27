@@ -60,6 +60,12 @@ UAT 後的合併（Claude TL 的建議，待 CI 管理員確認）：
 - 啟動檢查（Sam 11-26 批准「方法2」，sharedfeatures-01 `codex/server-utc-startup`，TL 非作者 PASS，排在小修正整合 PR 合併）：正式入口啟動時若 `TZ` 不是 `UTC`／`Etc/UTC` 或實際 offset 不為 0，系統拒絕啟動並在 stderr 寫明實際 TZ 與 offset；`NODE_ENV` 未設一律當正式環境。**部署及 UAT 環境必須明確設：`NODE_ENV=production`、`TZ=UTC`、`APP_TIME_ZONE=Asia/Hong_Kong`**（即使主機系統時區已是 UTC，沒有明確設 `TZ=UTC` 也會拒啟）。另須設 `CUSTOMER_IMPORT_ROOT`（客戶匯入目錄；11-26 獨立驗收 SD-01 發現 `.env.example` 缺此行，已派 customer-01 補）。根本修正（mysql2 `dateStrings`）延到上線後。
 - 金鑰：正式及 UAT 環境的 `JWT_SECRET`、`SUPPLIER_BANK_*`、`CUSTOMER_BANK_*` 必須由部署負責人在部署時新生成（例如 `openssl rand`），不可沿用倉庫內任何出現過的值（CI 設定、`.env.example`、文件或測試資料內的值）。
 - 網絡：API 不直接對互聯網開放。遠端使用須經 VPN 或 IP 白名單。正式環境必須設 `NODE_ENV=production`。
+- 多台部署（雙活，TL 11-27 審核）：先由 Sam 決定檔案存放方式（共享儲存，或上線先用單台）。決定之前，不按雙活準備部署。若採用多台，部署負責人須照下列設定：
+  - 每台 app 的 `TRUST_PROXY` 設為 nginx 的 IP。nginx 以覆寫方式傳送 `X-Forwarded-For` 及 `X-Forwarded-Proto`；防火牆只容許 nginx 連到 app。
+  - nginx 設定：`client_max_body_size 51m`；`proxy_read_timeout` 及 `proxy_send_timeout` 各 130 秒；upstream 不開 keepalive；不改寫路徑；錯誤頁回傳 JSON；登入加 `limit_req`；不對非冪等請求重試。
+  - migration 只由部署管線執行一次。升級時整體短暫停機，不做滾動更新。重啟時一次一台。
+  - 所有主機及 MySQL 都跑 NTP，偏差小於 1 秒。各台的環境變數必須一致，以雜湊比對。日誌集中收集。
+  - 帳號撤銷在其他實例最多約 30 秒後才生效，上線文件要寫明。
 - 角色名稱（TL 11-27 裁定，中文角色名修正一併上線）：部署前在目標庫執行 `SELECT id FROM roles WHERE name REGEXP '[[:cntrl:]]';`，結果須為空；若有，先改名再部署。
 - 主檔用語（11-27 UI/UX 方案 B）：上線前在貨幣主檔把 HKD 的名稱改為「港元」（代碼不變），其他預設主檔名稱也一併檢查是否為中文。
 - 權限收斂（F-09，合併後）：部署前後各執行一次 `docs/user_management/TASK-F-09.md` 裡的兩段唯讀 SELECT。一段盤點所有管理員帳號（含停用的）是否兼有業務角色，結果應為零列；另一段逐項核對管理員保留的 15 項權限。實際撤權由 F-09 migration 執行。
