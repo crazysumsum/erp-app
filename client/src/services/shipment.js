@@ -35,6 +35,12 @@ function draft(body,update){
  for(const [key,max]of [["carrierName",190],["trackingNumber",190],["notes",2000]])if(body[key]!==undefined)text(body[key],max);
 }
 function command(body,cancel=false){object(body,["eventId","version",...(cancel?["reason"]:[])],["eventId","version"]);event(body.eventId);if(!version(body.version))invalid();if(cancel&&body.reason!==undefined)text(body.reason,500);}
+function reversalCommand(body){
+ const fields=["eventId","version","reason","goodsUnderCompanyControl","goodsReturnedToOriginalBins"];
+ object(body,fields,fields);event(body.eventId);
+ const reason=typeof body.reason==="string"?body.reason.trim():"",length=[...reason].length;
+ if(!version(body.version)||length<5||length>500||/[\uD800-\uDFFF]/u.test(reason)||body.goodsUnderCompanyControl!==true||body.goodsReturnedToOriginalBins!==true)invalid();
+}
 function header(row,id){try{if(!row||shipmentDocumentId(row.id)!==id||!statuses.includes(row.status)||!version(row.version))unavailable();}catch{unavailable();}}
 function draftResult(result,{shipmentId,fulfillmentId,status,expectedVersion}){try{if(!result?.outcome||!result.shipment)unavailable();const id=shipmentDocumentId(result.outcome.id);header(result.shipment,id);if(shipmentId!==undefined&&id!==shipmentId||fulfillmentId!==undefined&&shipmentDocumentId(result.shipment.fulfillmentId)!==fulfillmentId||result.outcome.status!==status||result.outcome.version!==expectedVersion||result.shipment.version<expectedVersion)unavailable();}catch{unavailable();}return result;}
 function write(path,input,validate,{signal}={}){
@@ -70,6 +76,21 @@ export default {
   else if(result?.outcome==="SHIPPED"){header(result.shipment,id);if(!["SHIPPED","REVERSING","REVERSED"].includes(result.shipment.status)||result.shipment.version<confirmedVersion||!Array.isArray(result.inventoryMovementIds)||!result.inventoryMovementIds.length||result.inventoryMovementIds.length>5000||!result.salesOrder)unavailable();try{shipmentDocumentId(result.salesOrder.id);const ids=result.inventoryMovementIds.map(shipmentDocumentId);if(new Set(ids).size!==ids.length)unavailable();}catch{unavailable();}}
   else unavailable();return result;
  });},
+ reverse(id,input,{signal}={}){
+  id=shipmentDocumentId(id);reversalCommand(input);
+  const body={...input,reason:input.reason.trim()};
+  return httpClient.post(`/api/v1/shipments/${id}/reverse`,{body,idempotent:true,idempotencyKey:body.eventId,...(signal===undefined?{}:{signal})}).then(result=>{
+   if(result?.outcome==="REVERSING"){
+    shipmentOperationReference(result);
+    try{shipmentDocumentId(result.operationId);shipmentDocumentId(result.reversal?.id);}catch{unavailable();}
+    if(result.eventId!==body.eventId||result.shipmentVersion!==body.version+1||result.retryAfterSeconds!==2)unavailable();
+   }else if(result?.outcome==="REVERSED"){
+    header(result.shipment,id);
+    if(result.shipment.status!=="REVERSED"||result.shipment.version!==body.version+2)unavailable();
+   }else unavailable();
+   return result;
+  });
+ },
  getOperation(eventId,{signal}={}){event(eventId);return httpClient.get(`/api/v1/fulfillment-operations/by-event/${eventId}`,{signal}).then(result=>{try{if(!result||result.eventId!==eventId||!uuid(result.correlationId)||!["IN_PROGRESS","SUCCEEDED","FAILED"].includes(result.status))unavailable();shipmentDocumentId(result.operationId);if(result.status==="SUCCEEDED"){shipmentDocumentId(result.result?.id);if(!["DRAFT","CANCELLED","SHIPPED","REVERSED"].includes(result.result.status)||!version(result.result.version))unavailable();}if(result.status==="FAILED"&&(typeof result.publicErrorCode!=="string"||!result.publicErrorCode))unavailable();}catch{unavailable();}return result;});},
  getDeliveryNote(id,{signal}={}){return httpClient.get(`/api/v1/shipments/${shipmentDocumentId(id)}/delivery-note`,{signal});}
 };

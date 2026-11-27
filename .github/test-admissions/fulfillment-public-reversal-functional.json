@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "decision": "Sam extended the functional-case approval suspension through go-live in PR #395. PM 07edcfa6 and 855144b7 authorized the TASK-036/037 scope on 2026-11-26. PM fde02d88 and 0b316242 directed the exact ordinary merge and admission handoff. Source e88e94f59e676ce1b803053422779232729bf57b on main a79d737682525021b6acfb40f534e3a84e0b484e. Non-author review and trusted CI digest registration apply.",
+  "purpose": "Verify the strict whole-shipment reversal contract, invoice and return prerequisites, cost-fenced Recovery and the browser operation and access flows.",
+  "data": "Each of five native cases seeds one private sales order, one warehouse and one shipment. Fixtures use one line or two lines with a maximum of three stock balances, including one zero-picked line. Schema checks use in-memory commands. Each private browser case uses one shipped synthetic order.",
+  "concurrency": "Existing server CI discovery and shards are unchanged. Each native test uses its own schema and bounded operations on one shipment. The explicit local Playwright config uses one worker and zero retries.",
+  "repetitions": "Two schema tests and five native integration tests are discovered once per applicable functional run. Three browser cases run once per timezone in the explicit local validation. Existing P1 and P2 browser repetitions are unchanged.",
+  "thresholds": "Strict identities, confirmations and response shape, unchanged business facts on rejection, matching source occupancy, a valid cost witness and one terminal reversal. Existing permission gates, assertions, coverage and 20-second transaction limit are preserved.",
+  "trigger": "Existing routine server unit and integration discovery. The two reversal.validation.mjs paths are functional inputs to explicit local Playwright validation only. Routine P1 and P2 Playwright configs match only p1.spec.js and p2.spec.js. No workflow or capacity changes.",
+  "cost": "The five native cases took about 9.3 seconds in total in the local UTC author run including fixture setup. The two schemas took under 0.03 seconds. Three local Chrome cases took about 22 seconds per timezone. Remote CI wall-clock impact is unmeasured.",
+  "files": [
+    {
+      "path": "client/e2e/fulfillment-shipping-management/reversal.validation.config.mjs",
+      "mode": "100644",
+      "blob": "0fe107769e250e418283558df424365958a5c798",
+      "kind": "functional",
+      "cases": [
+        "native reversal dialog handles stale versions, real return occupancy and the final shipment and print status",
+        "native browser receives 202 and the registered cluster job recovers the cost-bound event",
+        "view-only operator sees no reversal action and the public API refuses the command"
+      ]
+    },
+    {
+      "path": "client/e2e/fulfillment-shipping-management/reversal.validation.mjs",
+      "mode": "100644",
+      "blob": "a43a5a1a166e6112708ad9e0b0b52086b6d34429",
+      "kind": "functional",
+      "cases": [
+        "native reversal dialog handles stale versions, real return occupancy and the final shipment and print status",
+        "native browser receives 202 and the registered cluster job recovers the cost-bound event",
+        "view-only operator sees no reversal action and the public API refuses the command"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/shipmentReversalSchemas.test.js",
+      "mode": "100644",
+      "blob": "08684ea48f9b99bb4ffcff0536e77ac4fc2b89c8",
+      "kind": "functional",
+      "cases": [
+        "Shipment Reverse command accepts only one whole shipment and both confirmations",
+        "Shipment Reverse uses a strict original-event pending response and terminal summary"
+      ]
+    },
+    {
+      "path": "server/test/integration/shipmentReversalDownstream.integration.test.js",
+      "mode": "100644",
+      "blob": "21ddc7b98311fe5078dbc1a75363b4bd21a4c7ce",
+      "kind": "functional",
+      "cases": [
+        "Shipment Reverse gates Phase A on matching invoice and return counts in the same transaction",
+        "Shipment Reverse provider-mode Recovery preserves an expired legacy intent without a provider witness",
+        "Shipment Reverse checks every stored ISSUE and rolls back Phase A on missing or unknown cost",
+        "Shipment Reverse cost-enabled Recovery preserves expired provider-mode v1 attempts",
+        "Shipment Reverse Recovery verifies the versioned cost witness against stored ISSUEs after restart"
+      ]
+    }
+  ]
+}
