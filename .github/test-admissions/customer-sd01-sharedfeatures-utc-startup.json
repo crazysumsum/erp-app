@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam assigned the UTC startup guard via PM (0ebd80e1); the per-case functional admission suspension is in force. Independent TL review 07172877 passed product revision 32df5be88afde5c917f929020bc8b646de79188c. CI administrator requested these file bindings in 7428a38b. Production key guard pin refresh. PM assignment f11ea60e. Independent TL review 7854ccfc of product revision 3011abe02c1650ef4451cf784b4c6b6f6065d920. CI administrator precheck de5ef8a1 assigned the inputs to these receipts. The UTC regression isolates its JWT and bank settings, and the environment template documents fresh production keys. Its original four cases, timeouts and workload are retained. SD-01 docs-only pin refresh approved for the Customer lookup candidate. Codex TL d8967f6c reviewed the SD-01 example with the lookup at bd0933223eae276a49dd672207ee61f71f82edd8. CI administrator 0fc538b2 identified this single active owner group and instructed a full renewal with only the environment example support pin changed.",
+  "decision": "Sam assigned the UTC startup guard via PM (0ebd80e1); the per-case functional admission suspension is in force. Independent TL review 07172877 passed product revision 32df5be88afde5c917f929020bc8b646de79188c. CI administrator requested these file bindings in 7428a38b. Production key guard pin refresh. PM assignment f11ea60e. Independent TL review 7854ccfc of product revision 3011abe02c1650ef4451cf784b4c6b6f6065d920. CI administrator precheck de5ef8a1 assigned the inputs to these receipts. The UTC regression isolates its JWT and bank settings, and the environment template documents fresh production keys. Its original four cases, timeouts and workload are retained. SD-01 docs-only pin refresh approved for the Customer lookup candidate. Codex TL d8967f6c reviewed the SD-01 example with the lookup at bd0933223eae276a49dd672207ee61f71f82edd8. CI administrator 0fc538b2 identified this single active owner group and instructed a full renewal with only the environment example support pin changed. CI administrator 259612ed requested rebinding the same five files after PR #428, preserving the four test and fixture bindings and updating only the environment example support blob.",
   "purpose": "Reject an unsafe Node process time zone before a production API can read MySQL DATE values. Keep explicit development and test processes usable in both time zones.",
   "data": "Four functional tests exercise ten sequential CLI launches with synthetic environment values and deliberately invalid subsequent application configuration. The CLI exits before database access. Existing Fulfillment fixtures only declare NODE_ENV=test for their API children.",
   "concurrency": "The new test file starts one subprocess at a time. Existing functional runner worker counts apply.",
@@ -52,7 +52,7 @@
     {
       "path": "server/.env.example",
       "mode": "100644",
-      "blob": "69c3043b0bfe8e82ec107eb3b39955d8605b259a",
+      "blob": "a2278b54edfc7e1f5858aee2e7243d0cf6ef14d9",
       "kind": "support"
     }
   ]
