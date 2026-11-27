@@ -59,6 +59,7 @@ UAT 後的合併（Claude TL 的建議，待 CI 管理員確認）：
 - 時區（Claude TL 11-24 的建議）：伺服器的 Node 程序設 `TZ=UTC`，與 CI 相同；業務日期由 `APP_TIME_ZONE` 決定（香港公司用 `Asia/Hong_Kong`；與預演所用的 `Asia/Taipei` 同為 UTC+8、無夏令時間，日期相同）。原因：資料庫驅動把 DATE 欄以本機時區的 Date 物件回傳，若伺服器設在 UTC+8，未被發現的讀取路徑會早一天（UAT-004 屬此類）。11-25 驗收庫照此設定並核對日期顯示。
 - 啟動檢查（Sam 11-26 批准「方法2」，sharedfeatures-01 `codex/server-utc-startup`，TL 非作者 PASS，排在小修正整合 PR 合併）：正式入口啟動時若 `TZ` 不是 `UTC`／`Etc/UTC` 或實際 offset 不為 0，系統拒絕啟動並在 stderr 寫明實際 TZ 與 offset；`NODE_ENV` 未設一律當正式環境。**部署及 UAT 環境必須明確設：`NODE_ENV=production`、`TZ=UTC`、`APP_TIME_ZONE=Asia/Hong_Kong`**（即使主機系統時區已是 UTC，沒有明確設 `TZ=UTC` 也會拒啟）。另須設 `CUSTOMER_IMPORT_ROOT`（客戶匯入目錄；11-26 獨立驗收 SD-01 發現 `.env.example` 缺此行，已派 customer-01 補）。根本修正（mysql2 `dateStrings`）延到上線後。
 - 金鑰：正式及 UAT 環境的 `JWT_SECRET`、`SUPPLIER_BANK_*`、`CUSTOMER_BANK_*` 必須由部署負責人在部署時新生成（例如 `openssl rand`），不可沿用倉庫內任何出現過的值（CI 設定、`.env.example`、文件或測試資料內的值）。
+- 網絡：API 不直接對互聯網開放。遠端使用須經 VPN 或 IP 白名單。正式環境必須設 `NODE_ENV=production`。
 - 角色名稱（TL 11-27 裁定，中文角色名修正一併上線）：部署前在目標庫執行 `SELECT id FROM roles WHERE name REGEXP '[[:cntrl:]]';`，結果須為空；若有，先改名再部署。
 - 主檔用語（11-27 UI/UX 方案 B）：上線前在貨幣主檔把 HKD 的名稱改為「港元」（代碼不變），其他預設主檔名稱也一併檢查是否為中文。
 - 權限收斂（F-09，合併後）：部署前後各執行一次 `docs/user_management/TASK-F-09.md` 裡的兩段唯讀 SELECT。一段盤點所有管理員帳號（含停用的）是否兼有業務角色，結果應為零列；另一段逐項核對管理員保留的 15 項權限。實際撤權由 F-09 migration 執行。
