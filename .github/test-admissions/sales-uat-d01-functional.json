@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam extended the temporary suspension of per-case functional test approval through production go-live on 2026-11-24, recorded in AGENTS.md and merged in PR #395. PM assigned Sales UAT D-01 in agent message 17ac8cbc and directed the test-title correction in a66097a5. Non-author Claude TL 13428c73 reviewed and validated the functional product and test body at 8f58ee3a074d6917c5492afa959393c92d70943e. The title-only candidate is 547ef26a3d3a3893c07746800b37d4b7ff2a9e90. Non-author Claude TL 71717cda verified the title-only candidate and confirmed the earlier functional evidence still applies. PM 9416b418 and CI 1490295c assigned the D-01 window on main 5a52f93ba81cf6dec080b4fc8f48fa446e465aa0. The tested product candidate is merge commit 0b03c6cd602f639570aa3ce0a20f290c3167c800. Its two-file product patch matches the title-only candidate with SHA-256 d1691a61d4782f8e2e6478791b14056477b362d890dde1f6b5c83001ddd60f9f.",
+  "decision": "Sam extended the temporary suspension of per-case functional test approval through production go-live on 2026-11-24, recorded in AGENTS.md and merged in PR #395. PM assigned Sales UAT D-01 in agent message 17ac8cbc and directed the test-title correction in a66097a5. Non-author Claude TL 13428c73 reviewed and validated the functional product and test body at 8f58ee3a074d6917c5492afa959393c92d70943e. The title-only candidate is 547ef26a3d3a3893c07746800b37d4b7ff2a9e90. Non-author Claude TL 71717cda verified the title-only candidate and confirmed the earlier functional evidence still applies. PM 9416b418 and CI 1490295c assigned the D-01 window on main 5a52f93ba81cf6dec080b4fc8f48fa446e465aa0. The tested product candidate is merge commit 0b03c6cd602f639570aa3ce0a20f290c3167c800. Its two-file product patch matches the title-only candidate with SHA-256 d1691a61d4782f8e2e6478791b14056477b362d890dde1f6b5c83001ddd60f9f. Sam's functional case-admission suspension until go-live in AGENTS.md applies. PM 8a2e7ac1, 7909d49e, 3f76663b, d8980e85 and 6818b16f authorized this Unicode role fix, synthetic HTTP validation and Role create/rename assertions. The source-only head is 0b095df1d68fc132255431e8d9ec19011e4b5fe0 on actual main 44d25ebe34944b91e5e1248cbece0484548bb953. TL non-author exact review and trusted CI administrator registration are required. This copy has no registration authority.",
   "purpose": "Catch false master-data warnings when a quotation-derived order is confirmed. Check that confirmation retains the saved price source and still reports a real master-data change.",
   "data": "One isolated synthetic MySQL fixture, with one actor, one SKU, four units of available stock, the existing setup draft, and three quotations converted to one-line orders. The third scenario renames the synthetic SKU. The reused phase2 fixture is already pinned by fulfillment-task036-event-recovery-functional.json.",
   "concurrency": "The existing server shard and worker settings apply. The scenarios execute sequentially in one test case.",
@@ -12,10 +12,11 @@
     {
       "path": "server/test/integration/salesConfirmation.integration.test.js",
       "mode": "100644",
-      "blob": "cbf5f19e8915afd60f3f5f43beca50c4e004c036",
+      "blob": "7bee1922a4c6288a71c77a83ab2bb74c8dd6a20e",
       "kind": "functional",
       "cases": [
-        "UAT D-01 quotation order confirmation reports only real master changes and retains the quoted price source"
+        "UAT D-01 quotation order confirmation reports only real master changes and retains the quoted price source",
+        "Sales confirmation completes over HTTP with a 190-code-point Unicode role"
       ]
     }
   ]

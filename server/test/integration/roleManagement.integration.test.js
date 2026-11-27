@@ -589,6 +589,24 @@ test("create, list, assign permissions and update a role, with one audit row eac
   );
   assert.equal(updateResponse.status, 200);
 
+  const invalidCreate = await fetch(
+    `${url}/api/v1/roles/create`,
+    authed(token, { name: `${roleName}\tcontrol`, description: "" })
+  );
+  const invalidCreateBody = await invalidCreate.json();
+  if (invalidCreate.status === 201) {
+    const invalidRoleId = invalidCreateBody.data.id;
+    await db.execute("DELETE FROM user_audit_logs WHERE target_id = ? AND target_type = 'role'", [invalidRoleId]);
+    await db.execute("DELETE FROM roles WHERE id = ?", [invalidRoleId]);
+  }
+  const invalidRename = await fetch(
+    `${url}/api/v1/roles/${createdRoleId}/update`,
+    authed(token, { name: `${roleName}\x7fcontrol`, description: "改過的描述" })
+  );
+  assert.deepEqual([invalidCreate.status, invalidRename.status], [400, 400]);
+  const [[stored]] = await db.query("SELECT name FROM roles WHERE id = ?", [createdRoleId]);
+  assert.equal(stored.name, roleName);
+
   const permissionsResponse = await fetch(`${url}/api/v1/permissions`, {
     headers: { Authorization: `Bearer ${token}` }
   });

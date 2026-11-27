@@ -147,7 +147,7 @@ integrationTest("AP rechecks debt and supplier eligibility when creating and con
   const f = await fixture();
   const supplier = await f.supplier("archived");
   await f.invoice(supplier, "10.0000", { status: "DRAFT" });
-  await f.db.query("INSERT IGNORE INTO currencies (code, name, decimal_places, status, created_at, updated_at) VALUES ('XAP', 'AP synthetic FX', 2, 'ACTIVE', 1, 1)");
+  await f.db.query("INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at) VALUES ('XAP', 'AP synthetic FX', 2, 'ACTIVE', 1, 1, 1) ON DUPLICATE KEY UPDATE code = code");
   await f.invoice(supplier, "20.0000", { currency: "XAP" });
   error(await f.draft(supplier, "30.00"), 409, "AP_PREPAYMENT_REQUIRES_ACTIVE_SUPPLIER");
   const debt = await f.invoice(supplier, "10.0000");
@@ -176,7 +176,7 @@ integrationTest("AP allocation is atomic across invoices and later spends prepay
   const b = await f.invoice(party, "100.0000", { due: -31 });
   const wrongSupplier = await f.invoice(other, "100.0000");
   const code = "XAP";
-  await f.db.query("INSERT IGNORE INTO currencies (code, name, decimal_places, status, created_at, updated_at) VALUES (?, 'AP synthetic FX', 2, 'ACTIVE', 1, 1)", [code]);
+  await f.db.query("INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at) VALUES (?, 'AP synthetic FX', 2, 'ACTIVE', 1, 1, 1) ON DUPLICATE KEY UPDATE code = code", [code]);
   const wrongCurrency = await f.invoice(party, "100.0000", { currency: code });
   const { id } = ok(await f.draft(party, "325.00"));
   ok(await f.post(`/${id}/confirm`, { version: 1 }));

@@ -2,6 +2,7 @@ import {
   inventoryStringHasInvalidCharacters,
   isInventorySensitiveKey
 } from "./inventorySafeJson.js";
+import { isValidClaimedRoleList } from "./claimedRoles.js";
 import { INVENTORY_STOCK_STATUSES } from "./inventoryConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
 
@@ -271,10 +272,14 @@ export function validateInventoryCommandContext(transaction, command, expectedAu
     throw new TypeError("Inventory command authorization contract mismatch");
   }
 
+  const actorUserId = userId(command.actor.userId);
+  const serviceName = string(command.actor.serviceName, "actor serviceName", 190, { empty: true });
+  const { claimedRoles } = command.actor;
+  if (!isValidClaimedRoleList(claimedRoles)) throw new TypeError("Invalid actor claimedRoles");
   const actor = {
-    userId: userId(command.actor.userId),
-    serviceName: string(command.actor.serviceName, "actor serviceName", 190, { empty: true }),
-    claimedRoles: stringArray(command.actor.claimedRoles, "actor claimedRoles"),
+    userId: actorUserId,
+    serviceName,
+    claimedRoles: [...claimedRoles],
     claimedPermissions: stringArray(command.actor.claimedPermissions, "actor claimedPermissions")
   };
   if (actor.userId === null && actor.serviceName.length === 0) {

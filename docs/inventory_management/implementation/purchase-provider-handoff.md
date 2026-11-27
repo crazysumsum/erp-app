@@ -38,3 +38,9 @@ Consumer TASK008仍需證明locked-row proof、相同tx passing、全projection 
 6. 未知commit以fresh獨立read-only RR query查`{documentType:"GOODS_RECEIPT_REVERSAL",documentId:原GR ID,eventId:原event}`；NOT_FOUND仍不能當成失敗或換event的許可。Consumer對賬逐原GR＋event＋原Detail，核對已持久Operation／Movement／originalMovement／quantity，不比較新Reversal Detail PK或跨event合併。
 
 目前為本機候選：35例真MySQL（含200行、競爭超額、第二Movement/link/Audit/completion及consumer後段回滾）及真JWT/password/device認證已執行；正式完整驗證／coverage、當前PR CI與最終Sam精確來源審閱以PR-B審閱文件的最終結果為準。真auth中的consumer tables是明示合成接入，不是Purchasing production consumer已實作。**PR-B實際merge commit尚未產生；Purchasing仍未實際解鎖。** TASK041/P4完整容量／soak不是此provider的前置，真正Stocktake Start聯合驗證維持獨立追蹤。
+
+## 已知限制 — 收貨沖銷 R12 同事件並發
+
+2026-11-27，TL 在收貨沖銷候選 `eb64b77d` 的 UTC 真 MySQL 原生 R12 觀察到一次 `ER_LOCK_DEADLOCK`（1213／SQLSTATE 40001），發生在第二個同事件請求的主 Operation claim INSERT。候選及基線 `3183c495` 分別單獨重跑 5/5 通過，形成循環的鎖仍未確認。原生案例直接呼叫 provider。依正式 Purchasing HTTP 入口的錯誤映射，明確死結會回 `409 CONCURRENT_OPERATION`。同一業務意圖保留原 event ID 和 payload，授權有效時重送可讀回已提交結果，避免重複過帳。若提交結果未知，先用原 event 查詢。 [原生 R12](https://github.com/crazysumsum/erp-app/blob/eb64b77dba290d604a3e3007c3f89042621ee38b/server/test/integration/inventoryPurchaseReversal.integration.test.js#L295) · [HTTP 錯誤映射](https://github.com/crazysumsum/erp-app/blob/eb64b77dba290d604a3e3007c3f89042621ee38b/server/src/modules/purchasing/PurchasingOperationService.js#L153-L160)
+
+PM 決定 `5e9c9998` 記為既有偶發限制，維持現行產品與重送行為。待現有功能合併完成且有空檔，再以隔離的最小 R12 場景擷取 InnoDB 死結圖。取得實際鎖循環證據後，才評估是否提出窄修正。
