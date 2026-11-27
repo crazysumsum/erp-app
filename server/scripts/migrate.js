@@ -101,8 +101,14 @@ async function migrate() {
     multipleStatements: true
   });
   const connection = await pool.getConnection();
+  let locked = false;
+  let releaseError;
 
   try {
+    const [[{ acquired }]] = await connection.query("SELECT GET_LOCK('erp-app:migrate', 600) AS acquired");
+    if (acquired !== 1) throw new Error("Could not acquire the migration lock");
+    locked = true;
+
     await ensureMigrationsTable(connection);
 
     const names = [...FRAMEWORK_SQL_FILES, ...(await loadDeltaMigrations())];
@@ -123,9 +129,19 @@ async function migrate() {
       console.log(`applied ${name}`);
     }
   } finally {
-    connection.release();
-    await pool.end();
+    try {
+      if (locked) {
+        const [[{ released }]] = await connection.query("SELECT RELEASE_LOCK('erp-app:migrate') AS released");
+        if (released !== 1) releaseError = new Error("Could not release the migration lock");
+      }
+    } catch (error) {
+      releaseError = error;
+    } finally {
+      connection.release();
+      await pool.end();
+    }
   }
+  if (releaseError) throw releaseError;
 }
 
 migrate()
