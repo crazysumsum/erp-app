@@ -54,7 +54,8 @@ export const REASON_SCHEMA = Object.freeze({
 export const ROLE_NAME_SCHEMA = Object.freeze({
   type: "string",
   minLength: 1,
-  maxLength: 190
+  maxLength: 190,
+  not: { pattern: "[\\u0000-\\u001F\\u007F]" }
 });
 
 /** 與 roles.description 的欄寬一致。 */

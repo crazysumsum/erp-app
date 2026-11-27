@@ -1,4 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { isValidClaimedRoleList } from "../inventory/claimedRoles.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { assertShipmentEventAdmissionInTransaction } from "../fulfillment/shipmentEventAdmission.js";
 import { getActiveTransactionIsolation,hasTransactionEventAdmission } from "../../services/mysqldatabase/MySqlDatabaseService.js";
@@ -31,7 +32,8 @@ export function normalizeSalesFulfillmentIntent(command){
   if(pending&&!["PENDING_CREATE","PENDING_UPDATE"].includes(command.claimMode))mismatch();
   fields(command,"actor,purpose,salesOrderId,expectedOrderVersion,lines"+(pending?",claimMode":"")+(shipment?",eventId,shipmentId,inventoryRequestHash":"")+(reverse?",originalConfirmationEventId":""));
   fields(command.actor,"userId,serviceName,claimedRoles,claimedPermissions");if(command.actor.serviceName!=="")mismatch();
-  const actor={userId:integer(command.actor.userId),serviceName:"",claimedRoles:strings(command.actor.claimedRoles),claimedPermissions:strings(command.actor.claimedPermissions)};
+  if(!isValidClaimedRoleList(command.actor.claimedRoles))mismatch();
+  const actor={userId:integer(command.actor.userId),serviceName:"",claimedRoles:[...command.actor.claimedRoles],claimedPermissions:strings(command.actor.claimedPermissions)};
   if(!Array.isArray(command.lines)||!command.lines.length||command.lines.length>100)mismatch();
   if(command.lines.reduce((count,line)=>count+(Array.isArray(line?.reservations)?line.reservations.length:0),0)>5000)mismatch();
   let previous=0n,total=0n;const reservations=new Set(),claims=new Set();
