@@ -84,4 +84,21 @@ integrationTest("Business list filters respect customer, supplier, document and 
     [imports, { channelCode: channel }], [imports, { errorCode: "UNKNOWN_SKU" }]
   ];
   for (const [resource, filters] of emptyLists) assert.deepEqual(await list(resource, filters), [], resource);
+
+  const unicodeFilters = [
+    ["fulfillments", "q"],
+    ["shipments", "q"],
+    ["outstanding-sales-orders", "number"],
+    ["sales-orders", "channelCode"],
+    ["outstanding-sales-orders", "channelCode"],
+    ["business-master/audit", "action"],
+    ["sales-audit-logs", "action"],
+    ["supplier-audit/logs", "action"],
+    ["supplier-audit/logs", "targetType"],
+    [imports, "channelCode"],
+    [imports, "errorCode"]
+  ];
+  for (const [resource, field] of unicodeFilters) {
+    assert.deepEqual(await list(resource, { [field]: "中é😀" }), [], `${resource} ${field}`);
+  }
 });
