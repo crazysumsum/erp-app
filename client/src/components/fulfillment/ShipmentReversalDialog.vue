@@ -10,7 +10,7 @@ const emit = defineEmits(["settled"]);
 const session = useSessionStore();
 const dialog = ref(null), dialogError = ref(null), pageError = ref(null), titleId = useId();
 const preview = ref(null), loading = ref(false), busy = ref(false), reference = ref(null);
-const reason = ref(""), controlled = ref(false), inBins = ref(false), error = ref(""), storageBlocked = ref(false);
+const reason = ref(""), password = ref(""), controlled = ref(false), inBins = ref(false), error = ref(""), storageBlocked = ref(false);
 const permitted = computed(() => ["fulfillment.view", "fulfillment.reverse"].every(name => session.permissions.includes(name)));
 const allowed = computed(() => permitted.value && props.document.status === "SHIPPED" && props.document.allowedActions.includes("reverse"));
 const storageKey = `shipment.reverse:${session.user?.id}:${props.document.id}`;
@@ -43,6 +43,7 @@ function saveReference(value) {
 
 watch(permitted, value => {
   if (!value) {
+    password.value = "";
     reference.value = null;
     dialog.value?.close();
     return;
@@ -75,11 +76,13 @@ watch([error, pollError], async () => {
 });
 onBeforeUnmount(() => {
   disposed = true;
+  password.value = "";
   previewRequest?.abort();
   submitRequest?.abort();
 });
 
 function closePreview() {
+  password.value = "";
   previewRequest?.abort();
   preview.value = null;
 }
@@ -89,6 +92,7 @@ async function open(event) {
   event.currentTarget.focus({ preventScroll: true });
   dialog.value.showModal();
   error.value = "";
+  password.value = "";
   controlled.value = false;
   inBins.value = false;
   previewRequest = new AbortController();
@@ -126,13 +130,15 @@ async function open(event) {
 
 async function submit() {
   if (!allowed.value || props.disabled || busy.value || reference.value || storageBlocked.value || !preview.value ||
-      !reasonValid.value || !controlled.value || !inBins.value) return;
+      !reasonValid.value || !password.value || !controlled.value || !inBins.value) return;
   if (preview.value.version !== props.document.version) {
     error.value = shipmentFailure({ status: 409, code: "VERSION_CONFLICT" }).message;
     dialog.value.close();
     emit("settled");
     return;
   }
+  const currentPassword = password.value;
+  password.value = "";
   const original = shipmentOriginalReference(crypto.randomUUID());
   if (!saveReference(original)) return;
   const id = props.document.id;
@@ -142,7 +148,7 @@ async function submit() {
   busy.value = true;
   error.value = "";
   try {
-    const result = await shipment.reverse(id, body, { signal: submitRequest.signal });
+    const result = await shipment.reverse(id, body, { signal: submitRequest.signal, password: currentPassword });
     if (disposed || !permitted.value) return;
     dialog.value.close();
     if (result.outcome === "REVERSING") {
@@ -161,7 +167,7 @@ async function submit() {
       reference.value = original;
     } else {
       saveReference(null);
-      if (cause?.code === "VERSION_CONFLICT" || cause?.code === "SHIPMENT_ALREADY_REVERSED" || cause?.status === 403) {
+      if (cause?.code === "VERSION_CONFLICT" || cause?.code === "SHIPMENT_ALREADY_REVERSED" || (cause?.status === 403 && failure.action !== "password")) {
         dialog.value.close();
         emit("settled");
       }
@@ -198,12 +204,14 @@ async function submit() {
         <DataTable :rows="preview.rows" :columns="issueColumns" :initial-pagination="{page: 1, rowsPerPage: 10}" />
         <q-input v-model="reason" outlined type="textarea" label="沖銷原因" required :disable="busy"
           :hint="'5 至 500 字'" />
+        <q-input v-model="password" outlined type="password" label="你的密碼" autocomplete="current-password"
+          maxlength="1024" required :disable="busy" />
         <q-checkbox v-model="controlled" label="確認貨物仍由公司控制" :disable="busy" />
         <q-checkbox v-model="inBins" label="確認所有貨物已放回原庫位" :disable="busy" />
       </form>
       <div class="row q-mt-md q-gutter-sm justify-end">
         <q-btn v-if="preview" form="shipment-reversal-form" type="submit" color="negative" label="確認沖銷整張出貨單"
-          :loading="busy" :disable="!reasonValid || !controlled || !inBins || storageBlocked || !allowed" />
+          :loading="busy" :disable="!reasonValid || !password || !controlled || !inBins || storageBlocked || !allowed" />
         <form method="dialog"><q-btn type="submit" flat label="取消" autofocus :disable="busy" /></form>
       </div>
     </dialog>

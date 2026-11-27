@@ -56,6 +56,7 @@ export function shipmentOperationReference(value){
 }
 export function shipmentFailure(error){
  const status=error?.status,code=error?.code,preserveInput=true;
+ if(["PASSWORD_REQUIRED","PASSWORD_INVALID"].includes(code))return {message:ERROR_CODE_MESSAGES[code],action:"password",preserveInput};
  if(status===401||status===403||["PERMISSION_STALE","FULFILLMENT_PERMISSION_DENIED"].includes(code))return {message:"登入或操作權限已變更，請重新登入或聯絡管理員。",action:"none",preserveInput};
  if(["SHIPPING_ADDRESS_CHANGED","SHIPPING_ADDRESS_UNAVAILABLE"].includes(code))return {message:"送貨地址或聯絡資料已變更，輸入仍保留；請重新選擇有效資料並核對。",action:"address",preserveInput};
  if(["ALLOCATION_CANDIDATE_CHANGED","ALLOCATION_INSUFFICIENT","RESERVATION_CLAIM_CONFLICT","FULFILLMENT_SOURCE_CONFLICT","FULFILLABLE_QUANTITY_CHANGED"].includes(code))return {message:"履約來源或分配資料已變更，輸入仍保留；請返回履約單核對可用操作。",action:"allocation",preserveInput};
@@ -76,10 +77,11 @@ export default {
   else if(result?.outcome==="SHIPPED"){header(result.shipment,id);if(!["SHIPPED","REVERSING","REVERSED"].includes(result.shipment.status)||result.shipment.version<confirmedVersion||!Array.isArray(result.inventoryMovementIds)||!result.inventoryMovementIds.length||result.inventoryMovementIds.length>5000||!result.salesOrder)unavailable();try{shipmentDocumentId(result.salesOrder.id);const ids=result.inventoryMovementIds.map(shipmentDocumentId);if(new Set(ids).size!==ids.length)unavailable();}catch{unavailable();}}
   else unavailable();return result;
  });},
- reverse(id,input,{signal}={}){
+ reverse(id,input,{signal,password}={}){
   id=shipmentDocumentId(id);reversalCommand(input);
+  if(typeof password!=="string"||!password||[...password].length>1024)invalid();
   const body={...input,reason:input.reason.trim()};
-  return httpClient.post(`/api/v1/shipments/${id}/reverse`,{body,idempotent:true,idempotencyKey:body.eventId,...(signal===undefined?{}:{signal})}).then(result=>{
+  return httpClient.post(`/api/v1/shipments/${id}/reverse`,{body:{...body,password},signed:true,idempotent:true,idempotencyKey:body.eventId,...(signal===undefined?{}:{signal})}).then(result=>{
    if(result?.outcome==="REVERSING"){
     shipmentOperationReference(result);
     try{shipmentDocumentId(result.operationId);shipmentDocumentId(result.reversal?.id);}catch{unavailable();}

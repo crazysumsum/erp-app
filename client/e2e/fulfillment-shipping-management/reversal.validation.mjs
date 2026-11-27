@@ -24,7 +24,7 @@ async function withShipment(page, verify, { withoutReverse = false } = {}) {
   page.on("response", response => {
     const path = new URL(response.url()).pathname, status = response.status();
     if (status < 400 || path === "/api/v1/user/login" && status === 403 ||
-        /^\/api\/v1\/shipments\/[^/]+\/reverse$/u.test(path) && ([400, 409].includes(status) || withoutReverse && status === 403)) return;
+        /^\/api\/v1\/shipments\/[^/]+\/reverse$/u.test(path) && [400, 403, 409].includes(status)) return;
     unexpectedResponses.push({ path, status });
   });
   try {
@@ -70,7 +70,7 @@ async function withShipment(page, verify, { withoutReverse = false } = {}) {
     await expect(page).toHaveURL(/\/$/u);
     await page.goto(`/shipments/${f.shipmentId}`);
     await expect(page.getByText("已出貨", { exact: true })).toBeVisible();
-    await verify(f, app);
+    await verify(f, app, password);
     expect({ pageErrors, failed, consoleErrors, unexpectedResponses }).toEqual({
       pageErrors: [], failed: [], consoleErrors: [], unexpectedResponses: []
     });
@@ -84,18 +84,18 @@ async function withShipment(page, verify, { withoutReverse = false } = {}) {
   if (errors.length) throw new AggregateError(errors, "Reversal browser validation or cleanup failed");
 }
 
-async function post(page, path, body, key = body.eventId) {
+async function post(page, path, body, key = body.eventId, signed = false) {
   const response = page.waitForResponse(reply => new URL(reply.url()).pathname === path && reply.request().method() === "POST");
-  await page.evaluate(async ({ path, body, key }) => {
+  await page.evaluate(async ({ path, body, key, signed }) => {
     const { httpClient } = await import("/src/framework/http/HttpClient.js");
-    try { await httpClient.post(path, { body, idempotent: true, idempotencyKey: key }); }
+    try { await httpClient.post(path, { body, idempotent: true, idempotencyKey: key, signed }); }
     catch { /* The test asserts the actual HTTP response below. */ }
-  }, { path, body, key });
+  }, { path, body, key, signed });
   return response;
 }
 
 function reverse(page, f, body = f.command, key = body.eventId) {
-  return post(page, `/api/v1/shipments/${f.shipmentId}/reverse`, body, key);
+  return post(page, `/api/v1/shipments/${f.shipmentId}/reverse`, body, key, true);
 }
 
 function reversalResponse(page, f) {
@@ -103,17 +103,23 @@ function reversalResponse(page, f) {
   return page.waitForResponse(reply => new URL(reply.url()).pathname === path && reply.request().method() === "POST");
 }
 
-async function confirmInDialog(page, f) {
-  await page.getByRole("button", { name: "沖銷出貨", exact: true }).click();
+async function confirmInDialog(page, f, password, beforeSubmit) {
   const dialog = page.getByRole("dialog", { name: /沖銷出貨/u });
-  await expect(dialog.getByText("原庫位明細", { exact: true })).toBeVisible();
+  if (!await dialog.isVisible()) {
+    await page.getByRole("button", { name: "沖銷出貨", exact: true }).click();
+    await expect(dialog.getByText("原庫位明細", { exact: true })).toBeVisible();
+    const submit = dialog.getByRole("button", { name: "確認沖銷整張出貨單", exact: true });
+    await dialog.getByLabel("沖銷原因").fill(f.command.reason);
+    await expect(submit).toBeDisabled();
+    await dialog.getByRole("checkbox", { name: "確認貨物仍由公司控制" }).click();
+    await expect(submit).toBeDisabled();
+    await dialog.getByRole("checkbox", { name: "確認所有貨物已放回原庫位" }).click();
+    await expect(submit).toBeDisabled();
+  }
+  await dialog.getByLabel("你的密碼").fill(password);
   const submit = dialog.getByRole("button", { name: "確認沖銷整張出貨單", exact: true });
-  await dialog.getByLabel("沖銷原因").fill(f.command.reason);
-  await expect(submit).toBeDisabled();
-  await dialog.getByRole("checkbox", { name: "確認貨物仍由公司控制" }).click();
-  await expect(submit).toBeDisabled();
-  await dialog.getByRole("checkbox", { name: "確認所有貨物已放回原庫位" }).click();
   await expect(submit).toBeEnabled();
+  await beforeSubmit?.();
   const result = reversalResponse(page, f);
   await submit.click();
   return result;
@@ -130,8 +136,11 @@ async function assertReversed(page, f) {
 }
 
 test("native reversal dialog handles stale versions, real return occupancy and the final shipment and print status", async ({ page }) => {
-  await withShipment(page, async f => {
-    expect((await reverse(page, f, f.command, randomUUID())).status()).toBe(400);
+  await withShipment(page, async (f, _app, password) => {
+    expect((await reverse(page, f, { ...f.command, password }, randomUUID())).status()).toBe(400);
+    const missing = await reverse(page, f);
+    expect(missing.status()).toBe(400);
+    expect((await missing.json()).error.code).toBe("PASSWORD_REQUIRED");
     const open = page.getByRole("button", { name: "沖銷出貨", exact: true });
     await page.setViewportSize({ width: 375, height: 850 });
     await open.focus();
@@ -142,14 +151,16 @@ test("native reversal dialog handles stale versions, real return occupancy and t
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
     await expect(open).toBeFocused();
-    const reversalPath = `**/api/v1/shipments/${f.shipmentId}/reverse`;
-    await page.route(reversalPath, route => {
-      if (route.request().method() !== "POST") return route.continue();
-      const body = route.request().postDataJSON();
-      return route.continue({ postData: JSON.stringify({ ...body, version: body.version - 1 }) });
-    });
-    const stale = await confirmInDialog(page, f);
-    await page.unroute(reversalPath);
+    const incorrect = await confirmInDialog(page, f, "wrong-synthetic-confirmation");
+    expect(incorrect.status()).toBe(403);
+    expect((await incorrect.json()).error.code).toBe("PASSWORD_INVALID");
+    await expect(dialog.getByRole("alert")).toContainText("請確認你目前的密碼");
+    await expect(dialog.getByLabel("你的密碼")).toHaveValue("");
+    const rejected = [f.command.eventId, incorrect.request().postDataJSON().eventId];
+    const [[operationCount]] = await f.db.query("SELECT COUNT(*) AS count FROM fulfillment_operation_requests WHERE event_id IN (?,?)", rejected);
+    expect(Number(operationCount.count)).toBe(0);
+    const stale = await confirmInDialog(page, f, password, () => f.db.execute(
+      "UPDATE shipments SET version=version+1 WHERE id=? AND version=?", [f.shipmentId, f.command.version]));
     expect(stale.status()).toBe(409);
     expect((await stale.json()).error.code).toBe("VERSION_CONFLICT");
     await expect(dialog).not.toBeVisible();
@@ -163,14 +174,14 @@ test("native reversal dialog handles stale versions, real return occupancy and t
     });
     expect(draft.status()).toBe(200);
     const returnId = (await draft.json()).data.id;
-    const blocked = await confirmInDialog(page, f);
+    const blocked = await confirmInDialog(page, f, password);
     expect(blocked.status()).toBe(409);
     expect((await blocked.json()).error.code).toBe("DOWNSTREAM_MATTER_BLOCKS_REVERSAL");
     await expect(dialog.getByRole("alert")).toContainText("已有下游事項");
     await dialog.getByRole("button", { name: "取消", exact: true }).click();
     await expect(page.getByText("已出貨", { exact: true })).toBeVisible();
     expect((await post(page, `/api/v1/customer-returns/${returnId}/cancel`, { eventId: randomUUID(), version: 1 })).status()).toBe(200);
-    const response = await confirmInDialog(page, f);
+    const response = await confirmInDialog(page, f, password);
     expect(response.status()).toBe(200);
     const { data } = await response.json();
     expect(data).toMatchObject({ outcome: "REVERSED", shipment: { id: f.shipmentId, status: "REVERSED" } });
@@ -188,7 +199,7 @@ test("native reversal dialog handles stale versions, real return occupancy and t
 });
 
 test("native browser receives 202 and the registered cluster job recovers the cost-bound event", async ({ page }) => {
-  await withShipment(page, async (f, app) => {
+  await withShipment(page, async (f, app, password) => {
     const complete = ShipmentReversalService.prototype.completeReversalPhaseB;
     let interrupted = 0, eventId;
     const commands = [];
@@ -204,7 +215,7 @@ test("native browser receives 202 and the registered cluster job recovers the co
     };
     let pending;
     try {
-      const response = await confirmInDialog(page, f);
+      const response = await confirmInDialog(page, f, password);
       expect(response.status()).toBe(202);
       expect(response.headers()["retry-after"]).toBe("2");
       pending = (await response.json()).data;
@@ -214,6 +225,10 @@ test("native browser receives 202 and the registered cluster job recovers the co
       ShipmentReversalService.prototype.completeReversalPhaseB = complete;
     }
     await expect(page.getByRole("status", { name: "沖銷處理中" })).toBeVisible();
+    const saved = await page.evaluate(shipmentId => Object.keys(sessionStorage)
+      .filter(key => key.startsWith("shipment.reverse:") && key.endsWith(`:${shipmentId}`))
+      .map(key => JSON.parse(sessionStorage.getItem(key))), f.shipmentId);
+    expect(saved).toEqual([{ eventId: pending.eventId, correlationId: pending.correlationId, statusUrl: pending.statusUrl }]);
     await page.reload();
     await expect(page.getByRole("status", { name: "沖銷處理中" })).toBeVisible();
     await expect(page.getByText("操作處理中，所有編輯及重複提交已停用；請查詢原事件結果。", { exact: true })).toBeVisible();
@@ -235,9 +250,9 @@ test("native browser receives 202 and the registered cluster job recovers the co
 });
 
 test("view-only operator sees no reversal action and the public API refuses the command", async ({ page }) => {
-  await withShipment(page, async f => {
+  await withShipment(page, async (f, _app, password) => {
     await expect(page.getByRole("button", { name: "沖銷出貨", exact: true })).toHaveCount(0);
-    const response = await reverse(page, f);
+    const response = await reverse(page, f, { ...f.command, password });
     expect(response.status()).toBe(403);
   }, { withoutReverse: true });
 });
