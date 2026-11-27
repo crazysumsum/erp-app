@@ -92,3 +92,7 @@
 - 前端：sharedfeatures-01 的共用選擇器接上這兩個來源；sales-01 套用到銷售訂單頁，fulfillment-01 套用到履約及出貨頁。
 - 加路由之前，ci-01 先確認 API 註冊日誌離 256 KB 上限還有多少。
 - 採購的供應商及採購員歷史，仍然留到上線後。
+- Warehouse master 既有的 LIKE wildcard 轉義（TL c4942911 P3）：上線後處理。
+- ArInvoicePrintSheet 行金額與總額格式化寫法統一（TL cb98479e P3）：上線後處理。
+- InventoryReferenceFilter 的 SKU 搜尋及 getSku 加上 abort signal（TL dc4ca332 P3）：上線後處理。
+- Supplier privileged_use 告警（TL f2b91d47）：F-09 後在合規部署中不會觸發。上線後評估移除，或改為監測任何管理員帳號持有銀行權限。
