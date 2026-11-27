@@ -49,6 +49,10 @@ test.beforeAll(async () => {
   const fixture = await shipmentTwoLineFixture({ after: (callback) => cleanup.push(callback) });
   const { db, connectionOptions, name } = fixture.f;
   await migrateArShipmentFixture(db);
+  await fixture.s.insert("customer_address_purposes", {
+    address_id: fixture.s.addressId, customer_id: fixture.s.customerId, purpose_code: "billing",
+    is_default: 1, created_at: fixture.s.now, updated_at: fixture.s.now
+  });
 
   // The first line ships 3 of 5 units, the second ships 2 of 2. Both invoice
   // lines are 0.0149 and the invoice total rounds to 0.03 at two decimal places.
