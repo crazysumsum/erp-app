@@ -14,10 +14,11 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import { can } from "@/framework/authorization/can.js";
 import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
-import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
+import { itemActivationIssueMessages, mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import ItemBasicForm from "@/components/items/ItemBasicForm.vue";
 import AttributeValueList from "@/components/items/AttributeValueList.vue";
 import ItemMediaPanel from "@/components/items/ItemMediaPanel.vue";
+import SkuActivationIssuesDialog from "@/components/items/SkuActivationIssuesDialog.vue";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -289,6 +290,8 @@ const activateSelection = ref([]);
 const activateReason = ref("");
 const activateSubmitting = ref(false);
 const activateError = ref("");
+const activateIssues = ref([]);
+const skuActivationIssues = ref([]);
 
 const activateValid = computed(() => {
   const trimmed = activateReason.value.trim();
@@ -299,6 +302,7 @@ function openActivateDialog() {
   activateSelection.value = activatableSkus.value.map((sku) => sku.id);
   activateReason.value = "";
   activateError.value = "";
+  activateIssues.value = [];
   showActivateDialog.value = true;
 }
 
@@ -308,6 +312,7 @@ async function submitActivate() {
   }
   activateSubmitting.value = true;
   activateError.value = "";
+  activateIssues.value = [];
   try {
     const updated = await itemService.activateItem(itemId.value, {
       skuIds: activateSelection.value,
@@ -324,7 +329,10 @@ async function submitActivate() {
     } else {
       activateError.value = error.message || "啟用失敗";
     }
-    notifyError(error.message || "啟用失敗");
+    activateIssues.value = itemActivationIssueMessages(error);
+    if (activateIssues.value.length === 0) {
+      notifyError(error.message || "啟用失敗");
+    }
   } finally {
     activateSubmitting.value = false;
   }
@@ -338,7 +346,10 @@ async function runSkuLifecycleAction(sku, action, successVerb) {
     notifySuccess(`SKU「${updated.skuCode}」${successVerb}`);
     await load();
   } catch (error) {
-    notifyError(error.message || "操作失敗");
+    skuActivationIssues.value = itemActivationIssueMessages(error);
+    if (skuActivationIssues.value.length === 0) {
+      notifyError(error.message || "操作失敗");
+    }
   }
 }
 
@@ -587,7 +598,12 @@ async function submitCopy() {
             </q-item>
           </q-list>
           <q-input v-model="activateReason" label="啟用原因" type="textarea" outlined dense class="q-mt-md" />
-          <q-banner v-if="activateError" class="bg-negative text-white q-mt-sm">{{ activateError }}</q-banner>
+          <q-banner v-if="activateError" role="alert" class="bg-negative text-white q-mt-sm">
+            {{ activateError }}
+            <ul v-if="activateIssues.length" class="q-mb-none q-pl-lg">
+              <li v-for="(message, index) in activateIssues" :key="index">{{ message }}</li>
+            </ul>
+          </q-banner>
           <div class="row justify-end q-gutter-sm q-mt-md">
             <q-btn flat label="取消" :disable="activateSubmitting" @click="showActivateDialog = false" />
             <q-btn
@@ -602,6 +618,8 @@ async function submitCopy() {
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <SkuActivationIssuesDialog v-model="skuActivationIssues" />
 
     <q-dialog v-model="showCopyDialog" persistent>
       <q-card style="min-width: 420px">
