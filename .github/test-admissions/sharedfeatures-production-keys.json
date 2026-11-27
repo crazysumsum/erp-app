@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "decision": "PM assignment f11ea60e. Independent TL review 7854ccfc of product revision 3011abe02c1650ef4451cf784b4c6b6f6065d920. CI administrator precheck de5ef8a1 assigned the inputs to these receipts.",
+  "purpose": "Validate production key configuration at the API entry point and preserve explicit test and development behavior.",
+  "data": "Synthetic CLI environments, published fixture values and freshly generated keys. Twelve serial child processes across four cases stop before database access.",
+  "concurrency": "One child process at a time per test file. Existing functional workers and jobs.",
+  "repetitions": "One execution per case in the existing server functional suite, with a 10-second timeout per child.",
+  "thresholds": "Rejected key material stops startup with the setting name and generation instructions and is absent from diagnostics. Fresh keys and explicit nonproduction fixtures reach the subsequent configuration check.",
+  "trigger": "Existing server functional test discovery for PR and main.",
+  "cost": "Four case bodies took about one second in local verification. Estimated additional CI runtime is a few seconds on an existing worker.",
+  "files": [
+    {
+      "path": "server/test/productionKeysStartup.test.js",
+      "mode": "100644",
+      "blob": "59e965db0fd1a03231b3ee2884e8eadc34529112",
+      "kind": "functional",
+      "cases": [
+        "production rejects published or constant JWT secrets and names only the setting",
+        "all four bank rings reject published material under any key ID including inactive versions",
+        "a repeated-byte bank fixture and a published bank key reused as JWT are rejected",
+        "fresh production keys and explicit nonproduction fixtures reach application configuration"
+      ]
+    }
+  ]
+}
