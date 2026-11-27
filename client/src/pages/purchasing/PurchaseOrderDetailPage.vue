@@ -12,7 +12,7 @@ import ApprovalSnapshotPanel from "@/components/purchasing/ApprovalSnapshotPanel
 import PurchaseOrderLifecycleDialog from "@/components/purchasing/PurchaseOrderLifecycleDialog.vue";
 import PurchaseOrderProgress from "@/components/purchasing/PurchaseOrderProgress.vue";
 import PurchaseOrderReceipts from "@/components/purchasing/PurchaseOrderReceipts.vue";
-import { addressText, printKind, statusColors, statusLabels, timestamp, warningText } from "@/components/purchasing/purchaseOrderPresentation.js";
+import { addressText, masterStatusLabel, printKind, statusColors, statusLabels, timestamp, warningText } from "@/components/purchasing/purchaseOrderPresentation.js";
 import { isZeroPrice } from "@/components/purchasing/purchasingEditorMath.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import { usePurchaseOrder } from "@/composables/purchasing/usePurchaseOrder.js";
@@ -75,14 +75,14 @@ const columns = [
   { name: "lineNumber", label: "行", field: "lineNumber", align: "left" },
   { name: "sku", label: "SKU", field: "skuName", align: "left" },
   { name: "ordered", label: "訂購", field: "orderedQuantity", align: "right" },
-  { name: "base", label: "數量（Base）", field: "orderedBaseQuantity", align: "left" },
+  { name: "base", label: "數量（基本單位）", field: "orderedBaseQuantity", align: "left" },
   { name: "unitPrice", label: "單價", field: "unitPrice", align: "right" },
   { name: "lineAmount", label: "明細總額", field: "lineAmount", align: "right" },
   { name: "expectedDeliveryDate", label: "預計交貨", field: "expectedDeliveryDate", align: "left" },
   { name: "lineNote", label: "備註", field: "lineNote", align: "left" }
 ];
-const BASE_ROWS = [["Ordered", "orderedBaseQuantity"], ["Gross Received", "grossReceivedBaseQuantity"], ["Reversed", "reversedBaseQuantity"], ["Net Received", "netReceivedBaseQuantity"],
-  ["Outstanding", "outstandingBaseQuantity"], ["Over-received", "overReceivedBaseQuantity"], ["Closed Remaining", "closedRemainingBaseQuantity"]];
+const BASE_ROWS = [["訂購數量", "orderedBaseQuantity"], ["累計收貨量（沖銷前）", "grossReceivedBaseQuantity"], ["已沖銷數量", "reversedBaseQuantity"], ["淨收貨量（扣除沖銷）", "netReceivedBaseQuantity"],
+  ["待收數量", "outstandingBaseQuantity"], ["超收數量", "overReceivedBaseQuantity"], ["已結清餘量", "closedRemainingBaseQuantity"]];
 
 // 喺開任何 dialog 之前捕捉原 generation 同目標；dialog 返嚟時 context 唔同就唔送（0 HTTP）。
 const capture = (action) => ({ id: poId.value, number: document.value?.number ?? "", version: document.value?.version, key: commandKey(action), gen: generation });
@@ -249,7 +249,7 @@ async function askCopy() {
             <h2 class="text-h6 q-ma-none q-mb-md">概覽</h2>
             <dl class="row q-col-gutter-md q-my-none break-word">
               <div v-for="[label, value] in overview" :key="label" class="col-12 col-md-6"><dt class="text-caption text-grey-7">{{ label }}</dt><dd class="q-ml-none">{{ value }}</dd></div>
-              <div class="col-12 col-md-6"><dt class="text-caption text-grey-7">已收／訂購（Base）</dt><dd class="q-ml-none"><PurchaseOrderProgress :received="sum('netReceivedBaseQuantity')" :ordered="sum('orderedBaseQuantity')" /></dd></div>
+              <div class="col-12 col-md-6"><dt class="text-caption text-grey-7">已收／訂購（基本單位）</dt><dd class="q-ml-none"><PurchaseOrderProgress :received="sum('netReceivedBaseQuantity')" :ordered="sum('orderedBaseQuantity')" /></dd></div>
               <div class="col-12"><dt class="text-caption text-grey-7">備註</dt><dd class="q-ml-none pre-line">{{ document.notes || "—" }}</dd></div>
             </dl>
           </q-card-section>
@@ -275,9 +275,9 @@ async function askCopy() {
           <q-card-section>
             <h2 class="text-h6 q-ma-none q-mb-md">目前主資料</h2>
             <p>以下目前值與交易快照不同，只供參考，不改寫上方快照。</p>
-            <p v-if="master.supplier" class="break-word">供應商：{{ master.supplier.supplierCode }} — {{ master.supplier.supplierName }}（{{ master.supplier.status }}）</p>
+            <p v-if="master.supplier" class="break-word">供應商：{{ master.supplier.supplierCode }} — {{ master.supplier.supplierName }}（{{ masterStatusLabel(master.supplier.status) }}）</p>
             <ul v-if="master.lines.length" class="q-my-none">
-              <li v-for="line in master.lines" :key="line.lineId" class="break-word">{{ line.skuCode }} — {{ line.skuName }}（SKU {{ line.skuStatus }}；Item {{ line.itemStatus }}）</li>
+              <li v-for="line in master.lines" :key="line.lineId" class="break-word">{{ line.skuCode }} — {{ line.skuName }}（SKU {{ masterStatusLabel(line.skuStatus) }}；商品{{ masterStatusLabel(line.itemStatus) }}）</li>
             </ul>
           </q-card-section>
         </q-card>

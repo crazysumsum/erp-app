@@ -68,7 +68,7 @@ describe("TASK-026 採購單例外操作", () => {
   it.each([
     ["撤回確認", "CONFIRMED", "withdrawConfirmation", "withdrawPurchaseOrderConfirmation", "DRAFT", "草稿"],
     ["取消採購單", "CONFIRMED", "cancel", "cancelPurchaseOrder", "CANCELLED", "已取消"],
-    ["結清餘量", "PARTIALLY_RECEIVED", "closeRemaining", "closePurchaseOrderRemaining", "CLOSED", "已結案"]
+    ["結清餘量", "PARTIALLY_RECEIVED", "closeRemaining", "closePurchaseOrderRemaining", "CLOSED", "已結清"]
   ])("%s 確認後用同一版本寫入，並重新讀取採購單", async (label, status, action, method, result, statusLabel) => {
     const po = { ...detail, status, version: 6, allowedActions: [action], lines: [
       line, { ...line, id: 12, lineNumber: 2, outstandingBaseQuantity: "3" },
@@ -222,7 +222,7 @@ describe("TASK-019 PO 列表", () => {
     purchasing.listPurchaseOrders.mockResolvedValue({ rows: [{ ...row, status: "PARTIALLY_RECEIVED", orderedBaseQuantity: HUGE, netReceivedBaseQuantity: "1", outstandingBaseQuantity: HUGE, risks: ["OVERDUE", "OVER_RECEIVED", "ZERO_PRICE", "INACTIVE_MASTER"] }], rowsNumber: 1 });
     await open("/purchasing/purchase-orders");
     const text = wrapper.text();
-    for (const label of ["部分收貨", "逾期", "超收", "零價", "主資料非 Active"]) expect(text).toContain(label);
+    for (const label of ["部分收貨", "逾期", "超收", "零價", "主檔未啟用"]) expect(text).toContain(label);
     expect(text).toContain(`1／${HUGE}`);
     expect(text).toContain(`未收 ${HUGE}`);
   });
@@ -286,8 +286,8 @@ describe("TASK-019 PO 詳情", () => {
     purchasing.getPurchaseOrder.mockResolvedValue({ ...detail, currentMasterDifferences: { supplier: { supplierCode: "S3", supplierName: "目前供應商", status: "suspended" }, lines: [{ lineId: 11, skuId: 7, skuCode: "SKU7", skuName: "目前貨品", skuStatus: "inactive", itemStatus: "active" }] } });
     await open("/purchasing/purchase-orders/8");
     const section = wrapper.find('[data-testid="po-current-master"]').text();
-    expect(section).toContain("目前供應商（suspended）");
-    expect(section).toContain("目前貨品（SKU inactive；Item active）");
+    expect(section).toContain("目前供應商（已暫停）");
+    expect(section).toContain("目前貨品（SKU 已停用；商品啟用中）");
     expect(section).not.toContain("快照供應商");
     expect(wrapper.text()).toContain("S3 — 快照供應商");
     expect(wrapper.text()).toContain("SKU7 — 快照貨品");
@@ -296,7 +296,7 @@ describe("TASK-019 PO 詳情", () => {
     purchasing.getPurchaseOrder.mockResolvedValue({ ...detail, lines: [{ ...line, orderedBaseQuantity: HUGE, grossReceivedBaseQuantity: "21", reversedBaseQuantity: "22", netReceivedBaseQuantity: "23", outstandingBaseQuantity: "24", overReceivedBaseQuantity: "25", closedRemainingBaseQuantity: "26", unitPrice: "0.0000", zeroPriceReason: "贈品" }] });
     await open("/purchasing/purchase-orders/8");
     const text = wrapper.text();
-    for (const shown of [`Ordered ${HUGE} EA`, "Gross Received 21 EA", "Reversed 22 EA", "Net Received 23 EA", "Outstanding 24 EA", "Over-received 25 EA", "Closed Remaining 26 EA", "1.000000 BOX", "零價：贈品", "超收", detail.notes]) expect(text).toContain(shown);
+    for (const shown of [`訂購數量 ${HUGE} EA`, "累計收貨量（沖銷前） 21 EA", "已沖銷數量 22 EA", "淨收貨量（扣除沖銷） 23 EA", "待收數量 24 EA", "超收數量 25 EA", "已結清餘量 26 EA", "1.000000 BOX", "零價：贈品", "超收", detail.notes]) expect(text).toContain(shown);
     expect(wrapper.find("dl script").exists()).toBe(false);
   });
   it("多行進度用 BigInt 加總，超過 2^53 都準", async () => {

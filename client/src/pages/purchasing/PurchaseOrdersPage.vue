@@ -37,7 +37,7 @@ const columns = [
   { name: "orderDate", label: "訂單日期", field: "orderDate", align: "left", sortable: true },
   { name: "expectedDeliveryDate", label: "預計交貨", field: "expectedDeliveryDate", align: "left", sortable: true },
   { name: "totalAmount", label: "總額", field: "totalAmount", align: "right", sortable: true },
-  { name: "progress", label: "進度（Base）", field: "netReceivedBaseQuantity", align: "left" },
+  { name: "progress", label: "進度（基本單位）", field: "netReceivedBaseQuantity", align: "left" },
   { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true },
   { name: "actions", label: "操作", align: "right" }
 ];

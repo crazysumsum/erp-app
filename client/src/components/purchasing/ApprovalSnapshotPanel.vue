@@ -42,7 +42,7 @@ const columns = [
   { name: "lineNumber", label: "行", field: "lineNumber", align: "left" },
   { name: "sku", label: "SKU", field: "skuName", align: "left" },
   { name: "ordered", label: "訂購", field: "orderedQuantity", align: "right" },
-  { name: "base", label: "數量（Base）", field: "orderedBaseQuantity", align: "right" },
+  { name: "base", label: "數量（基本單位）", field: "orderedBaseQuantity", align: "right" },
   { name: "unitPrice", label: "單價", field: "unitPrice", align: "right" },
   { name: "lineAmount", label: "明細總額", field: "lineAmount", align: "right" },
   { name: "expectedDeliveryDate", label: "預計交貨", field: "expectedDeliveryDate", align: "left" },
