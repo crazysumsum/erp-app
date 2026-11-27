@@ -1,3 +1,5 @@
+import { assertDeviceReviewer } from "./assertDeviceReviewer.js";
+import { AuditLogService } from "../../modules/audit/AuditLogService.js";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { DEVICE_STATUS } from "../../services/deviceBinding/DeviceBindingService.js";
@@ -25,6 +27,8 @@ import {
 class ReviewDeviceHandler extends BaseRequestHandler {
   constructor(services = {}) {
     super(services);
+    this.database = services.require("mysqldatabase");
+    this.auditLog = new AuditLogService({ database: this.database, logger: this.logger, time: this.time });
     this.deviceBinding = services.require("deviceBinding");
   }
 
@@ -38,10 +42,28 @@ class ReviewDeviceHandler extends BaseRequestHandler {
 
   async execute(req) {
     const bindingId = Number(req.input.params.id);
-    const reviewerId = Number(req.auth.claims.sub);
     const note = req.input.body?.note ?? "";
 
-    const binding = await this.review(bindingId, { reviewerId, note });
+    const binding = await this.database.withTransaction(async connection => {
+      const actor = await assertDeviceReviewer(connection, req.auth.claims);
+      const existing = await this.deviceBinding.findById(bindingId, connection);
+      if (!existing) return null;
+      if (Number(existing.user_id) === actor.id) {
+        throw new ApplicationError("Device review requires another reviewer", {
+          statusCode: 403, code: "DEVICE_SELF_REVIEW_DENIED", publicCode: "DEVICE_SELF_REVIEW_DENIED"
+        });
+      }
+      const updated = await this.review(bindingId, { reviewerId: actor.id, note }, connection, existing);
+      if (updated) {
+        await this.auditLog.record(connection, {
+          actorUserId: actor.id, actorUsername: actor.username, action: this.constructor.auditAction,
+          targetType: "device", targetId: bindingId, targetLabel: existing.label,
+          reason: note, detail: { userId: Number(existing.user_id), before: existing.status, after: updated.status },
+          requestId: req.requestId, ip: req.ip || req.socket?.remoteAddress || ""
+        });
+      }
+      return updated;
+    }, { isolationLevel: "SERIALIZABLE" });
 
     if (!binding) {
       // 轉移的 UPDATE 帶著來源狀態，所以影響 0 列可能是 id 不存在，也可能是
@@ -85,32 +107,35 @@ function reviewApi({ path, description }) {
 
 export class ApproveDeviceHandler extends ReviewDeviceHandler {
   static handlerName = "approveDevice";
+  static auditAction = "device.approve";
   static requiredStatus = "pending";
   static api = reviewApi({
     path: "/api/v1/device/bindings/:id/approve",
     description: "核准一筆待審批的設備綁定申請。"
   });
 
-  async review(bindingId, options) {
-    return this.deviceBinding.approve(bindingId, options);
+  async review(bindingId, options, connection) {
+    return this.deviceBinding.approve(bindingId, options, connection);
   }
 }
 
 export class RejectDeviceHandler extends ReviewDeviceHandler {
   static handlerName = "rejectDevice";
+  static auditAction = "device.reject";
   static requiredStatus = "pending";
   static api = reviewApi({
     path: "/api/v1/device/bindings/:id/reject",
     description: "拒絕一筆待審批的設備綁定申請。"
   });
 
-  async review(bindingId, options) {
-    return this.deviceBinding.reject(bindingId, options);
+  async review(bindingId, options, connection) {
+    return this.deviceBinding.reject(bindingId, options, connection);
   }
 }
 
 export class RevokeDeviceHandler extends ReviewDeviceHandler {
   static handlerName = "revokeDevice";
+  static auditAction = "device.revoke";
   static requiredStatus = "approved";
   static api = reviewApi({
     path: "/api/v1/device/bindings/:id/revoke",
@@ -144,10 +169,9 @@ export class RevokeDeviceHandler extends ReviewDeviceHandler {
    * 有一個極窄的窗，那段時間內的並行撤銷會讓版本號被多推一次——那只是多一次
    * 登出，不是少一次撤銷，可以接受。
    */
-  async review(bindingId, options) {
-    const existing = await this.deviceBinding.findById(bindingId);
+  async review(bindingId, options, connection, existing) {
 
-    if (!existing || existing.status !== DEVICE_STATUS.approved) {
+    if (existing.status !== DEVICE_STATUS.approved) {
       // 交給基底類別翻成 409。這裡不推版本號：這個動作本來就不該發生。
       return null;
     }
@@ -162,7 +186,7 @@ export class RevokeDeviceHandler extends ReviewDeviceHandler {
       reason: "device_revoked"
     });
 
-    return this.deviceBinding.revoke(bindingId, options);
+    return this.deviceBinding.revoke(bindingId, options, connection);
   }
 
   async afterReview(binding, req) {

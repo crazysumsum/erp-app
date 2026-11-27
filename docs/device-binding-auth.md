@@ -550,7 +550,7 @@ refresh vs 登出、refresh vs 裝置撤銷、login vs 裝置撤銷（含撤銷�
 1. 跑 migration —— 種入 `system-admin` 角色與 `device.mgmt` 權限（§1.3）
 2. `node scripts/createUser.js <帳號>` —— 這是系統第一個使用者，自動取得 `system-admin`。密碼在提示字元輸入（不回顯），或由 stdin 餵進來：`<secrets-manager> | node scripts/createUser.js <帳號>`。**不接受把密碼寫在 command line**——那會留在 shell history 與 `ps` 的輸出裡
 3. 該使用者在瀏覽器登入一次 —— 密碼會過，但設備還沒綁定，得到 `403 DEVICE_PENDING_APPROVAL`，同時在 `user_devices` 留下一筆 pending
-4. `node scripts/approveDevice.js <id>` —— 核准他自己的設備
+4. `node scripts/approveDevice.js <id>` —— 只有一位管理員時，由部署負責人透過此緊急復原腳本核准該管理員的新設備；另有設備管理員時，由另一人從審批介面處理。
 5. 他現在登得進去，且有 `device.mgmt`，之後所有人的設備都走正常審批流程
 
 第 2 步和第 4 步是**兩個獨立的 bootstrap 步驟**：帳號存在不等於設備已綁定。

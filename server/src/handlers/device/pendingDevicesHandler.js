@@ -1,3 +1,4 @@
+import { assertDeviceReviewer } from "./assertDeviceReviewer.js";
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import {
   DEVICE_MGMT_POLICY,
@@ -39,11 +40,15 @@ export class PendingDevicesHandler extends BaseRequestHandler {
 
   constructor(services = {}) {
     super(services);
+    this.database = services.require("mysqldatabase");
     this.deviceBinding = services.require("deviceBinding");
   }
 
-  async execute() {
-    const rows = await this.deviceBinding.listPending();
+  async execute(req) {
+    const rows = await this.database.withTransaction(async connection => {
+      await assertDeviceReviewer(connection, req.auth.claims);
+      return this.deviceBinding.listPending({ connection });
+    }, { isolationLevel: "SERIALIZABLE" });
 
     return this.response({ items: rows.map(toPendingBinding) });
   }
