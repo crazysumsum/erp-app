@@ -200,8 +200,12 @@ onUnmounted(() => sourceController.abort());
         <h3 class="text-subtitle1 q-mb-sm">現有分配</h3>
         <div v-if="!selected.allocations.length" role="status" class="text-grey-7">尚無分配</div>
         <q-list v-else bordered separator><q-item v-for="(allocation, index) in selected.allocations" :key="allocation.id">
-          <q-item-section>第 {{ index + 1 }} 筆分配 · {{ allocationLocations.get(allocation.balanceId)?.binCode || '庫位未能取得' }} · {{ allocationLocations.get(allocation.balanceId)?.lotNumber || '無批號' }} · {{ allocation.expiryDate || '無效期' }}</q-item-section>
-          <q-item-section side>未完成 {{ allocation.outstandingQuantity }} · {{ allocation.status }}</q-item-section>
+          <q-item-section>
+            第 {{ index + 1 }} 筆分配 · {{ allocationLocations.get(allocation.balanceId)?.binCode || '庫位未能取得' }}
+            · {{ allocation.lotId === null ? '無批號' : allocationLocations.get(allocation.balanceId)?.lotNumber || '批號未能取得' }}
+            · {{ allocation.expiryDate || '無效期' }}
+          </q-item-section>
+          <q-item-section side>未完成 {{ allocation.outstandingQuantity }} · {{ statuses.find((item) => item.value === allocation.status)?.label || allocation.status }}</q-item-section>
         </q-item></q-list>
       </template>
     </section>
