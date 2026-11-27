@@ -55,10 +55,10 @@ const columns = [
   { name: "lot", label: "批次", field: "lotNumber", align: "left", sortable: true },
   { name: "expiryDate", label: "效期狀態", field: "expiryDate", align: "left", sortable: true },
   { name: "firstReceiptDate", label: "首次收貨", field: "firstReceiptDate", align: "left", sortable: true },
-  { name: "totalOnHand", label: "總 On Hand", field: "totalOnHand", align: "right" },
-  { name: "availableOnHand", label: "Available On Hand", field: "availableOnHand", align: "right" },
-  { name: "quarantined", label: "Quarantined", field: "quarantined", align: "right" },
-  { name: "damaged", label: "Damaged", field: "damaged", align: "right" }
+  { name: "totalOnHand", label: "現存", field: "totalOnHand", align: "right" },
+  { name: "availableOnHand", label: "可用", field: "availableOnHand", align: "right" },
+  { name: "quarantined", label: "隔離", field: "quarantined", align: "right" },
+  { name: "damaged", label: "損壞", field: "damaged", align: "right" }
 ];
 function filters() {
   return {

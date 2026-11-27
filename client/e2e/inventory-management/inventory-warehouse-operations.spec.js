@@ -129,7 +129,7 @@ async function seededDraft() {
 test("TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock", async ({ page }) => {
   await newDraft(page, fixture.plain, true); const id = await saveDraft(page);
   await page.getByRole("button", { name: "準備整張出庫", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("Reserved 0");
+  await expect(page.getByRole("dialog")).toContainText("已預留 0");
   await page.getByRole("button", { name: "確認整張出庫", exact: true }).click(); await expect(page.getByRole("dialog")).toBeHidden();
   await expect(page.getByText("來源已扣、目的未入；在途不可修改／取消。")).toBeVisible();
   await expect(page.getByRole("button", { name: "編輯草稿", exact: true })).toHaveCount(0);
@@ -139,7 +139,7 @@ test("TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserv
   const detail = await api(`/${id}`); expect(detail.status).toBe("RECEIVED"); expect(detail.inTransitQuantity).toBe(0);
   expect(detail.movements).toHaveLength(8); expect(detail.lines.every(line => line.destinationBinId === fixture.destination.binId)).toBe(true);
   const [[stock]] = await db.query("SELECT SUM(on_hand_quantity) AS quantity FROM inventory_stock_balances WHERE sku_id=?", [fixture.plain.id]); expect(Number(stock.quantity)).toBe(100);
-  await page.reload(); await expect(page.getByRole("heading", { name: new RegExp(`${detail.number}.*RECEIVED`, "u") })).toBeVisible();
+  await page.reload(); await expect(page.getByRole("heading", { name: new RegExp(`${detail.number}.*已收貨`, "u") })).toBeVisible();
   await page.screenshot({ path: `${process.env.HARNESS_RUN_DIR}/transfer-received.png`, fullPage: true });
   await page.getByRole("button", { name: "新增調撥", exact: true }).click();
   expect(new URL(page.url()).searchParams.has("id")).toBe(false);
@@ -232,5 +232,5 @@ test("TASK-029 @technical keyboard lookup, unsaved close, responsive and URL ref
   }
   page.once("dialog", dialog => dialog.dismiss()); await page.getByRole("button", { name: "取消編輯", exact: true }).click(); await expect(page.getByRole("dialog")).toBeVisible();
   page.once("dialog", dialog => dialog.accept()); await page.getByRole("button", { name: "取消編輯", exact: true }).click(); await expect(page.getByRole("dialog")).toBeHidden();
-  await pick(page, "調撥狀態", "DRAFT"); await expect(page).toHaveURL(/status=DRAFT/u); await page.reload(); await expect(page.getByLabel("調撥狀態", { exact: true })).toHaveValue("DRAFT");
+  await pick(page, "調撥狀態", "草稿"); await expect(page).toHaveURL(/status=DRAFT/u); await page.reload(); await expect(page.getByLabel("調撥狀態", { exact: true })).toHaveValue("草稿");
 });

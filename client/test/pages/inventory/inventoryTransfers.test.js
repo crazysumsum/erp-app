@@ -103,7 +103,7 @@ describe("TASK-029 Transfer page boundaries", () => {
     const wrapper = await page(["inventory.view", "inventory.operation"], "DRAFT");
     await button(wrapper, "準備整張出庫").trigger("click"); await flushPromises();
     expect(inventory.getStockSummary).toHaveBeenCalledWith({ skuId: 12, warehouseId: 1 });
-    expect(document.body.textContent).toContain("Reserved 8"); expect(document.body.textContent).toContain("不支援部分");
+    expect(document.body.textContent).toContain("已預留 8"); expect(document.body.textContent).toContain("不支援部分");
     const submit = [...document.body.querySelectorAll("button")].find(b => b.textContent.trim() === "確認整張出庫"); submit.click(); await flushPromises();
     expect(inventory.dispatchTransfer).toHaveBeenCalledWith(7, expect.objectContaining({ version: 2 }));
     expect(inventory.dispatchTransfer.mock.calls[0][1]).not.toHaveProperty("lines"); wrapper.unmount();

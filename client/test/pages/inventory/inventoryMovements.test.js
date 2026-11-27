@@ -31,7 +31,7 @@ async function open(permissions = ["inventory.view", "inventory.adjust"], query 
   wrappers.push(wrapper); await flushPromises();
   return { wrapper, body: new DOMWrapper(document.body), session, router };
 }
-const click = async (body, id = 21) => { await body.find(`button[aria-label="查看 Movement ${id}"]`).trigger("click"); await flushPromises(); };
+const click = async (body, id = 21) => { await body.find(`button[aria-label="查看異動 ${id}"]`).trigger("click"); await flushPromises(); };
 describe("TASK033 Movement high-risk entry", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -44,38 +44,38 @@ describe("TASK033 Movement high-risk entry", () => {
     const { wrapper, body } = await open(["inventory.view", "inventory.operation", "inventory.fefo.override"]);
     await click(body);
     expect(wrapper.text()).toContain("GR-21");
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(false);
     expect(wrapper.find('[aria-label="庫存調整"]').exists()).toBe(false);
   });
   it("UI033-AUTH exposes exact local entry only with view+adjust and removes it on permission loss", async () => {
     const { wrapper, body, session } = await open(); await click(body);
     expect(wrapper.find('[aria-label="庫存調整"]').attributes("href")).toBe("/inventory/adjustments?action=IN");
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').attributes("href")).toBe("/inventory/adjustments?action=REVERSAL&movementId=21");
+    expect(wrapper.find('[aria-label="整組沖銷異動 21"]').attributes("href")).toBe("/inventory/adjustments?action=REVERSAL&movementId=21");
     session.user.permissions = ["inventory.adjust"]; await flushPromises();
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(false);
   });
   it("UI033-RECONCILE shows the full original group and bidirectional reversal links without write entry on reversed legs", async () => {
     inventory.getMovement.mockResolvedValue(detail(21, "RECEIPT", { reversedByMovementId: 25 }));
     const { wrapper, body } = await open(); await click(body);
-    expect(wrapper.text()).toContain("沖銷 Movement 25");
-    expect(wrapper.text()).toContain("同組 Movement legs");
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
-    expect(wrapper.find('[aria-label="查看同組 Movement 22"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain("沖銷異動 25");
+    expect(wrapper.text()).toContain("同組異動明細");
+    expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="查看同組異動 22"]').exists()).toBe(true);
   });
   it("UI033-RECONCILE allows only whole BIN groups of the five reversible types", async () => {
     const { wrapper, body } = await open();
     for (const type of ["RECEIPT", "ISSUE", "BIN_MOVE", "STATUS_TRANSFER", "ADJUSTMENT"]) {
       inventory.getMovement.mockResolvedValue(detail(21, type)); await click(body);
-      expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(true);
+      expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(true);
     }
     for (const type of ["TRANSFER_DISPATCH", "TRANSFER_RECEIVE", "STOCKTAKE", "OPENING", "REVERSAL"]) {
       inventory.getMovement.mockResolvedValue(detail(21, type)); await click(body);
-      expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
+      expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(false);
       expect(wrapper.text()).toContain("此異動組不提供沖銷入口");
     }
     const mixed = detail(); mixed.groupLegs[1].locationKind = "IN_TRANSIT";
     inventory.getMovement.mockResolvedValue(mixed); await click(body);
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(false);
   });
   it("UI033-UI-REGRESSION ignores late detail success after a newer selection", async () => {
     let finish;
@@ -84,7 +84,7 @@ describe("TASK033 Movement high-risk entry", () => {
     finish(detail(21)); await flushPromises();
     const selected = wrapper.find('section[aria-labelledby="movement-detail-heading"]');
     expect(selected.text()).toContain("GR-22"); expect(selected.text()).not.toContain("GR-21 / 行");
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 22"]').exists()).toBe(true);
+    expect(wrapper.find('[aria-label="整組沖銷異動 22"]').exists()).toBe(true);
   });
   it("UI033-UI-REGRESSION ignores late detail failure after newer success and rejects wrong server identity", async () => {
     let reject;
@@ -94,13 +94,13 @@ describe("TASK033 Movement high-risk entry", () => {
     expect(wrapper.text()).not.toContain("old response");
     inventory.getMovement.mockResolvedValue(detail(22)); await click(body, 21);
     expect(wrapper.text()).toContain("異動詳情與選取項目不一致");
-    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="整組沖銷異動 21"]').exists()).toBe(false);
   });
   it("UI033-UI-REGRESSION closes a pending detail without letting it reopen or show stale errors", async () => {
     let finish;
     inventory.getMovement.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
     const { wrapper, body } = await open(); await click(body);
-    await body.find('button[aria-label="關閉 Movement 詳情"]').trigger("click");
+    await body.find('button[aria-label="關閉異動詳情"]').trigger("click");
     finish(detail()); await flushPromises();
     expect(wrapper.find("#movement-detail-heading").exists()).toBe(false);
   });

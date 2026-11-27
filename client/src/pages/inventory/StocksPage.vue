@@ -61,7 +61,7 @@ const statusOptions = [
 ];
 const availabilityOptions = [
   { label: "全部存量", value: "ALL" }, { label: "有庫存", value: "IN_STOCK" },
-  { label: "無庫存", value: "NO_STOCK" }, { label: "ATP 為零", value: "ZERO_ATP" }
+  { label: "無庫存", value: "NO_STOCK" }, { label: "可承諾為零", value: "ZERO_ATP" }
 ];
 const expiryOptions = [
   { label: "全部效期", value: "ALL" }, { label: "未過期", value: "UNEXPIRED" },
@@ -70,13 +70,13 @@ const expiryOptions = [
 const aggregateColumns = [
   { name: "skuCode", label: "SKU", field: (row) => row.sku.code, align: "left", sortable: true },
   { name: "skuName", label: "名稱", field: (row) => row.sku.name, align: "left", sortable: true },
-  { name: "totalOnHand", label: "總 On Hand", field: "totalOnHand", align: "right", sortable: true },
-  { name: "availableOnHand", label: "Available On Hand", field: "availableOnHand", align: "right", sortable: true },
-  { name: "reserved", label: "Reserved", field: "reserved", align: "right" },
-  { name: "atp", label: "ATP", field: "atp", align: "right" },
-  { name: "quarantined", label: "Quarantined", field: "quarantined", align: "right" },
-  { name: "damaged", label: "Damaged", field: "damaged", align: "right" },
-  { name: "inTransit", label: "In Transit", field: "inTransit", align: "right" },
+  { name: "totalOnHand", label: "總現存", field: "totalOnHand", align: "right", sortable: true },
+  { name: "availableOnHand", label: "可用", field: "availableOnHand", align: "right", sortable: true },
+  { name: "reserved", label: "已預留", field: "reserved", align: "right" },
+  { name: "atp", label: "可承諾", field: "atp", align: "right" },
+  { name: "quarantined", label: "隔離", field: "quarantined", align: "right" },
+  { name: "damaged", label: "損壞", field: "damaged", align: "right" },
+  { name: "inTransit", label: "在途", field: "inTransit", align: "right" },
   { name: "actions", label: "操作", field: (row) => row.sku.skuId, align: "right" }
 ];
 const bucketColumns = [
@@ -85,9 +85,9 @@ const bucketColumns = [
   { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left", sortable: true },
   { name: "expiryDate", label: "效期", field: (row) => row.lot?.expiryDate ?? "—", align: "left", sortable: true },
   { name: "stockStatus", label: "狀態", field: "stockStatus", align: "left", sortable: true },
-  { name: "onHand", label: "On Hand", field: "onHand", align: "right", sortable: true },
-  { name: "allocated", label: "Allocated", field: "allocated", align: "right" },
-  { name: "available", label: "Bucket Free", field: "bucketFree", align: "right", sortable: true }
+  { name: "onHand", label: "現存", field: "onHand", align: "right", sortable: true },
+  { name: "allocated", label: "已分配", field: "allocated", align: "right" },
+  { name: "available", label: "可分配", field: "bucketFree", align: "right", sortable: true }
 ];
 const statusLabel = { AVAILABLE: "可用", QUARANTINED: "隔離", DAMAGED: "損壞" };
 const statusIcon = { AVAILABLE: "check_circle", QUARANTINED: "warning", DAMAGED: "dangerous" };
@@ -177,7 +177,7 @@ onUnmounted(() => { aggregateController?.abort(); bucketController?.abort(); sum
 
 <template>
   <div>
-    <PageHeader subtitle="先查看 SKU 聚合數量，再深入倉庫、庫位、批次與狀態 bucket。">
+    <PageHeader subtitle="先查看 SKU 庫存摘要，再按倉庫、庫位、批次和狀態查看明細。">
       <template #actions>
         <InventoryReportDownload label="匯出結存數量 CSV" filename="inventory-stocks.csv" :load="exportStocks" />
         <q-btn flat icon="event" label="批次與效期" to="/inventory/lots" />
@@ -206,14 +206,14 @@ onUnmounted(() => { aggregateController?.abort(); bucketController?.abort(); sum
       <q-separator class="q-mb-md" />
       <div class="row items-center q-gutter-sm q-mb-md">
         <q-btn flat icon="arrow_back" label="關閉明細" @click="closeSku" />
-        <h2 id="bucket-heading" class="text-h6 q-ma-none">{{ selectedSku.sku.code }} {{ selectedSku.sku.name }} 的庫存 bucket</h2>
+        <h2 id="bucket-heading" class="text-h6 q-ma-none">{{ selectedSku.sku.code }} {{ selectedSku.sku.name }} 的庫存明細</h2>
       </div>
       <q-banner v-if="summaryError" role="alert" class="bg-negative text-white q-mb-md">{{ summaryError }} <template #action><q-btn flat label="重試摘要" @click="loadSummary" /></template></q-banner>
       <div class="row q-col-gutter-sm q-mb-md" aria-label="SKU 數量摘要">
         <q-card v-for="item in [
-          ['總 On Hand', selectedSku.totalOnHand], ['Available On Hand', selectedSku.availableOnHand],
-          ['Reserved', selectedSku.reserved], ['ATP', selectedSku.atp], ['Quarantined', selectedSku.quarantined],
-          ['Damaged', selectedSku.damaged], ['In Transit', selectedSku.inTransit]
+          ['現存', selectedSku.totalOnHand], ['可用', selectedSku.availableOnHand],
+          ['已預留', selectedSku.reserved], ['可承諾', selectedSku.atp], ['隔離', selectedSku.quarantined],
+          ['損壞', selectedSku.damaged], ['在途', selectedSku.inTransit]
         ]" :key="item[0]" flat bordered class="col-6 col-sm-3 col-lg"><q-card-section class="q-pa-sm"><div class="text-caption text-grey-8">{{ item[0] }}</div><div class="text-h6">{{ item[1] ?? '—' }}</div></q-card-section></q-card>
       </div>
       <DataTable ref="bucketTable" :fetch="fetchBuckets" :columns="bucketColumns" :initial-pagination="bucketPagination" row-key="balanceId">

@@ -3,7 +3,7 @@ export const page = { name: "inventory-transfers", path: "/inventory/transfers",
   requires: { permissions: ["inventory.view"] }, menu: { group: "inventory", icon: "local_shipping", order: 50 } };
 </script>
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import { can } from "@/framework/authorization/can.js";
@@ -13,32 +13,60 @@ import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { promptReason } from "@/framework/ui/confirm.js";
 import TransferEditor from "@/components/inventory/TransferEditor.vue";
 import TransferReceive from "@/components/inventory/TransferReceive.vue";
+import { stockStatusLabel } from "@/components/inventory/stockStatusLabel.js";
 import inventory from "@/services/inventory.js";
 import { useSessionStore } from "@/stores/session.js";
 const route = useRoute(), router = useRouter(), session = useSessionStore();
 const canOperate = computed(() => can(session, { permissions: ["inventory.view", "inventory.operation"] }));
 const positive = value => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
-const statuses = ["ALL", "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED"];
+const statusLabels = { ALL: "全部狀態", DRAFT: "草稿", IN_TRANSIT: "在途", RECEIVED: "已收貨", CANCELLED: "已取消" };
+const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({ label, value }));
 const text = value => typeof value === "string" ? value : "";
-const number = ref(text(route.query.number)), status = ref(statuses.includes(route.query.status) ? route.query.status : "ALL");
+const number = ref(text(route.query.number)), status = ref(Object.hasOwn(statusLabels, route.query.status) ? route.query.status : "ALL");
 const sourceWarehouseId = ref(positive(route.query.sourceWarehouseId)), destinationWarehouseId = ref(positive(route.query.destinationWarehouseId));
 const selectedId = ref(positive(route.query.id)), selected = ref(null), detailLoading = ref(false), detailError = ref("");
 const table = ref(null), editor = ref(null), receiver = ref(null), mode = ref(""), busy = ref(false), operationError = ref("");
 const summaries = ref([]), summaryLoading = ref(false), commandId = ref("");
 const warehouses = ref([]), warehousePage = ref(0), warehouseTotal = ref(0), warehouseLoading = ref(false), warehouseError = ref("");
+const binCodes = ref(new Map());
 const pagination = { page: positive(route.query.page) ?? 1, rowsPerPage: appConfig.defaultPageSize, rowsNumber: 0,
   sortBy: ["number", "status", "createdAt", "updatedAt"].includes(route.query.sortBy) ? route.query.sortBy : "updatedAt", descending: route.query.descending !== "false" };
 const current = ref({ ...pagination });
 let detailGeneration = 0, summaryGeneration = 0;
+let binLookupController;
 const columns = [
   { name: "number", label: "單號", field: "number", sortable: true, align: "left" },
-  { name: "status", label: "狀態", field: "status", sortable: true, align: "left" },
+  { name: "status", label: "狀態", field: "status", sortable: true, align: "left", format: value => statusLabels[value] ?? value },
   { name: "source", label: "來源倉庫", field: "sourceWarehouseId", align: "left" },
   { name: "destination", label: "目的倉庫", field: "destinationWarehouseId", align: "left" },
   { name: "transit", label: "在途數量", field: "inTransitQuantity", align: "right" },
   { name: "actions", label: "詳情", field: "id", align: "right" }
 ];
 const warehouseName = id => warehouses.value.find(row => row.id === id)?.code || `倉庫 #${id}`;
+const binKey = (warehouseId, binId) => `${warehouseId}:${binId}`;
+const binCode = (warehouseId, binId) => binCodes.value.get(binKey(warehouseId, binId)) ?? "—";
+async function loadBinCodes(detail) {
+  binLookupController = new AbortController();
+  const { signal } = binLookupController;
+  const bins = new Map();
+  for (const line of detail.lines) {
+    bins.set(binKey(detail.sourceWarehouseId, line.sourceBinId), [detail.sourceWarehouseId, line.sourceBinId]);
+    if (line.destinationBinId) {
+      bins.set(binKey(detail.destinationWarehouseId, line.destinationBinId), [detail.destinationWarehouseId, line.destinationBinId]);
+    }
+  }
+  const entries = [...bins];
+  for (let start = 0; !signal.aborted && start < entries.length; start += 8) {
+    await Promise.all(entries.slice(start, start + 8).map(async ([key, [warehouseId, binId]]) => {
+      try {
+        const bin = await inventory.getBin(warehouseId, binId, { signal });
+        if (!signal.aborted) binCodes.value.set(key, bin.code);
+      } catch {
+        // Keep the rest of the transfer detail usable when a bin cannot be read.
+      }
+    }));
+  }
+}
 function syncUrl() {
   router.replace({ query: { number: number.value || undefined, status: status.value === "ALL" ? undefined : status.value,
     sourceWarehouseId: sourceWarehouseId.value || undefined, destinationWarehouseId: destinationWarehouseId.value || undefined,
@@ -50,8 +78,16 @@ function fetchTransfers(request) {
 }
 async function loadDetail(id = selectedId.value) {
   const generation = ++detailGeneration;
+  binLookupController?.abort();
+  binCodes.value.clear();
   selectedId.value = id; selected.value = null; detailLoading.value = true; detailError.value = ""; syncUrl();
-  try { const detail = await inventory.getTransfer(id); if (generation === detailGeneration) selected.value = detail; }
+  try {
+    const detail = await inventory.getTransfer(id);
+    if (generation === detailGeneration) {
+      selected.value = detail;
+      void loadBinCodes(detail);
+    }
+  }
   catch (cause) { if (generation === detailGeneration) detailError.value = cause.message || "無法載入調撥，請重試。"; }
   finally { if (generation === detailGeneration) detailLoading.value = false; }
 }
@@ -65,6 +101,7 @@ async function loadWarehouses() {
 }
 function canLeave() { return !busy.value && (mode.value !== "edit" || editor.value?.canDiscard()) && (mode.value !== "receive" || receiver.value?.canDiscard()); }
 function newDraft() {
+  binLookupController?.abort();
   detailGeneration++; selectedId.value = null; selected.value = null; detailLoading.value = false;
   detailError.value = ""; operationError.value = ""; syncUrl(); mode.value = "edit";
 }
@@ -100,6 +137,7 @@ async function cancelDraft() {
 }
 watch([status, sourceWarehouseId, destinationWarehouseId], () => table.value?.reload());
 onMounted(() => { loadWarehouses(); if (selectedId.value) loadDetail(); });
+onUnmounted(() => { detailGeneration++; binLookupController?.abort(); });
 </script>
 
 <template>
@@ -107,7 +145,7 @@ onMounted(() => { loadWarehouses(); if (selectedId.value) loadDetail(); });
     <PageHeader subtitle="整張調撥：草稿 → 在途 → 收貨；不支援部分過帳。" />
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
       <q-input class="col-12 col-sm-4" v-model="number" outlined dense debounce="300" label="搜尋調撥單號" clearable />
-      <q-select class="col-12 col-sm-2" v-model="status" outlined dense :options="statuses" label="調撥狀態" />
+      <q-select class="col-12 col-sm-2" v-model="status" outlined dense emit-value map-options :options="statusOptions" label="調撥狀態" />
       <q-select v-for="field in ['source', 'destination']" :key="field" class="col-12 col-sm-3" outlined dense clearable
         :model-value="field === 'source' ? sourceWarehouseId : destinationWarehouseId" :options="warehouses" option-value="id" option-label="code" emit-value map-options
         :label="field === 'source' ? '來源倉庫篩選' : '目的倉庫篩選'" :loading="warehouseLoading"
@@ -125,12 +163,12 @@ onMounted(() => { loadWarehouses(); if (selectedId.value) loadDetail(); });
       </DataTable>
     </section>
     <section v-if="selectedId" class="q-px-md q-pb-md" aria-label="調撥詳情" :aria-busy="detailLoading">
-      <q-btn flat label="關閉詳情" @click="selectedId = null; selected = null; detailGeneration++; syncUrl()" />
+      <q-btn flat label="關閉詳情" @click="selectedId = null; selected = null; detailGeneration++; binLookupController?.abort(); syncUrl()" />
       <div v-if="detailLoading" role="status">正在載入調撥詳情…</div>
       <q-banner v-if="detailError || operationError" role="alert" class="bg-negative text-white q-mb-sm">{{ detailError || operationError }}</q-banner>
       <q-btn v-if="!detailLoading" flat label="重載詳情" @click="operationError = ''; loadDetail()" />
       <template v-if="selected">
-        <h2 class="text-h6">{{ selected.number }} · {{ selected.status }}</h2>
+        <h2 class="text-h6">{{ selected.number }} · {{ statusLabels[selected.status] }}</h2>
         <p>{{ warehouseName(selected.sourceWarehouseId) }} → {{ warehouseName(selected.destinationWarehouseId) }} · 在途 {{ selected.inTransitQuantity }}</p>
         <q-banner v-if="selected.status === 'IN_TRANSIT'" role="status" class="bg-warning q-mb-md">來源已扣、目的未入；在途不可修改／取消。</q-banner>
         <div v-if="canOperate" class="row q-gutter-sm q-mb-md">
@@ -142,13 +180,15 @@ onMounted(() => { loadWarehouses(); if (selectedId.value) loadDetail(); });
         </div>
         <q-list bordered separator><q-item v-for="line in selected.lines" :key="line.id"><q-item-section>
           <q-item-label>{{ line.skuCode }} · {{ line.lotNumber || '無批次' }} · {{ line.expiryDate || '無效期' }}</q-item-label>
-          <q-item-label>來源 Bin #{{ line.sourceBinId }} → {{ line.destinationBinId ? `目的 Bin #${line.destinationBinId}` : '目的未入' }} · {{ line.dispatchStockStatus }} → {{ line.receiveStockStatus || '未收貨' }}</q-item-label>
+          <q-item-label>來源庫位 {{ binCode(selected.sourceWarehouseId, line.sourceBinId) }} →
+            {{ line.destinationBinId ? `目的庫位 ${binCode(selected.destinationWarehouseId, line.destinationBinId)}` : '目的未入' }} ·
+            {{ stockStatusLabel(line.dispatchStockStatus) }} → {{ stockStatusLabel(line.receiveStockStatus) || '未收貨' }}</q-item-label>
           <q-item-label>數量 {{ line.quantity }} · 在途 {{ line.inTransitQuantity }}</q-item-label>
         </q-item-section></q-item></q-list>
         <p v-if="selected.reason">原因：{{ selected.reason }}</p>
         <h3 class="text-subtitle1">異動追溯</h3><div v-if="!selected.movements.length" role="status">尚無庫存異動。</div>
         <q-list v-else bordered><q-item v-for="movement in selected.movements" :key="movement.movementId" clickable :to="{ path: '/inventory/movements', query: { movementId: movement.movementId } }">
-          <q-item-section>Movement {{ movement.movementId }} · {{ movement.direction }} {{ movement.quantity }} · {{ movement.stockStatus }}</q-item-section>
+          <q-item-section>異動 {{ movement.movementId }} · {{ movement.direction === 'IN' ? '入' : '出' }} {{ movement.quantity }} · {{ stockStatusLabel(movement.stockStatus) }}</q-item-section>
         </q-item></q-list>
       </template>
     </section>
@@ -161,7 +201,7 @@ onMounted(() => { loadWarehouses(); if (selectedId.value) loadDetail(); });
           <p>只可移動未保障 Reservation 的數量。整張過帳，不支援部分；提交時後端重新檢查庫存及鎖定。</p>
           <div v-if="summaryLoading" role="status">正在載入來源保障摘要…</div>
           <q-banner v-if="operationError" role="alert" class="bg-negative text-white">{{ operationError }}</q-banner>
-          <p v-for="row in summaries" :key="row.skuId">{{ row.code }}：來源 {{ row.eligibleOnHand }} · 本單 {{ row.quantity }} · Reserved {{ row.reserved }} · ATP {{ row.atp }}</p>
+          <p v-for="row in summaries" :key="row.skuId">{{ row.code }}：來源 {{ row.eligibleOnHand }} · 本單 {{ row.quantity }} · 已預留 {{ row.reserved }} · 可承諾 {{ row.atp }}</p>
           <q-btn v-if="operationError" flat label="重試摘要" @click="loadSummaries" />
           <div class="row justify-end q-gutter-sm"><q-btn flat label="返回詳情" :disable="busy" @click="closeDialog" />
             <q-btn color="primary" label="確認整張出庫" :loading="busy" :disable="summaryLoading || !!operationError || !summaries.length || busy" @click="change('dispatch')" /></div>

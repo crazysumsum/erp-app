@@ -9,7 +9,7 @@ export const page = {
 </script>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import { can } from "@/framework/authorization/can.js";
@@ -18,6 +18,7 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import AllocationPanel from "@/components/inventory/AllocationPanel.vue";
 import inventoryService from "@/services/inventory.js";
+import sales from "@/services/sales.js";
 import { useSessionStore } from "@/stores/session.js";
 
 const route = useRoute();
@@ -25,6 +26,7 @@ const router = useRouter();
 const session = useSessionStore();
 const canOperate = computed(() => can(session, { permissions: ["inventory.operation"] }));
 const canFefoOverride = computed(() => can(session, { permissions: ["inventory.fefo.override"] }));
+const canReadSales = computed(() => can(session, { permissions: ["sales.view"] }));
 const positive = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
 const search = ref(typeof route.query.q === "string" ? route.query.q : "");
 const status = ref(typeof route.query.status === "string" ? route.query.status : "ALL");
@@ -34,6 +36,9 @@ const selected = ref(null);
 const detailLoading = ref(false);
 const detailError = ref("");
 const showAllocation = ref(false);
+const salesNumbers = ref(new Map());
+const pendingSalesNumbers = new Set();
+const sourceController = new AbortController();
 const pagination = { page: positive(route.query.page) ?? 1, rowsPerPage: appConfig.defaultPageSize,
   rowsNumber: 0, sortBy: "updatedAt", descending: true };
 const currentPage = ref(pagination.page);
@@ -45,7 +50,7 @@ const statuses = [
 const columns = [
   { name: "skuCode", label: "SKU", field: (row) => row.sku.code, align: "left", sortable: true },
   { name: "warehouse", label: "倉庫", field: (row) => row.warehouse.code, align: "left" },
-  { name: "source", label: "來源單據", field: (row) => row.source.documentId, align: "left" },
+  { name: "source", label: "來源單據", field: "source", align: "left" },
   { name: "status", label: "狀態", field: "status", align: "left", sortable: true },
   { name: "original", label: "原始", field: "originalQuantity", align: "right" },
   { name: "outstanding", label: "未完成", field: "outstandingQuantity", align: "right" },
@@ -54,23 +59,49 @@ const columns = [
 ];
 const sourceText = (source) => `${source.module} / ${source.documentType} / ${source.documentId}` +
   ` / 行 ${source.lineId || '—'} / 事件 ${source.eventId}`;
+const salesOrderId = (source) => source.module === "SALES" && source.documentType === "SALES_ORDER" &&
+  /^[1-9]\d*$/u.test(source.documentId) ? positive(source.documentId) : null;
+const sourceNumber = (source) => canReadSales.value ? salesNumbers.value.get(salesOrderId(source)) : undefined;
+
+async function loadSourceNumber(id) {
+  pendingSalesNumbers.add(id);
+  try {
+    const order = await sales.getOrder(id, { signal: sourceController.signal });
+    if (!sourceController.signal.aborted && order.id === id && order.number) salesNumbers.value.set(id, order.number);
+  } catch {
+    // Keep reservations available if the related order cannot be read.
+  } finally {
+    pendingSalesNumbers.delete(id);
+  }
+}
+
+function loadSourceNumbers(rows) {
+  if (!canReadSales.value || sourceController.signal.aborted) return;
+  for (const row of rows) {
+    const id = salesOrderId(row.source);
+    if (id && !salesNumbers.value.has(id) && !pendingSalesNumbers.has(id)) void loadSourceNumber(id);
+  }
+}
 
 function syncUrl(pageNumber = 1) {
   router.replace({ query: { q: search.value || undefined, status: status.value === "ALL" ? undefined : status.value,
     uncovered: uncovered.value ? "true" : undefined, page: pageNumber,
     id: selected.value?.id ?? undefined } });
 }
-function fetchReservations(request) {
+async function fetchReservations(request) {
   currentPage.value = request.page;
   syncUrl(request.page);
-  return inventoryService.listReservations({ ...request, filter: search.value,
+  const result = await inventoryService.listReservations({ ...request, filter: search.value,
     status: status.value, uncovered: uncovered.value || undefined });
+  loadSourceNumbers(result.rows);
+  return result;
 }
 async function loadDetail(id) {
   detailLoading.value = true;
   detailError.value = "";
   try {
     selected.value = await inventoryService.getReservation(id);
+    loadSourceNumbers([selected.value]);
     syncUrl(currentPage.value);
   } catch (error) {
     detailError.value = error.message || "無法載入預留詳情";
@@ -97,6 +128,7 @@ async function copySource() {
 }
 watch([status, uncovered], () => table.value?.reload());
 onMounted(() => { if (positive(route.query.id)) loadDetail(positive(route.query.id)); });
+onUnmounted(() => sourceController.abort());
 </script>
 
 <template>
@@ -108,9 +140,13 @@ onMounted(() => { if (positive(route.query.id)) loadDetail(positive(route.query.
       <q-toggle class="col-12 col-sm-3" v-model="uncovered" label="只看未覆蓋" />
     </div>
     <section class="q-px-md q-pb-md" aria-labelledby="reservations-heading">
-      <h2 id="reservations-heading" class="text-h6 q-mt-none">Reservation 清單</h2>
+      <h2 id="reservations-heading" class="text-h6 q-mt-none">預留清單</h2>
       <DataTable ref="table" :fetch="fetchReservations" :columns="columns" :filter="search"
         :initial-pagination="pagination" row-key="id" sticky-actions>
+        <template #body-cell-source="{ row }">
+          <q-td><router-link v-if="sourceNumber(row.source)" :to="{ name: 'sales-order-detail', params: { id: salesOrderId(row.source) } }">{{ sourceNumber(row.source) }}</router-link>
+            <span v-else>單號未提供</span></q-td>
+        </template>
         <template #body-cell-status="{ value }"><q-td><q-badge :color="value === 'ACTIVE' ? 'positive' : 'grey-7'" :label="statuses.find((item) => item.value === value)?.label || value" /></q-td></template>
         <template #body-cell-uncovered="{ value }"><q-td class="text-right"><q-icon v-if="value" name="error" color="negative" class="q-mr-xs" /><span>{{ value ? `未覆蓋 ${value}` : '0' }}</span></q-td></template>
         <template #body-cell-actions="{ row }"><q-td class="text-right"><q-btn flat round dense icon="chevron_right" :aria-label="`查看預留 ${row.id} 詳情`" @click="loadDetail(row.id)" /></q-td></template>
@@ -138,7 +174,9 @@ onMounted(() => { if (positive(route.query.id)) loadDetail(positive(route.query.
         <q-banner v-if="selected.availability.uncoveredReserved > 0" role="status" class="bg-warning text-dark q-mb-md">
           未覆蓋 {{ selected.availability.uncoveredReserved }}；請檢查可用庫存與到期批次，再決定補貨或調整來源單據。
         </q-banner>
-        <div class="row items-center q-gutter-sm q-mb-md"><span>來源：{{ sourceText(selected.source) }}</span>
+        <div class="row items-center q-gutter-sm q-mb-md"><span>來源：<router-link v-if="sourceNumber(selected.source)"
+          :to="{ name: 'sales-order-detail', params: { id: salesOrderId(selected.source) } }">{{ sourceNumber(selected.source) }}</router-link>
+          <template v-else>單號未提供</template></span>
           <q-btn flat dense icon="content_copy" label="複製來源識別" @click="copySource" /></div>
         <h3 class="text-subtitle1 q-mb-sm">現有分配</h3>
         <div v-if="!selected.allocations.length" role="status" class="text-grey-7">尚無分配</div>

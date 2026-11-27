@@ -17,6 +17,7 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
 import InventoryReportDownload from "@/components/inventory/InventoryReportDownload.vue";
+import { stockStatusLabel } from "@/components/inventory/stockStatusLabel.js";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -59,25 +60,32 @@ const canReverse = computed(() => canAdjust.value && !detailLoading.value && !de
   detail.value.groupLegs.every(leg => leg.locationKind === "BIN" && reversibleTypes.includes(leg.movementType) &&
     leg.groupId === detail.value.movement.groupId && positive(leg.bin?.binId)));
 
+const movementLabels = {
+  RECEIPT: "收貨", ISSUE: "出庫", OPENING: "期初庫存", BIN_MOVE: "庫位移動",
+  STATUS_TRANSFER: "庫存狀態轉換", ADJUSTMENT: "庫存調整", REVERSAL: "沖銷",
+  TRANSFER_DISPATCH: "調撥出庫", TRANSFER_RECEIVE: "調撥收貨", STOCKTAKE_VARIANCE: "盤點差異",
+  CUSTOMER_RETURN: "客戶退貨", SUPPLIER_RETURN: "供應商退貨"
+};
 const columns = [
   { name: "postedAt", label: "時間", field: "postedAt", align: "left" },
-  { name: "movementType", label: "類型", field: "movementType", align: "left" },
+  { name: "movementType", label: "類型", field: "movementType", align: "left",
+    format: (value) => Object.hasOwn(movementLabels, value) ? movementLabels[value] : value },
   { name: "direction", label: "方向／數量", field: "direction", align: "left" },
   { name: "sku", label: "SKU", field: (row) => row.sku.code, align: "left" },
   { name: "location", label: "位置", field: (row) => row.bin ? `${row.warehouse.code}/${row.bin.code}` : `${row.warehouse.code}/在途`, align: "left" },
   { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left" },
-  { name: "status", label: "狀態", field: "stockStatus", align: "left" },
+  { name: "status", label: "狀態", field: "stockStatus", align: "left", format: stockStatusLabel },
   { name: "source", label: "來源", field: (row) => `${row.source.module}/${row.source.documentType}/${row.source.documentId}`, align: "left" },
   { name: "actions", label: "操作", field: "movementId", align: "right" }
 ];
 const detailColumns = [
-  { name: "movementId", label: "Movement", field: "movementId", align: "left" },
+  { name: "movementId", label: "異動編號", field: "movementId", align: "left" },
   { name: "sku", label: "SKU", field: (row) => row.sku.code, align: "left" },
   { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left" },
-  { name: "direction", label: "方向", field: "direction", align: "left" },
+  { name: "direction", label: "方向", field: "direction", align: "left", format: (value) => value === "IN" ? "入" : "出" },
   { name: "quantity", label: "數量", field: "quantity", align: "right" },
   { name: "location", label: "位置", field: (row) => row.bin ? `${row.warehouse.code}/${row.bin.code}` : `${row.warehouse.code}/在途`, align: "left" },
-  { name: "status", label: "狀態", field: "stockStatus", align: "left" },
+  { name: "status", label: "狀態", field: "stockStatus", align: "left", format: stockStatusLabel },
   { name: "actions", label: "查看", field: "movementId", align: "right" }
 ];
 function filters() {
@@ -143,7 +151,7 @@ onUnmounted(() => { detailGeneration++; listController?.abort(); detailControlle
 
 <template>
   <div>
-    <PageHeader subtitle="依固定時間順序追溯不可變 Movement、來源、同組 legs 與沖銷關聯。">
+    <PageHeader subtitle="依時間追溯庫存異動、來源、同組明細與沖銷關聯。">
       <template #actions><InventoryReportDownload label="匯出異動明細 CSV" filename="inventory-movements.csv" :load="exportMovements" /><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
@@ -160,39 +168,39 @@ onUnmounted(() => { detailGeneration++; listController?.abort(); detailControlle
       <q-input class="col-6 col-sm-3 col-md-2" v-model="actorId" dense outlined inputmode="numeric" label="操作者 ID" />
     </div>
     <section class="q-px-md q-pb-md" aria-labelledby="movements-heading">
-      <h2 id="movements-heading" class="text-h6 q-mt-none">Movement Ledger</h2>
+      <h2 id="movements-heading" class="text-h6 q-mt-none">庫存異動明細</h2>
       <DataTable ref="table" :fetch="fetchMovements" :columns="columns" :initial-pagination="initialPagination" row-key="movementId" sticky-actions>
         <template #body-cell-postedAt="{ value }"><q-td>{{ formatTime(value) }}</q-td></template>
         <template #body-cell-direction="{ row, value }"><q-td><q-icon :name="value === 'IN' ? 'south' : 'north'" class="q-mr-xs" /><span>{{ value === 'IN' ? '入' : '出' }} {{ row.quantity }}</span></q-td></template>
         <template #body-cell-sku="{ row, value }"><q-td><EllipsisCell :text="`${value} — ${row.sku.name}`" max-width="220px" /></q-td></template>
         <template #body-cell-lot="{ value }"><EllipsisCell :text="value" max-width="160px" /></template>
         <template #body-cell-source="{ row }"><q-td><EllipsisCell :text="sourceText(row.source)" max-width="260px" /></q-td></template>
-        <template #body-cell-actions="{ row }"><q-td class="text-right"><q-btn flat round dense icon="open_in_new" :aria-label="`查看 Movement ${row.movementId}`" @click="openDetail(row)" /></q-td></template>
+        <template #body-cell-actions="{ row }"><q-td class="text-right"><q-btn flat round dense icon="open_in_new" :aria-label="`查看異動 ${row.movementId}`" @click="openDetail(row)" /></q-td></template>
       </DataTable>
     </section>
     <section v-if="selectedId" class="q-px-md q-pb-md" aria-labelledby="movement-detail-heading" :aria-busy="detailLoading">
       <q-card flat bordered>
         <q-card-section>
-          <div class="row items-center q-gutter-sm"><h2 id="movement-detail-heading" class="text-h6 q-ma-none">Movement {{ selectedId }} 詳情</h2><q-space /><q-btn flat round dense icon="close" aria-label="關閉 Movement 詳情" @click="closeDetail" /></div>
+          <div class="row items-center q-gutter-sm"><h2 id="movement-detail-heading" class="text-h6 q-ma-none">異動 {{ selectedId }} 詳情</h2><q-space /><q-btn flat round dense icon="close" aria-label="關閉異動詳情" @click="closeDetail" /></div>
           <div v-if="detailLoading" role="status" class="q-mt-md">正在載入異動詳情…</div>
           <q-banner v-if="detailError" role="alert" class="bg-negative text-white q-mt-md">{{ detailError }}<template #action><q-btn flat label="重試" @click="openDetail(selectedId)" /></template></q-banner>
           <template v-if="detail">
             <dl class="movement-meta q-my-md">
-              <div><dt>Group</dt><dd>{{ detail.movement.groupId }}</dd></div>
+              <div><dt>異動組別</dt><dd>{{ detail.movement.groupId }}</dd></div>
               <div><dt>來源</dt><dd>{{ sourceText(detail.movement.source) }}</dd></div>
               <div><dt>操作者</dt><dd>{{ detail.movement.postedBy.label }}</dd></div>
             </dl>
             <div class="row q-gutter-sm q-mb-md">
-              <q-btn v-if="detail.reversal.reversalOfMovementId" outline icon="undo" :label="`原 Movement ${detail.reversal.reversalOfMovementId}`" @click="openDetail(detail.reversal.reversalOfMovementId)" />
-              <q-btn v-if="detail.reversal.reversedByMovementId" outline icon="redo" :label="`沖銷 Movement ${detail.reversal.reversedByMovementId}`" @click="openDetail(detail.reversal.reversedByMovementId)" />
+              <q-btn v-if="detail.reversal.reversalOfMovementId" outline icon="undo" :label="`原異動 ${detail.reversal.reversalOfMovementId}`" @click="openDetail(detail.reversal.reversalOfMovementId)" />
+              <q-btn v-if="detail.reversal.reversedByMovementId" outline icon="redo" :label="`沖銷異動 ${detail.reversal.reversedByMovementId}`" @click="openDetail(detail.reversal.reversedByMovementId)" />
               <span v-if="!detail.reversal.reversalOfMovementId && !detail.reversal.reversedByMovementId" class="text-grey-8"><q-icon name="link_off" /> 沒有沖銷關聯</span>
             </div>
-            <h3 class="text-subtitle1">同組 Movement legs</h3>
-            <q-btn v-if="canReverse" outline color="negative" label="整組沖銷" :aria-label="`整組沖銷 Movement ${selectedId}`" class="q-mb-md"
+            <h3 class="text-subtitle1">同組異動明細</h3>
+            <q-btn v-if="canReverse" outline color="negative" label="整組沖銷" :aria-label="`整組沖銷異動 ${selectedId}`" class="q-mb-md"
               :to="{ path: '/inventory/adjustments', query: { action: 'REVERSAL', movementId: selectedId } }" />
             <p v-else-if="canAdjust" role="status">此異動組不提供沖銷入口；請查看類型、位置及沖銷關聯。</p>
             <DataTable :rows="detail.groupLegs" :columns="detailColumns" row-key="movementId" sticky-actions>
-              <template #body-cell-actions="{ row }"><q-td><q-btn flat round icon="open_in_new" :aria-label="`查看同組 Movement ${row.movementId}`" @click="openDetail(row)" /></q-td></template>
+              <template #body-cell-actions="{ row }"><q-td><q-btn flat round icon="open_in_new" :aria-label="`查看同組異動 ${row.movementId}`" @click="openDetail(row)" /></q-td></template>
             </DataTable>
           </template>
         </q-card-section>

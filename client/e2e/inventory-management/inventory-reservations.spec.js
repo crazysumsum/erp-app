@@ -87,7 +87,7 @@ test("TASK-024 @technical Reservation detail shows quantities, uncovered next st
   await expect(page.getByText("已釋放 2")).toBeVisible();
   await expect(page.getByText("未完成 7")).toBeVisible();
   await expect(page.getByText(/未覆蓋 2.*請檢查可用庫存/)).toBeVisible();
-  await expect(page.getByText("SALES / SALES_ORDER / SO-42 / 行 1 / 事件 reserved-1")).toBeVisible();
+  await expect(page.getByText("來源：單號未提供")).toBeVisible();
   await page.getByRole("button", { name: "複製來源識別" }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("SALES / SALES_ORDER / SO-42 / 行 1 / 事件 reserved-1");
   expect(state.unexpected).toEqual([]);

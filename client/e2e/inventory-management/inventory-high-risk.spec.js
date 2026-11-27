@@ -194,14 +194,14 @@ test("TASK-033 @technical Status paired effects and whole-group Reversal preserv
   const movementLink = page.getByRole("link", { name: /查看已過帳 Movement/u }).first();
   const selected = Number(new URL(await movementLink.getAttribute("href"), page.url()).searchParams.get("movementId"));
   expect((await stock(fixture.batch)).map(row => Number(row.on_hand_quantity))).toEqual([97, 3]);
-  await movementLink.click(); await page.getByRole("link", { name: `整組沖銷 Movement ${selected}`, exact: true }).click();
+  await movementLink.click(); await page.getByRole("link", { name: `整組沖銷異動 ${selected}`, exact: true }).click();
   await page.getByLabel("原因說明", { exact: true }).fill("合成資料整組沖銷確認"); await review(page);
   await expect(page.getByRole("dialog").locator("li")).toHaveCount(2); await confirm(page); await resolved(page);
   expect((await stock(fixture.batch)).map(row => Number(row.on_hand_quantity))).toEqual([100, 0]);
   await page.getByRole("link", { name: /查看已過帳 Movement/u }).first().click();
-  await expect(page.getByRole("button", { name: /原 Movement/u })).toBeVisible();
-  await page.getByRole("button", { name: /原 Movement/u }).click(); await expect(page.getByRole("button", { name: /沖銷 Movement/u })).toBeVisible();
-  await expect(page.getByRole("link", { name: /整組沖銷 Movement/u })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /原異動/u })).toBeVisible();
+  await page.getByRole("button", { name: /原異動/u }).click(); await expect(page.getByRole("button", { name: /沖銷異動/u })).toBeVisible();
+  await expect(page.getByRole("link", { name: /整組沖銷異動/u })).toHaveCount(0);
   expect(await operationCount()).toBe(2);
 });
 test("TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO", async ({ page }) => {

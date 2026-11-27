@@ -94,7 +94,7 @@ describe("TASK-017 Stock / Lot / Movement UI", () => {
     await body.find('button[aria-label="查看 SKU-3 庫存明細"]').trigger("click");
     await flushPromises();
     expect(inventoryService.listStocks).toHaveBeenCalledWith(expect.objectContaining({ skuId: 3, warehouseId: 1 }));
-    expect(wrapper.text()).toContain("SKU-3 Widget 的庫存 bucket");
+    expect(wrapper.text()).toContain("SKU-3 Widget 的庫存明細");
     expect(wrapper.text()).toContain("已過期 2026-09-27");
   });
 
@@ -124,7 +124,7 @@ describe("TASK-017 Stock / Lot / Movement UI", () => {
       page: 2, expiryState: "EXPIRED", warehouseId: 1, signal: expect.any(AbortSignal)
     }));
     expect(wrapper.text()).toContain("已過期（-1 日）");
-    for (const label of ["總 On Hand", "Available On Hand", "Quarantined", "Damaged"]) {
+    for (const label of ["現存", "可用", "隔離", "損壞"]) {
       expect(wrapper.text()).toContain(label);
     }
   });
@@ -134,11 +134,11 @@ describe("TASK-017 Stock / Lot / Movement UI", () => {
     expect(inventoryService.listMovements).toHaveBeenCalledWith(expect.objectContaining({
       page: 2, sourceModule: "RECEIVING", signal: expect.any(AbortSignal)
     }));
-    await body.find('button[aria-label="查看 Movement 21"]').trigger("click");
+    await body.find('button[aria-label="查看異動 21"]').trigger("click");
     await flushPromises();
     expect(wrapper.text()).toContain("RECEIVING / GOODS_RECEIPT / GR-42 / 行 1 / 事件 posted-1");
-    expect(wrapper.text()).toContain("同組 Movement legs");
-    expect(wrapper.text()).toContain("沖銷 Movement 25");
+    expect(wrapper.text()).toContain("同組異動明細");
+    expect(wrapper.text()).toContain("沖銷異動 25");
     expect(router.currentRoute.value.query.movementId).toBe("21");
   });
 });
