@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
@@ -6,7 +7,12 @@ function startWithInvalidConfig(timeZone, environment, execArgv = []) {
   // The invalid setting stops the real entry point before it can access a database.
   const result = spawnSync(process.execPath, [...execArgv, "src/index.js"], {
     cwd: new URL("../", import.meta.url),
-    env: { ...process.env, TZ: timeZone, NODE_ENV: environment, FULFILLMENT_MAX_LINES_PER_DOCUMENT: "0" },
+    env: {
+      ...process.env, TZ: timeZone, NODE_ENV: environment, FULFILLMENT_MAX_LINES_PER_DOCUMENT: "0",
+      JWT_SECRET: randomBytes(48).toString("base64"),
+      SUPPLIER_BANK_ENCRYPTION_KEYS: "", SUPPLIER_BANK_LOOKUP_KEYS: "",
+      CUSTOMER_BANK_ENCRYPTION_KEYS: "", CUSTOMER_BANK_LOOKUP_KEYS: ""
+    },
     encoding: "utf8",
     timeout: 10000
   });
