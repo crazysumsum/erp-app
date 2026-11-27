@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "decision": "AP S1 proposal for CI administrator review: Sam accepted AP r5 Decision 4A (PM agentmsg 37deeaac). Functional case admission is suspended until production go-live under AGENTS.md (PR #395). PM 098533d3 and CI f17f5912 stage S1. Await final exact review and CI administrator registration.",
+  "purpose": "Check the AP side of Supplier lifecycle references, using the caller's transaction. Verify locking read order, database error propagation, current reads, supplier isolation and the open-confirmed-unpaid filter.",
+  "data": "One unit case with scripted responses. One existing MySQL integration lane case using five synthetic invoices, one synthetic payment and two referenced supplier IDs, with cleanup. No production data or additional fixtures.",
+  "concurrency": "One connection in the unit case. One reader and one writer transaction connection for the MySQL correctness case; no workload loop or additional workers.",
+  "repetitions": "1",
+  "thresholds": "Payments table is read before invoices by locking reads. Database error is propagated. Exact counts: one archive blocker, five references for the subject, zero for a missing supplier.",
+  "trigger": "Existing routine server functional discovery and the existing MySQL functional environment flag. No job, schedule, manual dispatch or capacity workload.",
+  "cost": "One unit case and one bounded MySQL case. Expected negligible effect on functional CI; no capacity run or timing threshold.",
+  "files": [
+    {
+      "path": "server/test/accounts-payable/apSupplierReferenceCheckers.test.js",
+      "mode": "100644",
+      "blob": "b87b904047da4146d88efff1bdb143fccfea2002",
+      "kind": "functional",
+      "cases": [
+        "Supplier AP reference checks lock payments before invoices and propagate database errors",
+        "Supplier AP checks see current references and only open confirmed invoices block archive"
+      ]
+    },
+    {
+      "path": "server/src/modules/accounts-payable/ApSupplierReferenceCheckers.js",
+      "mode": "100644",
+      "blob": "988351ab95e55379be85c7a2f4db4033d025a133",
+      "kind": "support"
+    }
+  ]
+}

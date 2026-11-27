@@ -4,6 +4,7 @@ export const page = { name: "purchase-orders", path: "/purchasing/purchase-order
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { exportFile } from "quasar";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
@@ -19,6 +20,7 @@ const manage = computed(() => can(session, { permissions: ["purchasing.mgmt"] })
 const SELECTS = ["status", "supplierId", "buyerId", "hasOutstanding"];
 const filters = reactive({ q: "", status: null, supplierId: null, buyerId: null, currencyCode: "", hasOutstanding: null, orderDateFrom: "", orderDateTo: "", expectedDeliveryDateFrom: "", expectedDeliveryDateTo: "" });
 const rows = ref([]);
+const exporting = ref(false), exportError = ref("");
 const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({ value, label }));
 const outstandingOptions = [{ value: "true", label: "仍有未收" }, { value: "false", label: "沒有未收" }];
 const optionsFrom = (id, label) => [...new Map(rows.value.filter((row) => row[id]).map((row) => [String(row[id]), { value: String(row[id]), label: label(row) }])).values()];
@@ -59,12 +61,31 @@ async function fetchRows(params) {
 function apply() { router.replace({ query: Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== null && value !== "")) }); }
 function reset() { router.replace({ query: {} }); }
 function acceptId(value, done) { if (/^[1-9]\d*$/u.test(value) && Number.isSafeInteger(Number(value))) done(value, "add-unique"); }
+async function exportOrders() {
+  if (exporting.value) return;
+  const { sortBy, descending } = pagination();
+  exporting.value = true;
+  exportError.value = "";
+  try {
+    const { blob, fileName, contentType } = await purchasing.exportPurchaseOrders({
+      ...filterQuery.value, sortBy, descending, signal: controller.signal
+    });
+    if (exportFile(fileName || "purchase-orders.csv", blob, contentType) !== true) exportError.value = "無法下載 CSV，請重試";
+  } catch (error) {
+    if (!controller.signal.aborted) exportError.value = error?.message ? `匯出 CSV 失敗。${error.message}` : "匯出 CSV 失敗";
+  } finally {
+    exporting.value = false;
+  }
+}
 </script>
 
 <template>
   <div>
     <PageHeader subtitle="顯示交易快照；可用編號、供應商、SKU 或供應商參考搜尋。">
-      <template #actions><q-btn v-if="manage" color="primary" label="新增採購單" to="/purchasing/purchase-orders/new" /></template>
+      <template #actions>
+        <q-btn flat icon="download" label="匯出 CSV" :loading="exporting" @click="exportOrders" />
+        <q-btn v-if="manage" color="primary" label="新增採購單" to="/purchasing/purchase-orders/new" />
+      </template>
     </PageHeader>
     <div class="q-px-md q-pb-md">
       <div class="row q-col-gutter-md">
@@ -80,6 +101,7 @@ function acceptId(value, done) { if (/^[1-9]\d*$/u.test(value) && Number.isSafeI
         <div class="col-6 col-md-3"><q-input v-model="filters.expectedDeliveryDateTo" label="預計交貨至" type="date" stack-label outlined dense /></div>
       </div>
       <div class="row q-gutter-sm q-mt-md"><q-btn label="搜尋" color="primary" @click="apply" /><q-btn flat label="清除篩選" @click="reset" /></div>
+      <q-banner v-if="exportError" class="bg-negative text-white q-mt-md" role="alert">{{ exportError }}</q-banner>
     </div>
     <div class="q-px-md q-pb-md" aria-live="polite">
       <DataTable :key="tableKey" :fetch="fetchRows" :columns="columns" sticky-actions :initial-pagination="pagination()">

@@ -12,6 +12,8 @@ import {
   isInventoryLotExpired
 } from "./inventoryValidation.js";
 
+const REPORT_ROW_LIMIT = 5_000;
+
 const STOCK_SORTS = Object.freeze({
   skuCode: "s.sku_code",
   skuName: "s.sku_name",
@@ -683,22 +685,49 @@ export class InventoryInquiryService {
     })) };
   }
 
-  async listStocks(input = {}) {
+  listStocks(input = {}) {
+    return this.#readStocks(this.database, input);
+  }
+
+  readStockReport(input, options) {
+    return this.#readReport((tx) => this.#readStocks(tx, input, true), options);
+  }
+
+  readMovementReport(input, options) {
+    return this.#readReport((tx) => this.#readMovements(tx, input, true), options);
+  }
+
+  async #readReport(read, { authorize, signal }) {
+    signal?.throwIfAborted();
+    return this.database.withTransaction(async (tx) => {
+      await authorize(tx);
+      signal?.throwIfAborted();
+      const rows = await read(tx);
+      signal?.throwIfAborted();
+      await authorize(tx);
+      signal?.throwIfAborted();
+      return rows;
+    }, { isolationLevel: "READ COMMITTED", signal });
+  }
+
+  async #readStocks(connection, input, report = false) {
     const currentDate = this.time.fileDate();
     const { page, pageSize, sortColumn, direction, offset } = pageInput(input, STOCK_SORTS, "skuCode");
     const { filters, params, search } = stockFilters(input, currentDate);
     const clause = whereClause(filters);
-    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total${STOCK_FROM}${clause}`, params);
+    const [[count]] = report ? [[null]] : await connection.query(`SELECT COUNT(*) AS total${STOCK_FROM}${clause}`, params);
     const rank = search ? `, CASE WHEN s.sku_code = ? OR EXISTS (
       SELECT 1 FROM item_sku_barcodes barcode
        WHERE barcode.sku_id = s.id AND barcode.normalized_barcode = ?
     ) THEN 0 ELSE 1 END AS search_rank` : "";
     const order = `${search ? "search_rank ASC, " : ""}${sortColumn} ${direction}, b.id ${direction}`;
-    const [rows] = await this.database.query(
+    const [rows] = await connection.query(
       `${STOCK_SELECT}${rank}${STOCK_FROM}${clause} ORDER BY ${order} LIMIT ? OFFSET ?`,
-      [...(search ? [search, normalizedBarcode(search)] : []), ...params, pageSize, offset]
+      [...(search ? [search, normalizedBarcode(search)] : []), ...params, ...(report ? [REPORT_ROW_LIMIT + 1, 0] : [pageSize, offset])]
     );
-    return { items: rows.map((row) => projectStock(row, currentDate)), total: Number(count.total), page, pageSize };
+    if (report && rows.length > REPORT_ROW_LIMIT) throw inventoryError("INVENTORY_REPORT_TOO_LARGE");
+    const items = rows.map((row) => projectStock(row, currentDate));
+    return report ? items : { items, total: Number(count.total), page, pageSize };
   }
 
   async listStockAggregates(input = {}) {
@@ -887,7 +916,11 @@ export class InventoryInquiryService {
     return this.listLots({ ...input, expiryState: input.expiryState ?? "EXPIRED" });
   }
 
-  async listMovements(input = {}) {
+  listMovements(input = {}) {
+    return this.#readMovements(this.database, input);
+  }
+
+  async #readMovements(connection, input, report = false) {
     const page = positiveId(input.page ?? 1, "page");
     const pageSize = positiveId(input.pageSize ?? 20, "pageSize");
     if (pageSize > 100 || page - 1 > Math.floor(Number.MAX_SAFE_INTEGER / pageSize)) invalid("page");
@@ -925,12 +958,14 @@ export class InventoryInquiryService {
     const clause = whereClause(filters);
     const from = ` FROM inventory_movements m JOIN inventory_operation_requests o ON o.id = m.operation_request_id`;
     const countFrom = sourceFilter ? from : " FROM inventory_movements m";
-    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total${countFrom}${clause}`, params);
-    const [rows] = await this.database.query(
+    const [[count]] = report ? [[null]] : await connection.query(`SELECT COUNT(*) AS total${countFrom}${clause}`, params);
+    const [rows] = await connection.query(
       `${MOVEMENT_SELECT}${clause} ORDER BY m.posted_at DESC, m.id DESC LIMIT ? OFFSET ?`,
-      [...params, pageSize, offset]
+      [...params, ...(report ? [REPORT_ROW_LIMIT + 1, 0] : [pageSize, offset])]
     );
-    return { items: rows.map(projectMovement), total: Number(count.total), page, pageSize };
+    if (report && rows.length > REPORT_ROW_LIMIT) throw inventoryError("INVENTORY_REPORT_TOO_LARGE");
+    const items = rows.map(projectMovement);
+    return report ? items : { items, total: Number(count.total), page, pageSize };
   }
 
   async getMovement(movementId) {

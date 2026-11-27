@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "decision": "Functional cases follow Sam's extension 「延續到上線」 in AGENTS.md (#395). PM merge preparation 8bfa9840 and CI administrator owner confirmation 620c4d86 apply to A1 candidate 7c6194bcc8ea4441b848d0ddb829ea541ac34c27. Claude TL independently reviewed the A1 functional candidate 7c6194bcc8ea4441b848d0ddb829ea541ac34c27 (agentmsg 68ff2d9d).",
+  "purpose": "Verify the seven approved AP tables, the four permissions and their system-admin grants, goods receipt references and reservations, invoice and payment balance constraints, immutable audit records, and the installed Business Master impact checker.",
+  "data": "Two cases on the ordinary migrated MySQL fixture. The first reads schema and grants. The second inserts up to two synthetic invoices, two payments, a receipt-line reservation and one audit row in a rolled-back transaction, and probes rejected writes with foreign key checks disabled only on that connection.",
+  "concurrency": "Serial, one connection per case.",
+  "repetitions": "1",
+  "thresholds": "Both cases pass. Exact schema, authorization, constraint, audit and checker assertions. Existing coverage floors remain in place.",
+  "trigger": "Existing ci.yml functional server MySQL shards for admitted PRs and main. Same discovery, workers, jobs and schedule.",
+  "cost": "Two added serial cases in the existing shard. Combined related local validation ran 26 cases in 9 to 10 seconds per timezone. CI time has not been measured.",
+  "files": [
+    {
+      "path": "server/test/integration/apMigrations.integration.test.js",
+      "mode": "100644",
+      "blob": "594d5888e30a98907865495924642dca267ca95c",
+      "kind": "functional",
+      "cases": [
+        "AP installs exactly seven tables and grants the four permissions only to system-admin",
+        "AP balances, invoice reservations, and audit immutability survive direct SQL writes"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0128_seed_ap_permissions.js",
+      "mode": "100644",
+      "blob": "5a84e40fc0009f800f1e63a5fa128401d2cf3e85",
+      "kind": "support"
+    },
+    {
+      "path": "server/database/migrations/0129_create_ap_tables.js",
+      "mode": "100644",
+      "blob": "54cbf3b75df56d6e7abca3631716b2823979d6b2",
+      "kind": "support"
+    },
+    {
+      "path": "server/src/modules/authorization/permissionCatalogue.js",
+      "mode": "100644",
+      "blob": "6cf7414c418559b94cdb4c926327597418b45363",
+      "kind": "support"
+    }
+  ]
+}

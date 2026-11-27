@@ -198,6 +198,8 @@ cp client/.env.example client/.env
   openssl rand -base64 48
   ```
 
+- 正式部署請設 `NODE_ENV=production`、`TZ=UTC`，並以 `APP_TIME_ZONE=Asia/Hong_Kong` 計算業務日期。API 啟動時只接受 `TZ=UTC` 或 `TZ=Etc/UTC`，且程序當下的 UTC 偏移必須為零，以免 MySQL 的 `DATE` 讀取後差一天。設定有誤時，程序會在連線資料庫前結束，原因會寫入 stderr 啟動日誌。只有明確設定 `NODE_ENV=development` 或 `test` 才會警告後繼續。
+
 - 其餘欄位（`DB_HOST`、`DB_USER`……）如果照 Step 3 用 `init.sql` 建立本機資料庫，保留預設值即可。
 
 ### Step 3：準備 MySQL

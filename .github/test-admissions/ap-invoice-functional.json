@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "decision": "Sam extended the functional per-case suspension to production go-live in AGENTS.md (PR #395). CI administrator codex-erp-app-ci-01 requested the A2 scope, pinned cases and a new baseline review in agentmsg 092bc44d. Final exact review and digest registration remain with the CI administrator.",
+  "purpose": "Check supplier invoice numbers, purchase receipt amounts and due dates, reservation release after void, no-PO supplier rules, receipt price override permissions and audit history, and future date rejection before number issuance.",
+  "data": "Three unit cases and four integration cases. The integration file shares one scratch MySQL schema and one HTTP application with three synthetic users, five suppliers, four purchase orders and confirmed receipts, one SKU, two UOMs and one payment term.",
+  "concurrency": "Serial cases and existing CI workers. One pair of simultaneous requests checks that a released receipt can be reserved only once. No additional workers or repeated traffic.",
+  "repetitions": "1",
+  "thresholds": "All seven functional cases pass. Preserve the existing global 92/83/90 thresholds and the 39 per-file coverage floors.",
+  "trigger": "Existing routine server functional test discovery and normal MySQL integration flags, schedules, and workers.",
+  "cost": "The seven case durations totaled approximately 2.53 seconds in UTC and 2.56 seconds in Asia/Hong_Kong in a private preview, including scratch schema setup within the first integration case. CI overhead is unmeasured.",
+  "files": [
+    {
+      "path": "server/test/accounts-payable/apInvoiceDraft.test.js",
+      "mode": "100644",
+      "blob": "0780b854ea7a22067434a5f970b83159b64aa493",
+      "kind": "functional",
+      "cases": [
+        "supplier invoice numbers keep their trimmed display text and validate the expanded uppercase key",
+        "PO amounts use receipt base quantity and half-up four-place math before rounding the invoice total",
+        "AP calculates the initial due date from a common PO snapshot and requires a reason for later changes"
+      ]
+    },
+    {
+      "path": "server/test/integration/apInvoices.integration.test.js",
+      "mode": "100644",
+      "blob": "9fccf62b7a9e386c5a02d52da9cc03b038b155dd",
+      "kind": "functional",
+      "cases": [
+        "AP reserves full receipts, uses PO payment-term snapshots and reopens sources after void",
+        "AP no-PO expenses preserve supplier number uniqueness and require an active supplier at confirmation",
+        "AP restricts receipt price overrides while preserving PO amounts and mixed-term manual due dates",
+        "AP rejects future invoice dates before writing or issuing a number and allows cancelling legacy drafts"
+      ]
+    },
+    {
+      "path": "server/test/integration/supplierScratchDatabase.js",
+      "mode": "100644",
+      "blob": "0a2dd5af62ab5f8b210db47fd4f6641b9439d12a",
+      "kind": "support"
+    }
+  ]
+}
