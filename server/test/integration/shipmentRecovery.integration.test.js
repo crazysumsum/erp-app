@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {readdir} from 'node:fs/promises';
+import { applyLegacyFulfillmentMigrations } from '../fulfillment/applyLegacyFulfillmentMigrations.js';
 import {shipmentDraftFixture} from '../../test/fulfillment/p1CancellationFixture.js';
 import {ShipmentConfirmationService} from '../../src/modules/fulfillment/ShipmentConfirmationService.js';
 import {createApplication} from '../../src/framework/application/createApplication.js';
@@ -23,8 +23,7 @@ const nativeDeadlock=(()=>{
 
 return async function(t){
  const f=await shipmentDraftFixture(t),draft=await f.create(f.body()),eventId=randomUUID(),started=await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
 
 
  let releaseGate,reachGate,scanTransaction=null,scanCommitted=false,prepareTransaction=null,gated=false,takeovers=0,rollbackAcks=0,destroys=0,worker=null,blockerWait=null;
@@ -70,8 +69,7 @@ return async function(t){
  await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  // A fixture-only clock fence models the crashed worker lease expiring, without waiting or changing the application deadline.
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const tables=['sales_orders','sales_order_lines','sales_order_line_reservations','sales_operation_requests','sales_order_status_history','sales_audit_logs','inventory_reservations','inventory_stock_controls','inventory_stock_balances','inventory_allocations','inventory_movements','inventory_operation_requests','inventory_audit_logs','fulfillments','fulfillment_lines','fulfillment_line_reservation_claims','fulfillment_allocations'];
  async function facts(){const result={};for(const table of tables)result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;}
  const before=await facts(),nativeFaults=[];let acknowledgedRootRollbacks=0;
@@ -111,8 +109,7 @@ const twoWorkerFence=(()=>{
 return async function(t){
  const f=await shipmentDraftFixture(t),draft=await f.create(f.body()),eventId=randomUUID(),started=await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
 
  const name='fulfillment.confirmationRecovery';let releaseGate,reachGate,released=false,gated=false,oldOwner=null,replacementOwner=null,oldSignal=null,heldTransaction=null,nativePreparationAcks=0,invalidFrameworkReads=0,destroys=0,firstWorker=null;
  const gate=new Promise(resolve=>{releaseGate=()=>{released=true;resolve();};}),reached=new Promise(resolve=>{reachGate=resolve;}),executors=new WeakMap(),preparations=new WeakSet(),wrapped=new WeakSet();
@@ -150,8 +147,7 @@ const renewalShutdown=(()=>{
 
 return async function(t){
  const f=await shipmentDraftFixture(t),draft=await f.create(f.body()),eventId=randomUUID(),started=await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
 
 
  const noEffectTables=['sales_orders','sales_order_lines','sales_order_line_reservations','sales_operation_requests','sales_order_status_history','sales_audit_logs','inventory_reservations','inventory_stock_controls','inventory_stock_balances','inventory_allocations','inventory_movements','inventory_operation_requests','inventory_audit_logs','fulfillments','fulfillment_lines','fulfillment_line_reservation_claims','fulfillment_allocations','fulfillment_status_history','fulfillment_audit_logs','shipments','shipment_lines','shipment_issue_details','shipment_status_history'];
@@ -194,8 +190,7 @@ return async function(t){
  await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  // A fixture-only clock fence models the crashed worker lease expiring, without waiting or changing the application deadline.
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,'sales.backorderAllocate':{enabled:false},'sales.importWorker':{enabled:false},'sales.quotationExpire':{enabled:false},'sales.confirmationRecovery':{enabled:false},'fulfillment.confirmationRecovery':{intervalMs:300000}}},database:{...source.database,host:f.f.connectionOptions.host,port:f.f.connectionOptions.port,socketPath:f.f.connectionOptions.socketPath,user:f.f.connectionOptions.user,password:f.f.connectionOptions.password,database:f.f.name}}});
  const priorShutdown=f.f.cleanup.shutdown;f.f.cleanup.shutdown=async()=>{const errors=[];try{await app.shutdown('shipment_recovery_case_complete');}catch(error){errors.push(error);}try{await priorShutdown?.();}catch(error){errors.push(error);}if(errors.length)throw new AggregateError(errors,'Owned app and fixture shutdown failed');};await app.start();
  const scheduler=app.services.require('scheduler'),job=scheduler.jobs.get('fulfillment.confirmationRecovery');
@@ -220,8 +215,7 @@ return async function(t){
  const started=await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  // A fixture-only clock fence models the crashed worker lease expiring, without waiting or changing the application deadline.
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const lostConnections=new WeakSet(),executors=new WeakMap(),outcomes=[],terminalReads=[];let rootInserts=0,successWrites=0,ackLosses=0,destroys=0,releases=0;
  const poolFactory=config=>{const pool=createMySqlDatabasePool(config),get=pool.getConnection.bind(pool);pool.getConnection=async()=>{const c=await get(),execute=c.execute.bind(c),query=c.query.bind(c),commit=c.commit.bind(c),destroy=c.destroy.bind(c),release=c.release.bind(c);let succeeded=false;
  c.execute=async(sql,values)=>{const text=typeof sql==='string'?sql:sql.sql,isSuccess=text.includes('UPDATE fulfillment_operation_requests SET status=?')&&values?.[0]==='SUCCEEDED'&&String(values[1])===draft.outcome.id&&String(values[7])===started.operationId;if(text.includes('INSERT INTO inventory_operation_requests')&&values?.[0]==='FULFILLMENT_BATCH_ISSUE'&&values[1]==='FULFILLMENT'&&values[2]==='SHIPMENT'&&values[3]===draft.outcome.id&&values[4]===''&&values[5]===eventId)rootInserts++;if(isSuccess)successWrites++;const result=await execute(sql,values);if(isSuccess&&result[0].affectedRows===1)succeeded=true;return result;};
@@ -254,8 +248,7 @@ return async function(t){
  const f=await shipmentDraftFixture(t),draft=await f.create(f.body()),eventId=randomUUID();
  await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
 
  await f.db.execute('UPDATE customer_addresses SET version=version+1,updated_at=? WHERE id=?',[f.s.now+1,f.s.addressId]);
  const tables=['sales_orders','sales_order_lines','sales_order_line_reservations','sales_operation_requests','sales_order_status_history','sales_audit_logs','inventory_reservations','inventory_stock_controls','inventory_stock_balances','inventory_allocations','inventory_movements','inventory_operation_requests','inventory_audit_logs','fulfillments','fulfillment_lines','fulfillment_line_reservation_claims','fulfillment_allocations'];
@@ -299,8 +292,7 @@ return async function(t){
  await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  // A fixture-only clock fence models the crashed worker lease expiring, without waiting or changing the application deadline.
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  await f.db.execute("UPDATE users SET status='disabled' WHERE id=?",[f.userId]);
  const ownerTables=['sales_orders','sales_order_lines','sales_order_line_reservations','sales_operation_requests','sales_order_status_history','sales_audit_logs','inventory_reservations','inventory_stock_controls','inventory_stock_balances','inventory_allocations','inventory_movements','inventory_operation_requests','inventory_audit_logs','fulfillments','fulfillment_lines','fulfillment_line_reservation_claims','fulfillment_allocations'];
  async function ownerFacts(){const result={};for(const table of ownerTables)result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;}
@@ -327,8 +319,7 @@ const interruptedFailureRecord=(()=>{
 return async function(t){
  const f=await shipmentDraftFixture(t),draft=await f.create(f.body()),eventId=randomUUID();await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
 
 
  await f.db.execute("UPDATE users SET status='disabled' WHERE id=?",[f.userId]);
@@ -368,8 +359,7 @@ return async function(t){
  await f.execute(()=>new ShipmentConfirmationService(f.options).startConfirmation(draft.outcome.id,{eventId,version:1}));
  // A fixture-only clock fence models the crashed worker lease expiring, without waiting or changing the application deadline.
  await f.db.execute('UPDATE fulfillment_operation_requests SET lease_expires_at=0,attempt_count=10 WHERE event_id=?',[eventId]);
- const directory=new URL('../../database/migrations/',import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const tables=['sales_orders','sales_order_lines','sales_order_line_reservations','sales_operation_requests','sales_order_status_history','sales_audit_logs','inventory_reservations','inventory_stock_controls','inventory_stock_balances','inventory_allocations','inventory_movements','inventory_operation_requests','inventory_audit_logs','fulfillments','fulfillment_lines','fulfillment_line_reservation_claims','fulfillment_allocations'];
  async function facts(){const result={};for(const table of tables)result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;}
  const before=await facts(),messages=[],logger=Object.fromEntries(['debug','info','warn','error'].map(level=>[level,async(event,message,context)=>{messages.push({level,event,context});}]));

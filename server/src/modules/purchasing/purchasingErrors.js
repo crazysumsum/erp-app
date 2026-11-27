@@ -23,6 +23,7 @@ export const PURCHASING_ERROR_STATUS = Object.freeze({
   BIN_INVALID: 409,
   BIN_WAREHOUSE_MISMATCH: 409,
   GR_STATE_CONFLICT: 409,
+  GR_INVOICE_SOURCE_MISMATCH: 409,
   GR_REVERSAL_INVOICED: 409,
   GR_REVERSAL_QUANTITY_EXCEEDED: 409,
   PO_LINE_NOT_RECEIVABLE: 409,
@@ -41,6 +42,7 @@ export const PURCHASING_ERROR_STATUS = Object.freeze({
   DOCUMENT_SEQUENCE_EXHAUSTED: 409,
   PURCHASING_EVENT_CONFLICT: 409,
   CONCURRENT_OPERATION: 409,
+  PURCHASING_EXPORT_TOO_LARGE: 422,
   TRANSACTION_OUTCOME_UNKNOWN: 500,
   PURCHASING_DEPENDENCY_UNAVAILABLE: 503
 });
@@ -64,6 +66,7 @@ const MESSAGES = Object.freeze({
   BIN_INVALID: "庫位目前不可使用",
   BIN_WAREHOUSE_MISMATCH: "庫位不屬於指定倉庫",
   GR_STATE_CONFLICT: "收貨單目前的狀態不允許這個操作，請重新整理",
+  GR_INVOICE_SOURCE_MISMATCH: "同一張發票的收貨單必須屬於同一供應商及幣別",
   GR_REVERSAL_INVOICED: "此收貨單已有有效的應付發票，取消或作廢發票後才能沖銷",
   GR_REVERSAL_QUANTITY_EXCEEDED: "沖銷數量超過扣除已沖銷及已退回後的實收數量",
   PO_LINE_NOT_RECEIVABLE: "採購單行不屬於這張採購單或已關閉，不能收貨",
@@ -82,6 +85,7 @@ const MESSAGES = Object.freeze({
   DOCUMENT_SEQUENCE_EXHAUSTED: "本月文件編號已用盡，請聯絡系統管理員",
   PURCHASING_EVENT_CONFLICT: "同一操作編號已用於不同內容，請重新整理後再試",
   CONCURRENT_OPERATION: "資料正被其他操作更新，請重新整理後再試",
+  PURCHASING_EXPORT_TOO_LARGE: "一次最多匯出 50,000 張採購單，請縮小篩選範圍",
   TRANSACTION_OUTCOME_UNKNOWN: "未能確認操作結果，請先查詢操作狀態，不要更換操作編號重送"
 });
 

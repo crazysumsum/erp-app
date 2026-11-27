@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "decision": "Sam assigned the UTC startup guard via PM (0ebd80e1); the per-case functional admission suspension is in force. Independent TL review 07172877 passed product revision 32df5be88afde5c917f929020bc8b646de79188c. CI administrator requested these file bindings in 7428a38b. Production key guard pin refresh. PM assignment f11ea60e. Independent TL review 7854ccfc of product revision 3011abe02c1650ef4451cf784b4c6b6f6065d920. CI administrator precheck de5ef8a1 assigned the inputs to these receipts. The UTC regression isolates its JWT and bank settings, and the environment template documents fresh production keys. Its original four cases, timeouts and workload are retained.",
+  "purpose": "Reject an unsafe Node process time zone before a production API can read MySQL DATE values. Keep explicit development and test processes usable in both time zones.",
+  "data": "Four functional tests exercise ten sequential CLI launches with synthetic environment values and deliberately invalid subsequent application configuration. The CLI exits before database access. Existing Fulfillment fixtures only declare NODE_ENV=test for their API children.",
+  "concurrency": "The new test file starts one subprocess at a time. Existing functional runner worker counts apply.",
+  "repetitions": "Each new case runs once per existing server functional suite. Existing Fulfillment tests run at their established frequency.",
+  "thresholds": "Unsafe production configurations exit 1 with the configured TZ, actual offset and remediation. Both UTC settings reach application validation. Explicit non-production modes warn and continue. Existing assertions and coverage floors are preserved.",
+  "trigger": "Existing server functional test discovery on ordinary PR and main runs. The existing Fulfillment P0 browser profile uses the same two cases and trigger.",
+  "cost": "About 0.9 seconds for the new test bodies locally. CI incremental cost estimated at a few seconds on an existing server worker. No new job or capacity workload.",
+  "files": [
+    {
+      "path": "server/test/serverTimeZoneStartup.test.js",
+      "mode": "100644",
+      "blob": "fc727048b97182429022888d45550a77513f1080",
+      "kind": "functional",
+      "cases": [
+        "production and unspecified environments reject unsafe process time zones before application setup",
+        "a UTC label with a nonzero runtime offset still fails closed",
+        "both permitted UTC settings reach application configuration in production",
+        "explicit test and development modes warn and continue in Hong Kong time"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/fulfillmentConfig.test.js",
+      "mode": "100644",
+      "blob": "40a26be04978e646e31c5abd74c03b5059cc1f39",
+      "kind": "functional",
+      "cases": [
+        "invalid Fulfillment environment configuration stops the actual server before database startup or listening"
+      ]
+    },
+    {
+      "path": "server/test/fulfillment/fulfillmentLockContext.test.js",
+      "mode": "100644",
+      "blob": "5e8612fa958a12515360afeca68dccec269fb41b",
+      "kind": "functional",
+      "cases": [
+        "P0 invalid activation fails actual startup before database access/listen"
+      ]
+    },
+    {
+      "path": "client/e2e/fulfillment-shipping-management/playwright.config.js",
+      "mode": "100644",
+      "blob": "14cf1f11260fcf0019fd144ed46cb370cf81a016",
+      "kind": "functional",
+      "cases": [
+        "P0 permissions remain independent in the real role UI and new public errors are localized",
+        "HD014 real browser shows withdrawal-history409, clears pending state and preserves Cancel"
+      ]
+    },
+    {
+      "path": "server/.env.example",
+      "mode": "100644",
+      "blob": "0bc36a80d5f63668820815f7cbe6a28fed5cec0b",
+      "kind": "support"
+    }
+  ]
+}

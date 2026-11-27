@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam's explicit decision in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f (call_cb2041d1c4bd4425b8747c97b7046ed2, relayed by the PM in agentmsg 7f5cada8) approving ADMISSION_PROPOSAL.md sha256 3e97d26155aafb688e04140cc2073eb0f1de1b69a0fdc2b0aa2567d83ea2663b: 11 new cases (7 unit, 1 table, 3 integration), I1 and I2 rewritten, 3 existing cases with 6 assertion lines changed, at most 6 POs and 5 GR rows per case; enablement policy limited B, with no shared or production 0119 or enablement under this decision. The author does not approve this receipt; the trusted approval administrator must independently verify that answer and these blobs before registering the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending. Receives the functional-only 2026-11-19 through 2026-11-26 Taipei umbrella decision (Sam: 「暫停 7 天」, PM agentmsg f3f4c3c8); non-author review, green functional CI, and external administrator registration apply to this exact revision.",
-  "purpose": "The production ever-confirmed reader answers exactly true or false from a fully validated goods_receipts rowset under the PO root lock, or throws a typed 503; withdraw confirmation and cancel succeed only when the PO never had a confirmed GR; allowedActions lists cancel and withdrawConfirmation from the has_confirmed_receipt flag Refresh the PO inquiry source pin to account for the purchase UOM projection and operation lookup; existing ever-confirmed tests continue to run. Refresh the inquiry service support pin for the TASK-037 overdue scope and existing PO date fallback. Refresh the range filter for the outstanding route; line delivery dates take precedence over the PO header delivery date.",
-  "data": "Per case at most 6 synthetic POs and 5 goods_receipts rows (G6); other integration cases at most 3 POs and 1 GR; unit cases use a fake tx with at most 2 inline rows Existing case registration and fixture counts are unchanged. Reader case registrations and fixture sizes are unchanged. The new HTTP workload is recorded in the receipt-server owner.",
+  "decision": "Sam's explicit decision in PM chat 01a0e71b-fccb-7c81-b9fe-ed817cc58e1f (call_cb2041d1c4bd4425b8747c97b7046ed2, relayed by the PM in agentmsg 7f5cada8) approving ADMISSION_PROPOSAL.md sha256 3e97d26155aafb688e04140cc2073eb0f1de1b69a0fdc2b0aa2567d83ea2663b: 11 new cases (7 unit, 1 table, 3 integration), I1 and I2 rewritten, 3 existing cases with 6 assertion lines changed, at most 6 POs and 5 GR rows per case; enablement policy limited B, with no shared or production 0119 or enablement under this decision. The author does not approve this receipt; the trusted approval administrator must independently verify that answer and these blobs before registering the digest TASK-033 functional-only successor under Sam's Taipei 2026-11-19 to 2026-11-26 instruction. Non-author review and admission administrator approval are pending. Receives the functional-only 2026-11-19 through 2026-11-26 Taipei umbrella decision (Sam: 「暫停 7 天」, PM agentmsg f3f4c3c8); non-author review, green functional CI, and external administrator registration apply to this exact revision. Purchase-order report follows Sam's functional-only suspension through production go-live (PR #395). PM 42e2bc34 and CI aa3997a1 direct preparation after P1 on actual main 3bb47ef2e7e45936f068328897f5ef23a716ff7b with reviewed report source merge 73f653a373118bf43290b64f121d6955677daedd. Independent review and CI administrator registration of the candidate receipts are required before an ordinary PR in the assigned window.",
+  "purpose": "The production ever-confirmed reader answers exactly true or false from a fully validated goods_receipts rowset under the PO root lock, or throws a typed 503; withdraw confirmation and cancel succeed only when the PO never had a confirmed GR; allowedActions lists cancel and withdrawConfirmation from the has_confirmed_receipt flag Refresh the PO inquiry source pin to account for the purchase UOM projection and operation lookup; existing ever-confirmed tests continue to run. Refresh the inquiry service support pin for the TASK-037 overdue scope and existing PO date fallback. Refresh the range filter for the outstanding route; line delivery dates take precedence over the PO header delivery date. The purchase-order CSV matches list filters, ordering and saved customer-facing fields, protects formula-like values and records successful export counts.",
+  "data": "Per case at most 6 synthetic POs and 5 goods_receipts rows (G6); other integration cases at most 3 POs and 1 GR; unit cases use a fake tx with at most 2 inline rows Existing case registration and fixture counts are unchanged. Reader case registrations and fixture sizes are unchanged. The new HTTP workload is recorded in the receipt-server owner. One functional integration case with four synthetic POs already using the inquiry fixture. It verifies two matching rows, a header-only response, two rejection paths and audit row counts.",
   "concurrency": "1",
   "repetitions": "1",
   "thresholds": "All cases pass; coverage floors unchanged; no timing threshold",
-  "trigger": "The existing ci.yml triggers: unit cases in the existing server test job, integration cases in the existing MySQL integration shards; every admitted PR dispatch, every push to main and the weekly schedule; no new job",
-  "cost": "Not measured; no capacity workload",
+  "trigger": "The existing ci.yml triggers: unit cases in the existing server test job, integration cases in the existing MySQL integration shards; every admitted PR dispatch, every push to main and the weekly schedule; no new job The one purchase-order CSV case runs once through the existing functional server integration discovery.",
+  "cost": "Not measured; no capacity workload No separate job or capacity workload. Incremental CI time unmeasured. Local Chromium CSV proof remains outside routine CI discovery.",
   "files": [
     {
       "path": "server/test/purchasing/goodsReceiptFacts.test.js",
@@ -51,7 +51,7 @@
     {
       "path": "server/test/integration/purchasingInquiry.integration.test.js",
       "mode": "100644",
-      "blob": "61efbd6d11ed0967ac69a2ada924d74571f897fb",
+      "blob": "155224abdde0b4e93da2eaab36c6a453a1383d83",
       "kind": "functional",
       "cases": [
         "列表預設按更新時間同 ID 倒序，分頁穩定；summary 係交易快照同安全欄位，allowedActions 跟 DB 權限",
@@ -61,7 +61,8 @@
         "列表 query 數量固定，唔跟 PO 同 Line 數量增加",
         "詳情回交易快照同逐行進度，目前主資料另外放；只回有分別嘅，唔露 Supplier 內部欄位",
         "名稱配中超過 100 個時，完全相符嘅 Supplier code 同 SKU code 唔會畀上限截走",
-        "唔存在嘅 ID 回一致 404；撤咗權嘅 token 讀唔到"
+        "唔存在嘅 ID 回一致 404；撤咗權嘅 token 讀唔到",
+        "採購報表 CSV 沿用列表篩選及排序、輸出交易快照，並防止公式注入"
       ]
     },
     {
@@ -98,9 +99,15 @@
     {
       "path": "server/src/modules/purchasing/PurchasingInquiryService.js",
       "mode": "100644",
-      "blob": "572ab7ca832deddd5ceea20627b5e96a14cffc1c",
+      "blob": "fd1842d56ed57b919fd527b622100b96fcfd6942",
       "kind": "support",
       "cases": []
+    },
+    {
+      "path": "server/src/handlers/purchase-orders/exportPurchaseOrdersHandler.js",
+      "mode": "100644",
+      "blob": "d0d13d7102021d1db4561a0896a07d39d7bb203f",
+      "kind": "support"
     }
   ]
 }

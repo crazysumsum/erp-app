@@ -198,6 +198,10 @@ cp client/.env.example client/.env
   openssl rand -base64 48
   ```
 
+- 每個正式環境都要自行產生新的 JWT 與銀行金鑰。JWT 使用上方指令；銀行加密與查詢各執行一次 `openssl rand -base64 32`，Customer 與 Supplier 使用相同的對應 key ring。API 會檢查所有版本，包含輪替中的舊金鑰。既有資料若用過公開金鑰，請先依既有銀行金鑰輪替程序完成重加密及查詢索引更新，再移除舊版本。
+
+- 正式部署請設 `NODE_ENV=production`、`TZ=UTC`，並以 `APP_TIME_ZONE=Asia/Hong_Kong` 計算業務日期。API 啟動時只接受 `TZ=UTC` 或 `TZ=Etc/UTC`，且程序當下的 UTC 偏移必須為零，以免 MySQL 的 `DATE` 讀取後差一天。設定有誤時，程序會在連線資料庫前結束，原因會寫入 stderr 啟動日誌。只有明確設定 `NODE_ENV=development` 或 `test` 才會警告後繼續。
+
 - 其餘欄位（`DB_HOST`、`DB_USER`……）如果照 Step 3 用 `init.sql` 建立本機資料庫，保留預設值即可。
 
 ### Step 3：準備 MySQL

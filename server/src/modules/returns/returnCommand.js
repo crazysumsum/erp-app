@@ -34,7 +34,13 @@ export function normalizeReturnDraft(input, kind) {
   if (!Number.isFinite(timestamp) || new Date(timestamp).toISOString().slice(0, 10) !== returnDate) throw invalid("returnDate");
   if (typeof input.reason !== "string" || !input.reason.isWellFormed()) throw invalid("reason");
   const reason = input.reason.trim();
-  if ([...reason].length < 1 || [...reason].length > 500 || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/u.test(reason)) throw invalid("reason");
+  const characters = [...reason];
+  if (characters.length < 1 || characters.length > 500) throw invalid("reason");
+  for (const character of characters) {
+    const code = character.codePointAt(0);
+    const whitespace = code === 9 || code === 10 || code === 13;
+    if ((code < 32 && !whitespace) || code === 127) throw invalid("reason");
+  }
   if (!Array.isArray(input.lines) || input.lines.length < 1 || input.lines.length > MAX_RETURN_LINES) throw invalid("lines");
   const lines = input.lines.map((line, index) => {
     const field = `lines.${index}`;

@@ -1,6 +1,6 @@
 import process from "node:process";
 import {randomUUID} from "node:crypto";
-import {readdir} from "node:fs/promises";
+import { applyLegacyFulfillmentMigrations } from "../../../server/test/fulfillment/applyLegacyFulfillmentMigrations.js";
 import {test,expect} from "@playwright/test";
 import {p1Fixture} from "../../../server/test/fulfillment/p1Fixture.js";
 import {cancellationFacts} from "../../../server/test/fulfillment/p1CancellationFixture.js";
@@ -14,8 +14,7 @@ test.describe.serial("P1 real fulfillment operator and view-only flows",()=>{
  test.beforeAll(async()=>{
   if(process.env.DB_INTEGRATION_TESTS!=="1"||!Number(process.env.FULFILLMENT_TEST_API_PORT))throw new Error("Explicit isolated P1 browser runtime required");
   f=await p1Fixture({after:fn=>cleanup.push(fn)});
-  const directory=new URL("../../../server/database/migrations/",import.meta.url),installed=new Set([92,93,95,96,98]);
-  for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+  await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
   password="Synthetic-"+randomUUID()+"-Aa1!";
   await f.db.execute("UPDATE users SET password_hash=? WHERE id=?",[await hashPassword(password),f.userId]);
   const name="view-"+randomUUID().slice(0,8),role=await f.s.insert("roles",{name,created_at:f.s.now});

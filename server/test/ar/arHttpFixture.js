@@ -6,7 +6,7 @@
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { readdir } from "node:fs/promises";
+import { applyLegacyFulfillmentMigrations } from "../fulfillment/applyLegacyFulfillmentMigrations.js";
 import { after } from "node:test";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
@@ -114,12 +114,7 @@ export async function arHttpShipmentFixture(t, { includeSecond = false, withBill
     await shipment.s.insert("customer_address_purposes", { address_id: shipment.s.addressId, customer_id: shipment.s.customerId,
       purpose_code: "billing", is_default: 1, created_at: shipment.s.now, updated_at: shipment.s.now });
   }
-  const directory = new URL("../../database/migrations/", import.meta.url);
-  const installed = new Set([92, 93, 95, 96, 98]);
-  const migrations = (await readdir(directory))
-    .filter((name) => /^[0-9]{4}_.*\.js$/u.test(name) && Number(name.slice(0, 4)) > 88 && !installed.has(Number(name.slice(0, 4))))
-    .sort();
-  for (const name of migrations) await (await import(new URL(name, directory).href)).up(shipment.db);
+  await applyLegacyFulfillmentMigrations(shipment.db, [92, 93, 95, 96, 98]);
   await shipment.db.query("UPDATE sales_order_lines SET unit_selling_price = 40, line_amount = 200 WHERE id = ?", [shipment.s.lineId]);
   const first = (await shipment.create(shipment.body())).outcome.id;
   const shipmentIds = [first];
