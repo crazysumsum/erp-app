@@ -1,7 +1,9 @@
 import { BaseService } from "../../framework/services/BaseService.js";
 import { ShipmentConfirmationService,normalizeShipmentConfirmationCommand } from "../../modules/fulfillment/ShipmentConfirmationService.js";
 import { ShipmentInquiryService } from "../../modules/fulfillment/ShipmentInquiryService.js";
-import { ShipmentReversalService } from "../../modules/fulfillment/ShipmentReversalService.js";
+import { normalizeShipmentReversal } from "../../modules/fulfillment/shipmentReversalCommand.js";
+import { fulfillmentOperationHash } from "../../modules/fulfillment/fulfillmentOperationHash.js";
+import { createShipmentReversalService } from "./createShipmentReversalService.js";
 import { FulfillmentTransactionService } from "../../modules/fulfillment/FulfillmentTransactionService.js";
 import { requireFulfillmentActor } from "../../modules/fulfillment/fulfillmentAuthorization.js";
 import { fulfillmentInteger } from "../../modules/fulfillment/fulfillmentValidation.js";
@@ -20,6 +22,7 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
   super(input);this.database=this.services.require("mysqldatabase");
   const options={database:this.database,time:this.services.require("time"),logger:this.services.require("logging").logger};
   this.time=options.time;this.transactions=new FulfillmentTransactionService(options);this.#confirmation=new ShipmentConfirmationService({...options,operationLeaseMs:this.config.fulfillment.operationLeaseMs});this.#inquiry=new ShipmentInquiryService(options);
+  this.#reversal=createShipmentReversalService({...options,operationLeaseMs:this.config.fulfillment.operationLeaseMs});
  }
  #detach(record){clearTimeout(record.timer);record.parentSignal?.removeEventListener("abort",record.abort);}
  #finish(record){this.#detach(record);this.#active.delete(record);if(this.#events.get(record.eventId)===record)this.#events.delete(record.eventId);record.finish();}
@@ -34,9 +37,9 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
   let finish;const controller=new AbortController(),record={deadline,controller,parentSignal:context?.signal,abort:()=>controller.abort(),done:new Promise(resolve=>{finish=resolve;}),finish:()=>finish()};
   this.#active.add(record);record.parentSignal?.addEventListener("abort",record.abort,{once:true});record.timer=setTimeout(record.abort,Math.max(0,deadline-performance.now()));return record;
  }
- async authorizeRequest(){
+ async authorizeRequest(permission="fulfillment.operation"){
   const context=this.database.context?.get(),record=this.#beginRequest(context);
-  try{await this.database.context.storage.run({...context,signal:record.controller.signal,databaseTransaction:null},()=>this.transactions.withTransaction(tx=>requireFulfillmentActor(this.database,tx,"fulfillment.operation")));if(this.#closed||record.controller.signal.aborted||performance.now()>=record.deadline)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");return true;}
+  try{await this.database.context.storage.run({...context,signal:record.controller.signal,databaseTransaction:null},()=>this.transactions.withTransaction(tx=>requireFulfillmentActor(this.database,tx,permission)));if(this.#closed||record.controller.signal.aborted||performance.now()>=record.deadline)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");return true;}
   finally{this.#finish(record);}
  }
  #launch(record,started,claims){
@@ -44,6 +47,7 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
   record.timer=setTimeout(()=>record.controller.abort(),Math.min(this.config.fulfillment.operationLeaseMs,60000));
   const context={auth:{claims},signal:record.controller.signal,databaseTransaction:null};
   record.promise=Promise.resolve().then(()=>this.database.context.storage.run(context,async()=>{
+   if(record.operationType==="REVERSE")return started.outcome==="REVERSED"?started:this.#reversal.completeReversalPhaseB(started,{signal:record.controller.signal});
    const terminal=started.outcome==="SHIPPED"?started:await this.#confirmation.completeConfirmation(started,{signal:record.controller.signal});
    return this.#inquiry.confirmationResult(terminal);
   })).then(data=>({data}),error=>({error})).finally(()=>this.#finish(record));
@@ -56,26 +60,37 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
     if(signal?.aborted)resolve(null);else signal?.addEventListener("abort",onAbort,{once:true});
    })]);
    if(outcome?.data)return {statusCode:200,data:outcome.data};
-   if(outcome?.error?.statusCode<500&&outcome.error.code!=="CONCURRENT_OPERATION")throw outcome.error;
-   if(record.started.outcome!=="SHIPPING")throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE",{correlationId:record.started.correlationId,statusUrl:"/api/v1/fulfillment-operations/by-event/"+record.eventId});
+   if(record.operationType==="SHIP"&&outcome?.error?.statusCode<500&&outcome.error.code!=="CONCURRENT_OPERATION")throw outcome.error;
+   if(!["SHIPPING","REVERSING"].includes(record.started.outcome))throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE",{
+    ...(record.started.correlationId?{correlationId:record.started.correlationId}:{}),statusUrl:"/api/v1/fulfillment-operations/by-event/"+record.eventId
+   });
    return {statusCode:202,data:record.started};
   }finally{clearTimeout(timer);signal?.removeEventListener("abort",onAbort);}
  }
  async confirm(shipmentId,input){
-  fulfillmentInteger(shipmentId);const intent=normalizeShipmentConfirmationCommand(input),context=this.database.context?.get(),record=this.#beginRequest(context);
-  Object.assign(record,{eventId:intent.eventId,shipmentId,version:intent.version});let launched=false;
+  return this.#runCommand(shipmentId,normalizeShipmentConfirmationCommand(input),"SHIP");
+ }
+ async reverse(shipmentId,input){
+  return this.#runCommand(shipmentId,normalizeShipmentReversal(input),"REVERSE");
+ }
+ async #runCommand(shipmentId,intent,operationType){
+  fulfillmentInteger(shipmentId);
+  const reversing=operationType==="REVERSE",permission=reversing?"fulfillment.reverse":"fulfillment.operation";
+  const payloadHash=fulfillmentOperationHash({operationType,target:{type:"SHIPMENT",id:shipmentId},payload:intent});
+  const context=this.database.context?.get(),record=this.#beginRequest(context);
+  Object.assign(record,{eventId:intent.eventId,operationType,payloadHash});let launched=false;
   const phaseAController=record.controller,deadline=record.deadline;
   try{
-   const actor=await this.database.context.storage.run({...context,signal:phaseAController.signal,databaseTransaction:null},()=>this.transactions.withTransaction(tx=>requireFulfillmentActor(this.database,tx,"fulfillment.operation")));
+   const actor=await this.database.context.storage.run({...context,signal:phaseAController.signal,databaseTransaction:null},()=>this.transactions.withTransaction(tx=>requireFulfillmentActor(this.database,tx,permission)));
    if(this.#closed||phaseAController.signal.aborted||performance.now()>=deadline)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
    record.actorId=String(actor.id);const existing=this.#events.get(intent.eventId);
    if(existing){
-    if(existing.shipmentId!==shipmentId||existing.version!==intent.version||existing.actorId!==record.actorId)throw fulfillmentError("IDEMPOTENCY_CONFLICT");
+    if(existing.payloadHash!==payloadHash||existing.actorId!==record.actorId)throw fulfillmentError("IDEMPOTENCY_CONFLICT");
     return await this.#wait(existing,deadline,phaseAController.signal);
    }
    const claims={sub:record.actorId,roles:[...actor.roles],permissions:[...actor.permissions]};
    let started;
-   try{started=await this.database.context.storage.run({auth:{claims},signal:phaseAController.signal,databaseTransaction:null},()=>this.#confirmation.startConfirmation(shipmentId,intent));}
+   try{started=await this.database.context.storage.run({auth:{claims},signal:phaseAController.signal,databaseTransaction:null},()=>reversing?this.#reversal.startReversal(shipmentId,intent):this.#confirmation.startConfirmation(shipmentId,intent));}
    catch(error){
     if(error?.statusCode>=400&&error.statusCode<500)throw error;
     const failure=fulfillmentError(error?.code==="DATABASE_TRANSACTION_INDETERMINATE"?"DATABASE_TRANSACTION_INDETERMINATE":"FULFILLMENT_DEPENDENCY_UNAVAILABLE",{statusUrl:"/api/v1/fulfillment-operations/by-event/"+intent.eventId});failure.cause=error;throw failure;
@@ -83,6 +98,7 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
    this.#detach(record);
    if(this.#closed)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
    if(started.outcome==="SHIPPING"&&!this.#confirmation.ownsStartedConfirmation(started))return {statusCode:202,data:started};
+   if(started.outcome==="REVERSING"&&!this.#reversal.ownsStartedReversal(started))return {statusCode:202,data:started};
    this.#events.set(intent.eventId,record);this.#launch(record,started,claims);launched=true;
    return await this.#wait(record,deadline,context?.signal);
   }finally{if(!launched)this.#finish(record);}
@@ -91,7 +107,6 @@ export class ShipmentConfirmationRuntimeService extends BaseService {
   const context=this.database.context?.get(),record=this.#beginRequest(context);
   try{
    // Keep the original-instance capability private; request auth is read afresh through this shared context.
-   this.#reversal??=new ShipmentReversalService({database:this.database,time:this.time,logger:this.services.require("logging").logger,operationLeaseMs:this.#confirmation.operations.leaseMs});
    const preparation=await this.database.context.storage.run({...context,signal:record.controller.signal,databaseTransaction:null},()=>this.#reversal.prepareReversalReadOnly(shipmentId,input,started));
    if(this.#closed||record.controller.signal.aborted||performance.now()>=record.deadline)throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
    return preparation;

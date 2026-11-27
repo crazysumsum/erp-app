@@ -15,6 +15,16 @@ function summary(value){
  return parsed;
 }
 
+function validateMovementIds(ids){
+ if(!Array.isArray(ids)||ids.length===0||ids.length>5000||new Set(ids).size!==ids.length)unavailable();
+ try{for(const movementId of ids)fulfillmentInteger(movementId);}catch{unavailable();}
+ return Object.freeze(ids);
+}
+
+export function shipmentReversalIssueIds(issues){
+ return validateMovementIds(ordered(issues).map(issue=>String(issue.inventory_movement_id)));
+}
+
 // Durable facts reconstruct the original command; they do not reconstruct an old executor or capability.
 export async function readDurableShipmentReversal(database,tx,eventId,operation){
  assertFulfillmentTransaction(database,tx);
@@ -26,7 +36,14 @@ export async function readDurableShipmentReversal(database,tx,eventId,operation)
  const shipmentId=id(operation.target_id),actorId=id(operation.initiated_by);
  const [rows]=await tx.query("SELECT * FROM shipment_reversals WHERE event_id=? LIMIT 2",[eventId]);
  if(rows.length!==1)unavailable();const reversal=rows[0],before=summary(reversal.before_summary);
- if(Object.keys(before).sort().join(",")!=="fulfillmentId,registryVersion,shipmentId,status,version"||before.shipmentId!==shipmentId||before.status!=="SHIPPED"||typeof before.registryVersion!=="string"||!before.registryVersion||
+ const keys=Object.keys(before).sort().join(",");
+ let issueCost;
+ if(keys==="fulfillmentId,issueCost,registryVersion,shipmentId,status,summaryVersion,version"){
+  issueCost=summary(before.issueCost);
+  if(before.summaryVersion!==2||Object.keys(issueCost).sort().join(",")!=="enabled,movementIds"||issueCost.enabled!==true)unavailable();
+  validateMovementIds(issueCost.movementIds);
+ }else if(keys!=="fulfillmentId,registryVersion,shipmentId,status,version")unavailable();
+ if(before.shipmentId!==shipmentId||before.status!=="SHIPPED"||typeof before.registryVersion!=="string"||!before.registryVersion||
     id(reversal.shipment_id)!==shipmentId||id(reversal.created_by)!==actorId||reversal.correlation_id!==operation.correlation_id||Number(reversal.goods_under_company_control)!==1||Number(reversal.goods_returned_to_original_bins)!==1)unavailable();
  id(before.fulfillmentId);id(reversal.id);
  const command=normalizeShipmentReversal({eventId,version:before.version,reason:reversal.reason,goodsUnderCompanyControl:true,goodsReturnedToOriginalBins:true});
@@ -38,7 +55,7 @@ export async function readDurableShipmentReversal(database,tx,eventId,operation)
  if(start.from_status!=="SHIPPED"||start.to_status!=="REVERSING"||Number(start.version_after)!==command.version+1||id(start.actor_user_id)!==actorId||start.reason!==command.reason||
     audit.target_type!=="SHIPMENT"||id(audit.target_id)!==shipmentId||id(audit.actor_user_id)!==actorId||audit.correlation_id!==request.correlationId||
     Object.keys(after).sort().join(",")!=="fulfillmentId,reversalId,shipmentId,status,version"||after.shipmentId!==shipmentId||after.fulfillmentId!==before.fulfillmentId||after.reversalId!==id(reversal.id)||after.status!=="REVERSING"||after.version!==command.version+1)unavailable();
- return {operation,reversal,request,actorId,fulfillmentId:before.fulfillmentId};
+ return {operation,reversal,request,actorId,fulfillmentId:before.fulfillmentId,registryVersion:before.registryVersion,issueCost};
 }
 
 export function shipmentReversalZeroEffectSource(snapshot,durable){

@@ -9,6 +9,7 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import ShipmentFormPanel from "@/components/fulfillment/ShipmentFormPanel.vue";
 import ShipmentCancelPanel from "@/components/fulfillment/ShipmentCancelPanel.vue";
 import ShipmentConfirmationPanel from "@/components/fulfillment/ShipmentConfirmationPanel.vue";
+import ShipmentReversalDialog from "@/components/fulfillment/ShipmentReversalDialog.vue";
 import {useSessionStore} from "@/stores/session.js";
 import shipment,{shipmentDocumentId,shipmentFailure} from "@/services/shipment.js";
 import {timestamp} from "@/components/fulfillment/fulfillmentPresentation.js";
@@ -37,6 +38,7 @@ watch([()=>route.params.id,()=>session.user?.id,()=>session.permissions.join('|'
  <ShipmentFormPanel v-if="document.status==='DRAFT'&&operate" :fulfillment-id="document.fulfillmentId" :customer-id="document.customer.id" :draft="document" :disabled="commands.confirm||commands.cancel||loading||!!error||!document.allowedActions.includes('update')" @permission-lost="error=shipmentFailure({status:403}).message" @dirty="value=>draftDirty=value" @pending="value=>commands.draft=value" @saved="first" />
  <ShipmentConfirmationPanel :document="document" :disabled="draftDirty||commands.draft||commands.cancel||loading||!!error" @permission-lost="error=shipmentFailure({status:403}).message" @pending="value=>commands.confirm=value" @settled="first" />
  <ShipmentCancelPanel :document="document" :disabled="commands.confirm||commands.draft||loading||!!error" @permission-lost="error=shipmentFailure({status:403}).message" @pending="value=>commands.cancel=value" @saved="first" />
+ <ShipmentReversalDialog :key="`${session.user?.id}:${document.id}`" :document="document" :disabled="loading||!!error" @settled="first" />
  <p v-if="document.status==='CANCELLED'">此草稿已取消，原履約單的實揀工作仍保留；可返回來源履約單建立新出貨草稿。</p>
  </template></section></div></template>
 <style scoped>
