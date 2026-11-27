@@ -27,6 +27,20 @@ export default {
     return httpClient.get("/api/v1/ar-receipts", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getReceipt(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-receipts/${id}`, { signal }); },
+  listCreditNotes({ signal, ...query } = {}) {
+    return httpClient.get("/api/v1/ar-credit-notes", { params: listParams(query), signal }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+  getCreditNote(id, { signal } = {}) { return httpClient.get(`/api/v1/ar-credit-notes/${id}`, { signal }); },
+  listCreditReturnSources(invoiceId, { signal } = {}) {
+    return httpClient.get(`/api/v1/ar-credit-notes/sources/${invoiceId}/returns`, { signal }).then(({ items }) => items);
+  },
+  createCreditNote(payload) { return write("/api/v1/ar-credit-notes", payload); },
+  editCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/edit`, payload); },
+  confirmCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/confirm`, payload); },
+  cancelCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/cancel`, payload); },
+  voidCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/void`, payload); },
+  applyCreditNote(id, payload) { return write(`/api/v1/ar-credit-notes/${id}/applications`, payload); },
+  unapplyCreditNote(id, applicationId, payload) { return write(`/api/v1/ar-credit-notes/${id}/applications/${applicationId}/unapply`, payload); },
   createReceipt(payload) { return write("/api/v1/ar-receipts", payload); },
   confirmReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/confirm`, payload); },
   cancelReceipt(id, payload) { return write(`/api/v1/ar-receipts/${id}/cancel`, payload); },

@@ -12,12 +12,6 @@ import { randomUUID } from "node:crypto";
 import process from "node:process";
 import test from "node:test";
 
-import { up as issueSchema } from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
-import { up as seedArPermissions } from "../../database/migrations/0122_seed_ar_permissions.js";
-import { up as createArTables } from "../../database/migrations/0123_create_ar_tables.js";
-import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
-import { up as addOpeningInvoices } from "../../database/migrations/0126_add_ar_opening_invoices.js";
-import { up as addBillingSnapshot } from "../../database/migrations/0127_add_ar_invoice_billing_snapshot.js";
 import { ArCommandRunner } from "../../src/modules/ar/arCommand.js";
 import { ArInquiryService } from "../../src/modules/ar/ArInquiryService.js";
 import { ArInvoiceService } from "../../src/modules/ar/ArInvoiceService.js";
@@ -28,7 +22,7 @@ import { BusinessMasterRepository } from "../../src/modules/businessMaster/Busin
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
 import { readInvoiceSourcesInTransaction } from "../../src/modules/fulfillment/readInvoiceSourcesInTransaction.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
-import { secondShipment } from "../ar/arShipmentFixture.js";
+import { migrateArShipmentFixture, secondShipment } from "../ar/arShipmentFixture.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
 
 const nativeTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -38,12 +32,7 @@ const code = (expected) => (error) => { assert.equal(error.code, expected, error
 /** 一張訂單（1 行，訂 5 件，行金額由呼叫方設定）及其第一張出貨草稿（3 件）；AR 表及權限已建立，操作者持有三個 ar.* 權限。 */
 async function arFixture(t, { lineAmount, unitPrice }) {
   const f = await shipmentDraftFixture(t);
-  await issueSchema(f.db);
-  await seedArPermissions(f.db);
-  await createArTables(f.db);
-  await addInvoiceLineSalesUom(f.db);
-  await addOpeningInvoices(f.db);
-  await addBillingSnapshot(f.db);
+  await migrateArShipmentFixture(f.db);
   await f.s.insert("customer_address_purposes", { address_id: f.s.addressId, customer_id: f.s.customerId, purpose_code: "billing", is_default: 1,
     created_at: f.s.now, updated_at: f.s.now });
   // AR 的操作者另建一名用戶及角色：改動 fixture 的角色會令 Fulfillment 自己的權限重驗失敗。

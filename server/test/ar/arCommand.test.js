@@ -55,6 +55,8 @@ test("AR document numbers are yearly, six digits, taken under the row lock, and 
   const first = sequence(1);
   assert.equal(await nextDocumentNumber(first.tx, { documentType: "INVOICE", time, nowMs: 5 }), "INV-2031-000001");
   assert.deepEqual(first.statements, [["INSERT", ["INVOICE", 2031, 5]], ["LOCK", ["INVOICE", 2031]], ["UPDATE", [5, "INVOICE", 2031]]]);
+  assert.equal(await nextDocumentNumber(sequence(1).tx, { documentType: "CREDIT_NOTE", time, nowMs: 5 }), "CRN-2031-000001");
+  assert.equal(await nextDocumentNumber(sequence(1).tx, { documentType: "REFUND", time, nowMs: 5 }), "RFD-2031-000001");
   assert.equal(await nextDocumentNumber(sequence(999999).tx, { documentType: "RECEIPT", time, nowMs: 5 }), "RCT-2031-999999");
   const exhausted = sequence(1000000);
   await assert.rejects(nextDocumentNumber(exhausted.tx, { documentType: "RECEIPT", time, nowMs: 5 }), (error) => error.code === "DOCUMENT_SEQUENCE_EXHAUSTED");

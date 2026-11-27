@@ -7,11 +7,11 @@ import test from "node:test";
 
 import { ArBusinessMasterImpactChecker } from "../../src/modules/ar/ArBusinessMasterImpactChecker.js";
 
-function fakeDatabase({ present = 2, rows = [] } = {}) {
+function fakeDatabase({ present = 2, creditPresent = 0, rows = [] } = {}) {
   const calls = [];
   return { calls, async query(sql, params) {
     calls.push({ sql, params });
-    return sql.includes("information_schema.tables") ? [[{ present }]] : [rows];
+    return sql.includes("information_schema.tables") ? [[{ present, credit_present: creditPresent }]] : [rows];
   } };
 }
 const row = (document_type, status, unsettled, reference_count, extra = {}) => ({ document_type, status, unsettled, reference_count,
@@ -43,6 +43,16 @@ test("no AR tables means not installed; no reference, and any payment term, is r
   assert.equal(database.calls.length, 1);
 });
 
+test("credit drafts, credit with a positive available balance and refund drafts count as open currency use", async () => {
+  const database = fakeDatabase({ creditPresent: 2, rows: [
+    row("credit_note", "DRAFT", 1, 1), row("credit_note", "CONFIRMED", 1, 2), row("credit_note", "CONFIRMED", 0, 1),
+    row("credit_note", "VOID", 0, 1), row("refund", "DRAFT", 0, 1), row("refund", "CONFIRMED", 0, 1), row("refund", "CANCELLED", 0, 1)
+  ] });
+  const result = await new ArBusinessMasterImpactChecker({ database }).check({ entityType: "CURRENCY", entityKey: "HKD" });
+  assert.deepEqual([result.openUseCount, result.historicalCount], [4, 4]);
+  assert.deepEqual(database.calls.at(-1).params, ["HKD", "HKD", "HKD", "HKD"]);
+});
+
 test("the watermark changes when a referencing document changes and only then", async () => {
   const mark = (rows) => check({ rows }).then((result) => result.watermark);
   const base = await mark([row("invoice", "DRAFT", 1, 1)]);
@@ -55,11 +65,13 @@ test("the watermark changes when a referencing document changes and only then", 
 
 test("anything it cannot classify or trust fails closed instead of reporting no use", async () => {
   await assert.rejects(check({ rows: [row("invoice", "PAID", 1, 1)] }), /Unclassified AR impact status/u);
-  await assert.rejects(check({ rows: [row("credit_note", "VOID", 0, 1)] }), /Unclassified AR impact status/u);
+  await assert.rejects(check({ creditPresent: 2, rows: [row("refund", "PAID", 0, 1)] }), /Unclassified AR impact status/u);
   await assert.rejects(check({ rows: [row("invoice", "DRAFT", 1, -1)] }), /Invalid AR impact reference_count/u);
   await assert.rejects(check({ rows: [row("invoice", "DRAFT", 1, 1, { max_id: "x" })] }), /Invalid AR impact max_id/u);
   await assert.rejects(check({ rows: [row("invoice", "DRAFT", 1, Number.MAX_SAFE_INTEGER), row("receipt", "DRAFT", 1, 1)] }), /count overflow/u);
   await assert.rejects(check({ present: 1 }), /schema is incomplete/u); // 只有一張表：不可當作沒有引用。
+  await assert.rejects(check({ creditPresent: 1 }), /schema is incomplete/u);
+  await assert.rejects(check({ present: 0, creditPresent: 2 }), /schema is incomplete/u);
   for (const subject of [{ entityType: "CURRENCY", entityKey: "hkd" }, { entityType: "CURRENCY", entityKey: 1 }, { entityType: "PAYMENT_TERM", entityKey: "0" },
     { entityType: "PAYMENT_TERM", entityKey: "1.5" }, { entityType: "CUSTOMER", entityKey: "1" }, {}]) {
     await assert.rejects(check({}, subject), TypeError);
