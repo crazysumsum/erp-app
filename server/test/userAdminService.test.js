@@ -1028,6 +1028,25 @@ test("matching permissions without the protected role cannot reset or disable a 
   assert.deepEqual(database.state.auditRows, []);
 });
 
+for (const operation of ["enable", "update"]) {
+  test(`S-02: ${operation} requires the protected role for an administrator target`, async () => {
+    const database = seedWithAdmin({
+      users: [
+        { id: 10, username: "admin", status: "disabled", display_name: "Admin" },
+        { id: 20, username: "manager", status: "active" }
+      ],
+      userRoles: [[10, SYSTEM_ADMIN.id], [20, STAFF.id]],
+      rolePermissions: [[SYSTEM_ADMIN.id, 100], [STAFF.id, 100]]
+    });
+    const { service } = createService({ database });
+    const command = { actorId: 20, claimedRoles: [STAFF.name], claimedPermissions: ["user.mgmt"], id: 10, reason: "S-02", displayName: "Changed" };
+    await assert.rejects(service[operation](command), { statusCode: 403, code: "PERMISSION_ESCALATION_DENIED" });
+    assert.equal(database.state.users.get(10).status, "disabled");
+    assert.equal(database.state.users.get(10).display_name, "Admin");
+    assert.deepEqual(database.state.auditRows, []);
+  });
+}
+
 test("equal or higher permissions allow administration of a peer account", async () => {
   const oldHash = await hashPassword("Previous-Test-123");
   const manager = { id: 3, name: "manager" };

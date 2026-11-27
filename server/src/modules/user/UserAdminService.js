@@ -293,6 +293,7 @@ export class UserAdminService {
         claimedPermissions
       });
       const target = await this.#requireUser(connection, id);
+      await this.#assertCanManageAccount(connection, actor, id);
       const nowMs = this.time.nowMs();
 
       await connection.execute(
@@ -313,7 +314,7 @@ export class UserAdminService {
       });
 
       return this.#toSummary({ ...target, display_name: String(displayName ?? "") });
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   /**
@@ -440,6 +441,7 @@ export class UserAdminService {
         claimedPermissions
       });
       const target = await this.#requireUser(connection, id);
+      await this.#assertCanManageAccount(connection, actor, id);
 
       if (target.status === "active") {
         return this.#toSummary(target);
@@ -466,7 +468,7 @@ export class UserAdminService {
       });
 
       return this.#toSummary({ ...target, status: "active" });
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   /**
@@ -513,7 +515,7 @@ export class UserAdminService {
         currentRoleIds
       );
       const nextPermissionNames = await this.#permissionNamesForRoleIds(connection, roleIds);
-      if (currentRoleNames.includes(SYSTEM_ADMIN_ROLE) !== nextRoleNames.includes(SYSTEM_ADMIN_ROLE)) {
+      if (currentRoleNames.includes(SYSTEM_ADMIN_ROLE) || nextRoleNames.includes(SYSTEM_ADMIN_ROLE)) {
         assertSystemAdminActor(actor.roles);
       }
       if (nextRoleNames.includes(SYSTEM_ADMIN_ROLE)) assertSystemAdminPermissions(nextPermissionNames);
@@ -612,7 +614,7 @@ export class UserAdminService {
   // --- 內部 ------------------------------------------------------------------
 
   async #assertCanManageAccount(connection, actor, targetId) {
-    // Both callers use SERIALIZABLE so the checked grants stay current through the write.
+    // Callers use SERIALIZABLE so the checked grants stay current through the write.
     const targetRoles = await loadRoleNamesForUser(connection, targetId);
     if (targetRoles.includes(SYSTEM_ADMIN_ROLE)) assertSystemAdminActor(actor.roles);
 
