@@ -1,4 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { applyLegacyFulfillmentMigrations } from "../fulfillment/applyLegacyFulfillmentMigrations.js";
+
+export function migrateArShipmentFixture(db) {
+  return applyLegacyFulfillmentMigrations(db, [92, 93, 95, 96, 98]);
+}
 
 /** 同一訂單行餘下的 2 件：另一張履約、揀貨及出貨草稿（與 Fulfillment reader 的測試同一做法）。 */
 export async function secondShipment(f) {

@@ -14,14 +14,14 @@ export const AR_INVOICE_POLICY = Object.freeze({ name: "hasPermission", options:
 export const AR_RECEIPT_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.receipt.mgmt"] } });
 export const AR_OPENING_POLICY = Object.freeze({ name: "hasPermission", options: { permissions: ["ar.opening.mgmt"] } });
 
-const object = (properties, required = Object.keys(properties)) => ({ type: "object", required, additionalProperties: false, properties });
+export const object = (properties, required = Object.keys(properties)) => ({ type: "object", required, additionalProperties: false, properties });
 export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
-const ID = { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER };
-const TEXT = { type: "string" }, NULLABLE_TEXT = { type: ["string", "null"] }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
-const AMOUNT = { type: "string", pattern: "^\\d+\\.\\d{4}$" }, DATE = { type: "string", format: "date" }, CURRENCY = { type: "string", pattern: "^[A-Z]{3}$" };
-const PAGE = { page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 } };
+export const ID = { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER };
+export const TEXT = { type: "string" }, NULLABLE_TEXT = { type: ["string", "null"] }, TIME = { type: "integer", minimum: 0 }, NULLABLE_TIME = { type: ["integer", "null"], minimum: 0 };
+export const AMOUNT = { type: "string", pattern: "^\\d+\\.\\d{4}$" }, DATE = { type: "string", format: "date" }, CURRENCY = { type: "string", pattern: "^[A-Z]{3}$" };
+export const PAGE = { page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 } };
 const RECEIPT_STATUSES = ["DRAFT", "CONFIRMED", "CANCELLED", "VOID"];
-const actions = (...names) => ({ type: "array", uniqueItems: true, items: { enum: names } });
+export const actions = (...names) => ({ type: "array", uniqueItems: true, items: { enum: names } });
 
 export const ID_PARAMS = Object.freeze(object({ id: ID }));
 export const ALLOCATION_PARAMS = Object.freeze(object({ id: ID, allocationId: ID }));
@@ -68,7 +68,9 @@ export const INVOICE_DETAIL_RESPONSE = Object.freeze(object({
   lines: { type: "array", items: object({ id: ID, lineNo: ID, shipmentId: ID, shipmentLineId: ID, salesOrderId: ID, salesOrderLineId: ID, skuCode: TEXT, skuName: TEXT,
     baseUomCode: TEXT, salesUomCode: TEXT, toBaseFactor: ID, quantity: QUANTITY, unitPrice: AMOUNT, lineAmount: AMOUNT }) },
   allocations: { type: "array", items: object({ id: ID, receiptId: ID, receiptNumber: NULLABLE_TEXT, receiptDate: TEXT, amount: AMOUNT,
-    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) }
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, createdAt: TIME }) },
+  creditAllocations: { type: "array", items: object({ id: ID, creditNoteId: ID, creditNoteNumber: NULLABLE_TEXT, creditDate: TEXT, amount: AMOUNT,
+    status: { enum: ["ACTIVE", "UNAPPLIED"] }, isOrigin: { type: "boolean" }, createdAt: TIME }) }
 }));
 export const INVOICE_PRINT_RESPONSE = Object.freeze(object({
   number: TEXT, customerName: TEXT, billingAddress: { type: "array", items: TEXT },

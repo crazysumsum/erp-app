@@ -7,7 +7,7 @@ const invalid = (field) => arError("AR_INPUT_INVALID", { field });
 const EVENT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const AMOUNT = /^\d{1,15}(?:\.\d{1,4})?$/u;
 const MAX_SEQUENCE = 999999;
-const PREFIX = Object.freeze({ INVOICE: "INV", RECEIPT: "RCT" });
+const PREFIX = Object.freeze({ INVOICE: "INV", RECEIPT: "RCT", CREDIT_NOTE: "CRN", REFUND: "RFD" });
 
 // ---- 輸入驗證：錯誤只帶欄位路徑，不帶值 ----
 
@@ -73,7 +73,7 @@ export function formatUnits(units) {
 
 // ---- 編號 ----
 
-/** 年度流水號（INV-YYYY-000001／RCT-YYYY-000001）。年度取確認當刻的本地日期；取號時鎖該年該類的一列。 */
+/** 年度流水號。年度取確認當刻的本地日期；取號時鎖該年該類的一列。 */
 export async function nextDocumentNumber(tx, { documentType, time, nowMs }) {
   const year = Number(time.fileDate(time.at(nowMs)).slice(0, 4));
   await tx.execute(`INSERT INTO ar_document_sequences (document_type, business_year, updated_at) VALUES (?, ?, ?)

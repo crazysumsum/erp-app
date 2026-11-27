@@ -12,7 +12,7 @@
     {
       "path": "server/test/integration/arMigrations.integration.test.js",
       "mode": "100644",
-      "blob": "f3fce207ecfa589cf34c8056293e2f1b3b2fb4ff",
+      "blob": "ff0cb278cdd058c6ca9d2144f3ddb8f1eb4a8e07",
       "kind": "functional",
       "cases": [
         "0122 lists exactly the three AR permissions with the catalogue descriptions and grants no role",
@@ -29,11 +29,12 @@
     {
       "path": "server/test/ar/arBusinessMasterImpactChecker.test.js",
       "mode": "100644",
-      "blob": "0c19c3c374f995dca95618a3addcd854f233bcef",
+      "blob": "0dc160902574d2f79b8bd8a399ab44089dc4818b",
       "kind": "functional",
       "cases": [
         "drafts and unsettled confirmed documents are open; settled, void and cancelled ones are historical",
         "no AR tables means not installed; no reference, and any payment term, is ready with zero counts",
+        "credit drafts, credit with a positive available balance and refund drafts count as open currency use",
         "the watermark changes when a referencing document changes and only then",
         "anything it cannot classify or trust fails closed instead of reporting no use"
       ]
@@ -41,7 +42,7 @@
     {
       "path": "server/test/business-master/http.integration.test.js",
       "mode": "100644",
-      "blob": "da94070dd0414817120687b22dc06b7e4f28549d",
+      "blob": "6ab6c82703bfb8aafd6f78437c5c902d73147d9f",
       "kind": "functional",
       "cases": [
         "TC-012 real HTTP authentication and authorized admin flow"
@@ -118,7 +119,7 @@
     {
       "path": "server/test/permissionCatalogueConventions.test.js",
       "mode": "100644",
-      "blob": "5dbd022cce4f06ddfd5469e6a34ea66c6587e837",
+      "blob": "5669590cbc7edd4fcf764973c60071de0ca0c9d5",
       "kind": "functional",
       "cases": [
         "every permission a handler demands exists in the catalogue",
