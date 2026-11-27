@@ -7,6 +7,7 @@ import { useRoute, useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import ApprovalSnapshotPanel from "@/components/purchasing/ApprovalSnapshotPanel.vue";
 import PurchaseOrderLifecycleDialog from "@/components/purchasing/PurchaseOrderLifecycleDialog.vue";
@@ -59,6 +60,7 @@ const actions = computed(() => (document.value?.allowedActions ?? [])
   .filter((action) => session.permissions.includes(DECISIONS.includes(action) ? "purchasing.approval" : "purchasing.mgmt")));
 const sum = (field) => document.value.lines.reduce((total, line) => total + BigInt(line[field]), 0n).toString();
 const master = computed(() => document.value?.currentMasterDifferences);
+const orderAmount = (value) => formatMoney(value, document.value.currencyCode, document.value.currencyDecimalPlaces);
 const overview = computed(() => {
   const value = document.value;
   return [
@@ -66,7 +68,7 @@ const overview = computed(() => {
     ["貨幣", `${value.currencyCode} — ${value.currencyName}`], ["付款條款快照", value.paymentTerm ? `${value.paymentTerm.code} — ${value.paymentTerm.name}` : "未設定"],
     ["訂單日期", value.orderDate], ["預計交貨日", value.expectedDeliveryDate || "未設定"],
     ["預設收貨倉", value.defaultWarehouseCode || "未設定"], ["採購員", value.buyerLabel || "未設定"],
-    ["供應商參考", value.supplierReference || "—"], ["小計／總額", `${value.currencyCode} ${value.subtotalAmount}／${value.totalAmount}`],
+    ["供應商參考", value.supplierReference || "—"], ["小計／總額", `${value.currencyCode} ${orderAmount(value.subtotalAmount)}／${orderAmount(value.totalAmount)}`],
     ["建立", `${value.createdByLabel}，${timestamp(value.createdAt)}`], ["最後更新", `${value.updatedByLabel}，${timestamp(value.updatedAt)}`],
     ...(value.confirmedAt ? [["確認時間", timestamp(value.confirmedAt)]] : []), ...(value.closedAt ? [["結案時間", timestamp(value.closedAt)]] : []), ...(value.cancelledAt ? [["取消時間", timestamp(value.cancelledAt)]] : [])
   ];
@@ -77,7 +79,7 @@ const columns = [
   { name: "ordered", label: "訂購", field: "orderedQuantity", align: "right" },
   { name: "base", label: "數量（基本單位）", field: "orderedBaseQuantity", align: "left" },
   { name: "unitPrice", label: "單價", field: "unitPrice", align: "right" },
-  { name: "lineAmount", label: "明細總額", field: "lineAmount", align: "right" },
+  { name: "lineAmount", label: "明細總額", field: "lineAmount", format: orderAmount, align: "right" },
   { name: "expectedDeliveryDate", label: "預計交貨", field: "expectedDeliveryDate", align: "left" },
   { name: "lineNote", label: "備註", field: "lineNote", align: "left" }
 ];
@@ -257,9 +259,9 @@ async function askCopy() {
         <h2 class="text-h6 q-ma-none q-mb-md">明細</h2>
         <DataTable :rows="document.lines" :columns="columns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
           <template #body-cell-sku="{ row }"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" max-width="160px" /></template>
-          <template #body-cell-ordered="{ row }"><q-td class="text-right">{{ row.orderedQuantity }} {{ row.purchaseUomCode }}</q-td></template>
+          <template #body-cell-ordered="{ row }"><q-td class="text-right">{{ formatQuantity(row.orderedQuantity) }} {{ row.purchaseUomCode }}</q-td></template>
           <template #body-cell-unitPrice="{ row }">
-            <q-td class="text-right">{{ row.unitPrice }}<div v-if="isZeroPrice(row.unitPrice)" class="text-caption break-word"><q-icon name="money_off" aria-hidden="true" /> 零價：{{ row.zeroPriceReason }}</div></q-td>
+            <q-td class="text-right">{{ formatMoney(row.unitPrice) }}<div v-if="isZeroPrice(row.unitPrice)" class="text-caption break-word"><q-icon name="money_off" aria-hidden="true" /> 零價：{{ row.zeroPriceReason }}</div></q-td>
           </template>
           <template #body-cell-base="{ row }">
             <q-td>

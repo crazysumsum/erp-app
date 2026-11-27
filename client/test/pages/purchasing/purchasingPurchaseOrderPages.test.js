@@ -296,7 +296,7 @@ describe("TASK-019 PO 詳情", () => {
     purchasing.getPurchaseOrder.mockResolvedValue({ ...detail, lines: [{ ...line, orderedBaseQuantity: HUGE, grossReceivedBaseQuantity: "21", reversedBaseQuantity: "22", netReceivedBaseQuantity: "23", outstandingBaseQuantity: "24", overReceivedBaseQuantity: "25", closedRemainingBaseQuantity: "26", unitPrice: "0.0000", zeroPriceReason: "贈品" }] });
     await open("/purchasing/purchase-orders/8");
     const text = wrapper.text();
-    for (const shown of [`訂購數量 ${HUGE} EA`, "累計收貨量（沖銷前） 21 EA", "已沖銷數量 22 EA", "淨收貨量（扣除沖銷） 23 EA", "待收數量 24 EA", "超收數量 25 EA", "已結清餘量 26 EA", "1.000000 BOX", "零價：贈品", "超收", detail.notes]) expect(text).toContain(shown);
+    for (const shown of [`訂購數量 ${HUGE} EA`, "累計收貨量（沖銷前） 21 EA", "已沖銷數量 22 EA", "淨收貨量（扣除沖銷） 23 EA", "待收數量 24 EA", "超收數量 25 EA", "已結清餘量 26 EA", "1 BOX", "零價：贈品", "超收", detail.notes]) expect(text).toContain(shown);
     expect(wrapper.find("dl script").exists()).toBe(false);
   });
   it("多行進度用 BigInt 加總，超過 2^53 都準", async () => {

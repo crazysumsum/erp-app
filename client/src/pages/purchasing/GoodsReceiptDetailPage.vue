@@ -6,6 +6,7 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { promptReason } from "@/framework/ui/confirm.js";
+import { formatQuantity } from "@/framework/ui/numberFormat.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import purchasing from "@/services/purchasing.js";
@@ -89,7 +90,7 @@ async function reversalPosted(result) {
               <q-list dense separator class="q-mt-sm">
                 <q-item v-for="detail in line.details" :key="detail.id">
                   <q-item-section>
-                    <q-item-label>{{ detail.receivedQuantity }} {{ detail.inputUomCode }}（基本 {{ detail.receivedBaseQuantity }}）→ {{ detail.warehouseCode }} / {{ detail.binCode }}・{{ STATUS[detail.stockStatus] ?? detail.stockStatus }}</q-item-label>
+                    <q-item-label>{{ formatQuantity(detail.receivedQuantity) }} {{ detail.inputUomCode }}（基本 {{ detail.receivedBaseQuantity }}）→ {{ detail.warehouseCode }} / {{ detail.binCode }}・{{ STATUS[detail.stockStatus] ?? detail.stockStatus }}</q-item-label>
                     <q-item-label v-if="detail.lotNumber" caption>批號 {{ detail.lotNumber }}<template v-if="detail.expiryDate">・到期 {{ detail.expiryDate }}</template><template v-if="detail.expiryOverrideReason">・放行原因：{{ detail.expiryOverrideReason }}</template></q-item-label>
                     <q-item-label v-if="detail.inventoryMovementId" caption>庫存異動 #{{ detail.inventoryMovementId }}</q-item-label>
                     <q-item-label v-if="detail.reversedBaseQuantity !== '0'" caption>已沖銷基本數量 {{ detail.reversedBaseQuantity }}</q-item-label>

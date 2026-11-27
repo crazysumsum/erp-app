@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import purchasing from "@/services/purchasing.js";
 import { isZeroPrice, previewBaseQuantity, previewLineAmount, validPrice, validQuantity } from "./purchasingEditorMath.js";
 
@@ -58,7 +59,7 @@ const quantityRule = (line) => (value) => {
   if (!validQuantity(value)) return "數量必須大於零，最多六位小數";
   return previewBaseQuantity(value, line.factor) !== null || `換算後不是整數 ${line.baseUomCode}；請調整數量或單位`;
 };
-const amount = (line) => previewLineAmount(line.orderedQuantity, line.unitPrice, props.currencyPlaces);
+const amount = (line) => formatMoney(previewLineAmount(line.orderedQuantity, line.unitPrice, props.currencyPlaces), props.currencyCode, props.currencyPlaces);
 </script>
 
 <template>
@@ -81,7 +82,7 @@ const amount = (line) => previewLineAmount(line.orderedQuantity, line.unitPrice,
       </div>
       <q-input :model-value="line.orderedQuantity" :label="`數量 ${index + 1} *`" inputmode="decimal" :rules="[quantityRule(line)]" :error="!!fieldError(`lines.${index}.orderedQuantity`)" :error-message="fieldError(`lines.${index}.orderedQuantity`)" outlined dense @update:model-value="value => change(index, 'orderedQuantity', value)" />
       <q-input :model-value="line.unitPrice" :label="`單價 ${index + 1} *`" inputmode="decimal" :hint="`${currencyCode || '此單貨幣'}；不自動換算`" :rules="[value => validPrice(value) || '請輸入非負單價，最多四位小數']" :error="!!fieldError(`lines.${index}.unitPrice`)" :error-message="fieldError(`lines.${index}.unitPrice`)" outlined dense @update:model-value="value => change(index, 'unitPrice', value)" />
-      <div class="po-line__amount"><span class="text-caption">金額預覽</span><div data-testid="po-line-amount">{{ amount(line) ?? "—" }}</div></div>
+      <div class="po-line__amount"><span class="text-caption">金額預覽</span><div data-testid="po-line-amount">{{ amount(line) }}</div></div>
       <q-input :model-value="line.expectedDeliveryDate" :label="`交期 ${index + 1}`" type="date" stack-label :rules="[value => !value || value >= orderDate || '交期不可早於訂單日期']" :error="!!fieldError(`lines.${index}.expectedDeliveryDate`)" :error-message="fieldError(`lines.${index}.expectedDeliveryDate`)" outlined dense @update:model-value="value => change(index, 'expectedDeliveryDate', value || null)" />
       <q-input :model-value="line.lineNote" :label="`明細備註 ${index + 1}`" maxlength="1000" outlined dense @update:model-value="value => change(index, 'lineNote', value)" />
       <div class="po-line__actions">

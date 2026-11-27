@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, useId, watch } from "vue";
 import appConfig from "@config/app.js";
 import DataTable from "@/framework/ui/DataTable.vue";
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { addressText, timestamp } from "./purchaseOrderPresentation.js";
 
@@ -22,6 +23,7 @@ const reasonInput = ref(null), reasonMessage = ref(""), reasonHelpId = useId();
 watch(() => props.pendingReason, (value) => { if (props.uncertainAction) reason.value = value; });
 const message = computed(() => reasonMessage.value ? "" : localError.value || props.errorMessage);
 const snapshot = computed(() => props.approval.snapshot);
+const orderAmount = (value) => formatMoney(value, snapshot.value.currency.code, snapshot.value.currency.decimalPlaces);
 const canDecide = computed(() => props.actions.includes("approve") || props.actions.includes("reject"));
 const reasonError = (required) => {
   const length = reason.value.trim().length;
@@ -34,7 +36,7 @@ const overview = computed(() => {
     ["供應商", `${value.supplier.code} — ${value.supplier.name}`], ["訂購地址", addressText(value.orderingAddress)],
     ["貨幣", `${value.currency.code} — ${value.currency.name}`], ["付款條款", value.paymentTerm ? `${value.paymentTerm.code} — ${value.paymentTerm.name}` : "未設定"],
     ["訂單日期", value.orderDate], ["預計交貨日", value.expectedDeliveryDate || "未設定"], ["預設收貨倉", value.defaultWarehouseCode || "未設定"],
-    ["採購員", value.buyerLabel || "未設定"], ["供應商參考", value.supplierReference || "—"], ["小計／總額", `${value.currency.code} ${value.subtotalAmount}／${value.totalAmount}`],
+    ["採購員", value.buyerLabel || "未設定"], ["供應商參考", value.supplierReference || "—"], ["小計／總額", `${value.currency.code} ${orderAmount(value.subtotalAmount)}／${orderAmount(value.totalAmount)}`],
     ["提交人", `${props.approval.requestedByLabel}，${timestamp(props.approval.requestedAt)}`], ["審批人", props.approval.approverLabel], ["提交備註", props.approval.requestNote || "—"]
   ];
 });
@@ -44,7 +46,7 @@ const columns = [
   { name: "ordered", label: "訂購", field: "orderedQuantity", align: "right" },
   { name: "base", label: "數量（基本單位）", field: "orderedBaseQuantity", align: "right" },
   { name: "unitPrice", label: "單價", field: "unitPrice", align: "right" },
-  { name: "lineAmount", label: "明細總額", field: "lineAmount", align: "right" },
+  { name: "lineAmount", label: "明細總額", field: "lineAmount", format: orderAmount, align: "right" },
   { name: "expectedDeliveryDate", label: "預計交貨", field: "expectedDeliveryDate", align: "left" },
   { name: "lineNote", label: "備註", field: "lineNote", align: "left" }
 ];
@@ -80,9 +82,9 @@ async function decide(action) {
     </q-card-section>
     <DataTable :rows="snapshot.lines" :columns="columns" row-key="lineNumber" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">
       <template #body-cell-sku="{ row }"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" max-width="160px" /></template>
-      <template #body-cell-ordered="{ row }"><q-td class="text-right">{{ row.orderedQuantity }} {{ row.purchaseUomCode }}</q-td></template>
+      <template #body-cell-ordered="{ row }"><q-td class="text-right">{{ formatQuantity(row.orderedQuantity) }} {{ row.purchaseUomCode }}</q-td></template>
       <template #body-cell-base="{ row }"><q-td class="text-right">{{ row.orderedBaseQuantity }} {{ row.baseUomCode }}</q-td></template>
-      <template #body-cell-unitPrice="{ row }"><q-td class="text-right">{{ row.unitPrice }}<div v-if="row.zeroPriceReason" class="text-caption break-word">零價：{{ row.zeroPriceReason }}</div></q-td></template>
+      <template #body-cell-unitPrice="{ row }"><q-td class="text-right">{{ formatMoney(row.unitPrice) }}<div v-if="row.zeroPriceReason" class="text-caption break-word">零價：{{ row.zeroPriceReason }}</div></q-td></template>
       <template #body-cell-expectedDeliveryDate="{ row }"><q-td>{{ row.expectedDeliveryDate || "未設定" }}</q-td></template>
       <template #body-cell-lineNote="{ row }"><EllipsisCell :text="row.lineNote" /></template>
     </DataTable>

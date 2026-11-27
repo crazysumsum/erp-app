@@ -5,6 +5,7 @@ import FormPanel from "@/framework/ui/FormPanel.vue";
 import { useCommandEvent } from "@/composables/purchasing/useCommandEvent.js";
 import purchasing from "@/services/purchasing.js";
 import PurchaseOrderLineEditor from "./PurchaseOrderLineEditor.vue";
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import { isZeroPrice, previewLineAmount, previewTotal } from "./purchasingEditorMath.js";
 
 // `commands` 由 Edit／Create 頁（穩定 owner）傳入：Form 會因父頁 loading／error／權限 v-if 卸載，record 唔可以跟 Form 一齊冇咗。
@@ -270,7 +271,7 @@ async function submit() {
       </fieldset>
       <section class="po-summary" aria-labelledby="po-summary-heading">
         <h2 id="po-summary-heading" class="text-h6 q-my-sm">總額及風險</h2>
-        <p class="q-mb-xs">{{ dirty || !document ? "預覽總額" : "已保存總額" }}：<strong data-testid="po-total">{{ form.currencyCode }} {{ dirty || !document ? total ?? "—" : document.totalAmount }}</strong><span v-if="dirty || !document" class="text-caption">（保存後以伺服器計算為準）</span></p>
+        <p class="q-mb-xs">{{ dirty || !document ? "預覽總額" : "已保存總額" }}：<strong data-testid="po-total">{{ form.currencyCode }} {{ formatMoney(dirty || !document ? total : document.totalAmount, form.currencyCode, places) }}</strong><span v-if="dirty || !document" class="text-caption">（保存後以伺服器計算為準）</span></p>
         <ul v-if="zeroPriceLines || !form.paymentTermId" class="q-my-xs q-pl-md text-caption">
           <li v-if="zeroPriceLines">{{ zeroPriceLines }} 行為零價。</li>
           <li v-if="!form.paymentTermId">未選擇付款條款。</li>
@@ -288,7 +289,7 @@ async function submit() {
           <dl v-if="document" data-testid="po-submit-summary">
             <dt>供應商</dt><dd>{{ document.supplierCode }} — {{ document.supplierName }}</dd>
             <dt>明細</dt><dd>{{ document.lines.length }} 行</dd>
-            <dt>總額</dt><dd>{{ document.currencyCode }} {{ document.totalAmount }}</dd>
+            <dt>總額</dt><dd>{{ document.currencyCode }} {{ formatMoney(document.totalAmount, document.currencyCode, document.currencyDecimalPlaces) }}</dd>
             <dt>交期</dt><dd>{{ document.expectedDeliveryDate ?? "未填" }}</dd>
           </dl>
           <ul v-if="zeroPriceLines || !document?.paymentTermId" class="q-pl-md">

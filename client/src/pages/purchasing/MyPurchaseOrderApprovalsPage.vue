@@ -7,6 +7,7 @@ import { onBeforeUnmount, reactive, ref } from "vue";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { timestamp } from "@/components/purchasing/purchaseOrderPresentation.js";
 import purchasing from "@/services/purchasing.js";
@@ -46,7 +47,7 @@ function acceptId(value, done) { if (/^[1-9]\d*$/u.test(value) && Number.isSafeI
       <DataTable :key="tableKey" :fetch="fetchRows" :columns="columns" row-key="approvalId" sticky-actions
         :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, rowsNumber: 0, sortBy: null, descending: false }">
         <template #body-cell-supplier="{ row }"><EllipsisCell :text="`${row.supplierCode} — ${row.supplierName}`" max-width="160px" /></template>
-        <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ row.totalAmount }}</q-td></template>
+        <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ formatMoney(row.totalAmount) }}</q-td></template>
         <template #body-cell-requestNote="{ row }"><EllipsisCell :text="row.requestNote || '—'" /></template>
         <template #body-cell-requestedAt="{ row }"><q-td>{{ timestamp(row.requestedAt) }}</q-td></template>
         <template #body-cell-actions="{ row }">

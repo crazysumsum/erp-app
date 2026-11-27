@@ -5,11 +5,13 @@ export const page = { name: "purchase-order-print", path: "/purchasing/purchase-
 import { computed } from "vue";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import { formatMoney, formatQuantity } from "@/framework/ui/numberFormat.js";
 import { addressText, printKind } from "@/components/purchasing/purchaseOrderPresentation.js";
 import { usePurchaseOrder } from "@/composables/purchasing/usePurchaseOrder.js";
 
 const { document, loading, error, load } = usePurchaseOrder();
 const kind = computed(() => (document.value ? printKind(document.value.status) : null));
+const orderAmount = (value) => formatMoney(value, document.value.currencyCode, document.value.currencyDecimalPlaces);
 function print() { window.print(); }
 </script>
 
@@ -50,14 +52,14 @@ function print() { window.print(); }
             <tr v-for="line in document.lines" :key="line.id">
               <td>{{ line.lineNumber }}</td>
               <td>{{ line.skuCode }} — {{ line.skuName }}<div v-if="line.supplierItemCode">供應商貨號：{{ line.supplierItemCode }}</div><div v-if="line.lineNote">{{ line.lineNote }}</div></td>
-              <td><span class="po-number">{{ line.orderedQuantity }}</span> {{ line.purchaseUomCode }}</td>
-              <td class="po-number text-right">{{ line.unitPrice }}</td>
-              <td class="po-number text-right">{{ line.lineAmount }}</td>
+              <td><span class="po-number">{{ formatQuantity(line.orderedQuantity) }}</span> {{ line.purchaseUomCode }}</td>
+              <td class="po-number text-right">{{ formatMoney(line.unitPrice) }}</td>
+              <td class="po-number text-right">{{ orderAmount(line.lineAmount) }}</td>
               <td class="po-number">{{ line.expectedDeliveryDate || "—" }}</td>
             </tr>
           </tbody>
         </table>
-        <p class="text-right text-weight-bold q-mt-md" data-testid="po-print-total">總額：{{ document.currencyCode }} {{ document.totalAmount }}</p>
+        <p class="text-right text-weight-bold q-mt-md" data-testid="po-print-total">總額：{{ document.currencyCode }} {{ orderAmount(document.totalAmount) }}</p>
         <div v-if="document.notes"><strong>備註</strong><p class="po-notes">{{ document.notes }}</p></div>
       </article>
       <q-banner v-else-if="document" role="status" class="bg-warning text-dark">目前狀態不允許列印此採購單。</q-banner>

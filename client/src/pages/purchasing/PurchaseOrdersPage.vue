@@ -8,6 +8,7 @@ import { exportFile } from "quasar";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import { formatMoney } from "@/framework/ui/numberFormat.js";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import PurchaseOrderProgress from "@/components/purchasing/PurchaseOrderProgress.vue";
 import { riskLabels, statusColors, statusLabels, timestamp } from "@/components/purchasing/purchaseOrderPresentation.js";
@@ -107,7 +108,7 @@ async function exportOrders() {
       <DataTable :key="tableKey" :fetch="fetchRows" :columns="columns" sticky-actions :initial-pagination="pagination()">
         <template #body-cell-supplierName="{ row }"><EllipsisCell :text="`${row.supplierCode} — ${row.supplierName}`" max-width="130px" /></template>
         <template #body-cell-expectedDeliveryDate="{ row }"><q-td>{{ row.expectedDeliveryDate || "未設定" }}</q-td></template>
-        <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ row.totalAmount }}</q-td></template>
+        <template #body-cell-totalAmount="{ row }"><q-td class="text-right">{{ row.currencyCode }} {{ formatMoney(row.totalAmount) }}</q-td></template>
         <template #body-cell-progress="{ row }"><q-td><PurchaseOrderProgress :received="row.netReceivedBaseQuantity" :ordered="row.orderedBaseQuantity" /><div class="text-caption">未收 {{ row.outstandingBaseQuantity }}</div></q-td></template>
         <template #body-cell-status="{ row }">
           <q-td>

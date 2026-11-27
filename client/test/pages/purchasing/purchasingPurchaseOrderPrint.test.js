@@ -33,7 +33,7 @@ describe("TASK-020 A4 列印", () => {
     expect(page.requires.permissions).toEqual(["purchasing.view"]);
     await open();
     const text = sheet().text();
-    for (const shown of ["F&M ERP", po.number, "S3 — 快照供應商", "快照地址, HK, HK", "2026-11-01", "2026-12-01", "HKD — 港幣", "N30 — 30 天", "REF", "SKU7 — 快照貨品", "V-7", "明細備註", "2.000000 BOX", "12.3400", "24.68", "總額：HKD 24.68"]) expect(text).toContain(shown);
+    for (const shown of ["F&M ERP", po.number, "S3 — 快照供應商", "快照地址, HK, HK", "2026-11-01", "2026-12-01", "HKD — 港幣", "N30 — 30 天", "REF", "SKU7 — 快照貨品", "V-7", "明細備註", "2 BOX", "12.3400", "24.68", "總額：HKD 24.68"]) expect(text).toContain(shown);
     for (const hidden of ["目前供應商", "目前貨品", "secret-phone"]) expect(text).not.toContain(hidden);
   });
   it("語意 table，100 行都喺度；PO 編號喺重複嘅表頭入面", async () => {
