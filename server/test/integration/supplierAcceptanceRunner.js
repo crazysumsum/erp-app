@@ -146,9 +146,12 @@ export async function deploymentChecks(connection, schema, check, { approvalMust
   const [permissions] = await connection.query(`SELECT name FROM \`${schema}\`.permissions WHERE name LIKE 'supplier.%' ORDER BY name`);
   check("deploy.six_permissions_no_extra", JSON.stringify(permissions.map((row) => row.name)) === JSON.stringify(SUPPLIER_PERMISSIONS),
     { permissions: permissions.map((row) => row.name) });
-  const [[admins]] = await connection.query(`SELECT COUNT(*) AS n FROM \`${schema}\`.role_permissions rp JOIN \`${schema}\`.roles r ON r.id = rp.role_id
-    JOIN \`${schema}\`.permissions p ON p.id = rp.permission_id WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%'`);
-  check("deploy.system_admin_holds_six", Number(admins.n) === 6, { granted: Number(admins.n) });
+  const [adminGrants] = await connection.query(`SELECT p.name FROM \`${schema}\`.role_permissions rp JOIN \`${schema}\`.roles r ON r.id = rp.role_id
+    JOIN \`${schema}\`.permissions p ON p.id = rp.permission_id WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%' ORDER BY p.name`);
+  const granted = adminGrants.map(row => row.name);
+  check("deploy.system_admin_holds_four_non_bank_permissions", JSON.stringify(granted) === JSON.stringify([
+    "supplier.approval", "supplier.mgmt", "supplier.settings", "supplier.view"
+  ]), { granted });
   const [settingsRows] = await connection.query(`SELECT id, require_activation_approval FROM \`${schema}\`.supplier_settings`);
   const approval = settingsRows.length === 1 ? Number(settingsRows[0].require_activation_approval) === 1 : null;
   const singleton = settingsRows.length === 1 && Number(settingsRows[0].id) === 1;

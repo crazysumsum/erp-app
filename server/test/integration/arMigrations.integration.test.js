@@ -19,6 +19,7 @@ import { up as createTables } from "../../database/migrations/0123_create_ar_tab
 import { up as addInvoiceLineSalesUom } from "../../database/migrations/0124_add_ar_invoice_line_sales_uom.js";
 import { up as addOpeningInvoices } from "../../database/migrations/0126_add_ar_opening_invoices.js";
 import { up as addBillingSnapshot } from "../../database/migrations/0127_add_ar_invoice_billing_snapshot.js";
+import { up as separateAdminPermissions } from "../../database/migrations/0134_revoke_system_admin_business_permissions.js";
 import { ArBusinessMasterImpactChecker } from "../../src/modules/ar/ArBusinessMasterImpactChecker.js";
 import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
 
@@ -140,6 +141,7 @@ integrationTest("AR migrations rerun: permissions and the seven AR tables match 
   await createTables(db);
   await addInvoiceLineSalesUom(db);
   await addOpeningInvoices(db);
+  await separateAdminPermissions(db);
   await addBillingSnapshot(db);
   await addBillingSnapshot(db);
   const [[billing]] = await db.query(`SELECT column_type AS type, is_nullable AS nullable, column_default AS fallback FROM information_schema.columns
@@ -162,7 +164,7 @@ integrationTest("AR migrations rerun: permissions and the seven AR tables match 
   assert.deepEqual(openingColumns, Array.from({ length: 2 }, () => ({ type: "varchar(50)", nullable: "YES", fallback: null })));
   const [grants] = await db.query(`SELECT r.name FROM role_permissions rp JOIN roles r ON r.id = rp.role_id
     JOIN permissions p ON p.id = rp.permission_id WHERE p.name = 'ar.opening.mgmt' AND r.name = 'system-admin'`);
-  assert.deepEqual(grants.map(({ name }) => name), ["system-admin"]);
+  assert.deepEqual(grants, []);
 });
 
 integrationTest("the AR schema retains exactly the approved keys, foreign keys, CHECK constraints and audit triggers", async (t) => {

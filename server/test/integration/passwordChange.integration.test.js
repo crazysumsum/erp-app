@@ -13,7 +13,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
-import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
+import { SYSTEM_ADMIN_PERMISSIONS as ADMIN_PERMISSIONS } from "../../src/modules/authorization/adminGuard.js";
 import { createTestDevice } from "../../test-support/testDevice.js";
 
 const skip =
@@ -106,10 +106,7 @@ async function signedAuthed(device, token, { path, body }) {
   return { method: "POST", headers: { ...headers, Authorization: `Bearer ${token}` }, body: bodyText };
 }
 
-// Claims 跟隨 migration 授予 system-admin 的權限，Customer bank 權限需要另行指派。
-const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
-  .map(({ name }) => name)
-  .filter((name) => !name.startsWith("customer.bank."));
+
 
 test("create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked", { skip }, async (t) => {
   const application = await startApplication();

@@ -19,6 +19,7 @@ import { ADMIN, ADMIN_CONFIG, childDatabaseEnv, runRunner, scratchDatabase, SERV
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const DATABASE_DIRECTORY = path.join(SERVER, "database");
 const FRAMEWORK_SQL_FILES = ["framework/idempotency.sql", "framework/jwt.sql", "framework/scheduler.sql"];
+const ADMIN_SEPARATION = "migrations/0134_revoke_system_admin_business_permissions.js";
 const SUPPLIER_PERMISSIONS = ["supplier.approval", "supplier.bank.mgmt", "supplier.bank.view", "supplier.mgmt", "supplier.settings", "supplier.view"];
 
 function isSupplierTable(table) {
@@ -295,7 +296,8 @@ integrationTest("TC-002 (MIG-002): every Supplier migration stopped before any o
 
   // 成套 migration 做完、有業務資料之後，再跑晒 16 支 Supplier migration：schema 同資料都唔變（REV-102 M-4）。
   const full = await scratchDatabase(t);
-  for (const name of migrations) await apply(full.connection, name);
+  // Check the old seeds in their original pre-revocation state, then apply the final policy.
+  for (const name of migrations.filter(name => name !== ADMIN_SEPARATION)) await apply(full.connection, name);
   const now = Date.now();
   const [supplierRow] = await full.connection.query(
     `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, display_name, default_currency_code,
@@ -317,9 +319,13 @@ integrationTest("TC-002 (MIG-002): every Supplier migration stopped before any o
   for (const name of supplier) await apply(rerun.connection, name);
   assertNoOp(rerun, "rerunning every Supplier migration on a finished database");
   assert.deepEqual(await snapshot(full.connection, full.name), withData, "no data lost or reset");
+  await apply(full.connection, ADMIN_SEPARATION);
+  const separated = await snapshot(full.connection, full.name);
+  await apply(full.connection, ADMIN_SEPARATION);
+  assert.deepEqual(await snapshot(full.connection, full.name), separated, "replaying the final policy is idempotent");
 });
 
-integrationTest("TC-004 (MIG-004): the six Supplier permissions and their system-admin grants exist once, approval starts OFF, Supplier seeds no Currency or Payment Term, and reruns keep it that way", async (t) => {
+integrationTest("TC-004 (MIG-004): the six Supplier permissions and four non-bank system-admin grants exist once, approval starts OFF, Supplier seeds no Currency or Payment Term, and reruns keep it that way", async (t) => {
   const { connection } = await scratchDatabase(t);
   const migrations = await allMigrations();
   const supplierWrites = [];
@@ -347,8 +353,8 @@ integrationTest("TC-004 (MIG-004): the six Supplier permissions and their system
     return { permissions: permissions.map((row) => [row.name, Number(row.permissions), Number(row.adminGrants)]),
       settings: settings.map((row) => [Number(row.id), Number(row.approval)]) };
   };
-  const expected = { permissions: SUPPLIER_PERMISSIONS.map((permission) => [permission, 1, 1]), settings: [[1, 0]] };
-  assert.deepEqual(await counts(), expected, "six permissions, each granted to system-admin once, no unknown extra; settings id=1 with approval OFF");
+  const expected = { permissions: SUPPLIER_PERMISSIONS.map((permission) => [permission, 1, permission.startsWith("supplier.bank.") ? 0 : 1]), settings: [[1, 0]] };
+  assert.deepEqual(await counts(), expected, "six permissions, only four non-bank grants to system-admin, no unknown extra; settings id=1 with approval OFF");
   // 日常 role 唔會自動攞到 Supplier 權限。
   const [others] = await connection.query(
     `SELECT r.name AS name FROM role_permissions rp JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id
@@ -367,6 +373,7 @@ integrationTest("TC-004 (MIG-004): the six Supplier permissions and their system
   for (const seed of ["migrations/0028_seed_supplier_management_permissions.js", "migrations/0036_create_supplier_settings.js"]) {
     await apply(connection, seed);
   }
+  await apply(connection, ADMIN_SEPARATION);
   assert.deepEqual(await counts(), { ...expected, settings: [[1, 1]] }, "a rerun neither duplicates nor resets an operator's choice");
 });
 
@@ -436,6 +443,9 @@ integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment cha
     ["0028", "0029", "0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0061", "0062", "0080", "0081", "0087", "0103"]);
   const recorder = recording(connection);
   for (const migration of supplierMigrations) await apply(recorder.connection, migration);
+  // This upgrade fixture installs the historical Supplier seeds after the other modules.
+  // Reapply the final access policy in deployment order before checking the resulting grants.
+  await apply(connection, ADMIN_SEPARATION);
   const after = await snapshot(connection, name, { keepTimes: true });
 
   // 1. 原有嘅表：schema 唔變；資料唔變，除咗權限 seed 加嘅行（只可以加，唔可以改或者刪）。
@@ -456,12 +466,14 @@ integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment cha
     `SELECT p.name AS name FROM permissions p WHERE p.name LIKE 'supplier.%' ORDER BY p.name`);
   assert.deepEqual(added.map((row) => row.name), SUPPLIER_PERMISSIONS);
   assert.equal(after.permissions.data.length - before.permissions.data.length, SUPPLIER_PERMISSIONS.length, "only the six Supplier permissions are new");
-  assert.equal(after.role_permissions.data.length - before.role_permissions.data.length, SUPPLIER_PERMISSIONS.length,
-    "only their six system-admin grants are new");
+  const adminSupplierPermissions = ["supplier.approval", "supplier.mgmt", "supplier.settings", "supplier.view"];
+  assert.equal(after.role_permissions.data.length - before.role_permissions.data.length, adminSupplierPermissions.length);
   const [grantees] = await connection.query(
-    `SELECT DISTINCT r.name AS name FROM role_permissions rp JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id
-      WHERE p.name LIKE 'supplier.%'`);
-  assert.deepEqual(grantees.map((row) => row.name), ["system-admin"]);
+    `SELECT r.name AS roleName, p.name AS permission FROM role_permissions rp
+       JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id
+      WHERE p.name LIKE 'supplier.%' ORDER BY p.name`);
+  assert.deepEqual(grantees.map(row => [row.roleName, row.permission]),
+    adminSupplierPermissions.map(permission => ["system-admin", permission]));
   const newTables = Object.keys(after).filter((table) => !(table in before));
   assert.ok(newTables.length > 0 && newTables.every(isSupplierTable), `only Supplier tables are new: ${newTables.join(", ")}`);
 

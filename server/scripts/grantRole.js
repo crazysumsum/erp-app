@@ -1,5 +1,5 @@
 /**
- * Break-glass：把一個角色授予某個帳號，不經過應用程式、不受任何提權防護。
+ * Break-glass：把一個角色授予某個帳號，透過部署權限執行，仍須符合管理員職責分離。
  * 設計說明見 docs/user_management/design_spec.md §5.1。
  *
  *   node scripts/grantRole.js <username> <role> --reason "<原因>"
@@ -15,7 +15,7 @@
  * 帳號如果是 disabled，這裡一併啟用（清掉鎖定與失敗計數，做法跟
  * UserAdminService.enable() 一致）——角色救回來了，帳號卻還登不進去等於沒救。
  *
- * 沒有任何守衛：能跑這支腳本的人＝能連生產資料庫的人，那道門在部署層，不在
+ * 能跑這支腳本的人＝能連生產資料庫的人，那道門在部署層，不在
  * 這裡。每次執行都寫一列 user_audit_logs（actor_user_id 是 NULL，
  * actor_username 是 `cli:<執行這支腳本的系統帳號>`），從命令列動生產資料庫
  * 這件事，比從介面動更需要留痕。
@@ -23,6 +23,8 @@
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import { assertSystemAdminPermissions, SYSTEM_ADMIN_ROLE } from "../src/modules/authorization/adminGuard.js";
+import { loadPermissionNamesForUser, loadRoleNamesForUser } from "../src/modules/authorization/directoryLookups.js";
 import { normalizeDatabaseConfig } from "../src/framework/configuration/normalizeDatabaseConfig.js";
 
 // 與 migrate.js／approveDevice.js 相同的載入順序：config/database.js 在載入
@@ -59,15 +61,6 @@ function parseArguments(argv) {
   return { username, roleName, reason };
 }
 
-async function currentRoleNames(connection, userId) {
-  const [rows] = await connection.query(
-    `SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id = r.id
-      WHERE ur.user_id = ? ORDER BY r.name`,
-    [userId]
-  );
-  return rows.map((row) => row.name);
-}
-
 async function grantRole(connection, { username, roleName, reason }) {
   const [[user]] = await connection.query(
     "SELECT id, status FROM users WHERE username = ?",
@@ -85,7 +78,7 @@ async function grantRole(connection, { username, roleName, reason }) {
   }
 
   const nowMs = Date.now();
-  const beforeRoles = await currentRoleNames(connection, user.id);
+  const beforeRoles = await loadRoleNamesForUser(connection, user.id);
 
   // PRIMARY KEY (user_id, role_id)：已經有這個角色就當作重跑一次，不報錯。
   await connection.execute(
@@ -103,7 +96,10 @@ async function grantRole(connection, { username, roleName, reason }) {
     );
   }
 
-  const afterRoles = await currentRoleNames(connection, user.id);
+  const afterRoles = await loadRoleNamesForUser(connection, user.id);
+  if (afterRoles.includes(SYSTEM_ADMIN_ROLE)) {
+    assertSystemAdminPermissions(await loadPermissionNamesForUser(connection, user.id));
+  }
   const detail = { roles: { before: beforeRoles, after: afterRoles } };
   if (wasDisabled) {
     detail.status = { before: "disabled", after: "active" };
@@ -118,7 +114,7 @@ async function grantRole(connection, { username, roleName, reason }) {
     [nowMs, actorUsername, user.id, username, reason, JSON.stringify(detail)]
   );
 
-  console.log(
+  return (
     `Granted role "${roleName}" to "${username}"` +
       (wasDisabled ? " and reactivated the account" : "") +
       `. Roles are now: ${afterRoles.join(", ")}`
@@ -130,8 +126,13 @@ const pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
 const connection = await pool.getConnection();
 
 try {
-  await grantRole(connection, options);
+  await connection.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+  await connection.beginTransaction();
+  const message = await grantRole(connection, options);
+  await connection.commit();
+  console.log(message);
 } catch (error) {
+  await connection.rollback();
   console.error(error.message);
   process.exitCode = 1;
 } finally {

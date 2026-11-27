@@ -14,7 +14,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
-import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
+import { SYSTEM_ADMIN_PERMISSIONS as ADMIN_PERMISSIONS } from "../../src/modules/authorization/adminGuard.js";
 import { createTestDevice } from "../../test-support/testDevice.js";
 
 const skip =
@@ -126,10 +126,7 @@ function tokenIssuer(application) {
   };
 }
 
-// Claims 跟隨 migration 授予 system-admin 的權限，Customer bank 權限需要另行指派。
-const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
-  .map(({ name }) => name)
-  .filter((name) => !name.startsWith("customer.bank."));
+
 
 function authed(token, body) {
   return {

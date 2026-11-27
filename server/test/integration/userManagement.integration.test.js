@@ -13,12 +13,14 @@
  * 只是要一台能簽出合法簽章的設備。
  */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { childDatabaseEnv, runRunner, scratchDatabase, SERVER } from "./supplierScratchDatabase.js";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
-import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
+import { SYSTEM_ADMIN_PERMISSIONS as ADMIN_PERMISSIONS } from "../../src/modules/authorization/adminGuard.js";
 import { createTestDevice } from "../../test-support/testDevice.js";
 
 const skip =
@@ -125,10 +127,7 @@ function tokenIssuer(application) {
   };
 }
 
-// Claims 跟隨 migration 授予 system-admin 的權限，Customer bank 權限需要另行指派。
-const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
-  .map(({ name }) => name)
-  .filter((name) => !name.startsWith("customer.bank."));
+
 
 function authed(token, body) {
   return {
@@ -715,4 +714,30 @@ test("creating a user without an initial password is rejected by schema validati
   assert.equal(response.status, 400);
   const body = await response.json();
   assert.equal(body.error.code, "REQUEST_VALIDATION_FAILED");
+});
+
+test("first-account bootstrap rejects a business role paired with the implicit system-admin role", { skip }, async t => {
+  const { name, connection } = await scratchDatabase(t);
+  await runRunner(name);
+  const [role] = await connection.execute("INSERT INTO roles (name, created_at) VALUES ('finance', ?)", [Date.now()]);
+  await connection.execute("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = 'supplier.bank.mgmt'", [role.insertId]);
+  const create = (...args) => spawnSync(process.execPath, ["scripts/createUser.js", "first-admin", ...args], {
+    cwd: SERVER, env: { ...process.env, ...childDatabaseEnv(name) }, input: randomUUID() + "Aa!", encoding: "utf8"
+  });
+  const rejected = create("--role", "finance");
+  assert.equal(rejected.status, 1);
+  assert.match(rejected.stderr, /cannot hold business permissions/u);
+  const [[remaining]] = await connection.query("SELECT COUNT(*) AS accounts FROM users");
+  assert.equal(Number(remaining.accounts), 0);
+  assert.equal(create().status, 0);
+  await connection.execute("UPDATE users SET status = 'disabled' WHERE username = 'first-admin'");
+  const recover = roleName => spawnSync(process.execPath, ["scripts/grantRole.js", "first-admin", roleName, "--reason", "F-09 recovery drill"], {
+    cwd: SERVER, env: { ...process.env, ...childDatabaseEnv(name) }, encoding: "utf8"
+  });
+  assert.equal(recover("finance").status, 1);
+  const [[user]] = await connection.query("SELECT status FROM users WHERE username = 'first-admin'");
+  assert.equal(user.status, "disabled");
+  assert.equal(recover("system-admin").status, 0);
+  const [[restored]] = await connection.query("SELECT status FROM users WHERE username = 'first-admin'");
+  assert.equal(restored.status, "active");
 });

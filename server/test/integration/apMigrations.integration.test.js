@@ -16,7 +16,7 @@ async function connect(t) {
   return db;
 }
 
-integrationTest("AP installs exactly seven tables and grants the four permissions only to system-admin", async (t) => {
+integrationTest("AP installs exactly seven tables and registers the four permissions without default role grants", async (t) => {
   const db = await connect(t);
   const [tables] = await db.query(
     "SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LEFT(TABLE_NAME, 3) = 'ap_' ORDER BY TABLE_NAME"
@@ -32,7 +32,7 @@ integrationTest("AP installs exactly seven tables and grants the four permission
   const [grants] = await db.query(
     "SELECT p.name, r.name AS role FROM permissions p LEFT JOIN role_permissions rp ON rp.permission_id = p.id LEFT JOIN roles r ON r.id = rp.role_id WHERE p.name LIKE 'ap.%' ORDER BY p.name"
   );
-  assert.deepEqual(grants, permissions.map((name) => ({ name, role: "system-admin" })));
+  assert.deepEqual(grants, permissions.map((name) => ({ name, role: null })));
 
   const [foreignKeys] = await db.query(
     "SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ap_invoice_lines' AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY REFERENCED_TABLE_NAME, ORDINAL_POSITION"

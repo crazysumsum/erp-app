@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { SYSTEM_ADMIN_PERMISSIONS } from "../src/modules/authorization/adminGuard.js";
 import { UserAdminService } from "../src/modules/user/UserAdminService.js";
 import { hashPassword } from "../src/modules/user/passwordHash.js";
 import { createTestTime } from "../test-support/createTestTime.js";
@@ -827,25 +828,26 @@ test("assignRoles denies an actor granting a permission they do not hold", async
   assert.equal(database.state.userRoles.has(`30:${SYSTEM_ADMIN.id}`), false);
 });
 
-test("assignRoles allows removing a role the actor does not hold themselves (de-escalation is fine)", async () => {
+test("assignRoles allows removing a business role the actor does not hold themselves", async () => {
   // §1.4：「只檢查新增的部分，不檢查移除的」。一個只有 user.mgmt 的操作者，
-  // 應該有能力把某個人身上的 system-admin 拔掉，即使他自己沒有 role.mgmt。
+  // 可移除普通業務角色。管理員角色另受保護。
   const database = seedWithAdmin({
     users: [
       { id: 10, username: "admin", password_hash: "x", display_name: "", status: "active", created_at: 1 },
       { id: 11, username: "admin2", password_hash: "x", display_name: "", status: "active", created_at: 1 },
       { id: 20, username: "limited", password_hash: "x", display_name: "", status: "active", created_at: 1 }
     ],
+    roles: [SYSTEM_ADMIN, STAFF, { id: 3, name: "operations" }],
     userRoles: [
       [10, SYSTEM_ADMIN.id],
-      [11, SYSTEM_ADMIN.id],
+      [11, 3],
       [20, STAFF.id]
     ],
     rolePermissions: [
       [SYSTEM_ADMIN.id, 100],
       [SYSTEM_ADMIN.id, 101],
       [SYSTEM_ADMIN.id, 102],
-      [STAFF.id, 100]
+      [STAFF.id, 100], [3, 101]
     ]
   });
   const { service } = createService({ database });
@@ -856,11 +858,11 @@ test("assignRoles allows removing a role the actor does not hold themselves (de-
     claimedPermissions: ["user.mgmt"],
     id: 11,
     roleIds: [],
-    expectedRoleIds: [SYSTEM_ADMIN.id],
-    reason: "撤銷這個人的管理員身份"
+    expectedRoleIds: [3],
+    reason: "撤銷這個人的業務角色"
   });
 
-  assert.equal(database.state.userRoles.has(`11:${SYSTEM_ADMIN.id}`), false);
+  assert.equal(database.state.userRoles.has(`11:3`), false);
 });
 
 test("assignRoles refuses to strip the last admin's role", async () => {
@@ -1051,4 +1053,42 @@ test("equal or higher permissions allow administration of a peer account", async
     assert.equal(database.state.users.get(20).must_change_password, 1);
     assert.equal((await service.disable(command)).status, "disabled");
   }
+});
+
+test("only a protected administrator can add or remove its role even when another role has identical permissions", async () => {
+  const permissions = SYSTEM_ADMIN_PERMISSIONS.map((name, id) => ({ id: id + 100, name }));
+  const database = seedWithAdmin({
+    users: [10, 20, 30].map(id => ({ id, username: `u${id}`, status: "active" })),
+    roles: [SYSTEM_ADMIN, STAFF], permissions,
+    userRoles: [[10, SYSTEM_ADMIN.id], [20, STAFF.id]],
+    rolePermissions: [SYSTEM_ADMIN.id, STAFF.id].flatMap(role => permissions.map(p => [role, p.id]))
+  });
+  const { service } = createService({ database });
+  const ordinary = { actorId: 20, claimedRoles: ["staff"], claimedPermissions: SYSTEM_ADMIN_PERMISSIONS };
+  const administrator = { actorId: 10, claimedRoles: ["system-admin"], claimedPermissions: SYSTEM_ADMIN_PERMISSIONS };
+  const create = { username: "new-admin", password: "StrongPassword123", roleIds: [SYSTEM_ADMIN.id] };
+  await assert.rejects(() => service.create({ ...ordinary, ...create }), { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
+  const grant = { id: 30, expectedRoleIds: [], roleIds: [SYSTEM_ADMIN.id], reason: "管理員職責" };
+  const remove = { ...grant, expectedRoleIds: grant.roleIds, roleIds: [] };
+  await assert.rejects(() => service.assignRoles({ ...ordinary, ...grant }), { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
+  await service.assignRoles({ ...administrator, ...grant });
+  await assert.rejects(() => service.assignRoles({ ...ordinary, ...remove }), { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
+  assert.equal(database.state.userRoles.has(`30:${SYSTEM_ADMIN.id}`), true);
+  await service.assignRoles({ ...administrator, ...remove });
+  assert.equal(database.state.userRoles.has(`30:${SYSTEM_ADMIN.id}`), false);
+});
+
+test("mixed administrator and business grants cannot be assigned to an account", async () => {
+  const database = seedWithAdmin({
+    users: [10, 20].map(id => ({ id, username: `u${id}`, status: "active" })),
+    permissions: [...ADMIN_ACTOR.claimedPermissions, "supplier.bank.mgmt"].map((name, i) => ({ id: 100 + i, name })),
+    rolePermissions: [[1, 100], [1, 101], [1, 102], [STAFF.id, 103]]
+  });
+  const { service } = createService({ database });
+  const roleIds = [SYSTEM_ADMIN.id, STAFF.id];
+  await assert.rejects(() => service.create({ ...ADMIN_ACTOR, username: "mixed", password: "StrongPassword123", roleIds }),
+    { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
+  await assert.rejects(() => service.assignRoles({ ...ADMIN_ACTOR, id: 20, roleIds, expectedRoleIds: [], reason: "職責分離" }),
+    { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
+  assert.deepEqual([...database.state.userRoles], ["10:1"]);
 });

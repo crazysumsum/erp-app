@@ -3,6 +3,9 @@ import { AuditLogService } from "../audit/AuditLogService.js";
 import {
   assertNoPermissionEscalation,
   assertRoleNotProtected,
+  SYSTEM_ADMIN_PERMISSIONS,
+  SYSTEM_ADMIN_ROLE,
+  assertSystemAdminPermissions,
   newlyGrantedPermissions
 } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
@@ -255,6 +258,18 @@ export class RoleAdminService {
       const nextPermissionNames = permissions.map((permission) => permission.name);
       const currentPermissionNames = await this.#permissionNamesByIds(connection, currentPermissionIds);
 
+      if (nextPermissionNames.some(name => !SYSTEM_ADMIN_PERMISSIONS.includes(name))) {
+        // All holders count, including disabled accounts that retain their role assignments.
+        const [adminHolders] = await connection.query(
+          `SELECT 1 FROM user_roles holder
+             JOIN user_roles membership ON membership.user_id = holder.user_id
+             JOIN roles admin ON admin.id = membership.role_id
+            WHERE holder.role_id = ? AND admin.name = ? LIMIT 1`,
+          [id, SYSTEM_ADMIN_ROLE]
+        );
+        if (adminHolders.length) assertSystemAdminPermissions(nextPermissionNames);
+      }
+
       const granted = newlyGrantedPermissions(currentPermissionNames, nextPermissionNames);
       assertNoPermissionEscalation({
         actorRoles: actor.roles,
@@ -285,7 +300,7 @@ export class RoleAdminService {
       });
 
       return { id: Number(id), permissions: nextPermissionNames };
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   /** 權限目錄，唯讀。 */

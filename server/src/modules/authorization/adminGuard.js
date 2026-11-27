@@ -1,10 +1,11 @@
+import { PERMISSION_NAMES } from "./permissionCatalogue.js";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 
 /**
  * 提權防護：四道。設計說明見 docs/user_management/design_spec.md §1.4。
  *
  * `user.mgmt` 與 `role.mgmt` 本身就有能力製造更高的權限——一個只有 `user.mgmt`
- * 的人，可以把 `system-admin` 指派給自己，一步拿齊全部權限。「`system-admin`
+ * 的人，可以把 `system-admin` 指派給自己，取得管理員的轉授能力。「`system-admin`
  * 角色不可改」擋不住這件事：角色不能改，不代表這個角色不能被指派給別人。
  *
  * 這裡全部是**純函式**：它們要的東西（操作者現在的權限、目標的角色、這次要
@@ -16,10 +17,32 @@ import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 
 export const SYSTEM_ADMIN_ROLE = "system-admin";
 
-const PROTECTED_ADMIN_DELEGATABLE_PERMISSIONS = new Set([
-  "customer.bank.view",
-  "customer.bank.mgmt"
+const accountManagement = ["user.mgmt", "role.mgmt", "device.mgmt"];
+export const SYSTEM_ADMIN_PERMISSIONS = Object.freeze([
+  ...accountManagement, "item.view", "item.mgmt",
+  "customer.view", "customer.mgmt", "customer.approval", "customer.settings",
+  "supplier.view", "supplier.mgmt", "supplier.approval", "supplier.settings",
+  "business_master.view", "business_master.mgmt"
 ]);
+const PROTECTED_ADMIN_DELEGATABLE_PERMISSIONS = new Set(
+  PERMISSION_NAMES.filter(permission => !accountManagement.includes(permission))
+);
+
+export function assertSystemAdminActor(actorRoles) {
+  if (!actorRoles.includes(SYSTEM_ADMIN_ROLE)) {
+    throw forbidden("Managing a system-admin account requires the system-admin role", {
+      code: "PERMISSION_ESCALATION_DENIED", publicMessage: "只有系統管理員可以管理此帳號"
+    });
+  }
+}
+
+export function assertSystemAdminPermissions(permissionNames) {
+  if (permissionNames.some(permission => !SYSTEM_ADMIN_PERMISSIONS.includes(permission))) {
+    throw forbidden("A system administrator cannot hold business permissions", {
+      code: "PERMISSION_ESCALATION_DENIED", publicMessage: "系統管理員不能兼有業務權限"
+    });
+  }
+}
 
 function conflict(message, { code, publicMessage }) {
   return new ApplicationError(message, {
@@ -69,11 +92,8 @@ export function newlyGrantedPermissions(currentPermissionNames, nextPermissionNa
 }
 
 /**
- * 第二道的第二步：新增的權限集合必須是操作者自己權限集合的子集。
- *
- * 對 `system-admin` 自然成立：他持有全部三個權限，所以什麼都授得出去。對只有
- * `user.mgmt` 的人，效果是他只能指派「權限集合 ⊆ {user.mgmt}」的角色——
- * `system-admin` 帶著另外兩個權限，於是指派不出去，包括指派給自己。
+ * 一般操作者只能新增自己持有的權限。受保護管理員可向其他帳號或自己
+ * 未持有的角色轉授目錄內的業務權限。帳號、角色和設備管理權限仍須本人持有。
  */
 export function assertNoPermissionEscalation({
   actorRoles = [],

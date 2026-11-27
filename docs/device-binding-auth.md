@@ -106,7 +106,7 @@ CREATE TABLE user_device_nonces (
 
 migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：角色 `system-admin`、權限 `device.mgmt`、以及兩者之間的 `role_permissions` 關聯。
 
-`system-admin` 種入時**只給 `device.mgmt` 這一個權限**，不預先塞其他的。日後要什麼再逐項加——一個上線第一天就握有所有權限的角色，之後沒有人敢動它。
+`system-admin` 在設備綁定 migration 最初只取得 `device.mgmt`。F-09 完成後共保留 15 項：`user.mgmt`、`role.mgmt`、`device.mgmt`、`item.view`、`item.mgmt`、`customer.view`、`customer.mgmt`、`customer.approval`、`customer.settings`、`supplier.view`、`supplier.mgmt`、`supplier.approval`、`supplier.settings`、`business_master.view`、`business_master.mgmt`。管理員維護帳號、設備及主資料；供應商銀行資料改由財務查看與維護。首個帳號若指定帶有業務權限的角色，整筆建立會回滾。角色配置及部署前後盤點見 [F-09 實作 TASK](user_management/TASK-F-09.md)。
 
 **角色名用 slug `system-admin`，不是帶空格的 `system admin`。** 這一欄的值會直接進 JWT 的 `roles` claim，也是 `hasRole` 策略與前端 `page.requires.roles` 的比對字串——那些位置都是機器讀的識別碼，慣例與 `device.mgmt` 一致。給人看的字串放 `description`（`System Admin`），`roles` 表本來就有這一欄。
 

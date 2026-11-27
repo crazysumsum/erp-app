@@ -16,6 +16,8 @@
  */
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import { assertSystemAdminPermissions, SYSTEM_ADMIN_ROLE } from "../src/modules/authorization/adminGuard.js";
+import { loadPermissionNamesForUser, loadRoleNamesForUser } from "../src/modules/authorization/directoryLookups.js";
 import { normalizeDatabaseConfig } from "../src/framework/configuration/normalizeDatabaseConfig.js";
 import { hashPassword } from "../src/modules/user/passwordHash.js";
 
@@ -26,10 +28,6 @@ const { default: databaseConfig } = await import("../config/database.js");
 const { createMySqlDatabasePool } = await import(
   "../src/services/mysqldatabase/connection.js"
 );
-
-// 系統第一個帳號自動取得這個角色。角色與它的 device.mgmt 權限由
-// 0004_add_device_binding_tables.js 種入（0005 把該權限由 device.approve 改名）。
-const SYSTEM_ADMIN_ROLE = "system-admin";
 
 function parseArguments(argv) {
   const positional = [];
@@ -149,6 +147,7 @@ async function createUser(connection, { username, password, displayName, roles }
   const passwordHash = await hashPassword(password);
   const nowMs = Date.now();
 
+  await connection.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
   await connection.beginTransaction();
 
   try {
@@ -188,6 +187,9 @@ async function createUser(connection, { username, password, displayName, roles }
       );
     }
 
+    if ((await loadRoleNamesForUser(connection, userId)).includes(SYSTEM_ADMIN_ROLE)) {
+      assertSystemAdminPermissions(await loadPermissionNamesForUser(connection, userId));
+    }
     await connection.commit();
     return { userId, roles: effectiveRoles, isFirstUser };
   } catch (error) {

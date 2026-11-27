@@ -130,6 +130,14 @@ function createFakeDatabase({
       return [{ affectedRows: 1 }];
     }
 
+    if (sql.includes("SELECT 1 FROM user_roles holder")) {
+      const [id, adminRole] = params;
+      const held = [...state.users.keys()].some(userId =>
+        roleIdsOfUser(userId).includes(id) && roleIdsOfUser(userId).some(roleId => state.roles.get(roleId)?.name === adminRole)
+      );
+      return [held ? [{ held: 1 }] : []];
+    }
+
     if (sql.includes("SELECT permission_id FROM role_permissions WHERE role_id = ? FOR UPDATE")) {
       return [permissionIdsOfRole(params[0]).map((permission_id) => ({ permission_id }))];
     }
@@ -559,4 +567,20 @@ test("RoleAdminService: every write rejects with PERMISSION_STALE when the actor
       }),
     { code: "PERMISSION_STALE" }
   );
+});
+
+test("a disabled system administrator's secondary role cannot receive a business permission", async () => {
+  const database = seedWithAdmin({
+    users: [{ id: 10, username: "admin", status: "active" }, { id: 20, username: "inactive", status: "disabled" }],
+    userRoles: [[10, SYSTEM_ADMIN.id], [20, SYSTEM_ADMIN.id], [20, STAFF.id]],
+    permissions: [
+      { id: 100, name: "user.mgmt" }, { id: 101, name: "role.mgmt" }, { id: 102, name: "device.mgmt" },
+      { id: 103, name: "supplier.bank.view" }
+    ]
+  });
+  const { service } = createService({ database });
+  await assert.rejects(() => service.assignPermissions({ ...ADMIN_ACTOR, id: STAFF.id,
+    permissionIds: [103], expectedPermissionIds: [], reason: "角色持有人包括停用的管理員" }),
+  { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
+  assert.equal(database.state.rolePermissions.has(`${STAFF.id}:103`), false);
 });

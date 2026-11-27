@@ -104,7 +104,7 @@ test("assertNoPermissionEscalation denies self-assigning system-admin with only 
   assert.deepEqual(error.details.permissions.sort(), ["device.mgmt", "role.mgmt"]);
 });
 
-test("protected system-admin may delegate only Customer bank permissions it does not hold", () => {
+test("protected system-admin may delegate Customer bank permissions it does not hold", () => {
   assert.doesNotThrow(() =>
     assertNoPermissionEscalation({
       actorRoles: ["system-admin"],
@@ -127,15 +127,15 @@ test("ordinary admin may not delegate Customer bank permissions it does not hold
   );
 });
 
-test("protected system-admin exception does not cover unrelated permissions", () => {
+test("protected system-admin delegation is limited to catalogued non-administration permissions", () => {
   const error = captureError(() =>
     assertNoPermissionEscalation({
       actorRoles: ["system-admin"],
       actorPermissions: ["role.mgmt"],
-      grantedPermissions: ["customer.bank.view", "supplier.bank.view"]
+      grantedPermissions: ["customer.bank.view", "supplier.bank.view", "device.mgmt", "unknown.permission"]
     })
   );
-  assert.deepEqual(error.details.permissions, ["supplier.bank.view"]);
+  assert.deepEqual(error.details.permissions, ["device.mgmt", "unknown.permission"]);
 });
 
 test("protected system-admin may not use the delegation exception on itself", () => {

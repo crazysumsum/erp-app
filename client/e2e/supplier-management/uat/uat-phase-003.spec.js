@@ -81,7 +81,6 @@ function newLogText(mark, keep = () => true) {
 }
 // 只係 request log：被拒嘅請求會連 requestId 寫入 system log，所以喺全部 log 搵 requestId 證明唔到 request log 有寫。
 const requestLogOnly = (file) => path.basename(file).startsWith("requests-");
-const systemLogOnly = (file) => file.startsWith(path.join(logRoot, "system"));
 
 /** 記低呢啲頁面送出嘅 bank 請求嘅 X-Request-Id，用嚟證明 request log 已經寫到呢個 test 最後一個請求。 */
 function trackBankRequests(...pages) {
@@ -290,10 +289,10 @@ test("@uat UAT-029 a Supplier without any bank account activates; missing paymen
   test.fixme(true, DOWNSTREAM);
 });
 
-test("@uat UAT-030 SYSTEM-ADMIN has every bank permission, yet still sees the masked list and re-authenticates to reveal and to change, with Audit and an alert", async ({ as }, testInfo) => {
+test("@uat UAT-030 finance re-authenticates to reveal and change masked bank data with audit, while system administrators cannot access bank details", async ({ as }, testInfo) => {
   const mark = logMark();
   const { supplier, bank } = await supplierWithAccount(as);
-  const { page, account: admin } = await as("SYSTEM-ADMIN");
+  const { page, account: officer } = await as("BANK-OFFICER");
   const requestIds = trackBankRequests(page);
   // 密碼錯係 403 PASSWORD_INVALID（passwordReauth.js：401 會令前端當 session 失效登出）。
   const problems = watchProblems(page, { allow: [{ status: 403, path: "/reveal" }, { status: 403, path: "/update" }] });
@@ -302,67 +301,70 @@ test("@uat UAT-030 SYSTEM-ADMIN has every bank permission, yet still sees the ma
   await expect(bankRow(page, bank.bankName)).toContainText(masked(bank.account));
   await expect(page.getByRole("button", { name: "新增銀行帳戶" })).toBeVisible();
   expect(await domHas(page, bank.account), "no full account number on the page").toBe(false);
-  await evidence(page, testInfo, "masked-for-admin", [bank.account]);
+  await evidence(page, testInfo, "masked-for-finance", [bank.account]);
 
   // Reveal 要密碼：錯嘅密碼唔得，啱嘅先顯示。
   await page.getByRole("button", { name: `查看完整帳號 ${bank.bankName}` }).click();
   let dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("button", { name: "確認查看" })).toBeDisabled();
-  await dialog.getByLabel("密碼 *").fill(`${admin.password}-wrong`);
-  await dialog.getByLabel("查看原因 *").fill("UAT-030 break-glass check");
+  await dialog.getByLabel("密碼 *").fill(`${officer.password}-wrong`);
+  await dialog.getByLabel("查看原因 *").fill("UAT-030 finance check");
   await dialog.getByRole("button", { name: "確認查看" }).click();
   await expect(dialog.getByRole("alert")).toContainText("密碼不正確");
   await expect(page.locator(PLAINTEXT)).toHaveCount(0);
-  await dialog.getByLabel("密碼 *").fill(admin.password);
+  await dialog.getByLabel("密碼 *").fill(officer.password);
   await dialog.getByRole("button", { name: "確認查看" }).click();
   await until(() => revealedIs(page, bank.account), "the full number is shown after re-authentication");
   await page.getByRole("button", { name: "收起" }).click();
   await until(async () => (await revealedCount(page)) === 0, "hidden again");
 
   // 改銀行資料要重新認證：錯嘅密碼伺服器拒絕、資料冇變（REV-123 R3），啱嘅先成功。
-  const renamed = `${bank.bankName} (admin)`;
+  const renamed = `${bank.bankName} (finance)`;
   const edit = async (password) => {
     await page.getByRole("button", { name: `編輯 ${bank.bankName}` }).click();
     dialog = page.getByRole("dialog");
     await dialog.getByLabel("銀行名稱 *").fill(renamed);
-    await dialog.getByLabel("修改原因 *").fill("UAT-030 break-glass correction");
+    await dialog.getByLabel("修改原因 *").fill("UAT-030 finance correction");
     await expect(dialog.getByRole("button", { name: "儲存" })).toBeDisabled();
     await dialog.getByLabel("密碼 *").fill(password);
     await dialog.getByRole("button", { name: "儲存" }).click();
   };
-  await edit(`${admin.password}-wrong`);
+  await edit(`${officer.password}-wrong`);
   await expect(dialog.getByRole("alert")).toBeVisible();
   await dialog.getByRole("button", { name: "取消" }).click();
   await page.reload();
   await page.getByRole("tab", { name: "銀行資料" }).click();
   await expect(bankRow(page, bank.bankName)).toContainText(masked(bank.account));
   await expect(bankRow(page, renamed)).toHaveCount(0);
-  await edit(admin.password);
+  await edit(officer.password);
   await expect(dialog).toHaveCount(0);
   await expect(bankRow(page, renamed)).toContainText(masked(bank.account));
 
   await page.getByRole("tab", { name: "變更紀錄" }).click();
-  for (const [label, reason] of [["查看完整帳號", "UAT-030 break-glass check"], ["編輯銀行帳戶", "UAT-030 break-glass correction"]]) {
+  for (const [label, reason] of [["查看完整帳號", "UAT-030 finance check"], ["編輯銀行帳戶", "UAT-030 finance correction"]]) {
     const row = page.locator("tbody tr", { hasText: label });
     await expect(row).toHaveCount(1);
-    await expect(row).toContainText("uat-system-admin");
+    await expect(row).toContainText("uat-bank-officer");
     await expect(row).toContainText(reason);
+    const auditText = await row.innerText();
+    const requestId = requestIds.find(id => auditText.includes(id));
+    expect(requestId, "bank audit row identifies the corresponding request").toBeTruthy();
   }
-  await evidence(page, testInfo, "admin-audit", [bank.account]);
+  await evidence(page, testInfo, "finance-audit", [bank.account]);
   await expectNoPlaintextStored({ supplierId: supplier.id, accounts: [bank.account], mark, requestIds });
   expect(problems).toEqual([]);
 
-  // 告警（SEC-014、設計 §4 system-admin、§12.4）：break-glass 嘅 reveal 同修改要有告警，即係 system log 有一條提到呢個
-  // Supplier 嘅 warn 級以上事件。DEF-047：而家冇，所以呢步會紅，等 HD-142 決定（REV-123 R2）。
-  const alerted = () => newLogText(mark, systemLogOnly).split("\n").filter(Boolean).some((line) => {
-    try {
-      const entry = JSON.parse(line);
-      return ["warn", "error"].includes(entry.level) && Number(entry.context?.supplierId) === supplier.id;
-    } catch {
-      return false;
-    }
-  });
-  await until(alerted, "DEF-047: a warn-level system log event for this system-admin bank use");
+  const { page: adminPage, account: admin } = await as("SYSTEM-ADMIN");
+  const adminProblems = watchProblems(adminPage, { allow: [{ status: 403, path: "/reveal" }] });
+  await openBankTab(adminPage, supplier.id);
+  await expect(bankRow(adminPage, bank.bankName)).toContainText(masked(bank.account));
+  await expect(adminPage.getByRole("button", { name: `編輯 ${bank.bankName}` })).toHaveCount(0);
+  await expect(adminPage.getByRole("button", { name: /查看完整帳號/ })).toHaveCount(0);
+  await expect(adminPage.getByRole("button", { name: "新增銀行帳戶" })).toHaveCount(0);
+  const denied = await bankCall(adminPage, "reveal", supplier.id, bank.id, { password: admin.password, reason: "UAT-030 admin access check" });
+  expect(denied.startsWith("403 "), "system administrator cannot reveal the full account").toBe(true);
+  expect(denied.includes(bank.account) || await domHas(adminPage, bank.account)).toBe(false);
+  expect(adminProblems).toEqual([]);
 });
 
 test("@uat UAT-053 a BANK-OFFICER adds, edits, sets the default and deactivates an account; plaintext appears only while typed or revealed, and every step is audited", async ({ as }, testInfo) => {

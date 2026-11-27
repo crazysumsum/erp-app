@@ -20,6 +20,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
+import { SYSTEM_ADMIN_PERMISSIONS } from "../../src/modules/authorization/adminGuard.js";
 import { up as addUserPasswordColumns } from "../../database/migrations/0006_add_user_password_columns.js";
 import { up as addUserAuditLogs } from "../../database/migrations/0007_add_user_audit_logs.js";
 import { up as seedPermissions } from "../../database/migrations/0008_seed_user_management_permissions.js";
@@ -118,7 +119,7 @@ test("0007 built user_audit_logs with the three indexes and an actor FK that doe
   assert.equal(constraints.length, 1, "user_audit_logs should have exactly one FK");
 });
 
-test("0038 seeds the Customer catalogue but does not grant bank permissions to system-admin", { skip }, async (t) => {
+test("all migrations seed the permission catalogue and leave exactly the retained system-admin permissions", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   // 只驗證目錄涵蓋這幾項，不驗證「剛好只有」這幾項：node --test 預設會跨檔案
@@ -140,17 +141,14 @@ test("0038 seeds the Customer catalogue but does not grant bank permissions to s
   const heldNames = held.map((row) => row.name);
   assert.deepEqual(
     heldNames.sort(),
-    PERMISSION_CATALOGUE
-      .map((permission) => permission.name)
-      .filter((name) => !name.startsWith("customer.bank."))
-      .sort()
+    [...SYSTEM_ADMIN_PERMISSIONS].sort()
   );
   assert.equal(heldNames.includes("customer.bank.view"), false);
   assert.equal(heldNames.includes("customer.bank.mgmt"), false);
-  assert.equal(heldNames.some((name) => name.startsWith("inventory.")), true);
-  assert.equal(heldNames.some((name) => name.startsWith("fulfillment.")), true);
-  assert.equal(heldNames.some((name) => name.startsWith("sales.")), true);
-  assert.equal(heldNames.includes("fulfillment.operation"), true);
+  assert.equal(heldNames.some((name) => name.startsWith("inventory.")), false);
+  assert.equal(heldNames.some((name) => name.startsWith("fulfillment.")), false);
+  assert.equal(heldNames.some((name) => name.startsWith("sales.")), false);
+  assert.equal(heldNames.includes("fulfillment.operation"), false);
 });
 
 test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip }, async (t) => {
@@ -179,7 +177,7 @@ test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip },
   );
 });
 
-test("0028 seeded all Supplier permissions and granted each to system-admin", { skip }, async (t) => {
+test("Supplier catalogue includes all six permissions and system-admin holds only the four non-bank grants", { skip }, async (t) => {
   const database = await withDatabase(t);
   const expected = [
     "supplier.approval",
@@ -202,7 +200,7 @@ test("0028 seeded all Supplier permissions and granted each to system-admin", { 
       WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%'
       ORDER BY p.name`
   );
-  assert.deepEqual(held.map((row) => row.name), expected);
+  assert.deepEqual(held.map((row) => row.name), expected.filter(name => !name.startsWith("supplier.bank.")));
 });
 
 test("0011 built item_categories: a generated parent_scope_id blocks duplicate root names too", { skip }, async (t) => {

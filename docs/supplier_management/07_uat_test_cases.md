@@ -30,7 +30,7 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 | BANK-READER | `supplier.view`＋`supplier.bank.view` |
 | BANK-OFFICER | `supplier.view`＋`supplier.bank.view`＋`supplier.bank.mgmt`，使用approved device |
 | SETTINGS-ADMIN | `supplier.settings`，使用approved device |
-| SYSTEM-ADMIN | 受保護的最高權限break-glass角色；銀行操作仍需同等重新認證、稽核及告警 |
+| SYSTEM-ADMIN | 受保護的系統管理角色；供應商銀行資料由財務管理（F-09，Sam fe2d50de） |
 | BUYER | Purchasing授權使用者，只透過正式Supplier lookup選擇供應商 |
 | S-DRAFT／S-ACTIVE／S-SUSP／S-BLOCK／S-ARCH | 各狀態Supplier；另準備未引用及已引用資料 |
 | CSV-MIXED | 含合法、錯誤、警告、檔內重複、更新及公式字首列的10列小型CSV；不含銀行欄位：含銀行欄位的檔案於上傳時整檔拒絕，由UAT-038獨立驗證（HD-053 A、HD-054 A；HD-145 A修訂） |
@@ -89,7 +89,7 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 | UAT-027 | P0 | PHASE-003 | CLERK/BANK-READER | FR-045；AC-025 | Supplier有Bank | 嘗試新增／修改Bank | 後端拒絕；資料不變 | 錯誤、遮罩列表前後 | — | NOT_RUN |
 | UAT-028 | P0 | PHASE-003 | BANK-OFFICER | FR-048；AC-026 | 已有default Bank | 將另一帳戶設為default | 同一操作取消舊default；只剩一個有效default | 前後遮罩列表、Audit | — | NOT_RUN |
 | UAT-029 | P1 | PHASE-003 | CLERK/BUYER | FR-051；AC-027 | Supplier無Bank | 啟用並在Purchasing選擇 | 不被Supplier模組阻擋；付款資料缺少只由下游提示 | 啟用、Buyer結果 | — | NOT_RUN |
-| UAT-030 | P0 | PHASE-003 | SYSTEM-ADMIN | SEC-005～SEC-014；HD-001 | Break-glass帳號及approved device | 一般查看、Reveal及Bank修改各一次 | 具最高權限；一般畫面仍遮罩；Reveal／write仍重新認證、Audit及告警，不能繞過安全控制 | permission、遮罩、Audit、alert（不得含明文） | — | NOT_RUN |
+| UAT-030 | P0 | PHASE-003 | 財務（BANK-OFFICER）、SYSTEM-ADMIN | SEC-005～SEC-014；F-09 r3，Sam fe2d50de | 財務及管理員帳號、已核准設備 | 財務查看遮罩、重新認證以查看及修改；管理員查閱同一供應商 | 錯誤密碼拒絕；修改須填原因；稽核可核對請求編號；管理員只見遮罩，無新增或顯示完整帳號入口，請求完整帳號回 403 | 遮罩、權限、稽核（不得含明文） | — | NOT_RUN |
 | UAT-031 | P1 | PHASE-001 | CLERK | FR-020, FR-024；HD-002 | Business Master有Active及inactive值 | 建立／編輯時選值；前往Supplier Settings | 只可選Active；舊inactive值可顯示；Supplier Settings沒有目錄寫入控制 | 表單、詳情、Settings、network | — | NOT_RUN |
 
 ### 4.4 Supplier–SKU、Import、Export與權限

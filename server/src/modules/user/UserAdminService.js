@@ -3,6 +3,8 @@ import { AuditLogService } from "../audit/AuditLogService.js";
 import {
   assertLastActiveAdminPreserved,
   assertNoPermissionEscalation,
+  assertSystemAdminActor,
+  assertSystemAdminPermissions,
   lastAdminProtectedError,
   SYSTEM_ADMIN_ROLE,
   newlyGrantedPermissions
@@ -223,6 +225,10 @@ export class UserAdminService {
 
       const roles = await this.#rolesByIds(connection, roleIds);
       const nextPermissionNames = await this.#permissionNamesForRoleIds(connection, roleIds);
+      if (roles.some(role => role.name === SYSTEM_ADMIN_ROLE)) {
+        assertSystemAdminActor(actor.roles);
+        assertSystemAdminPermissions(nextPermissionNames);
+      }
       const granted = newlyGrantedPermissions([], nextPermissionNames);
       assertNoPermissionEscalation({
         actorRoles: actor.roles,
@@ -276,7 +282,7 @@ export class UserAdminService {
         displayName: String(displayName ?? ""),
         roles: roles.map((role) => role.name)
       };
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   async update({ actorId, claimedRoles, claimedPermissions, id, displayName, requestId, ip }) {
@@ -507,6 +513,10 @@ export class UserAdminService {
         currentRoleIds
       );
       const nextPermissionNames = await this.#permissionNamesForRoleIds(connection, roleIds);
+      if (currentRoleNames.includes(SYSTEM_ADMIN_ROLE) !== nextRoleNames.includes(SYSTEM_ADMIN_ROLE)) {
+        assertSystemAdminActor(actor.roles);
+      }
+      if (nextRoleNames.includes(SYSTEM_ADMIN_ROLE)) assertSystemAdminPermissions(nextPermissionNames);
       const granted = newlyGrantedPermissions(currentPermissionNames, nextPermissionNames);
       assertNoPermissionEscalation({
         actorRoles: actor.roles,
@@ -540,7 +550,7 @@ export class UserAdminService {
       });
 
       return { id: Number(id), roles: nextRoleNames };
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   /**
@@ -604,14 +614,7 @@ export class UserAdminService {
   async #assertCanManageAccount(connection, actor, targetId) {
     // Both callers use SERIALIZABLE so the checked grants stay current through the write.
     const targetRoles = await loadRoleNamesForUser(connection, targetId);
-    if (targetRoles.includes(SYSTEM_ADMIN_ROLE) && !actor.roles.includes(SYSTEM_ADMIN_ROLE)) {
-      throw new ApplicationError("Managing a system-admin account requires the system-admin role", {
-        code: "PERMISSION_ESCALATION_DENIED",
-        publicCode: "PERMISSION_ESCALATION_DENIED",
-        statusCode: 403,
-        publicMessage: "只有系統管理員可以管理此帳號"
-      });
-    }
+    if (targetRoles.includes(SYSTEM_ADMIN_ROLE)) assertSystemAdminActor(actor.roles);
 
     assertNoPermissionEscalation({
       actorRoles: actor.roles,

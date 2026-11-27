@@ -12,6 +12,7 @@ export const page = {
 import { computed, onMounted, ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
+import { canDelegate } from "@/framework/authorization/canDelegate.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
 import { useCrud } from "@/framework/ui/useCrud.js";
@@ -62,19 +63,19 @@ onMounted(async () => {
   roles.value = await roleService.list();
 });
 
-// §1.4 第二道嘅前端提示版：操作者授唔出自己都冇嘅權限。呢度淨係為咗喺畫面
-// 上早講一句，唔係防線——後端 PERMISSION_ESCALATION_DENIED 先係真正擋住嗰道。
-function isRoleAssignable(role) {
-  return role.permissions.every((permission) => session.permissions.includes(permission));
+function roleOptionsFor(targetIsActor) {
+  return roles.value.map(role => {
+    const assignable = (role.name !== "system-admin" || session.roles.includes("system-admin")) &&
+      role.permissions.every(permission => canDelegate(session, permission, targetIsActor));
+    return {
+      label: assignable ? role.name : `${role.name}（你自己冇呢個權限）`,
+      value: role.id,
+      disable: !assignable
+    };
+  });
 }
-
-const roleOptions = computed(() =>
-  roles.value.map((role) => ({
-    label: isRoleAssignable(role) ? role.name : `${role.name}（你自己冇呢個權限）`,
-    value: role.id,
-    disable: !isRoleAssignable(role)
-  }))
-);
+const createRoleOptions = computed(() => roleOptionsFor(false));
+const editRoleOptions = computed(() => roleOptionsFor(rolesDialogUser.value?.id === session.user?.id));
 
 /* ---------------- 新增用戶 ---------------- */
 
@@ -389,7 +390,7 @@ async function toggleStatus(row) {
                 filled
                 :rules="[(val) => val === createForm.newUserPassword || '同「初始密碼」不一致']"
               />
-              <q-option-group v-model="createForm.roleIds" type="checkbox" :options="roleOptions" />
+              <q-option-group v-model="createForm.roleIds" type="checkbox" :options="createRoleOptions" />
               <q-separator />
               <q-input
                 v-model="createForm.password"
@@ -459,7 +460,7 @@ async function toggleStatus(row) {
           >
             <div class="q-gutter-md">
               <q-banner v-if="rolesDialogError" class="bg-warning text-dark">{{ rolesDialogError }}</q-banner>
-              <q-option-group v-model="selectedRoleIds" type="checkbox" :options="roleOptions" />
+              <q-option-group v-model="selectedRoleIds" type="checkbox" :options="editRoleOptions" />
               <q-input
                 v-model="rolesReason"
                 label="原因"

@@ -10,6 +10,7 @@ export const page = {
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { canDelegate } from "@/framework/authorization/canDelegate.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
@@ -120,7 +121,7 @@ const permissionsDialogError = ref("");
 
 // §1.4 第二道嘅前端提示版，見 UsersPage.vue 同一段註解。
 function isPermissionGrantable(permission) {
-  return session.permissions.includes(permission.name);
+  return canDelegate(session, permission.name, session.roles.includes(permissionsDialogRole.value?.name));
 }
 
 const permissionOptions = computed(() =>
