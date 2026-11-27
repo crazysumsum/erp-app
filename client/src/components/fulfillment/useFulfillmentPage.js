@@ -9,7 +9,8 @@ export function useFulfillmentPage(kind){
   finally{if(!signal.aborted)loading.value=false;}
  }
  function apply(filters){try{return router.replace({query:normalizeFulfillmentQuery(kind,{...filters,page:1,cursor:undefined})});}catch{error.value="篩選資料不正確，請檢查後再試";}}
+ function changePageSize(pageSize){return apply({...route.query,pageSize});}
  function next(){if(!loading.value&&data.value.hasMore&&data.value.nextCursor)return router.push({query:{...route.query,page:String(data.value.page+1),cursor:data.value.nextCursor}});}
  function first(){return router.push({query:{...route.query,page:"1",cursor:undefined}});}
- watch(()=>route.fullPath,load,{immediate:true});onBeforeUnmount(()=>controller?.abort());return {route,data,loading,error,load,apply,next,first};
+ watch(()=>route.fullPath,load,{immediate:true});onBeforeUnmount(()=>controller?.abort());return {route,data,loading,error,load,apply,changePageSize,next,first};
 }
