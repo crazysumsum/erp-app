@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "decision": "Sam extended functional per-case admission suspension until production go-live in AGENTS.md (PR #395). PM 47461a13, 07250f43 and eaacc66b directed the AR Credit Memo scope, ordinary merges and functional handoff. The source head is 3e89378f928427b6b16dbbff5c55908cc22ffbd2 on main ac3dd17a379368852af90fd4dedeee0855601b81. Independent exact review and trusted CI administrator digest registration are required. PM f8ab3e3a and a551b7f2, with TL eb6da488, authorized a fixture-only correction for the three existing TC-020 cases after #424's first CI failure. The correction aligns the schema probe result shape without changing assertions or execution counts. PM c3efbc58 and TL c8d893e8 authorized one in-memory TC-020 negative regression after confirming that the existing cases did not cover an omitted credit_present column.",
+  "decision": "Sam extended functional per-case admission suspension until production go-live in AGENTS.md (PR #395). PM 47461a13, 07250f43 and eaacc66b directed the AR Credit Memo scope, ordinary merges and functional handoff. The source head is 3e89378f928427b6b16dbbff5c55908cc22ffbd2 on main ac3dd17a379368852af90fd4dedeee0855601b81. Independent exact review and trusted CI administrator digest registration are required. PM f8ab3e3a and a551b7f2, with TL eb6da488, authorized a fixture-only correction for the three existing TC-020 cases after #424's first CI failure. The correction aligns the schema probe result shape without changing assertions or execution counts. PM c3efbc58 and TL c8d893e8 authorized one in-memory TC-020 negative regression after confirming that the existing cases did not cover an omitted credit_present column. AP Credit Memo integration on main 51316c5e follows the same Sam #395 functional decision and PM d4ddb65a. CI administrator codex-erp-app-ci-01 confirmed this existing owner in f16ef314 for program candidate 867bef55958e1dadd381ca6cd029d967101142d8.",
   "purpose": "Verify AR Credit Memo schema, permission seeding, currency rounding and remaining credit amounts, invoice void protection, concurrent confirmations, idempotent commands, credit applications and the shared refund balance contract.",
   "data": "Two MySQL schema checks verify permission seeds and credit/refund constraints in a freshly migrated private schema. Two HTTP cases use synthetic customers and a single opening invoice or a single shipped two-line order, with one matching posted return for source validation. Three in-memory tests cover per-line caps and shared credit balance locking. The added TC-020 regression uses one in-memory stub returning an absent-schema row with no credit table count; it writes no database rows.",
   "concurrency": "Existing routine server jobs and shard configuration. The HTTP case uses two concurrent confirmations for one original invoice to verify serialized credit limits. No new worker or job.",
@@ -57,7 +57,7 @@
     {
       "path": "server/test/business-master/consumer-contract/providerContract.test.js",
       "mode": "100644",
-      "blob": "0d9d842984ffacc71f6e28017e95f6389619f5bc",
+      "blob": "08a293b085bf5d74e362730455b385d84c1583a7",
       "kind": "functional",
       "cases": [
         "TC-020 the registered Supplier-owned checker replaces only its conservative readiness boundary",

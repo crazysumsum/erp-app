@@ -20,6 +20,7 @@ const scope = computed(() => `${session.user?.id}:ap-invoice:${id.value}:`);
 const actions = computed(() => invoice.value?.allowedActions ?? []);
 const mayOverride = computed(() => session.permissions.includes("ap.invoice.price.override"));
 const mayPay = computed(() => session.permissions.includes("ap.payment.mgmt") && invoice.value?.status === "CONFIRMED" && toUnits(invoice.value.outstandingAmount) > 0n);
+const mayCredit = computed(() => session.permissions.includes("ap.credit.mgmt") && invoice.value?.status === "CONFIRMED" && toUnits(invoice.value.totalAmount) > 0n);
 const form = reactive({ supplierInvoiceNumber: "", supplierTotalAmount: "", dueDate: "", dueDateReason: "", notes: "" });
 const expenses = ref([]), receiptEdits = ref([]);
 const changedDueDate = computed(() => form.dueDate !== invoice.value?.dueDate);
@@ -127,6 +128,7 @@ async function ask(action) {
     <PageHeader :title="invoice?.number || '應付發票詳情'">
       <template #actions>
         <q-btn v-if="mayPay" color="primary" label="登記付款" :to="{ path: '/ap/payments/new', query: { supplierId: invoice.supplierId, currencyCode: invoice.currencyCode } }" />
+        <q-btn v-if="mayCredit" outline color="primary" label="建立貸項單" :to="{ path: '/ap/credit-notes/new', query: { invoiceId: invoice.id } }" />
         <q-btn flat label="返回發票列表" to="/ap/invoices" />
       </template>
     </PageHeader>
@@ -203,8 +205,8 @@ async function ask(action) {
             </tbody>
           </q-markup-table>
         </div>
-        <h2 class="text-h6">核銷記錄</h2>
-        <p v-if="!invoice.allocations.length" role="status">未有核銷。</p>
+        <h2 class="text-h6">付款核銷</h2>
+        <p v-if="!invoice.allocations.length" role="status">未有付款核銷。</p>
         <q-list v-else bordered separator>
           <q-item v-for="item in invoice.allocations" :key="item.id">
             <q-item-section><router-link :to="`/ap/payments/${item.paymentId}`">{{ item.paymentNumber || '付款詳情' }}</router-link></q-item-section>
@@ -212,6 +214,16 @@ async function ask(action) {
             <q-item-section side>{{ item.status === 'ACTIVE' ? '有效' : '已解除' }}</q-item-section>
           </q-item>
         </q-list>
+        <h2 class="text-h6">貸項核銷</h2>
+        <p v-if="!invoice.creditAllocations?.length" role="status">未有貸項核銷。</p>
+        <q-list v-else bordered separator>
+          <q-item v-for="item in invoice.creditAllocations" :key="item.id">
+            <q-item-section><router-link :to="`/ap/credit-notes/${item.creditNoteId}`">{{ item.creditNoteNumber }}</router-link></q-item-section>
+            <q-item-section>{{ amount(item.amount) }} · {{ item.creditDate }}</q-item-section>
+            <q-item-section side>{{ item.status === 'ACTIVE' ? '有效' : '已解除' }}</q-item-section>
+          </q-item>
+        </q-list>
+        <q-btn flat label="查看原發票貸項單" class="q-mt-sm" :to="{ path: '/ap/credit-notes', query: { invoiceId: invoice.id } }" />
       </template>
     </div>
   </div>

@@ -309,7 +309,7 @@ function handlerServices() {
 
 test("TC-026/TC-033 (TL ruling 4): the shared factory gives every Supplier handler the Purchasing reference and open-flow checkers", () => {
   const { references, openFlows } = createSupplierReferenceServices();
-  const referenceNames = new Set(["採購單", "應付發票及付款"]);
+  const referenceNames = new Set(["採購單", "應付文件"]);
   const openFlowNames = new Set(["未完成採購單", "未付應付發票"]);
   assert.deepEqual(new Set(references.checkers.map((checker) => checker.name)), referenceNames);
   assert.deepEqual(new Set(openFlows.checkers.map((checker) => checker.name)), openFlowNames);

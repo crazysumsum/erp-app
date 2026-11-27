@@ -1,29 +1,31 @@
 {
   "version": 1,
-  "decision": "Sam extended the per-case functional suspension to production go-live in AGENTS.md (PR #395). The CI administrator requested exact preparation for A4 in agentmsg 63e2ccc2 and received the browser scope in ffc862f3. Exact non-author review and CI administrator registration precede the ordinary PR.",
-  "purpose": "Verify the accounts-payable browser path from confirmed receipt through supplier invoice, payment, allocation and cleared aging. Check supplier permissions, currency selection, validation, original-event recovery after refresh, account isolation, and browser and API errors.",
-  "data": "One private migrated MySQL schema and one localhost application. Three synthetic identities including a disabled bootstrap account, one supplier, one additional test currency, one SKU and UOM link, and one purchase order with one confirmed goods receipt line for HKD 325. The scenario also creates a no-PO draft and tests rejected payment data and one original-event replay.",
-  "concurrency": "One Playwright worker and one browser test. Intentional dropped responses verify one rejected and one committed request and their original-event retry.",
+  "decision": "Sam extended the per-case functional suspension to production go-live in AGENTS.md (PR #395). The CI administrator requested exact preparation for A4 in agentmsg 63e2ccc2 and received the browser scope in ffc862f3. Exact non-author review and CI administrator registration precede the ordinary PR. AP Credit Memo integration on main 51316c5e follows the same Sam #395 functional decision and PM d4ddb65a. CI administrator codex-erp-app-ci-01 confirmed this existing owner in f16ef314 for program candidate 867bef55958e1dadd381ca6cd029d967101142d8.",
+  "purpose": "Verify the accounts-payable browser path from confirmed receipt through supplier invoice, payment, allocation and cleared aging. Check supplier permissions, currency selection, validation, original-event recovery after refresh, account isolation, and browser and API errors. The credit note case verifies draft validation, operation replay, confirmation, applying, reversing and voiding credits.",
+  "data": "One private migrated MySQL schema and one localhost application. Three synthetic identities including a disabled bootstrap account, one supplier, one additional test currency, one SKU and UOM link, and one purchase order with one confirmed goods receipt line for HKD 325. The scenario also creates a no-PO draft and tests rejected payment data and one original-event replay. The separate credit scenario uses one synthetic supplier, two invoices and two original invoice lines. Both cases receive independently migrated disposable schemas.",
+  "concurrency": "One Playwright worker, two functional cases executed serially, zero retries. Each case sends its own bounded intentional fault-injection and recovery requests.",
   "repetitions": "1 per local invocation at each verification timezone.",
-  "thresholds": "The browser case passes, one committed payment exists after retry, allocation clears outstanding aging, and the browser records no unexpected AP API or console errors. Routine coverage floors stay the same.",
+  "thresholds": "The browser case passes, one committed payment exists after retry, allocation clears outstanding aging, and the browser records no unexpected AP API or console errors. Routine coverage floors stay the same. The credit scenario verifies exact invoice and credit balances, replay, and no unexpected AP API or browser errors.",
   "trigger": "Explicit local functional validation using the dedicated Playwright config. Existing routine CI workflows, browser commands, discovery and worker counts are unchanged.",
-  "cost": "Preview end-to-end Playwright invocations took 13.5 seconds in UTC and 12.7 seconds in Asia/Hong_Kong, excluding MySQL initialization and migrations. The AP case adds no routine CI workload.",
+  "cost": "The two local cases took 22.6 seconds in UTC and 23.8 seconds in Asia/Hong_Kong, including per-case schema setup. This adds no routine CI browser workload.",
   "files": [
     {
       "path": "client/e2e/accounts-payable/ap-flow.spec.js",
       "mode": "100644",
-      "blob": "39ec9bf08b7da2d20955300ca4ad2e148bcd89b7",
+      "blob": "5e763d49a2b43fa6e3f3e2ef5530e2b0a4ad140c",
       "kind": "functional",
       "cases": [
+        "AP credit note browser flow applies and reverses invoice credits",
         "AP browser flow confirms a receipt-backed invoice, pays it and clears aging"
       ]
     },
     {
       "path": "client/e2e/accounts-payable/playwright.config.js",
       "mode": "100644",
-      "blob": "f54aad89202d0fba48802f9faf380bd2fc865d81",
+      "blob": "690ede64ed88b36c0b4e017db35e6ef71cbbbb26",
       "kind": "functional",
       "cases": [
+        "AP credit note browser flow applies and reverses invoice credits",
         "AP browser flow confirms a receipt-backed invoice, pays it and clears aging"
       ]
     }
