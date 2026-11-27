@@ -1111,3 +1111,20 @@ test("mixed administrator and business grants cannot be assigned to an account",
     { code: "PERMISSION_ESCALATION_DENIED", statusCode: 403 });
   assert.deepEqual([...database.state.userRoles], ["10:1"]);
 });
+
+test("S-02 requires an administrator when changing secondary roles on an existing administrator", async () => {
+  const secondary = { id: 3, name: "secondary" };
+  const database = seedWithAdmin({
+    users: [{ id: 10, username: "admin", status: "active" }, { id: 20, username: "manager", status: "active" }],
+    roles: [SYSTEM_ADMIN, STAFF, secondary],
+    userRoles: [[10, SYSTEM_ADMIN.id], [20, STAFF.id]],
+    rolePermissions: [[SYSTEM_ADMIN.id, 100], [STAFF.id, 100]]
+  });
+  const { service } = createService({ database });
+  await assert.rejects(service.assignRoles({
+    actorId: 20, claimedRoles: [STAFF.name], claimedPermissions: ["user.mgmt"], id: 10,
+    expectedRoleIds: [SYSTEM_ADMIN.id], roleIds: [SYSTEM_ADMIN.id, secondary.id], reason: "S-02"
+  }), { statusCode: 403, code: "PERMISSION_ESCALATION_DENIED" });
+  assert.deepEqual([...database.state.userRoles].sort(), ["10:1", "20:2"]);
+  assert.deepEqual(database.state.auditRows, []);
+});
