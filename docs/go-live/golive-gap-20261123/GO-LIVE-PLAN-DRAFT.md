@@ -60,6 +60,7 @@ UAT 後的合併（Claude TL 的建議，待 CI 管理員確認）：
 - 啟動檢查（Sam 11-26 批准「方法2」，sharedfeatures-01 `codex/server-utc-startup`，TL 非作者 PASS，排在小修正整合 PR 合併）：正式入口啟動時若 `TZ` 不是 `UTC`／`Etc/UTC` 或實際 offset 不為 0，系統拒絕啟動並在 stderr 寫明實際 TZ 與 offset；`NODE_ENV` 未設一律當正式環境。**部署及 UAT 環境必須明確設：`NODE_ENV=production`、`TZ=UTC`、`APP_TIME_ZONE=Asia/Hong_Kong`**（即使主機系統時區已是 UTC，沒有明確設 `TZ=UTC` 也會拒啟）。另須設 `CUSTOMER_IMPORT_ROOT`（客戶匯入目錄；11-26 獨立驗收 SD-01 發現 `.env.example` 缺此行，已派 customer-01 補）。根本修正（mysql2 `dateStrings`）延到上線後。
 - 金鑰：正式及 UAT 環境的 `JWT_SECRET`、`SUPPLIER_BANK_*`、`CUSTOMER_BANK_*` 必須由部署負責人在部署時新生成（例如 `openssl rand`），不可沿用倉庫內任何出現過的值（CI 設定、`.env.example`、文件或測試資料內的值）。
 - 角色名稱（TL 11-27 裁定，中文角色名修正一併上線）：部署前在目標庫執行 `SELECT id FROM roles WHERE name REGEXP '[[:cntrl:]]';`，結果須為空；若有，先改名再部署。
+- 主檔用語（11-27 UI/UX 方案 B）：上線前在貨幣主檔把 HKD 的名稱改為「港元」（代碼不變），其他預設主檔名稱也一併檢查是否為中文。
 - 資料庫（請部署負責人核對，Claude TL 提出，未在正式環境條件下量度）：migration 會建立 trigger，MySQL 開啟 binlog 時須設 `log_bin_trust_function_creators` 或以有足夠權限的帳號執行；執行 migration 的管理帳號與應用程式帳號分開；MySQL 版本、字元集及定序與測試一致。
 - 應用程式設定：`FULFILLMENT_LIFECYCLE_ENABLED=true`（沒有它銷售的履約流程不可用）；`AR_INVOICE_COMPANY_NAME`（應收發票列印的公司名稱；未設時列印只見「公司名稱尚未設定」，`.env.example` 目前未列，11-27 UI/UX 檢查發現）；`APP_TIME_ZONE` 明確設定（業務日期及發票年度編號都取這個時區）；JWT 密鑰、CORS 允許的來源、`NODE_ENV`；Customer 及 Supplier 的銀行金鑰要另存備份，遺失即已加密的銀行資料無法讀回。
 - 執行方式：單一還是多個應用程式實例（排程工作不可重複執行）；反向代理及 HTTPS、代理之後客戶端 IP 的取得；日誌目錄、輪替及磁碟空間；附件及匯入檔的目錄。

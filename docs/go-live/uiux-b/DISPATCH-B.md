@@ -61,3 +61,35 @@
 | supplier-01 | X-8 供應商頁欄名（Supplier Code、Request ID、Business Master 等） |
 
 完成後，UI/UX 檢查員會按報告重驗這八類。
+
+## 上線後遺留（需新增 API，上線前不做）
+
+- 庫存篩選（TL 65ffc42a）：Lot 歷史搜尋、操作者、來源單據。inventory-01 會逐欄列出缺哪個 API、需要什麼權限。
+- X-10 匯總（TL 5554f9e6）：上線前只做權限相容的倉庫，以及倉庫內的庫位。其餘照舊用精確 ID 篩選，不放寬權限。
+- 上線後要補的 API：
+  1. 客戶及倉庫的唯讀代碼和名稱查詢，給 sales.view 或 fulfillment.view 使用。
+  2. 供應商及採購員的歷史選項，給 purchasing.view 使用。
+  3. 庫存（inventory-01 890df7fe）的 SKU 代碼和名稱，含停用項目；Lot 歷史，含零餘額；操作者名稱，不需要 user.mgmt；以及跨模組來源單號。
+- 是否把第 1 項提前到上線前做，待 Sam 決定。
+- 採購的供應商及採購員歷史選項（TL 248e83b2）：需要開放給 purchasing.view 使用的 choices API，回傳代碼和名稱，並包含非 active 的記錄。
+- M-F1 批號（TL 09f39ec2）：preview 會鎖 Sales、allocation 及 Inventory balance，所以不自動呼叫。上線前首屏只顯示庫位。上線後在推薦 DTO 加 lotNumber。
+- AR/AP 出貨單及銷售單搜尋（Codex TL f0d844e2）：部分比對，以及沒有履約權限時取得出貨單號，都需要新 API。上線前沿用完整編號搜尋。
+
+## Sam 11-27「照建議做客戶倉庫」：上線前新增兩個唯讀查詢 API
+
+依 TL 7d3d4455 草案：
+
+- 回傳 `{ id, code, name, status }`。
+- 每頁最多 50 筆。
+- 用 q 按名稱或代碼做部分比對。
+- 預設包含停用和封存的記錄。
+- 不改表結構，不放寬權限。
+
+| 端點 | 權限（任一） | 實作 |
+|---|---|---|
+| `GET /api/v1/customer-lookups/references` | customer.view、sales.view、fulfillment.view | customer-01 |
+| `GET /api/v1/inventory-lookups/warehouses` | inventory.view、sales.view、fulfillment.view | inventory-01 |
+
+- 前端：sharedfeatures-01 的共用選擇器接上這兩個來源；sales-01 套用到銷售訂單頁，fulfillment-01 套用到履約及出貨頁。
+- 加路由之前，ci-01 先確認 API 註冊日誌離 256 KB 上限還有多少。
+- 採購的供應商及採購員歷史，仍然留到上線後。
