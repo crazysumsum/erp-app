@@ -80,6 +80,23 @@ async function fixture(db) {
   return { now, po, lineA, lineB, skuA, skuB, gr, main, other, grLine, detail, confirm, supplier, user, insert };
 }
 
+integrationTest("收貨沖銷 migration 建立兩張不可改寫的表並保護單內明細唯一", async t => {
+  const db = await connect(t);
+  const [headers] = await db.query("SHOW CREATE TABLE goods_receipt_reversals");
+  const [details] = await db.query("SHOW CREATE TABLE goods_receipt_reversal_details");
+  assert.match(headers[0]["Create Table"], /inventory_result_summary` json NOT NULL/u);
+  assert.match(headers[0]["Create Table"], /UNIQUE KEY [^\n]+\(`reversal_reference`\)/u);
+  assert.match(details[0]["Create Table"], /UNIQUE KEY [^\n]+\(`reversal_id`,`goods_receipt_detail_id`\)/u);
+  assert.match(details[0]["Create Table"], /FOREIGN KEY \(`reversal_id`,\s*`goods_receipt_id`\) REFERENCES `goods_receipt_reversals`/u);
+  const [guards] = await db.query(`SELECT event_object_table AS tableName, event_manipulation AS action
+    FROM information_schema.triggers WHERE trigger_schema = DATABASE()
+      AND event_object_table IN ('goods_receipt_reversals', 'goods_receipt_reversal_details')`);
+  assert.deepEqual(guards.map(({ tableName, action }) => `${tableName}:${action}`).sort(), [
+    "goods_receipt_reversal_details:DELETE", "goods_receipt_reversal_details:UPDATE",
+    "goods_receipt_reversals:DELETE", "goods_receipt_reversals:UPDATE"
+  ]);
+});
+
 integrationTest("TASK-027 FK：GR line 嘅 PO 同 GR 嘅 PO 唔一致就拒絕（跨 PO）", async (t) => {
   const db = await connect(t);
   await inRollback(db, async () => {
