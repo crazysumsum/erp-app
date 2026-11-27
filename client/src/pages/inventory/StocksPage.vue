@@ -17,6 +17,7 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
 import InventoryReportDownload from "@/components/inventory/InventoryReportDownload.vue";
+import InventoryReferenceFilter from "@/components/inventory/InventoryReferenceFilter.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -29,6 +30,10 @@ const text = (value) => typeof value === "string" ? value : "";
 const search = ref(text(initial.q));
 const warehouseId = ref(text(initial.warehouseId));
 const binId = ref(text(initial.binId));
+function selectWarehouse(value) {
+  if (warehouseId.value !== value) binId.value = "";
+  warehouseId.value = value;
+}
 const lot = ref(text(initial.lot));
 const status = ref(oneOf(initial.status, ["AVAILABLE", "QUARANTINED", "DAMAGED"], null));
 const availability = ref(oneOf(initial.availability, ["IN_STOCK", "NO_STOCK", "ZERO_ATP"], "ALL"));
@@ -186,8 +191,10 @@ onUnmounted(() => { aggregateController?.abort(); bucketController?.abort(); sum
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
       <q-input class="col-12 col-sm-6 col-md-3" v-model="search" dense outlined debounce="300" clearable label="搜尋 SKU 代碼、名稱或條碼"><template #prepend><q-icon name="search" /></template></q-input>
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="warehouseId" dense outlined inputmode="numeric" label="倉庫 ID" />
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="binId" dense outlined inputmode="numeric" label="庫位 ID" />
+      <InventoryReferenceFilter class="col-6 col-sm-4 col-md-3" kind="warehouse" label="倉庫"
+        :model-value="warehouseId" @update:model-value="selectWarehouse" />
+      <InventoryReferenceFilter :key="warehouseId" class="col-6 col-sm-4 col-md-3" kind="bin" label="庫位"
+        v-model="binId" :warehouse-id="warehouseId" />
       <q-input class="col-12 col-sm-6 col-md-2" v-model="lot" dense outlined debounce="300" label="批號" />
       <q-select class="col-12 col-sm-6 col-md-3" v-model="status" dense outlined emit-value map-options :options="statusOptions" label="庫存狀態" />
       <q-select class="col-12 col-sm-6 col-md-3" v-model="availability" dense outlined emit-value map-options :options="availabilityOptions" label="存量" />

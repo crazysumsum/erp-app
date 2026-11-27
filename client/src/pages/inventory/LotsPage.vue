@@ -9,16 +9,21 @@ export const page = {
 </script>
 
 <script setup>
-import { onUnmounted, ref, watch } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
+import InventoryReferenceFilter from "@/components/inventory/InventoryReferenceFilter.vue";
+import { can } from "@/framework/authorization/can.js";
+import { useSessionStore } from "@/stores/session.js";
 
 const route = useRoute();
 const router = useRouter();
+const session = useSessionStore();
+const canSearchSkus = computed(() => can(session, { permissions: ["item.view", "item.mgmt"], match: "any" }));
 const initial = route.query;
 const positive = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
 const nonNegative = (value) => Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null;
@@ -99,8 +104,9 @@ onUnmounted(() => controller?.abort());
       <template #actions><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="history" label="庫存異動" to="/inventory/movements" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="skuId" dense outlined inputmode="numeric" label="SKU ID" />
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="warehouseId" dense outlined inputmode="numeric" label="倉庫 ID" />
+      <InventoryReferenceFilter v-if="canSearchSkus" v-model="skuId" class="col-6 col-sm-4 col-md-3" kind="sku" label="SKU" />
+      <q-input v-else v-model="skuId" class="col-6 col-sm-3 col-md-2" dense outlined inputmode="numeric" label="SKU ID" />
+      <InventoryReferenceFilter v-model="warehouseId" class="col-6 col-sm-4 col-md-3" kind="warehouse" label="倉庫" />
       <q-input class="col-12 col-sm-6 col-md-2" v-model="lot" dense outlined debounce="300" label="批號" />
       <q-select class="col-12 col-sm-6 col-md-2" v-model="status" dense outlined emit-value map-options :options="statusOptions" label="庫存狀態" />
       <q-select class="col-12 col-sm-6 col-md-2" v-model="expiryState" dense outlined emit-value map-options :options="expiryOptions" label="效期" />

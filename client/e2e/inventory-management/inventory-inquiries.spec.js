@@ -47,6 +47,7 @@ async function installApi(page, options = {}) {
     const fail = (status, code, message) => route.fulfill({ status, headers, body: JSON.stringify({ success: false, error: { code, message }, meta: { requestId: "pw-inquiries" } }) });
 
     if (path === "/api/v1/user/me") return ok({ id: 1, username: "sam", displayName: "Sam", roles: [], permissions });
+    if (path === "/api/v1/inventory/warehouses/1") return ok({ id: 1, code: "WH-A", name: "Main" });
     if (path === "/api/v1/inventory/stocks/aggregates") {
       if (state.aggregateFailure) { state.aggregateFailure = false; return fail(503, "SERVICE_UNAVAILABLE", "Service unavailable"); }
       const items = state.aggregateEmpty ? [] : [SUMMARY];

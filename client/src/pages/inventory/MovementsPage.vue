@@ -17,6 +17,7 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
 import InventoryReportDownload from "@/components/inventory/InventoryReportDownload.vue";
+import InventoryReferenceFilter from "@/components/inventory/InventoryReferenceFilter.vue";
 import { stockStatusLabel } from "@/components/inventory/stockStatusLabel.js";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
@@ -25,6 +26,7 @@ const route = useRoute();
 const router = useRouter();
 const session = useSessionStore();
 const canAdjust = computed(() => can(session, { permissions: ["inventory.view", "inventory.adjust"] }));
+const canSearchSkus = computed(() => can(session, { permissions: ["item.view", "item.mgmt"], match: "any" }));
 const initial = route.query;
 const positive = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
 const text = (value) => typeof value === "string" ? value : "";
@@ -40,6 +42,10 @@ const sourceDocumentId = ref(text(initial.sourceDocumentId));
 const skuId = ref(text(initial.skuId));
 const warehouseId = ref(text(initial.warehouseId));
 const binId = ref(text(initial.binId));
+function selectWarehouse(value) {
+  if (warehouseId.value !== value) binId.value = "";
+  warehouseId.value = value;
+}
 const lotId = ref(text(initial.lotId));
 const actorId = ref(text(initial.actorId));
 const selectedId = ref(positive(initial.movementId));
@@ -161,9 +167,12 @@ onUnmounted(() => { detailGeneration++; listController?.abort(); detailControlle
       <q-input class="col-12 col-sm-6 col-md-2" v-model="sourceModule" dense outlined debounce="300" label="來源模組" />
       <q-input class="col-12 col-sm-6 col-md-2" v-model="sourceDocumentType" dense outlined debounce="300" label="來源單據類型" />
       <q-input class="col-12 col-sm-6 col-md-2" v-model="sourceDocumentId" dense outlined debounce="300" label="來源單據 ID" />
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="skuId" dense outlined inputmode="numeric" label="SKU ID" />
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="warehouseId" dense outlined inputmode="numeric" label="倉庫 ID" />
-      <q-input class="col-6 col-sm-3 col-md-2" v-model="binId" dense outlined inputmode="numeric" label="庫位 ID" />
+      <InventoryReferenceFilter v-if="canSearchSkus" v-model="skuId" class="col-6 col-sm-4 col-md-3" kind="sku" label="SKU" />
+      <q-input v-else v-model="skuId" class="col-6 col-sm-3 col-md-2" dense outlined inputmode="numeric" label="SKU ID" />
+      <InventoryReferenceFilter class="col-6 col-sm-4 col-md-3" kind="warehouse" label="倉庫"
+        :model-value="warehouseId" @update:model-value="selectWarehouse" />
+      <InventoryReferenceFilter :key="warehouseId" class="col-6 col-sm-4 col-md-3" kind="bin" label="庫位"
+        v-model="binId" :warehouse-id="warehouseId" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="lotId" dense outlined inputmode="numeric" label="批號 ID" />
       <q-input class="col-6 col-sm-3 col-md-2" v-model="actorId" dense outlined inputmode="numeric" label="操作者 ID" />
     </div>

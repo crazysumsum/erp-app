@@ -13,6 +13,7 @@ vi.mock("@/services/inventory.js", () => ({
 }));
 
 import inventoryService from "@/services/inventory.js";
+import ReferencePicker from "@/framework/ui/ReferencePicker.vue";
 import LotsPage, { page as lotsDefinition } from "@/pages/inventory/LotsPage.vue";
 import MovementsPage, { page as movementsDefinition } from "@/pages/inventory/MovementsPage.vue";
 import StocksPage, { page as stocksDefinition } from "@/pages/inventory/StocksPage.vue";
@@ -110,8 +111,9 @@ describe("TASK-017 Stock / Lot / Movement UI", () => {
         signals.push(signal);
         return Promise.resolve({ rows: [SUMMARY], rowsNumber: 1 });
       });
-    const { body } = await mountPage(StocksPage, stocksDefinition);
-    await body.findAll(".q-field").find((field) => field.text().includes("倉庫 ID")).find("input").setValue("1");
+    const { wrapper } = await mountPage(StocksPage, stocksDefinition);
+    wrapper.findAllComponents(ReferencePicker).find((picker) => picker.props("label") === "倉庫")
+      .vm.$emit("update:modelValue", { id: 1, code: "WH-A", name: "Main" });
     await flushPromises();
     expect(signals).toHaveLength(2);
     expect(signals[0].aborted).toBe(true);
