@@ -22,6 +22,7 @@ const IDENTIFIER_SEPARATORS = Object.freeze({
 });
 const SENSITIVE_HEADER = /(?:bank|iban|swift|bic|routing|beneficiary|accountnumber|accountno|attachment|filecontent|filename|password|secret|credential|token|creditnotes|internalnotes)/u;
 const CREDIT_PATTERN = /^(?:0|[1-9][0-9]{0,14})\.[0-9]{4}$/u;
+const CURRENCY_CODE_PATTERN = /^[A-Za-z]{3}$/u;
 const CONTROL_PATTERN = /[\p{Cc}\p{Cf}]/u;
 
 const ADDRESS_FIELDS = Object.freeze({
@@ -207,7 +208,10 @@ async function loadLookups(connection, records) {
     try { if (record.customerCode.trim()) customerCodes.add(normalizeCustomerCode(record.customerCode).key); } catch { /* row validation reports it */ }
     try { if (record.legalName.trim()) legalNames.add(normalizeLegalName(record.legalName).key); } catch { /* row validation reports it */ }
     try { const trading = normalizeTradingName(record.tradingName).key; if (trading) tradingNames.add(trading); } catch { /* row validation reports it */ }
-    for (const field of ["defaultCurrencyCode", "creditCurrencyCode"]) if (record[field].trim()) currencies.add(record[field].trim().toUpperCase());
+    for (const field of ["defaultCurrencyCode", "creditCurrencyCode"]) {
+      const currency = record[field].trim();
+      if (CURRENCY_CODE_PATTERN.test(currency)) currencies.add(currency.toUpperCase());
+    }
     if (record.paymentTermCode.trim()) terms.add(upperKey(record.paymentTermCode));
     if (record.accountManagerUsername.trim()) users.add(key(record.accountManagerUsername));
     if (record.categoryCode.trim()) categories.add(key(record.categoryCode));
@@ -280,7 +284,7 @@ function rootPayload(record, operation, lookups, errors) {
   const currency = text(record, "defaultCurrencyCode", 3, errors, { required });
   if (currency) {
     const code = currency.toUpperCase(); const found = lookups.currencies.get(code);
-    if (!/^[A-Z]{3}$/u.test(code) || found?.status !== "ACTIVE") issue(errors, "defaultCurrencyCode", "IMPORT_CURRENCY_NOT_ACTIVE", "defaultCurrencyCode 必須是有效的啟用貨幣");
+    if (!CURRENCY_CODE_PATTERN.test(currency) || found?.status !== "ACTIVE") issue(errors, "defaultCurrencyCode", "IMPORT_CURRENCY_NOT_ACTIVE", "defaultCurrencyCode 必須是有效的啟用貨幣");
     else root.defaultCurrencyCode = code;
   }
   const termId = reference(record, "paymentTermCode", lookups.terms, errors, { normalize: upperKey, code: "IMPORT_PAYMENT_TERM_NOT_ACTIVE", message: "paymentTermCode 不存在或未啟用" });
@@ -350,10 +354,11 @@ function childPayload(record, operation, errors) {
 function creditPayload(record, operation, lookups, errors) {
   if (!hasAny(record, ["creditLimit", "creditCurrencyCode", "creditStatus"])) return undefined;
   const limit = text(record, "creditLimit", 20, errors);
-  const currencyCode = text(record, "creditCurrencyCode", 3, errors).toUpperCase();
+  const currency = text(record, "creditCurrencyCode", 3, errors);
+  const currencyCode = currency.toUpperCase();
   const status = text(record, "creditStatus", 20, errors, { required: operation === "create" });
   if (limit && !CREDIT_PATTERN.test(limit)) issue(errors, "creditLimit", "IMPORT_CREDIT_LIMIT_INVALID", "creditLimit 必須是四位小數的非負金額");
-  if (currencyCode && (!/^[A-Z]{3}$/u.test(currencyCode) || lookups.currencies.get(currencyCode)?.status !== "ACTIVE")) issue(errors, "creditCurrencyCode", "IMPORT_CURRENCY_NOT_ACTIVE", "creditCurrencyCode 必須是有效的啟用貨幣");
+  if (currency && (!CURRENCY_CODE_PATTERN.test(currency) || lookups.currencies.get(currencyCode)?.status !== "ACTIVE")) issue(errors, "creditCurrencyCode", "IMPORT_CURRENCY_NOT_ACTIVE", "creditCurrencyCode 必須是有效的啟用貨幣");
   if (status && !new Set(["normal", "on_hold"]).has(status)) issue(errors, "creditStatus", "IMPORT_CREDIT_STATUS_INVALID", "creditStatus 只接受 normal 或 on_hold");
   if (operation === "create") return { creditLimit: limit || null, creditCurrencyCode: limit ? currencyCode : null, creditStatus: status };
   return {
