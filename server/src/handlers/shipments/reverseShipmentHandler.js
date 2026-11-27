@@ -7,6 +7,7 @@ export class ReverseShipmentHandler extends BaseRequestHandler {
   static handlerName = "reverseShipment";
   static api = {
     method: "POST", path: "/api/v1/shipments/:id/reverse", description: "Reverse Shipment with original-event recovery",
+    authType: "jwt-device-password",
     authorizationPolicies: [{ name: "hasPermission", options: { permissions: ["fulfillment.view", "fulfillment.reverse"] } }],
     idempotency: { enabled: true, retryAfterSeconds: 2 },
     requestSchema: { params: SHIPMENT_ID_PARAMS, query: SHIPMENT_EMPTY, body: SHIPMENT_REVERSE_BODY },
@@ -19,7 +20,13 @@ export class ReverseShipmentHandler extends BaseRequestHandler {
   }
 
   authorizeRequest(req) {
-    if (req.get("Idempotency-Key") !== req.body?.eventId) throw fulfillmentError("FULFILLMENT_INPUT_INVALID", { field: "eventId" });
+    const { password, ...body } = req.body;
+    if (password.length > 1024 || req.get("Idempotency-Key") !== body.eventId) {
+      throw fulfillmentError("FULFILLMENT_INPUT_INVALID", { field: password.length > 1024 ? "password" : "eventId" });
+    }
+    // Device signing and password confirmation have already used the original request.
+    // Validate and fingerprint the same business body as before password confirmation.
+    req.body = body;
     return this.runtime.authorizeRequest("fulfillment.reverse");
   }
 
