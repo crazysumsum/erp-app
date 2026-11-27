@@ -58,6 +58,8 @@ export default {
   updateGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/update`, payload); },
   cancelGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/cancel`, payload); },
   confirmGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/confirm`, payload); },
+  previewGoodsReceiptReversal(id, { signal } = {}) { return httpClient.get(`/api/v1/goods-receipts/${id}/reversals/preview`, { signal }); },
+  reverseGoodsReceipt(id, payload) { return write(`/api/v1/goods-receipts/${id}/reversals/create`, payload, { signed: true }); },
   getOperationByEvent(eventId, { signal } = {}) { return httpClient.get(`/api/v1/purchasing-operations/by-event/${eventId}`, { signal }); },
   lookupReceivablePurchaseOrders({ signal, ...params } = {}) { return receiving("purchase-orders", params, signal); },
   lookupReceivingWarehouses({ signal } = {}) { return receiving("warehouses", {}, signal); },
