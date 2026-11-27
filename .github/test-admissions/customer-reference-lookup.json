@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "decision": "Sam 2026-11-27 “照建議做客戶倉庫” (DISPATCH-B); temporary functional admission through go-live per AGENTS.md. Non-author CODE PASS codex-erp-app-tl-01 via agentmsg d8967f6c at bd0933223eae276a49dd672207ee61f71f82edd8.",
+  "purpose": "Protect historical Customer selector permissions, literal search and the four-field identity projection.",
+  "data": "Two synthetic customers (suspended and archived), four synthetic actors with corresponding roles, nine sequential GETs in one real HTTP integration case.",
+  "concurrency": "One app and serial requests in the case; existing workflow and workers unchanged.",
+  "repetitions": "One per normal functional integration run.",
+  "thresholds": "200 for each existing viewer permission, 403 without them, exact four-field items, historical status visibility, literal search and bounded pagination.",
+  "trigger": "Existing server functional integration suite. No capacity classification or discovery/wiring changes.",
+  "cost": "One measured local invocation was about 1–2 seconds plus normal fixture overhead. CI impact unmeasured.",
+  "files": [
+    {
+      "path": "server/test/integration/customerReferenceLookup.integration.test.js",
+      "mode": "100644",
+      "blob": "61dd698acfe30c496a61583200ff234a8676a2fb",
+      "kind": "functional",
+      "cases": [
+        "Customer reference lookup allows each viewer permission and returns only historical identity fields"
+      ]
+    }
+  ]
+}
