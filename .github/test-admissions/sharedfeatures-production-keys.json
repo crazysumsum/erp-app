@@ -12,7 +12,7 @@
     {
       "path": "server/test/productionKeysStartup.test.js",
       "mode": "100644",
-      "blob": "59e965db0fd1a03231b3ee2884e8eadc34529112",
+      "blob": "d47ee59b1e62f85a0fca027c7295d28a19dc009a",
       "kind": "functional",
       "cases": [
         "production rejects published or constant JWT secrets and names only the setting",

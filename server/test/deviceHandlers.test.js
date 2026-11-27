@@ -23,12 +23,25 @@ function collectingLogger() {
   return { entries, debug: write("debug"), info: write("info"), warn: write("warn"), error: write("error") };
 }
 
-function createHandler(HandlerClass, { deviceBinding, tokenRevocation } = {}) {
+function createHandler(HandlerClass, { deviceBinding, tokenRevocation, currentPermissions = ["device.mgmt"] } = {}) {
+  const audit = [];
+  const connection = {
+    async query(sql) {
+      if (sql.includes("FROM users")) return [[{ username: "reviewer" }]];
+      if (sql.includes("FROM roles r")) return [[{ name: "reviewer" }]];
+      if (sql.includes("FROM permissions p")) return [currentPermissions.map(name => ({ name }))];
+      throw new Error("Unexpected reviewer query");
+    },
+    async execute(sql, args) {
+      assert.match(sql, /INSERT INTO user_audit_logs/u);
+      audit.push(args);
+    }
+  };
   const logger = collectingLogger();
   const available = {
     logging: { logger, loggers: {} },
     time: createTestTime(),
-    mysqldatabase: {},
+    mysqldatabase: { withTransaction: fn => fn(connection) },
     deviceBinding,
     tokenRevocation
   };
@@ -43,7 +56,7 @@ function createHandler(HandlerClass, { deviceBinding, tokenRevocation } = {}) {
     }
   });
 
-  return { handler, logger };
+  return { handler, logger, audit };
 }
 
 function fakeDeviceBinding({
@@ -98,7 +111,7 @@ function fakeTokenRevocation() {
 
 const reviewerRequest = (id = "5", body = {}) => ({
   input: { params: { id }, query: {}, body },
-  auth: { claims: { sub: "3", permissions: ["device.mgmt"] } }
+  auth: { claims: { sub: "3", roles: ["reviewer"], permissions: ["device.mgmt"] } }
 });
 
 // --- 權限 --------------------------------------------------------------------
@@ -161,8 +174,23 @@ test("approving and rejecting record who did it and any note", async () => {
     assert.deepEqual(response.data, { id: 5, status: "approved" });
     assert.deepEqual(deviceBinding.calls, [
       // reviewerId 取自 token，不是 body：讓呼叫端自己說「我是誰」等於沒有稽核。
+      { method: "findById", id: 5 },
       { method, id: 5, options: { reviewerId: 3, note: "已致電確認" } }
     ]);
+  }
+});
+
+test("S-01 device review checks the actor and records completed decisions", async () => {
+  const self = fakeDeviceBinding({ current: { id: 5, user_id: 3, status: "pending" } });
+  const denied = createHandler(ApproveDeviceHandler, { deviceBinding: self });
+  await assert.rejects(denied.handler.execute(reviewerRequest()), { publicCode: "DEVICE_SELF_REVIEW_DENIED", statusCode: 403 });
+  assert.deepEqual(denied.audit, []);
+  const stale = createHandler(PendingDevicesHandler, { deviceBinding: self, currentPermissions: [] });
+  await assert.rejects(stale.handler.execute(reviewerRequest()), { publicCode: "PERMISSION_STALE" });
+  for (const Handler of [ApproveDeviceHandler, RejectDeviceHandler, RevokeDeviceHandler]) {
+    const { handler, audit } = createHandler(Handler, { deviceBinding: fakeDeviceBinding(), tokenRevocation: fakeTokenRevocation() });
+    await handler.execute(reviewerRequest());
+    assert.deepEqual(audit.map(row => row.slice(1, 6)), [[3, "reviewer", Handler.auditAction, "device", 5]]);
   }
 });
 
@@ -327,7 +355,7 @@ test("the pending queue maps rows to the shape the approver sees", async () => {
   });
   const { handler } = createHandler(PendingDevicesHandler, { deviceBinding });
 
-  const response = await handler.execute({ input: { params: {}, query: {} } });
+  const response = await handler.execute(reviewerRequest());
 
   assert.deepEqual(response.data, {
     items: [

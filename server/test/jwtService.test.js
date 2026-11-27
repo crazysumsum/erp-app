@@ -328,3 +328,13 @@ test("expiresIn must carry a unit, because a bare number means milliseconds", ()
 
   assert.equal(claims.exp - claims.iat, 1800);
 });
+
+test("S-06 validates the verified session timestamps", t => {
+  const service = createService();
+  const valid = { sub: "test", auth_time: AUTH_TIME, iat: AUTH_TIME, exp: AUTH_TIME + 60 };
+  const verified = t.mock.method(jwt, "verify", () => valid);
+  for (const change of [{ exp: undefined }, { exp: AUTH_TIME + service.expiresInSeconds + 1 }, { auth_time: AUTH_TIME + 3600 }]) {
+    verified.mock.mockImplementation(() => ({ ...valid, ...change }));
+    assert.throws(() => service.verify("fixture"), jwt.JsonWebTokenError);
+  }
+});

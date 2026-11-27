@@ -16,7 +16,7 @@ async function bootstrap() {
     console.warn(message);
   }
 
-  if (environment !== "test" && environment !== "development") rejectPublishedKeys(process.env);
+  if (environment !== "test") rejectPublishedKeys(process.env);
 
   const [{ createApplication }, { registerProcessLifecycle }] = await Promise.all([
     import("./framework/application/createApplication.js"),
