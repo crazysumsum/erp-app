@@ -123,7 +123,7 @@ export class SalesBackorderService{
    return this.database.withTransaction(async tx=>{
     const {nowMs}=await this.#lease(tx);await tx.query("SELECT id FROM sales_orders WHERE id=? FOR UPDATE",[Number(candidate.sales_order_id)]);
     const [[queue]]=await tx.query("SELECT * FROM sales_backorder_entries WHERE id=? AND sales_order_id=? FOR UPDATE",[Number(candidate.id),Number(candidate.sales_order_id)]);
-    const [[audit]]=await tx.query("SELECT action FROM sales_audit_logs WHERE event_id=? AND target_id=? LOCK IN SHARE MODE",[eventId,Number(candidate.sales_order_id)]);
+    const [[audit]]=await tx.query("SELECT action FROM sales_audit_logs WHERE event_id=? AND target_id=? AND target_type='ORDER' LOCK IN SHARE MODE",[eventId,Number(candidate.sales_order_id)]);
     if(audit){if(completed&&["sales_order.backorder_allocated","sales_order.backorder_deferred","sales_order.backorder_stale"].includes(audit.action))return {...completed,reconciled:true};throw error;}
     if(queue?.status==="OPEN"){
      const delay=Math.min(300000,30000*2**Math.min(Number(queue.attempt_count),4));

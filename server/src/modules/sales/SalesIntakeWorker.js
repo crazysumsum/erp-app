@@ -14,13 +14,13 @@ export class SalesIntakeWorker {
   this.database=database;this.config=config;this.root=root;this.authorize=authorizeSalesImport;this.logger=logger;this.audit=audit??new SalesAuditService();this.intake=intakeService??new SalesIntakeService({database,time,logger,config,authorizeSalesImport,channelVerifier});
  }
  #lease(tx,signal,previous){return requireSalesImportWorker(tx,this.authorize,signal,previous);}
- async #transaction(claim,signal,work){
+ async #transaction(claim,signal,work,isolationLevel){
   return this.database.withTransaction(async tx=>{
    const first=await this.#lease(tx,signal);let job,actor,nowMs=first.nowMs;
    if(claim){[[job]]=await tx.query("SELECT * FROM sales_import_jobs WHERE id=? FOR UPDATE",[claim.id]);const fresh=await this.#lease(tx,signal,first);nowMs=fresh.nowMs;if(!job||job.status!=="PROCESSING"||job.lease_owner!==claim.token||Number(job.lease_until)<=fresh.nowMs||Number(job.confirmed_by)!==claim.actorId)throw salesError("CONCURRENT_OPERATION");actor=await requireSalesImportActorById(tx,claim.actorId);}
    const result=await work(tx,job,actor,nowMs),last=await this.#lease(tx,signal,first);if(job&&Number(job.lease_until)<=last.nowMs)throw salesError("CONCURRENT_OPERATION");
    if(job)await tx.execute("UPDATE sales_import_jobs SET lease_until=?,updated_at=? WHERE id=? AND status='PROCESSING' AND lease_owner=?",[last.nowMs+this.config.confirmationLeaseMs,last.nowMs,claim.id,claim.token]);return result;
-  },{signal,timeoutMs:this.config.transactionTimeoutMs});
+  },{signal,timeoutMs:this.config.transactionTimeoutMs,isolationLevel});
  }
  async #claimJob(signal){
   return this.database.withTransaction(async tx=>{
@@ -36,7 +36,7 @@ export class SalesIntakeWorker {
   return this.#transaction(claim,signal,async(tx,_job,_actor,nowMs)=>{
    const [rows]=await tx.query(`SELECT id,processing_event_id,attempt_count FROM sales_intake_orders WHERE ${claim?"import_job_id=?":"source_type='CHANNEL'"} AND status IN ('QUEUED','PROCESSING') AND (next_attempt_at IS NULL OR next_attempt_at<=?) ORDER BY id LIMIT ? FOR UPDATE`,[...(claim?[claim.id]:[]),nowMs,limit]);
    for(const row of rows)await tx.execute("UPDATE sales_intake_orders SET status='PROCESSING',attempt_count=attempt_count+1,last_attempt_at=?,next_attempt_at=NULL,updated_at=? WHERE id=? AND processing_event_id=?",[nowMs,nowMs,row.id,row.processing_event_id]);return rows;
-  });
+  },claim?undefined:"READ COMMITTED");
  }
  async #defer(claim,row,signal){
   return this.#transaction(claim,signal,async(tx,_job,_actor,nowMs)=>{
