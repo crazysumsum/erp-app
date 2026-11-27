@@ -90,7 +90,7 @@ function setExclusiveFlag(index, flag) {
         <q-radio
           :model-value="row.isBase"
           :val="true"
-          label="Base"
+          label="基本單位"
           :disable="readonly"
           @update:model-value="setExclusiveFlag(index, 'isBase')"
         />

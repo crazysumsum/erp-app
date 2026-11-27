@@ -32,7 +32,7 @@ defineEmits(["release"]);
       <div class="col-12 col-md-6">
         <q-input
           v-model="model.skuCode"
-          label="SKU Code *"
+          label="SKU 代碼 *"
           outlined
           dense
           hint="人手輸入，建立後不可修改；不分大小寫全域唯一"

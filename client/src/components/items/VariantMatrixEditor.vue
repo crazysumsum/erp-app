@@ -169,7 +169,7 @@ function removeRow(index) {
         <thead>
           <tr>
             <th class="text-left">規格組合</th>
-            <th class="text-left">SKU Code *</th>
+            <th class="text-left">SKU 代碼 *</th>
             <th class="text-left">SKU 名稱 *</th>
             <th></th>
           </tr>

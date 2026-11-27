@@ -382,7 +382,7 @@ describe("pages/items/ItemDetailPage.vue", () => {
     await body.findAll(".q-btn").find((btn) => btn.text() === "複製").trigger("click");
     await flushPromises();
 
-    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("VITC-90 的新 Code")).find("input");
+    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("VITC-90 的新 SKU 代碼")).find("input");
     await codeInput.setValue("VITC-90-COPY");
 
     const confirmButtons = body.findAll(".q-btn").filter((btn) => btn.text() === "複製");

@@ -628,13 +628,13 @@ async function submitCopy() {
         </q-card-section>
         <q-card-section class="q-pt-none">
           <div class="text-body2 q-mb-sm">
-            複製成一個新的草稿商品；不會複製條碼，請為每個 SKU 提供一個新的 Code：
+            複製成一個新的草稿商品；不會複製條碼，請為每個 SKU 提供新的代碼：
           </div>
           <q-input
             v-for="(sku, index) in item.skus"
             :key="sku.id"
             v-model="copySkuCodes[index]"
-            :label="`${sku.skuCode} 的新 Code`"
+            :label="`${sku.skuCode} 的新 SKU 代碼`"
             outlined
             dense
             class="q-mb-sm"

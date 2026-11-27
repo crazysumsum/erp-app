@@ -223,12 +223,12 @@ const itemColumns = [
 ];
 
 const skuColumns = [
-  { name: "skuCode", label: "SKU Code", field: "skuCode", align: "left", sortable: true },
+  { name: "skuCode", label: "SKU 代碼", field: "skuCode", align: "left", sortable: true },
   { name: "skuName", label: "SKU 名稱", field: "skuName", align: "left" },
   { name: "itemName", label: "商品", field: "itemName", align: "left" },
   { name: "primaryBarcode", label: "主要條碼", field: "primaryBarcode", align: "left" },
-  { name: "baseUomCode", label: "Base 單位", field: "baseUomCode", align: "left" },
-  { name: "suggestedRetailPrice", label: "RRP", field: "suggestedRetailPrice", align: "right" },
+  { name: "baseUomCode", label: "基本單位", field: "baseUomCode", align: "left" },
+  { name: "suggestedRetailPrice", label: "建議零售價", field: "suggestedRetailPrice", align: "right" },
   { name: "status", label: "狀態", field: "status", align: "left" },
   { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true },
   { name: "actions", label: "", field: "id", align: "right" }
@@ -341,7 +341,7 @@ function formatPrice(price) {
         dense
         outlined
         debounce="300"
-        :placeholder="view === 'item' ? '搜尋商品名稱或其 SKU' : '搜尋 SKU Code、條碼或名稱'"
+        :placeholder="view === 'item' ? '搜尋商品名稱或其 SKU' : '搜尋 SKU 代碼、條碼或名稱'"
         style="width: 280px"
         @update:model-value="dataTableRef?.reload()"
       >

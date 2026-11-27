@@ -384,7 +384,7 @@ async function submit({ activate }) {
 
       <div class="text-h6 q-mb-md">{{ form.item.productType === "variant" ? "SKU 共用資料" : "SKU" }}</div>
       <div v-if="form.item.productType === 'variant'" class="text-caption text-grey-7 q-mb-md">
-        以下資料會套用到下面每一個規格組合；SKU Code／名稱在下方各自組合中填寫。
+        以下資料會套用到下面每一個規格組合；SKU 代碼／名稱在下方各自組合中填寫。
       </div>
       <SkuEditor v-model="form.sku" :field-error="skuFieldError" :hide-identity="form.item.productType === 'variant'" />
 

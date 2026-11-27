@@ -146,7 +146,7 @@ describe("pages/items/SkuDetailPage.vue", () => {
     await body.findAll(".q-btn").find((btn) => btn.text() === "編輯").trigger("click");
     await flushPromises();
 
-    const skuCodeInput = body.findAll(".q-field").find((f) => f.text().includes("SKU Code")).find("input");
+    const skuCodeInput = body.findAll(".q-field").find((f) => f.text().includes("SKU 代碼")).find("input");
     expect(skuCodeInput.attributes("readonly")).toBeDefined();
   });
 
@@ -356,10 +356,10 @@ describe("pages/items/SkuDetailPage.vue", () => {
     itemService.changeSkuCode.mockResolvedValue({ ...SKU, skuCode: "VITC-90-NEW", version: 2 });
     const { body } = await mountPage();
 
-    await body.findAll(".q-btn").find((btn) => btn.text() === "特批修改 Code").trigger("click");
+    await body.findAll(".q-btn").find((btn) => btn.text() === "特批修改 SKU 代碼").trigger("click");
     await flushPromises();
 
-    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("新 SKU Code")).find("input");
+    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("新 SKU 代碼")).find("input");
     await codeInput.setValue("VITC-90-NEW");
     const reasonInput = body.findAll(".q-field").find((f) => f.text().includes("修改原因")).find("textarea");
     await reasonInput.setValue("特批改 code 原因");

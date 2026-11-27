@@ -140,7 +140,7 @@ describe("pages/items/ItemImportsPage.vue", () => {
     itemImportService.exportSkus.mockResolvedValue({ blob: new Blob(["x"]), contentType: "text/csv" });
     const { wrapper } = await mountImportsPage();
 
-    await wrapper.find("input[placeholder='搜尋 SKU Code／名稱／條碼']").setValue("ABC");
+    await wrapper.find("input[placeholder='搜尋 SKU 代碼／名稱／條碼']").setValue("ABC");
     await wrapper.findAll(".q-btn").find((btn) => btn.text().includes("匯出 CSV")).trigger("click");
     await flushPromises();
 
@@ -228,6 +228,7 @@ describe("pages/items/ItemImportsPage.vue", () => {
     await flushPromises();
 
     expect(itemImportService.getJob).toHaveBeenCalledWith(1, expect.objectContaining({ page: 1, pageSize: 20 }));
+    expect(body.get(".q-dialog tbody tr").findAll("td").map((cell) => cell.text()).slice(1, 3)).toEqual(["新增", "有效"]);
     expect(body.text()).toContain("SKU Code 唔一致");
   });
 

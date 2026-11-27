@@ -356,7 +356,7 @@ async function submitCodeChange() {
     sku.value = updated;
     loadFormFrom(updated);
     showCodeChangeDialog.value = false;
-    notifySuccess(`SKU Code 已改為「${updated.skuCode}」`);
+    notifySuccess(`SKU 代碼已改為「${updated.skuCode}」`);
   } catch (error) {
     codeChangeError.value = error.message || "修改失敗";
     notifyError(error.message || "修改失敗");
@@ -406,7 +406,7 @@ async function releaseBarcodeFlow({ id, barcode, version }) {
             <q-btn v-if="showDiscontinue" flat color="warning" label="停產" @click="discontinueFlow" />
             <q-btn v-if="showArchive" flat color="warning" label="封存" @click="archiveFlow" />
             <q-btn v-if="showRestore" flat color="primary" label="從封存恢復" @click="restoreFlow" />
-            <q-btn flat color="primary" label="特批修改 Code" @click="openCodeChangeDialog" />
+            <q-btn flat color="primary" label="特批修改 SKU 代碼" @click="openCodeChangeDialog" />
             <q-btn v-if="showDelete" flat color="negative" label="刪除" @click="deleteFlow" />
             <q-btn flat color="primary" label="編輯" @click="startEdit" />
           </template>
@@ -435,7 +435,7 @@ async function releaseBarcodeFlow({ id, barcode, version }) {
         <q-input
           v-if="editing"
           v-model="reason"
-          label="修改原因（改 Base 單位、換算係數或追蹤政策時必填）"
+          label="修改原因（修改基本單位、換算係數或追蹤政策時必填）"
           outlined
           dense
           class="q-mt-md"
@@ -464,10 +464,10 @@ async function releaseBarcodeFlow({ id, barcode, version }) {
     <q-dialog v-model="showCodeChangeDialog" persistent>
       <q-card style="min-width: 420px">
         <q-card-section>
-          <h2 class="text-h6 q-ma-none">特批修改 SKU Code</h2>
+          <h2 class="text-h6 q-ma-none">特批修改 SKU 代碼</h2>
         </q-card-section>
         <q-card-section class="q-pt-none">
-          <q-input v-model="newSkuCode" label="新 SKU Code" outlined dense class="q-mb-sm" />
+          <q-input v-model="newSkuCode" label="新 SKU 代碼" outlined dense class="q-mb-sm" />
           <q-input v-model="codeChangeReason" label="修改原因" type="textarea" outlined dense class="q-mb-sm" />
           <q-input v-model="codeChangePassword" label="密碼確認" type="password" outlined dense />
           <q-banner v-if="codeChangeError" class="bg-negative text-white q-mt-sm">{{ codeChangeError }}</q-banner>

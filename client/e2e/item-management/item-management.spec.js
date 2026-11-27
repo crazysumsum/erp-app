@@ -206,7 +206,7 @@ test.describe.serial("Item Management executable UAT", () => {
 
   test("UAT-001 search state survives refresh and empty results remain usable", async () => {
     await page.goto("/items");
-    const search = page.getByPlaceholder("搜尋 SKU Code、條碼或名稱");
+    const search = page.getByPlaceholder("搜尋 SKU 代碼、條碼或名稱");
     await search.fill(`${marker}-missing`);
     await expect(page).toHaveURL(new RegExp(`q=${marker}-missing`));
     await expect(page.getByText("冇資料")).toBeVisible();

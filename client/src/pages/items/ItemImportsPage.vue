@@ -57,6 +57,7 @@ const STATUS_COLOUR = {
   cancelled: "grey"
 };
 const MODE_LABEL = { create_only: "只新增", upsert: "新增與更新並存" };
+const ROW_OPERATION_LABEL = { create: "新增", update: "更新", skip: "略過" };
 const ROW_STATUS_LABEL = {
   valid: "有效",
   warning: "有效（有警告）",
@@ -377,7 +378,7 @@ onUnmounted(stopPolling);
     <div v-if="canManage" class="q-px-md q-pb-md">
       <h2 class="text-subtitle1 q-mb-sm">匯出商品 SKU</h2>
       <div class="row q-gutter-sm items-center">
-        <q-input v-model="exportQuery" dense outlined placeholder="搜尋 SKU Code／名稱／條碼" style="width: 240px">
+        <q-input v-model="exportQuery" dense outlined placeholder="搜尋 SKU 代碼／名稱／條碼" style="width: 240px">
           <template #prepend><q-icon name="search" /></template>
         </q-input>
         <q-select
@@ -543,6 +544,10 @@ onUnmounted(stopPolling);
             :columns="rowColumns"
             row-key="rowNumber"
           >
+            <template #body-cell-operation="{ value }">
+              <q-td class="text-left">{{ ROW_OPERATION_LABEL[value] ?? value }}</q-td>
+            </template>
+
             <template #body-cell-status="{ value }">
               <q-td class="text-left">{{ ROW_STATUS_LABEL[value] ?? value }}</q-td>
             </template>

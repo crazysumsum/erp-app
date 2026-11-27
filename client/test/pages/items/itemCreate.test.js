@@ -96,7 +96,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
 
     await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
@@ -116,7 +116,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
 
     await wrapper.find('button[aria-label="儲存並啟用"]').trigger("click");
@@ -131,7 +131,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
     await fieldInput(body, "啟用原因").setValue("完成初次建檔並上架");
 
@@ -149,7 +149,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body, router } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
     await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
     await flushPromises();
@@ -223,7 +223,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
     await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
     await flushPromises();
@@ -241,7 +241,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
     await fieldInput(body, "啟用原因").setValue("完成初次建檔並上架");
     await wrapper.find('button[aria-label="儲存並啟用"]').trigger("click");
@@ -258,7 +258,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     const { wrapper, body } = await mountPage();
 
     await fieldInput(body, "商品名稱 *").setValue("維他命 C");
-    await fieldInput(body, "SKU Code *").setValue("VITC-90");
+    await fieldInput(body, "SKU 代碼 *").setValue("VITC-90");
     await fieldInput(body, "SKU 名稱 *").setValue("維他命 C 90 粒裝");
     await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
     await flushPromises();
