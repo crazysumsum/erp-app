@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { up as migrateLinks } from "../../database/migrations/0101_create_inventory_purchase_reversal_links.js";
+import { up as migrateCost } from "../../database/migrations/0130_create_inventory_cost.js";
 import { InventoryOperationService } from "../../src/modules/inventory/InventoryOperationService.js";
 import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
 import { InventoryLookupService } from "../../src/modules/inventory/InventoryLookupService.js";
@@ -13,9 +14,9 @@ import { purchaseNativeFixture, purchaseConfirmedLines } from "../../test-suppor
 
 const native = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_PURCHASE_TESTS === "1" ? test : test.skip;
 
-async function receipt(f, command = f.command()) {
+async function receipt(f, command = f.command(), costInputs) {
   return f.withRequest(command, async (tx, req) => {
-    command.context = issuePurchaseReceiptContext(req, tx, command, purchaseConfirmedLines(command), f.options);
+    command.context = issuePurchaseReceiptContext(req, tx, command, purchaseConfirmedLines(command), { ...f.options, costInputs });
     return new InventoryPostingService(f).postPurchaseReceiptBatchInTransaction(tx, command);
   });
 }
@@ -49,9 +50,18 @@ native("Purchase reversal native R01 fresh schema and rerun preserve generic ful
   assert.equal(legacy[0].Column_name, "reversal_of_movement_id");
 });
 
-async function reversalFixture(t, { twoLines = false, lotTracked = false, lineCount = twoLines ? 2 : 1 } = {}) {
+async function installCost(f) {
+  await migrateCost(f.db);
+  await f.db.execute("INSERT INTO fr_schema_migrations (name, applied_at) VALUES ('migrations/0130_create_inventory_cost.js',1)");
+}
+
+async function reversalFixture(t, { twoLines = false, lotTracked = false, lineCount = twoLines ? 2 : 1, costMode } = {}) {
   const f = await purchaseNativeFixture(t); await migrateLinks(f.db);
   const input = f.command();
+  if (costMode === "priced") {
+    await installCost(f);
+    input.lines[0].baseQuantity = 4;
+  }
   if (lotTracked) {
     await f.db.execute("UPDATE item_skus SET tracking_policy='batch_expiry' WHERE id=?", [f.skuId]);
     Object.assign(input.lines[0], { lotNumber: "LOT-A", expiryDate: "2027-12-31" });
@@ -59,7 +69,10 @@ async function reversalFixture(t, { twoLines = false, lotTracked = false, lineCo
   }
   for (let i = 1; i < lineCount; i++) input.lines.push({ ...structuredClone(input.lines[0]), sourceLineId: String(81 + i),
     commitment: { ...input.lines[0].commitment, purchaseOrderLineId: 6 + i } });
-  const original = await receipt(f, input);
+  const costInputs = costMode === "priced" ? input.lines.map(({ sourceLineId }) =>
+    ({ sourceLineId, currencyCode: "HKD", unitPrice: "0.0001", toBaseFactor: 2 })) : undefined;
+  const original = await receipt(f, input, costInputs);
+  if (costMode === "legacy") await installCost(f);
   await (await import("../../database/migrations/0004_add_device_binding_tables.js")).up(f.db);
   f.actor.claimedPermissions.push("inventory.adjust");
   await f.db.execute("INSERT INTO role_permissions(role_id,permission_id) SELECT ?,id FROM permissions WHERE name='inventory.adjust'", [f.roleId]);
@@ -90,10 +103,55 @@ async function reversalFixture(t, { twoLines = false, lotTracked = false, lineCo
       "inventory_audit_logs", "inventory_purchase_reversal_links"]) {
       [result[table]] = await f.db.query(`SELECT * FROM ${table} ORDER BY id`);
     }
+    if (costMode) {
+      [result.costs] = await f.db.query("SELECT * FROM inventory_cost_entries ORDER BY id");
+      [result.pool] = await f.db.query("SELECT * FROM inventory_cost_pools ORDER BY sku_id");
+    }
     return result;
   };
   return { ...f, original, input, reversal: command, submit, snapshot, deviceId };
 }
+
+native("Purchase cost reversals preserve cumulative half-up shares, drain and exact retry", async t => {
+  const f = await reversalFixture(t, { costMode: "priced" });
+  const first = f.reversal();
+  const result = await f.submit(first);
+  for (let i = 0; i < 3; i++) await f.submit(f.reversal(), { ownerStatus: "PARTIALLY_REVERSED" });
+  const before = await f.snapshot();
+  assert.deepEqual(before.costs.slice(1).map(row => [row.original_entry_id, row.original_value_hkd, row.value_delta_hkd]), [
+    [before.costs[0].id, "0.0001", "-0.0001"], [before.costs[0].id, "0.0000", "0.0000"],
+    [before.costs[0].id, "0.0001", "-0.0001"], [before.costs[0].id, "0.0000", "0.0000"]
+  ]);
+  assert.deepEqual(before.pool.map(row => [Number(row.costed_quantity), row.value_hkd]), [[0, "0.0000"]]);
+  assert.deepEqual(await f.submit(first, { ownerStatus: "REVERSED" }), result);
+  assert.deepEqual(await f.snapshot(), before);
+});
+
+native("Purchase cost reversal rejects an original ledger missing after activation", async t => {
+  const f = await reversalFixture(t, { costMode: "legacy" }), before = await f.snapshot();
+  await assert.rejects(f.submit(f.reversal()), { code: "INVENTORY_COST_SOURCE_MISSING" });
+  assert.deepEqual(await f.snapshot(), before);
+});
+
+native("Purchase cost reversal keeps concurrent claims and cost shares within the original quantity", async t => {
+  const f = await reversalFixture(t, { costMode: "priced" });
+  const commands = [f.reversal(3), f.reversal(3)];
+  await f.db.beginTransaction();
+  await f.db.query("SELECT id FROM inventory_warehouses WHERE id=? FOR UPDATE", [f.warehouseId]);
+  const pending = Promise.allSettled(commands.map(command => f.submit(command)));
+  try { await waitForWarehouseWait(f, 2); } finally { await f.db.rollback(); }
+  const settled = await pending;
+  assert.equal(settled.filter(result => result.status === "fulfilled").length, 1);
+  const loser = settled.findIndex(result => result.status === "rejected");
+  assert.ok(["REVERSAL_NOT_ALLOWED", "CONCURRENT_OPERATION"].includes(settled[loser].reason.code));
+  const before = await f.snapshot(), { costs, pool } = before;
+  await assert.rejects(f.submit(commands[loser]), { code: "REVERSAL_NOT_ALLOWED" });
+  assert.deepEqual(await f.snapshot(), before);
+  assert.equal(before.inventory_purchase_reversal_links.length, 1);
+  assert.equal(costs.length, 2);
+  assert.equal(costs[1].original_value_hkd, "0.0002");
+  assert.deepEqual(pool.map(row => [Number(row.costed_quantity), row.value_hkd]), [[1, "0.0000"]]);
+});
 
 native("Purchase reversal native R04 repeated partial events, full depletion and exact terminal replay", async t => {
   const f = await reversalFixture(t), first = f.reversal(1), a = await f.submit(first);
