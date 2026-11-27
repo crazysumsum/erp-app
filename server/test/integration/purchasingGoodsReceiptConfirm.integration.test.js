@@ -462,8 +462,17 @@ integrationTest("P1 發票來源讀取確認收貨快照，序列化採購單及
   await f.db.query("INSERT IGNORE INTO currencies (code, name, decimal_places, status, version, created_at, updated_at) VALUES ('BMD', 'Bermudian Dollar', 2, 'ACTIVE', 1, ?, ?)", [now, now]);
   const otherCurrencyPo = await f.order("CONFIRMED", { currencyCode: "BMD" });
   const otherCurrencyReceipt = String(await f.draft(otherCurrencyPo.id));
-  const otherCurrencyConfirmation = await f.confirm(otherCurrencyReceipt, 1, twoLines(f, otherCurrencyPo));
-  assert.equal(otherCurrencyConfirmation.status, 200, JSON.stringify(otherCurrencyConfirmation.body));
+  // 合成成本啟用前的歷史外幣收貨，只供來源幣別檢查。
+  await f.transaction(async (tx) => {
+    await tx.query(`INSERT INTO goods_receipt_lines (goods_receipt_id, purchase_order_id, purchase_order_line_id, line_number,
+      sku_id, sku_code_snapshot, sku_name_snapshot, received_base_quantity, created_at, updated_at)
+      SELECT ?, purchase_order_id, id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, 1, ?, ?
+      FROM purchase_order_lines WHERE id = ?`, [otherCurrencyReceipt, now, now, otherCurrencyPo.lineA]);
+    await tx.query(`UPDATE goods_receipts SET status = 'CONFIRMED', version = 2, total_received_base_quantity = 1,
+      supplier_status_at_confirm = 'active', confirmed_at = ?, confirm_event_id = ? WHERE id = ?`, [now, randomUUID(), otherCurrencyReceipt]);
+  });
+  const [historicalSource] = await read([otherCurrencyReceipt]);
+  assert.equal(historicalSource.currencyCode, "BMD");
   await assert.rejects(() => read([receiptId, otherCurrencyReceipt]), { code: "GR_INVOICE_SOURCE_MISMATCH" });
   const otherCurrencyList = await f.read(`/api/v1/goods-receipts?purchaseOrderId=${otherCurrencyPo.id}&supplierId=${f.supplier}&status=CONFIRMED`);
   assert.deepEqual(otherCurrencyList.body.data.items.map(item => [String(item.id), item.currencyCode]), [[otherCurrencyReceipt, "BMD"]]);
