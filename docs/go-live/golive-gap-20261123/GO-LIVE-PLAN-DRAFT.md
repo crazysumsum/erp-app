@@ -63,6 +63,7 @@ UAT 後的合併（Claude TL 的建議，待 CI 管理員確認）：
 - 主檔用語（11-27 UI/UX 方案 B）：上線前在貨幣主檔把 HKD 的名稱改為「港元」（代碼不變），其他預設主檔名稱也一併檢查是否為中文。
 - 權限收斂（F-09，合併後）：部署前後各執行一次 `docs/user_management/TASK-F-09.md` 裡的兩段唯讀 SELECT。一段盤點所有管理員帳號（含停用的）是否兼有業務角色，結果應為零列；另一段逐項核對管理員保留的 15 項權限。實際撤權由 F-09 migration 執行。
 - 投產決定（F-09 TC-136）：最終候選版本確定後，由 PM 彙整 CI、驗收證據及未結 P0／P1，交 Sam 決定 GO 或 NO-GO。
+- 穩定性（11-27 審計）：上線前修 S-01、S-02、S-03(a)，都不改表。另外加三個 event 索引（S-03(b)，Sam 11-27「批准加索引」）：sales_audit_logs(event_id)、sales_order_status_history(event_id)、inventory_operation_requests(source_event_id)。其餘 S-04 至 S-18 上線後處理，S-14 及 S-16 優先。
 - 資料庫（請部署負責人核對，Claude TL 提出，未在正式環境條件下量度）：migration 會建立 trigger，MySQL 開啟 binlog 時須設 `log_bin_trust_function_creators` 或以有足夠權限的帳號執行；執行 migration 的管理帳號與應用程式帳號分開；MySQL 版本、字元集及定序與測試一致。
 - 應用程式設定：`FULFILLMENT_LIFECYCLE_ENABLED=true`（沒有它銷售的履約流程不可用）；`AR_INVOICE_COMPANY_NAME`（應收發票列印的公司名稱；未設時列印只見「公司名稱尚未設定」，`.env.example` 目前未列，11-27 UI/UX 檢查發現）；`APP_TIME_ZONE` 明確設定（業務日期及發票年度編號都取這個時區）；JWT 密鑰、CORS 允許的來源、`NODE_ENV`；Customer 及 Supplier 的銀行金鑰要另存備份，遺失即已加密的銀行資料無法讀回。
 - 執行方式：單一還是多個應用程式實例（排程工作不可重複執行）；反向代理及 HTTPS、代理之後客戶端 IP 的取得；日誌目錄、輪替及磁碟空間；附件及匯入檔的目錄。

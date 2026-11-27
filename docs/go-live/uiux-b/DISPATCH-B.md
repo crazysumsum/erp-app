@@ -96,3 +96,4 @@
 - ArInvoicePrintSheet 行金額與總額格式化寫法統一（TL cb98479e P3）：上線後處理。
 - InventoryReferenceFilter 的 SKU 搜尋及 getSku 加上 abort signal（TL dc4ca332 P3）：上線後處理。
 - Supplier privileged_use 告警（TL f2b91d47）：F-09 後在合規部署中不會觸發。上線後評估移除，或改為監測任何管理員帳號持有銀行權限。
+- 穩定性 S-04 至 S-18（TL 2e0efb03）留到上線後，S-14（Customer 匯入匯出檔永不刪除）優先。S-16 銷售報表匯出改為串流（PM 決定），與 S-14 一起排。
