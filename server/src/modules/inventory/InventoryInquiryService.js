@@ -1,5 +1,5 @@
 import { InventoryOperationService } from "./InventoryOperationService.js";
-import { INVENTORY_RESERVATION_STATUSES, INVENTORY_TRANSFER_STATUSES } from "./inventoryConstants.js";
+import { INVENTORY_RESERVATION_OPEN_FILTER, INVENTORY_RESERVATION_STATUSES, INVENTORY_TRANSFER_STATUSES } from "./inventoryConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
   movementProjection,
@@ -630,9 +630,16 @@ export class InventoryInquiryService {
       const value = boundedText(input[field], field, length, { ascii: field !== "sourceDocumentId" });
       if (value) { filters.push(`${column} = ?`); params.push(value); }
     }
-    const status = input.status ?? "ALL";
-    if (status !== "ALL" && !RESERVATION_STATUSES.has(status)) invalid("status");
-    if (status !== "ALL") { filters.push("v.status = ?"); params.push(status); }
+    const status = input.status ?? INVENTORY_RESERVATION_OPEN_FILTER;
+    if (typeof status !== "string") invalid("status");
+    if (status !== "ALL") {
+      const statuses = status.split(",");
+      if (statuses.length > RESERVATION_STATUSES.size || statuses.some((value) => !RESERVATION_STATUSES.has(value))) {
+        invalid("status");
+      }
+      filters.push(`v.status IN (${statuses.map(() => "?").join(", ")})`);
+      params.push(...statuses);
+    }
     if (input.uncovered !== undefined && typeof input.uncovered !== "boolean") invalid("uncovered");
     if (input.uncovered === true) filters.push("v.uncovered_reserved > 0");
     if (input.uncovered === false) filters.push("v.uncovered_reserved = 0");

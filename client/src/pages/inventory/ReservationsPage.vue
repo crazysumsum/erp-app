@@ -25,9 +25,10 @@ const router = useRouter();
 const session = useSessionStore();
 const canOperate = computed(() => can(session, { permissions: ["inventory.operation"] }));
 const canFefoOverride = computed(() => can(session, { permissions: ["inventory.fefo.override"] }));
+const inProgress = "ACTIVE,PARTIALLY_CONSUMED";
 const positive = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
 const search = ref(typeof route.query.q === "string" ? route.query.q : "");
-const status = ref(typeof route.query.status === "string" ? route.query.status : "ALL");
+const status = ref(typeof route.query.status === "string" ? route.query.status : inProgress);
 const uncovered = ref(route.query.uncovered === "true");
 const table = ref(null);
 const selected = ref(null);
@@ -38,6 +39,7 @@ const pagination = { page: positive(route.query.page) ?? 1, rowsPerPage: appConf
   rowsNumber: 0, sortBy: "updatedAt", descending: true };
 const currentPage = ref(pagination.page);
 const statuses = [
+  { label: "進行中", value: inProgress },
   { label: "全部狀態", value: "ALL" }, { label: "有效", value: "ACTIVE" },
   { label: "部分耗用", value: "PARTIALLY_CONSUMED" }, { label: "已耗用", value: "CONSUMED" },
   { label: "已釋放", value: "RELEASED" }, { label: "已取消", value: "CANCELLED" }
@@ -56,7 +58,7 @@ const sourceText = (source) => `${source.module} / ${source.documentType} / ${so
   ` / 行 ${source.lineId || '—'} / 事件 ${source.eventId}`;
 
 function syncUrl(pageNumber = 1) {
-  router.replace({ query: { q: search.value || undefined, status: status.value === "ALL" ? undefined : status.value,
+  router.replace({ query: { q: search.value || undefined, status: status.value === inProgress ? undefined : status.value,
     uncovered: uncovered.value ? "true" : undefined, page: pageNumber,
     id: selected.value?.id ?? undefined } });
 }

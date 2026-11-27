@@ -76,7 +76,9 @@ async function installApi(page, { permissions = ["inventory.view", "inventory.op
 test("TASK-024 @technical Reservation detail shows quantities, uncovered next step and copyable source", async ({ page }) => {
   const state = await installApi(page);
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  const firstList = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/v1/inventory/reservations");
   await page.goto("/inventory/reservations");
+  expect(new URL((await firstList).url()).searchParams.get("status")).toBe("ACTIVE,PARTIALLY_CONSUMED");
   await expect(page.getByRole("heading", { name: "預留與分配" })).toBeVisible();
   const detail = page.getByRole("button", { name: "查看預留 17 詳情" });
   await detail.focus();

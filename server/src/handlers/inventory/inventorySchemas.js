@@ -2,6 +2,7 @@ import {
  INVENTORY_ALLOCATION_STATUSES,
   INVENTORY_ADJUSTMENT_REASON_CATEGORIES,
   INVENTORY_MASTER_STATUSES,
+  INVENTORY_RESERVATION_OPEN_FILTER,
   INVENTORY_RESERVATION_STATUSES,
   INVENTORY_STOCK_STATUSES,
   INVENTORY_TRANSFER_STATUSES
@@ -469,6 +470,7 @@ export const RESERVATION_RESPONSE = Object.freeze({
   }
 });
 
+const reservationStatusPattern = `(?:${INVENTORY_RESERVATION_STATUSES.join("|")})`;
 export const RESERVATION_LIST_QUERY = Object.freeze({
   type: "object", additionalProperties: false,
   properties: {
@@ -479,7 +481,11 @@ export const RESERVATION_LIST_QUERY = Object.freeze({
     sourceModule: { type: "string", minLength: 1, maxLength: 40 },
     sourceDocumentType: { type: "string", minLength: 1, maxLength: 50 },
     sourceDocumentId: { type: "string", minLength: 1, maxLength: 100 },
-    status: { type: "string", enum: ["ALL", ...INVENTORY_RESERVATION_STATUSES], default: "ALL" },
+    status: {
+      type: "string",
+      pattern: `^(?:ALL|${reservationStatusPattern}(?:,${reservationStatusPattern}){0,${INVENTORY_RESERVATION_STATUSES.length - 1}})$`,
+      default: INVENTORY_RESERVATION_OPEN_FILTER
+    },
     uncovered: { type: "boolean" },
     sortBy: { type: "string", enum: ["updatedAt", "createdAt", "status", "skuCode"], default: "updatedAt" },
     descending: { type: "boolean", default: true }
