@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: [
     { command: "npm run start --workspace server", cwd: root, reuseExistingServer: false,
       url: `http://127.0.0.1:${apiPort}/api/v1/health`, timeout: 120000,
-      env: { APP_HOST: "127.0.0.1", APP_PORT: String(apiPort), CLIENT_URL: `http://127.0.0.1:${clientPort}` } },
+      env: { NODE_ENV: "test", APP_HOST: "127.0.0.1", APP_PORT: String(apiPort), CLIENT_URL: `http://127.0.0.1:${clientPort}` } },
     { command: `npm run dev --workspace client -- --port ${clientPort} --strictPort`, cwd: root, reuseExistingServer: false,
       url: `http://127.0.0.1:${clientPort}/login`, timeout: 120000,
       env: { VITE_API_BASE_URL: `http://127.0.0.1:${apiPort}` } }

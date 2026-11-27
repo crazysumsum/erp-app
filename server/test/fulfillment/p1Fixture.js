@@ -1,3 +1,4 @@
+import { applyLegacyFulfillmentMigrations } from "./applyLegacyFulfillmentMigrations.js";
 import {capacityDiagnostics} from "./p1CapacityDiagnostics.js";
 import { randomUUID } from "node:crypto";
 import { fixture } from "./aggregateFixture.js";
@@ -39,9 +40,8 @@ export async function ownerQuantities(f){
 }
 
 export async function startP1Http(t,f,{diagnostics=false}={}){
- const {createApplication}=await import("../../src/framework/application/createApplication.js"),{defaultConfigurationSource}=await import("../../src/framework/configuration/applicationConfiguration.js"),{readdir}=await import("node:fs/promises");
- const directory=new URL("../../database/migrations/",import.meta.url),installed=new Set([92,93,95,96,98]);
- for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+ const {createApplication}=await import("../../src/framework/application/createApplication.js"),{defaultConfigurationSource}=await import("../../src/framework/configuration/applicationConfiguration.js");
+ await applyLegacyFulfillmentMigrations(f.db, [92,93,95,96,98]);
  const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:false},"sales.quotationExpire":{enabled:false}}},database:{...source.database,host:f.f.connectionOptions.host,port:f.f.connectionOptions.port,socketPath:f.f.connectionOptions.socketPath,user:f.f.connectionOptions.user,password:f.f.connectionOptions.password,database:f.f.name}}});
  t.after(()=>app.shutdown("fulfillment_p1_http_complete"));const {url}=await app.start(),subject=String(f.userId),version=await app.services.require("tokenRevocation").currentVersion(subject);
  const token=await app.services.require("jwt").issue({roles:f.claims.roles,permissions:f.claims.permissions},{subject,version,authTime:Math.floor(Date.now()/1000)}),denied=await app.services.require("jwt").issue({roles:f.claims.roles,permissions:[]},{subject,version,authTime:Math.floor(Date.now()/1000)});

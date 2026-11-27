@@ -1,3 +1,4 @@
+import { applyLegacyFulfillmentMigrations } from "../fulfillment/applyLegacyFulfillmentMigrations.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
@@ -91,9 +92,7 @@ nativeTest("Discovered Create HTTP endpoint enforces strict body, fresh permissi
   const f=await setup(t);
   const {createApplication}=await import("../../src/framework/application/createApplication.js");
   const {defaultConfigurationSource}=await import("../../src/framework/configuration/applicationConfiguration.js");
-  const {readdir}=await import("node:fs/promises"),directory=new URL("../../database/migrations/",import.meta.url);
-  const installed=new Set([92,93,95,98]);
-  for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
+  await applyLegacyFulfillmentMigrations(f.db, [92,93,95,98]);
   const source=defaultConfigurationSource();
   const app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:false},"sales.quotationExpire":{enabled:false}}},database:{...source.database,host:f.f.connectionOptions.host,port:f.f.connectionOptions.port,socketPath:f.f.connectionOptions.socketPath,user:f.f.connectionOptions.user,password:f.f.connectionOptions.password,database:f.f.name}}});
   t.after(()=>app.shutdown("fulfillment_p1_create_http_complete"));

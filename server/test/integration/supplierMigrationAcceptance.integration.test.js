@@ -21,6 +21,11 @@ const DATABASE_DIRECTORY = path.join(SERVER, "database");
 const FRAMEWORK_SQL_FILES = ["framework/idempotency.sql", "framework/jwt.sql", "framework/scheduler.sql"];
 const SUPPLIER_PERMISSIONS = ["supplier.approval", "supplier.bank.mgmt", "supplier.bank.view", "supplier.mgmt", "supplier.settings", "supplier.view"];
 
+function isSupplierTable(table) {
+  return (table === "suppliers" || table.startsWith("supplier_")) &&
+    table !== "supplier_returns" && table !== "supplier_return_lines";
+}
+
 async function allMigrations() {
   const names = (await readdir(path.join(DATABASE_DIRECTORY, "migrations"))).filter((name) => /\.(js|sql)$/u.test(name)).sort();
   return [...FRAMEWORK_SQL_FILES, ...names.map((name) => `migrations/${name}`)];
@@ -137,7 +142,7 @@ async function startServer(database, overrides = {}) {
   const port = await freePort();
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-mig-"));
   const child = spawn(process.execPath, [path.join(SERVER, "src/index.js")], { cwd,
-    env: { ...process.env, ...childDatabaseEnv(database), APP_HOST: "127.0.0.1", APP_PORT: String(port), ...overrides } });
+    env: { ...process.env, ...childDatabaseEnv(database), NODE_ENV: "test", APP_HOST: "127.0.0.1", APP_PORT: String(port), ...overrides } });
   const output = { stdout: "", stderr: "" };
   child.stdout.on("data", (chunk) => { output.stdout += chunk; });
   child.stderr.on("data", (chunk) => { output.stderr += chunk; });
@@ -185,7 +190,7 @@ integrationTest("TC-001 (MIG-001): the runner deploys every migration on an empt
   assert.deepEqual(ledgerAgain, ledger);
 
   const [tables] = await connection.query("SELECT table_name AS name FROM information_schema.tables WHERE table_schema = ? ORDER BY table_name", [name]);
-  const supplierTables = tables.map((row) => row.name).filter((table) => table.startsWith("supplier"));
+  const supplierTables = tables.map((row) => row.name).filter(isSupplierTable);
   assert.deepEqual(supplierTables, ["supplier_activation_requests", "supplier_address_purposes", "supplier_addresses", "supplier_audit_logs",
     "supplier_bank_accounts", "supplier_contact_purposes", "supplier_contacts", "supplier_identifiers", "supplier_import_jobs", "supplier_import_rows",
     "supplier_name_grams", "supplier_settings", "supplier_sku_refs", "supplier_supply_events", "suppliers"]);
@@ -193,8 +198,9 @@ integrationTest("TC-001 (MIG-001): the runner deploys every migration on an empt
   // Supplier 只用 FK 指向 Business Master 嘅表。
   const [references] = await connection.query(
     `SELECT DISTINCT table_name AS child, referenced_table_name AS parent FROM information_schema.referential_constraints
-      WHERE constraint_schema = ? AND table_name LIKE 'supplier%' AND referenced_table_name IN ('currencies', 'payment_terms') ORDER BY child, parent`, [name]);
-  assert.deepEqual(references.map((row) => `${row.child}>${row.parent}`), ["supplier_bank_accounts>currencies", "suppliers>currencies", "suppliers>payment_terms"]);
+      WHERE constraint_schema = ? AND referenced_table_name IN ('currencies', 'payment_terms') ORDER BY child, parent`, [name]);
+  assert.deepEqual(references.filter((row) => isSupplierTable(row.child)).map((row) => `${row.child}>${row.parent}`),
+    ["supplier_bank_accounts>currencies", "suppliers>currencies", "suppliers>payment_terms"]);
 
   // 真 server，用假 Bank key（MIG-001 前提）。SupplierCoreProvider 係 eager：readiness 唔係 READY 就開唔到機。
   const server = await startServer(name, bankEnv());
@@ -433,7 +439,6 @@ integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment cha
   const after = await snapshot(connection, name, { keepTimes: true });
 
   // 1. 原有嘅表：schema 唔變；資料唔變，除咗權限 seed 加嘅行（只可以加，唔可以改或者刪）。
-  const supplierTable = (table) => table === "suppliers" || table.startsWith("supplier_");
   for (const [table, previous] of Object.entries(before)) {
     if (table === "#triggers") {
       assert.deepEqual(after[table], previous, "triggers unchanged");
@@ -458,14 +463,14 @@ integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment cha
       WHERE p.name LIKE 'supplier.%'`);
   assert.deepEqual(grantees.map((row) => row.name), ["system-admin"]);
   const newTables = Object.keys(after).filter((table) => !(table in before));
-  assert.ok(newTables.length > 0 && newTables.every(supplierTable), `only Supplier tables are new: ${newTables.join(", ")}`);
+  assert.ok(newTables.length > 0 && newTables.every(isSupplierTable), `only Supplier tables are new: ${newTables.join(", ")}`);
 
   // 2. 寫入：Supplier 自己嘅表，加權限 seed 嘅 INSERT；冇 drop table、冇 drop column、冇 TRUNCATE；
   //    唯一嘅 DROP INDEX 係 0087 重排自己嘅 index（HD-114 A）。
   const target = (sql) => /^(?:CREATE TABLE(?: IF NOT EXISTS)?|ALTER TABLE|INSERT(?: IGNORE)? INTO|UPDATE|DELETE FROM|REPLACE INTO|DROP TABLE(?: IF EXISTS)?|TRUNCATE(?: TABLE)?)\s+`?(\w+)`?/iu.exec(sql)?.[1];
   const outside = recorder.writes.filter((sql) => {
     const table = target(sql);
-    if (supplierTable(table ?? "")) return false;
+    if (isSupplierTable(table ?? "")) return false;
     return !(/^INSERT INTO (permissions|role_permissions)\b/iu.test(sql));
   });
   assert.deepEqual(outside, [], "no Supplier migration writes another module's table, except inserting its permission seed");

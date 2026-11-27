@@ -6,13 +6,14 @@
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { applyLegacyFulfillmentMigrations } from "../fulfillment/applyLegacyFulfillmentMigrations.js";
 import { after } from "node:test";
 
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { ShipmentConfirmationService } from "../../src/modules/fulfillment/ShipmentConfirmationService.js";
 import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
-import { migrateArShipmentFixture, secondShipment } from "./arShipmentFixture.js";
+import { secondShipment } from "./arShipmentFixture.js";
 
 async function runCleanups(cleanups) {
   const errors = [];
@@ -109,11 +110,11 @@ export async function arHttpShipmentFixture(t, { includeSecond = false, withBill
     if (errors.length) throw new AggregateError(errors, "AR shipment fixture cleanup failed");
   });
   const shipment = await shipmentDraftFixture({ after: (cleanup) => cleanups.push(cleanup) });
-  await migrateArShipmentFixture(shipment.db);
   if (withBillingAddress) {
     await shipment.s.insert("customer_address_purposes", { address_id: shipment.s.addressId, customer_id: shipment.s.customerId,
       purpose_code: "billing", is_default: 1, created_at: shipment.s.now, updated_at: shipment.s.now });
   }
+  await applyLegacyFulfillmentMigrations(shipment.db, [92, 93, 95, 96, 98]);
   await shipment.db.query("UPDATE sales_order_lines SET unit_selling_price = 40, line_amount = 200 WHERE id = ?", [shipment.s.lineId]);
   const first = (await shipment.create(shipment.body())).outcome.id;
   const shipmentIds = [first];

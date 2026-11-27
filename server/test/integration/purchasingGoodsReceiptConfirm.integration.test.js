@@ -13,6 +13,7 @@ import { createApplication } from "../../src/framework/application/createApplica
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
 import { PurchasingAuditService } from "../../src/modules/purchasing/PurchasingAuditService.js";
+import { readSupplierInvoiceSourcesInTransaction } from "../../src/modules/purchasing/readSupplierInvoiceSourcesInTransaction.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const MONTH = "209812", RECEIPT_DATE = "2098-12-02";
@@ -69,11 +70,15 @@ async function setup() {
       created_at: now, updated_at: now });
     const b1 = await bin(w1, "1"), b3 = await bin(w1, "3"), b2 = await bin(w2, "2");
     /** line A（SKU A，BOX×12，訂 2 BOX＝24）同 line B（SKU B，batch，訂 10 EA）；最後先改表頭狀態（line trigger）。 */
-    const order = async (status = "CONFIRMED", { minLifeB = null } = {}) => {
+    const order = async (status = "CONFIRMED", { minLifeB = null, supplierId = supplier, currencyCode = "HKD", paymentTerm = null } = {}) => {
       const [[{ next }]] = await db.query("SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next FROM purchase_orders WHERE document_year_month = ?", [MONTH]);
+      const [[vendor]] = await db.query("SELECT supplier_code, supplier_name FROM suppliers WHERE id = ?", [supplierId]);
+      const [[currency]] = await db.query("SELECT name, decimal_places FROM currencies WHERE code = ?", [currencyCode]);
       const id = await insert("purchase_orders", { po_number: `PO-${MONTH}-${String(next).padStart(6, "0")}`, document_year_month: MONTH, sequence_no: Number(next),
-        supplier_id: supplier, supplier_code_snapshot: `GRC-${tag}`, supplier_name_snapshot: "Confirm Supplier", currency_code: "HKD", currency_name_snapshot: "HK Dollar",
-        currency_decimal_places_snapshot: 2, order_date: "2098-12-01", buyer_id: receiver.id, buyer_label: "Buyer", total_amount: "34.0000", subtotal_amount: "34.0000",
+        supplier_id: supplierId, supplier_code_snapshot: vendor.supplier_code, supplier_name_snapshot: vendor.supplier_name,
+        currency_code: currencyCode, currency_name_snapshot: currency.name, currency_decimal_places_snapshot: currency.decimal_places,
+        payment_term_id: paymentTerm?.id ?? null, payment_term_snapshot: paymentTerm ? JSON.stringify(paymentTerm.snapshot) : null,
+        order_date: "2098-12-01", buyer_id: receiver.id, buyer_label: "Buyer", total_amount: "34.0000", subtotal_amount: "34.0000",
         has_outstanding: 1, created_at: now, updated_at: now, created_by: receiver.id, created_by_label: "receiver", updated_by: receiver.id, updated_by_label: "receiver" });
       const line = (number, fields) => insert("purchase_order_lines", { purchase_order_id: id, line_number: number, inventory_tracked_snapshot: 1,
         base_uom_id: each, base_uom_code_snapshot: `E${tag}`, unit_price: "1.0000", line_amount: "1.0000", has_outstanding: 1, created_at: now, updated_at: now, ...fields });
@@ -103,6 +108,8 @@ async function setup() {
       { body: { eventId: randomUUID(), purchaseOrderId, businessReceiptDate: RECEIPT_DATE } })).body.data.id;
     const confirm = (id, version, lines, { token, eventId = randomUUID(), ...fields } = {}) => send(`/api/v1/goods-receipts/${id}/confirm`,
       { token, body: { eventId, version, businessReceiptDate: RECEIPT_DATE, lines, ...fields } });
+    const cancel = (id) => send(`/api/v1/goods-receipts/${id}/cancel`,
+      { body: { eventId: randomUUID(), version: 1, reason: "Cancelled for P1 functional test" } });
     const time = application.services.require("time"), today = time.fileDate(time.at(time.nowMs()));
     const header = async (id) => (await db.query(`SELECT status, version, confirmed_at, confirm_event_id, has_over_receipt, has_sku_exception, has_expiry_override, supplier_status_at_confirm,
       supplier_exception_reason FROM goods_receipts WHERE id = ?`, [id]))[0][0];
@@ -120,7 +127,10 @@ async function setup() {
       const [[balance]] = await db.query("SELECT COALESCE(SUM(on_hand_quantity), 0) AS total FROM inventory_stock_balances WHERE sku_id IN (?, ?)", [skuA, skuB]);
       return [Number(moves.total), Number(balance.total)];
     };
-    return { db, cleanups, order, draft, confirm, lookup, read, other, person, overrider, today, skuA, header, details, progress, po, audits, stock, receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3 };
+    const context = application.services.require("context");
+    const transaction = (work, options) => context.storage.run({ databaseTransaction: null }, () => db.withTransaction(work, options));
+    return { db, cleanups, order, draft, confirm, cancel, lookup, read, other, person, overrider, today, skuA, header, details, progress, po, audits, stock,
+      receiver, viewer, supplier, each, box, w1, w2, b1, b2, b3, insert, tag, transaction };
   } catch (error) {
     const cleanupErrors = await runCleanups(cleanups);
     throw cleanupErrors.length ? new AggregateError([error, ...cleanupErrors], "Goods receipt confirm fixture setup failed and its cleanup also failed") : error;
@@ -366,6 +376,106 @@ integrationTest("收貨單最小 list／detail GET：Draft 有編輯動作、確
   assert.equal((await f.read("/api/v1/goods-receipts?status=NOPE")).status, 400);
   assert.equal((await f.read(`/api/v1/goods-receipts/${Number.MAX_SAFE_INTEGER}`)).status, 404);
   assert.equal((await f.read(`/api/v1/goods-receipts/${id}`, f.overrider.token)).status, 200);
+});
+
+integrationTest("P1 收貨清單以供應商、採購單及狀態合併篩選，回傳採購單幣別", async () => {
+  const f = await fixture();
+  const poRow = await f.order();
+  const id = await f.draft(poRow.id);
+  const base = `/api/v1/goods-receipts?purchaseOrderId=${poRow.id}&status=DRAFT&pageSize=1`;
+  const selected = await f.read(`${base}&supplierId=${f.supplier}`, f.viewer.token);
+  assert.equal(selected.status, 200, JSON.stringify(selected.body));
+  const { total, items } = selected.body.data;
+  assert.deepEqual([total, items.map(item => [item.id, item.currencyCode])], [1, [[id, "HKD"]]]);
+  assert.equal((await f.read(`${base}&supplierId=${Number.MAX_SAFE_INTEGER}`)).body.data.total, 0);
+  assert.deepEqual(failure(await f.read(`${base}&supplierId=0`)), [400, "PURCHASING_INPUT_INVALID", "supplierId"]);
+  const unauthorized = await f.person("no_purchasing", []);
+  assert.equal((await f.read(`${base}&supplierId=${f.supplier}`, unauthorized.token)).status, 403);
+});
+
+integrationTest("P1 發票來源讀取確認收貨快照，序列化採購單及收貨鎖，拒絕不合資格的整批來源", async () => {
+  const f = await fixture();
+  const now = Date.now();
+  const term = { code: `AP-${f.tag}`, name: "On purchase order", calculationType: "NET_DAYS", dueDays: 30 };
+  const termId = await f.insert("payment_terms", { code: term.code, code_key: term.code.toLowerCase(), name: term.name,
+    calculation_type: term.calculationType, due_days: term.dueDays, status: "ACTIVE", version: 1, created_at: now, updated_at: now });
+  const poRow = await f.order("CONFIRMED", { paymentTerm: { id: termId, snapshot: term } });
+  const olderOrder = await f.order();
+  const olderReceipt = String(await f.draft(olderOrder.id));
+  const receiptId = String(await f.draft(poRow.id));
+  const rc = { isolationLevel: "READ COMMITTED" };
+  const read = goodsReceiptIds => f.transaction(tx => readSupplierInvoiceSourcesInTransaction(tx, { goodsReceiptIds }), rc);
+  await assert.rejects(() => read([receiptId]), { code: "GR_STATE_CONFLICT" });
+  for (const ids of [[], [receiptId, receiptId], [Number(receiptId)], ["18446744073709551616"], Array.from({ length: 21 }, (_, i) => String(i + 1))]) {
+    await assert.rejects(() => read(ids), { code: "PURCHASING_INPUT_INVALID" });
+  }
+  await assert.rejects(() => read(["18446744073709551615"]), { code: "GOODS_RECEIPT_NOT_FOUND" });
+  await assert.rejects(() => f.transaction(tx => readSupplierInvoiceSourcesInTransaction(tx, { goodsReceiptIds: [receiptId] })),
+    error => error.cause instanceof TypeError);
+
+  const first = twoLines(f, poRow);
+  first[0].details[0].receivedQuantity = "2";
+  const confirmed = await f.confirm(receiptId, 1, first);
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  assert.equal((await f.po(poRow.id)).status, "FULLY_RECEIVED");
+  const second = await f.confirm(olderReceipt, 1, twoLines(f, olderOrder));
+  assert.equal(second.status, 200, JSON.stringify(second.body));
+  await f.db.query("UPDATE payment_terms SET name = ?, due_days = 60 WHERE id = ?", ["Changed master term", termId]);
+
+  let closedTransaction;
+  await f.transaction(async tx => {
+    closedTransaction = tx;
+    const [older, source] = await readSupplierInvoiceSourcesInTransaction(tx, { goodsReceiptIds: [receiptId, olderReceipt] });
+    assert.deepEqual([older.id, older.paymentTerm, source.id, source.number, source.businessReceiptDate, source.purchaseOrderId, source.supplierId,
+      source.currencyCode, source.currencyDecimalPlaces, source.paymentTerm], [olderReceipt, null, receiptId, confirmed.body.data.number, RECEIPT_DATE,
+      String(poRow.id), String(f.supplier), "HKD", 2, { id: String(termId), ...term }]);
+    assert.deepEqual(source.lines.map(line => [line.lineNumber, line.purchaseOrderLineId, line.toBaseFactor, line.receivedBaseQuantity, line.unitPrice]),
+      [[1, String(poRow.lineA), 12, "24", "1.0000"], [2, String(poRow.lineB), 1, "10", "1.0000"]]);
+    assert.deepEqual([source.lines[0].skuId, source.lines[0].baseUomCodeSnapshot, source.lines[0].purchaseUomCodeSnapshot],
+      [String(f.skuA), `E${f.tag}`, `X${f.tag}`]);
+
+    for (const [sql, id] of [
+      ["SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE NOWAIT", poRow.id],
+      ["SELECT id FROM purchase_orders WHERE id = ? FOR UPDATE NOWAIT", olderOrder.id],
+      ["SELECT id FROM goods_receipts WHERE id = ? FOR UPDATE NOWAIT", receiptId]
+    ]) {
+      await assert.rejects(() => f.transaction(other => other.query(sql, [id])), error => error.cause?.code === "ER_LOCK_NOWAIT");
+    }
+  }, rc);
+  await assert.rejects(() => readSupplierInvoiceSourcesInTransaction(closedTransaction, { goodsReceiptIds: [receiptId] }), TypeError);
+
+  const draft = String(await f.draft(olderOrder.id));
+  await assert.rejects(() => read([receiptId, draft]), { code: "GR_STATE_CONFLICT" });
+  const cancelled = await f.cancel(draft);
+  assert.equal(cancelled.status, 200, JSON.stringify(cancelled.body));
+  await assert.rejects(() => read([receiptId, draft]), { code: "GR_STATE_CONFLICT" });
+  const otherSupplier = await f.insert("suppliers", { supplier_code: `OTHER-${f.tag}`, supplier_code_key: `other-${f.tag}`, supplier_name: "Other supplier",
+    supplier_name_key: "other supplier", default_currency_code: "HKD", status: "active", created_at: now, updated_at: now });
+  const otherPo = await f.order("CONFIRMED", { supplierId: otherSupplier });
+  const otherReceipt = String(await f.draft(otherPo.id));
+  const otherConfirmation = await f.confirm(otherReceipt, 1, twoLines(f, otherPo));
+  assert.equal(otherConfirmation.status, 200, JSON.stringify(otherConfirmation.body));
+  await assert.rejects(() => read([receiptId, otherReceipt]), { code: "GR_INVOICE_SOURCE_MISMATCH" });
+  const filtered = await f.read(`/api/v1/goods-receipts?supplierId=${otherSupplier}&status=CONFIRMED&pageSize=1`);
+  assert.deepEqual([filtered.body.data.total, filtered.body.data.items.map(item => String(item.id))], [1, [otherReceipt]]);
+
+  await f.db.query("INSERT IGNORE INTO currencies (code, name, decimal_places, status, version, created_at, updated_at) VALUES ('BMD', 'Bermudian Dollar', 2, 'ACTIVE', 1, ?, ?)", [now, now]);
+  const otherCurrencyPo = await f.order("CONFIRMED", { currencyCode: "BMD" });
+  const otherCurrencyReceipt = String(await f.draft(otherCurrencyPo.id));
+  // 合成成本啟用前的歷史外幣收貨，只供來源幣別檢查。
+  await f.transaction(async (tx) => {
+    await tx.query(`INSERT INTO goods_receipt_lines (goods_receipt_id, purchase_order_id, purchase_order_line_id, line_number,
+      sku_id, sku_code_snapshot, sku_name_snapshot, received_base_quantity, created_at, updated_at)
+      SELECT ?, purchase_order_id, id, line_number, sku_id, sku_code_snapshot, sku_name_snapshot, 1, ?, ?
+      FROM purchase_order_lines WHERE id = ?`, [otherCurrencyReceipt, now, now, otherCurrencyPo.lineA]);
+    await tx.query(`UPDATE goods_receipts SET status = 'CONFIRMED', version = 2, total_received_base_quantity = 1,
+      supplier_status_at_confirm = 'active', confirmed_at = ?, confirm_event_id = ? WHERE id = ?`, [now, randomUUID(), otherCurrencyReceipt]);
+  });
+  const [historicalSource] = await read([otherCurrencyReceipt]);
+  assert.equal(historicalSource.currencyCode, "BMD");
+  await assert.rejects(() => read([receiptId, otherCurrencyReceipt]), { code: "GR_INVOICE_SOURCE_MISMATCH" });
+  const otherCurrencyList = await f.read(`/api/v1/goods-receipts?purchaseOrderId=${otherCurrencyPo.id}&supplierId=${f.supplier}&status=CONFIRMED`);
+  assert.deepEqual(otherCurrencyList.body.data.items.map(item => [String(item.id), item.currencyCode]), [[otherCurrencyReceipt, "BMD"]]);
 });
 
 integrationTest("收貨頁面選項：可收貨 PO（q 篩）、Active 倉、倉內 Active Bin；停用 Bin 唔出；冇 receiving.operation 403", async () => {

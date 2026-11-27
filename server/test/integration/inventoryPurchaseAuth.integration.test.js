@@ -11,6 +11,8 @@ import { hashPassword } from "../../src/modules/user/passwordHash.js";
 import { purchaseNativeFixture, purchaseConfirmedLines } from "../../test-support/inventoryPurchaseFixtures.js";
 
 const native = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_PURCHASE_TESTS === "1" ? test : test.skip;
+const costInputs = command => command.lines.map(({ sourceLineId }) =>
+  ({ sourceLineId, currencyCode: "HKD", unitPrice: "1.0000", toBaseFactor: 1 }));
 
 native("Purchase real HTTP/JWT receipt boundary", async t => {
   const f = await purchaseNativeFixture(t, { fullSchema: true }), template = f.command();
@@ -30,7 +32,8 @@ native("Purchase real HTTP/JWT receipt boundary", async t => {
       const provider = new InventoryPostingService({ database, time, logger: this.services.require("logging").logger });
       const result = await database.withTransaction(tx => {
         command.context = issuePurchaseReceiptContext(req, tx, command, purchaseConfirmedLines(template),
-          { database, time, sessionMaxAgeSeconds: jwt.sessionMaxAgeSeconds, clockToleranceSeconds: jwt.config.jwt.clockToleranceSeconds });
+          { database, time, sessionMaxAgeSeconds: jwt.sessionMaxAgeSeconds,
+            clockToleranceSeconds: jwt.config.jwt.clockToleranceSeconds, costInputs: costInputs(template) });
         return provider.postPurchaseReceiptBatchInTransaction(tx, command);
       });
       return this.response(result);
@@ -88,7 +91,8 @@ native("Purchase real HTTP/JWT receipt boundary", async t => {
 native("Purchase real HTTP/JWT/device/password partial reversal boundary and consumer FK order", async t => {
   const f = await purchaseNativeFixture(t, { fullSchema: true }), receipt = f.command();
   const original = await f.withRequest(receipt, (tx, req) => {
-    receipt.context = issuePurchaseReceiptContext(req, tx, receipt, purchaseConfirmedLines(receipt), f.options);
+    receipt.context = issuePurchaseReceiptContext(req, tx, receipt, purchaseConfirmedLines(receipt),
+      { ...f.options, costInputs: costInputs(receipt) });
     return new InventoryPostingService(f).postPurchaseReceiptBatchInTransaction(tx, receipt);
   });
   f.actor.claimedPermissions.push("inventory.adjust");

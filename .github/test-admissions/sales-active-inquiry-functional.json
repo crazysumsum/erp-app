@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "decision": "Sam 2026-11-19: 暫停 7 天, functional-test case-by-case admission paused through 2026-11-26 Taipei end of day. PM assignment bc340c26, CI process c8e3b773. Independent review: codex-erp-app-tl-01 ACCEPT of product 72f7d74fcabbc71d86565f982cdd7d47d960bfc8, turn 01a1f18c-51dd-7753-baff-4c3a911176ed, final msg_0dbf0ee249f10fec016afe59515a1087d198808414f1e977ca (11/19).",
-  "purpose": "Prevent lost inquiry filters and misleading outstanding totals. Verify fresh reader authorization, exact quantities for uniform units and omission for mixed base units, and list navigation.",
-  "data": "Isolated synthetic fixtures. Unit case uses constant query inputs. Two native cases use two test orders each, with up to two lines per order and one mixed-unit order. Browser uses one confirmed order and two synthetic actors. Reused fixture blobs 6f97cb44ff4e1d586c5c146bbb39f61789e1f10c and b18562d275504202b7a21525d773fe9c870091ca are already pinned by fulfillment-task036-event-recovery-functional.json.",
+  "decision": "Sam 2026-11-19: 暫停 7 天, functional-test case-by-case admission paused through 2026-11-26 Taipei end of day. PM assignment bc340c26, CI process c8e3b773. Independent review: codex-erp-app-tl-01 ACCEPT of product 72f7d74fcabbc71d86565f982cdd7d47d960bfc8, turn 01a1f18c-51dd-7753-baff-4c3a911176ed, final msg_0dbf0ee249f10fec016afe59515a1087d198808414f1e977ca (11/19). Sam approved the Sales report and CSV scope in the original PM session on 2026-11-24 (human event ceb66809-f02b-41fd-b152-ae8678000b97). PR #395 extended the existing functional-test admission suspension through production go-live. PM c4f19fc7 directed the TASK-033 cross-module contract reference into the next Sales PR. Non-author Claude TL 811eea6a reviewed the exact product diff e4a37641 with an isolated real browser and MySQL; Non-author Claude TL 82bd488e reviewed the documentation-only delta e4a37641..cd7d12a3. Non-author Claude TL 329ada8e, dab3a5dc and 9c6ee6bb reviewed the successive product combinations. The exact Sales product candidate a8b4897b1466f76595d44006ef49ab449d64d241 is based on 7ea5e68702dbb3f4621ab12e46cb5c0a2539d7d2 and preserves the independently reviewed Sales patch with SHA-256 add1e4dba49a3ac343b9ae6cb6cfe261e4f27ecd2a2c218c0d4ec6caec72cf7f.",
+  "purpose": "Prevent lost inquiry filters and misleading outstanding totals. Verify fresh reader authorization, exact quantities for uniform units and omission for mixed base units, and list navigation. Sales report: check that CSV and list queries return the same confirmed order lines, respect filters and current permissions, and export formula-like synthetic text safely. The TASK-033 document is pinned because its basename is referenced in existing tests.",
+  "data": "Isolated synthetic fixtures. Unit case uses constant query inputs. Two native cases use two test orders each, with up to two lines per order and one mixed-unit order. Browser uses one confirmed order and two synthetic actors. Reused fixture blobs 6f97cb44ff4e1d586c5c146bbb39f61789e1f10c and b18562d275504202b7a21525d773fe9c870091ca are already pinned by fulfillment-task036-event-recovery-functional.json. The report case uses one synthetic draft and one confirmed order, with three lines total, in the existing Sales fixture. The extra SKU uses a different synthetic unit.",
   "concurrency": "Existing server shards and workers unchanged. Local Playwright config uses one worker.",
-  "repetitions": "One routine execution of each new server case per candidate. Browser configuration is for one separate local functional flow.",
-  "thresholds": "Case assertions cover fresh authorization, Draft exclusion, exact uniform quantities, no mixed-unit aggregate, persisted pageSize and read-only detail navigation. Existing coverage floors and capacity exclusions unchanged.",
+  "repetitions": "One routine execution of each new server case per candidate. Browser configuration is for one separate local functional flow. The Sales report server case runs once under existing discovery.",
+  "thresholds": "Case assertions cover fresh authorization, Draft exclusion, exact uniform quantities, no mixed-unit aggregate, persisted pageSize and read-only detail navigation. Existing coverage floors and capacity exclusions unchanged. The report case verifies confirmed-only scope, date/customer/SKU filters, CSV row/column parity and protection, invalid dates, and anonymous or revoked authorization refusal.",
   "trigger": "Ordinary PR via the existing controller. Unit and native cases use existing server discovery. Browser runs separately with an isolated local MySQL socket. No workflow or job changes.",
-  "cost": "Observed local 1 unit plus 2 native cases took under 2 seconds after migration. Browser took about 4.4 seconds total after migration. CI wall time and runner cost are unmeasured. No new job.",
+  "cost": "Observed local 1 unit plus 2 native cases took under 2 seconds after migration. Browser took about 4.4 seconds total after migration. CI wall time and runner cost are unmeasured. No new job. The report case took approximately 1.37 seconds in the author’s focused local run.",
   "files": [
     {
       "path": "client/e2e/sales-order-management/playwright.active-inquiry.config.js",
@@ -42,7 +42,7 @@
     {
       "path": "client/src/services/sales.js",
       "mode": "100644",
-      "blob": "7177de6f3d55259e3f40652bd150b8c8f43f0fcf",
+      "blob": "089055b4bd5bfb2dc4f100daa959092f9dbfe3bd",
       "kind": "support"
     },
     {
@@ -81,6 +81,21 @@
       "cases": [
         "TC-044 common order views have an explicit allowlist"
       ]
+    },
+    {
+      "path": "server/test/integration/salesReport.integration.test.js",
+      "mode": "100644",
+      "blob": "769218a3b7e02b9c3113e5159252ade39ad15b16",
+      "kind": "functional",
+      "cases": [
+        "Sales report and CSV show the same confirmed order lines, filters and permissions"
+      ]
+    },
+    {
+      "path": "docs/sales_order_management/05_development_tasks.md",
+      "mode": "100644",
+      "blob": "b58757d61aaef426777dcfacde80e116b705ca91",
+      "kind": "support"
     }
   ]
 }

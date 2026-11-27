@@ -193,3 +193,21 @@ test("Purchase reversal context rechecks permission, token and signature/session
   await withPurchaseUnitRequest(async f => { reversalRequest(f); f.req.auth.claims.auth_time -= 86401; assert.throws(() => issueReversal(f)); });
   await withPurchaseUnitRequest(async f => { reversalRequest(f); delete f.options.signatureMaxSkewSeconds; assert.throws(() => issueReversal(f)); });
 });
+
+test("Purchase receipt makes a private copy of verified cost inputs by source line", async () => {
+  await withPurchaseUnitRequest(async f => {
+    f.options.costInputs = [{ sourceLineId: "81", currencyCode: "HKD", unitPrice: "7.5001", toBaseFactor: 3 }];
+    const capsule = issue(f);
+    f.options.costInputs[0].unitPrice = "999.9999";
+    const guard = consume(f, capsule);
+    assert.deepEqual(guard.getCostInput("81"), { currencyCode: "HKD", unitPrice: "7.5001", toBaseFactor: 3 });
+    assert.equal(guard.getCostInput("82"), undefined);
+    assert.equal(Object.isFrozen(guard.getCostInput("81")), true);
+  });
+});
+
+test("Purchase receipt rejects incomplete or duplicate private cost projections", async () => {
+  for (const costInputs of [[], [{ sourceLineId: "82", currencyCode: "HKD", unitPrice: "1.0000", toBaseFactor: 3 }]]) {
+    await withPurchaseUnitRequest(async f => { f.options.costInputs = costInputs; assert.throws(() => issue(f)); });
+  }
+});

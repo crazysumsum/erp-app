@@ -210,7 +210,9 @@ export class SalesOrderConfirmationService {
       const profile = prepared.snapshots.find(s => s.skuId === line.skuId && s.salesUom.skuUomId === line.skuUomId);
       assertQuantityConservation({ orderedBaseQuantity: base_quantity,reservedOutstandingBaseQuantity: result.reservedBaseQuantity,
         backorderedBaseQuantity: result.uncoveredBaseQuantity,fulfilledBaseQuantity: 0,cancelledBaseQuantity: 0 });
-      const values = { ...snapshot,ordered_quantity: quantity,ordered_base_quantity: base_quantity,tracking_policy_snapshot: profile.trackingPolicy,
+      // Quotation conversion already classified the agreed price. Confirmation does not choose a new price.
+      const priceSource = order.sourceType === "QUOTATION" ? line.priceSource : snapshot.price_source;
+      const values = { ...snapshot,price_source: priceSource,ordered_quantity: quantity,ordered_base_quantity: base_quantity,tracking_policy_snapshot: profile.trackingPolicy,
         minimum_sale_life_days_snapshot: profile.minimumSaleLifeDays ?? 0,reserved_outstanding_base_quantity: result.reservedBaseQuantity,
         backordered_base_quantity: result.uncoveredBaseQuantity,updated_at: nowMs };
       await tx.execute(`UPDATE sales_order_lines SET ${Object.keys(values).map(field => `${field}=?`).join(",")},version=version+1 WHERE id=? AND sales_order_id=?`, [...Object.values(values),line.id,order.id]);

@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "decision": "Sam's 2026-11-24 extension 「延續到上線」 in AGENTS.md (PR #395) applies to the ordinary functional cases. PM agentmsg 2796bdb0 directed integration on cost main 89c14b211dd119e99617fa4f64965b5530e99b29. CI administrator agentmsg a4ea408d confirmed the active pins and workload for functional source ab6e5a1d2c251b1491d7755d70b953eb0354d59d. Independent review and trusted CI administrator registration apply. The two local browser cases are the physical Returns subset of Sam's separate 2026-11-25 approval 「都照建議批准」 (PM 65c74e1d, decision dc903209); the future browser workflow is outside this change.",
+  "purpose": "Exercise customer returns to quarantine and supplier returns against the original receipt in the real API, including original cost, authorization, rollback, replay and the shared quantity limit. Verify remaining quantities and each source reader's transaction and isolation requirements. Bind two local browser flows that verify draft cancellation, posting and persistence across refresh.",
+  "data": "Two isolated MySQL cases. The customer case uses one SKU and a return batch of two lines; the supplier case uses one SKU, one five-unit receipt and two competing drafts. Six unit cases use bounded inline input, no database server. The two local browser cases use synthetic fixtures and a disposable UUID schema.",
+  "concurrency": "At most two competing supplier posting requests in one case; other cases unchanged. Local browser config uses one worker and no retries.",
+  "repetitions": "Once per applicable ordinary functional CI run; once per selected time zone for local validation.",
+  "thresholds": "Exact inventory and original cost entries, a full rollback on rejection, and one success plus one quantity-conflict response for the competing posts. Stock, original receipt, replay, browser console and network assertions must pass. Existing coverage floors remain in force.",
+  "trigger": "Existing ordinary PR, main and scheduled functional discovery. The two Playwright cases are local with an explicit config. No browser CI trigger, workflow, new job or capacity workload.",
+  "cost": "The added HTTP cases took about 8 to 12 seconds combined on the local test machine; six added unit cases took under 10 ms. Estimated hosted increment is 8 to 15 seconds in the existing affected shard; not yet measured. No additional CI job.",
+  "files": [
+    {
+      "path": "client/e2e/returns/playwright.config.js",
+      "mode": "100644",
+      "blob": "b58dbfacabd8fe5e259fb61b0068e587e0eced8c",
+      "kind": "functional",
+      "cases": [
+        "customer return persists across refresh, cancels a draft, and posts to quarantine",
+        "supplier return starts from the receipt and stays posted after refresh"
+      ]
+    },
+    {
+      "path": "client/e2e/returns/return-posting.spec.js",
+      "mode": "100644",
+      "blob": "de5ecd37e9187053e17b9c2ec06fe70ea0b8ea78",
+      "kind": "functional",
+      "cases": [
+        "customer return persists across refresh, cancels a draft, and posts to quarantine",
+        "supplier return starts from the receipt and stays posted after refresh"
+      ]
+    },
+    {
+      "path": "server/database/migrations/0132_seed_returns_permissions.js",
+      "mode": "100644",
+      "blob": "78a3dceab995f42757c6e66f3b7a79131fad0efc",
+      "kind": "support"
+    },
+    {
+      "path": "server/test/integration/returnDrafts.integration.test.js",
+      "mode": "100644",
+      "blob": "82e1009cc0001b4f4b46421f52d51e72bc9b3159",
+      "kind": "functional",
+      "cases": [
+        "customer returns link every movement before posting and roll back a failed batch",
+        "supplier returns post against the original receipt without changing it and serialize the shared quantity cap"
+      ]
+    },
+    {
+      "path": "server/test/returns/returnQuantities.test.js",
+      "mode": "100644",
+      "blob": "cf931a3180c4df375acd37fcbab55ffa1479b26d",
+      "kind": "functional",
+      "cases": [
+        "a return may use the remaining quantity across multiple bins",
+        "the combined request cannot exceed the remaining quantity after returns and reversals",
+        "a return rejects missing or unrelated source facts"
+      ]
+    },
+    {
+      "path": "server/test/returns/returnShipmentCostFixture.js",
+      "mode": "100644",
+      "blob": "d47a1deeca58d705a793d09789234ecb4ebf46ce",
+      "kind": "functional",
+      "cases": [
+        "customer returns link every movement before posting and roll back a failed batch",
+        "supplier returns post against the original receipt without changing it and serialize the shared quantity cap",
+        "customer return persists across refresh, cancels a draft, and posts to quarantine",
+        "supplier return starts from the receipt and stays posted after refresh"
+      ]
+    },
+    {
+      "path": "server/test/returns/returnSourceReaders.test.js",
+      "mode": "100644",
+      "blob": "461e11be0b9e785eee4c1ba25da6d884165def93",
+      "kind": "functional",
+      "cases": [
+        "shipment return lookup counts drafts and posted returns and fills absent requested shipments",
+        "supplier return quantity lookup reads only posted movements and preserves exact totals",
+        "return source readers require the caller's active transaction at the agreed isolation"
+      ]
+    },
+    {
+      "path": "server/test/returns/supplierReturnFixture.js",
+      "mode": "100644",
+      "blob": "d443afdecc4324a4bb6bba5a0163deeeed8b5137",
+      "kind": "functional",
+      "cases": [
+        "supplier returns post against the original receipt without changing it and serialize the shared quantity cap",
+        "customer return persists across refresh, cancels a draft, and posts to quarantine",
+        "supplier return starts from the receipt and stays posted after refresh"
+      ]
+    }
+  ]
+}

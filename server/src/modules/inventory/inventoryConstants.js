@@ -19,6 +19,7 @@ export const INVENTORY_AUDIT_ACTIONS = Object.freeze([
   "warehouse.create", "warehouse.update", "warehouse.deactivate", "warehouse.reactivate", "warehouse.delete",
   "bin.create", "bin.update", "bin.deactivate", "bin.reactivate", "bin.delete",
   "receipt.post", "issue.post", "bin_move.post", "status_transfer.post", "adjustment.post", "movement.reverse",
+  "return.customer.post", "return.supplier.post",
   "reservation.create", "reservation.release", "reservation.cancel", "reservation.consume",
   "allocation.create", "allocation.release", "allocation.reallocate", "fefo.override",
   "transfer.create", "transfer.update", "transfer.cancel", "transfer.dispatch", "transfer.receive",
