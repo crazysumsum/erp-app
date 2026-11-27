@@ -1,3 +1,4 @@
+import loggingConfig from "../config/logging.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { LoggerRegistry } from "../src/services/logging/LoggerRegistry.js";
@@ -181,4 +182,10 @@ test("logging service flushes registry loggers once and separately flushes an in
   await injectedService.shutdown();
   assert.equal(injectedLoggerFlushes, 1);
   assert.deepEqual(injectedFlushes, { request: 1, system: 1 });
+});
+
+test("F-06 applies the same credential fields to request and system logs", () => {
+  for (const profile of [loggingConfig.loggers.request, loggingConfig.loggers.system]) {
+    for (const field of ["newUserPassword", "access_token"]) assert.ok(profile.redactedFields.includes(field));
+  }
 });

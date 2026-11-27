@@ -1,3 +1,4 @@
+import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { BaseService } from "../../framework/services/BaseService.js";
 import { describeMissingTable } from "../mysqldatabase/missingTableError.js";
 import { normalizeTokenRevocationConfig } from "./normalizeTokenRevocationConfig.js";
@@ -13,8 +14,8 @@ const SQL_FILE = "server/database/framework/jwt.sql";
  *
  * 所以撤銷用「版本號」表示：一個使用者一列，記著一個單調遞增的計數器。token
  * 帶著簽發當下的 ver，比目前版本舊就是已撤銷。整張表小到可以整份載入記憶體
- * （一個使用者一列，不是一個 token 一列），請求路徑只做一次 Map 查詢與一次
- * 數字比較。定時工作負責把快照刷新。「小到」由 maxCachedSubjects 強制執行
+ * （一個使用者一列，不是一個 token 一列），一般請求依本機快照比對；版本較快照新時，
+ * 讀回該帳號的資料庫版本再判斷。定時工作負責把快照刷新。「小到」由 maxCachedSubjects 強制執行
  * ——見 load()。
  *
  * 上一版用時間切線（「這個時間點之前簽發的全部作廢」）。換掉它是因為那等於
@@ -67,7 +68,7 @@ export class TokenRevocationService extends BaseService {
   /**
    * token 是否已被撤銷。這是熱路徑，每個帶 JWT 的請求都會走一次。
    */
-  isRevoked(claims) {
+  async isRevoked(claims) {
     const subject = String(claims?.sub ?? "").trim();
 
     // sub 缺失就沒有 key 可查，唯一 fail closed 的答案是「當作已撤銷」。與下面
@@ -91,7 +92,22 @@ export class TokenRevocationService extends BaseService {
     }
 
     // 沒有列代表從未撤銷過，等同版本 0——與 DEFAULT 1 的第一次撤銷銜接得上。
-    return version < (this.snapshot.get(subject) ?? 0);
+    const cached = this.snapshot.get(subject) ?? 0;
+    if (version <= cached) return version !== cached;
+
+    // Another instance may have issued the token since our last refresh.
+    let persisted;
+    try {
+      persisted = await this.currentVersion(subject);
+    } catch (cause) {
+      throw new ApplicationError("Unable to confirm session version", {
+        cause, code: "REVOCATION_UNAVAILABLE", statusCode: 503,
+        publicCode: "SERVICE_UNAVAILABLE", publicMessage: "Service unavailable"
+      });
+    }
+    const current = Math.max(this.snapshot.get(subject) ?? 0, persisted);
+    if (current > cached) this.snapshot.set(subject, current);
+    return version !== persisted || version !== current;
   }
 
   /**
@@ -215,8 +231,7 @@ export class TokenRevocationService extends BaseService {
   /**
    * 快照是否還在可信範圍內。false 代表撤銷判斷已經不能當數。
    *
-   * isRevoked() 刻意不看年齡——它回答的是「這個版本號算不算舊」，那是一個純粹
-   * 的比較。快照本身還算不算數是另一個問題，答錯的後果也不同（一個是放行錯的
+   * isRevoked() 核對帳號的版本。快照本身還算不算數是另一個問題，答錯的後果也不同（一個是放行錯的
    * 人，一個是整批人進不來），所以分成兩個問題問。
    */
   snapshotUsable() {
