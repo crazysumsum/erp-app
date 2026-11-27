@@ -6,7 +6,7 @@ import {
   lastAdminProtectedError,
   newlyGrantedPermissions
 } from "../authorization/adminGuard.js";
-import { assertActorFresh, loadRoleNamesForUser } from "../authorization/directoryLookups.js";
+import { assertActorFresh, loadPermissionNamesForUser, loadRoleNamesForUser } from "../authorization/directoryLookups.js";
 import { hashPassword } from "./passwordHash.js";
 import { assertPasswordChanged, assertPasswordStrength } from "./passwordPolicy.js";
 
@@ -344,6 +344,8 @@ export class UserAdminService {
       });
       const target = await this.#requireUser(connection, id);
 
+      await this.#assertCanManageAccount(connection, actor, id);
+
       if (target.status !== "active") {
         return this.#toSummary(target);
       }
@@ -416,7 +418,7 @@ export class UserAdminService {
       });
 
       return this.#toSummary({ ...target, status: "disabled" });
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   /**
@@ -564,6 +566,7 @@ export class UserAdminService {
       });
       const target = await this.#requireUserWithHash(connection, id);
 
+      await this.#assertCanManageAccount(connection, actor, id);
       await assertPasswordChanged(normalizedPassword, target.password_hash);
 
       // 重設密碼的前提通常是舊密碼已經不可信，那麼舊 session 也一樣不可信。
@@ -593,10 +596,19 @@ export class UserAdminService {
       });
 
       return { id: Number(id) };
-    });
+    }, { isolationLevel: "SERIALIZABLE" });
   }
 
   // --- 內部 ------------------------------------------------------------------
+
+  async #assertCanManageAccount(connection, actor, targetId) {
+    // Both callers use SERIALIZABLE so the checked grants stay current through the write.
+    // Delegating a bank permission does not grant control of the account that holds it.
+    assertNoPermissionEscalation({
+      actorPermissions: actor.permissions,
+      grantedPermissions: await loadPermissionNamesForUser(connection, targetId)
+    });
+  }
 
   async #requireUser(connection, id) {
     const [rows] = await connection.query(
@@ -613,7 +625,7 @@ export class UserAdminService {
 
   async #requireUserWithHash(connection, id) {
     const [rows] = await connection.query(
-      "SELECT id, username, password_hash FROM users WHERE id = ?",
+      "SELECT id, username, password_hash FROM users WHERE id = ? FOR UPDATE",
       [id]
     );
 
