@@ -14,23 +14,39 @@ import { confirm, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import ar from "@/services/ar.js";
+import shipment from "@/services/shipment.js";
 
 const route = useRoute(), session = useSessionStore();
 const command = useCommandEvent();
 const invoice = ref(null), loading = ref(false), error = ref("");
+const shipmentNumbers = ref(new Map());
 const invoiceId = computed(() => String(route.params.id));
+const canViewShipments = computed(() => session.permissions.includes("fulfillment.view"));
+
+async function loadShipmentNumbers(lines, signal) {
+  const ids = [...new Set(lines.map((line) => line.shipmentId))];
+  const results = await Promise.allSettled(ids.map(async (id) => {
+    const { shipment: source } = await shipment.getShipment(id, { signal });
+    return [id, source.number];
+  }));
+  if (!signal.aborted) shipmentNumbers.value = new Map(results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []));
+}
+
 let controller;
 async function load({ keep = false } = {}) {
   controller?.abort();
   controller = new AbortController();
   const { signal } = controller, id = invoiceId.value;
   error.value = "";
-  if (!keep) { invoice.value = null; loading.value = true; }
+  if (!keep) { invoice.value = null; shipmentNumbers.value = new Map(); loading.value = true; }
   // route param 會 decode：唔係正整數就唔砌入 API path。
   if (!/^[1-9]\d*$/u.test(id)) { error.value = "找不到這張發票。"; loading.value = false; return; }
   try {
     const value = await ar.getInvoice(id, { signal });
-    if (!signal.aborted) invoice.value = value;
+    if (!signal.aborted) {
+      invoice.value = value;
+      if (canViewShipments.value) void loadShipmentNumbers(value.lines, signal);
+    }
   } catch (failure) {
     if (!signal.aborted) error.value = failure.message || "載入發票失敗";
   } finally {
@@ -44,7 +60,6 @@ watch([invoiceId, () => session.user?.id], () => { generation += 1; });
 onBeforeUnmount(() => { generation += 1; controller?.abort(); });
 
 // allowedActions 只係提示（server 已按 ar.invoice.mgmt 過濾）；命令 server 會再驗。
-const canViewShipments = computed(() => session.permissions.includes("fulfillment.view"));
 const actions = computed(() => (session.permissions.includes("ar.invoice.mgmt") ? invoice.value?.allowedActions ?? [] : []));
 const issuedShipmentInvoice = computed(() => invoice.value?.status === "CONFIRMED" && invoice.value.number &&
   !invoice.value.openingReference && invoice.value.lines.length > 0);
@@ -68,7 +83,7 @@ const lineColumns = [
   { name: "sku", label: "SKU", field: "skuName", align: "left" },
   { name: "quantity", label: "數量 × 單價", field: "quantity", align: "left" },
   { name: "lineAmount", label: "行金額", field: "lineAmount", align: "right" },
-  { name: "shipmentId", label: "出貨單 ID", field: "shipmentId", align: "left" }
+  { name: "shipmentId", label: "出貨單號", field: "shipmentId", align: "left" }
 ];
 const allocationColumns = [
   { name: "receiptNumber", label: "收款編號", field: "receiptNumber", align: "left" },
@@ -151,7 +166,12 @@ async function ask(action) {
           <template #body-cell-sku="{ row }"><EllipsisCell :text="`${row.skuCode} — ${row.skuName}`" max-width="160px" /></template>
           <template #body-cell-quantity="{ row }"><q-td>{{ quantityText(row) }}</q-td></template>
           <template #body-cell-lineAmount="{ row }"><q-td class="text-right">{{ money(row.lineAmount, dp) }}</q-td></template>
-          <template #body-cell-shipmentId="{ row }"><q-td><router-link v-if="canViewShipments" :to="`/shipments/${row.shipmentId}`">出貨單 {{ row.shipmentId }}</router-link><template v-else>{{ row.shipmentId }}</template></q-td></template>
+          <template #body-cell-shipmentId="{ row }">
+            <q-td>
+              <router-link v-if="canViewShipments" :to="`/shipments/${row.shipmentId}`">{{ shipmentNumbers.get(row.shipmentId) || "出貨單號未提供" }}</router-link>
+              <template v-else>出貨單號未提供</template>
+            </q-td>
+          </template>
         </DataTable>
         <h2 class="text-h6 q-mt-lg q-mb-md">核銷記錄</h2>
         <DataTable :rows="invoice.allocations" :columns="allocationColumns" :initial-pagination="{ page: 1, rowsPerPage: appConfig.defaultPageSize, sortBy: null, descending: false }">

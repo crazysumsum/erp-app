@@ -91,7 +91,7 @@ describe("AR 由出貨開立發票", () => {
     await flushPromises();
     expect(wrapper.text()).toContain("所選出貨已在另一張未作廢的發票上");
     expect(shipment.listShipments).toHaveBeenCalledTimes(2);
-    expect(rows()[0].text()).toContain("已在發票 （草稿）");
+    expect(rows()[0].text()).toContain("已在發票 草稿（未編號）");
     expect(wrapper.text()).toContain("已選 0 張");
   });
   it("結果未確定：鎖住選擇，重試用同一個 eventId 同內容", async () => {

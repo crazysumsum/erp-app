@@ -18,7 +18,7 @@ const command = useCommandEvent();
 const key = computed(() => `${session.user?.id}:ar-invoice-create`);
 const search = reactive({ customerId: "", q: "", shipmentDateFrom: "", shipmentDateTo: "" });
 const form = reactive({ invoiceDate: today(), dueDate: "", dueDateReason: "", notes: "" });
-const shipments = ref([]), invoiced = ref(new Map()), selected = ref([]);
+const shipments = ref([]), selected = ref([]);
 const loading = ref(false), loadError = ref(""), submitError = ref(""), searched = ref(false);
 const uncertain = computed(() => command.isUncertain(key.value));
 const busy = computed(() => command.isBusy(key.value));
@@ -37,9 +37,9 @@ async function find() {
     const { items } = await shipment.listShipments({ ...query, signal });
     const marks = await ar.listInvoicedShipments(items.map((row) => row.id), { signal });
     if (signal.aborted) return;
-    shipments.value = items;
-    invoiced.value = new Map(marks.map((mark) => [String(mark.shipmentId), mark]));
-    selected.value = selected.value.filter((id) => items.some((row) => row.id === id) && !invoiced.value.has(id));
+    const invoicesByShipment = new Map(marks.map((mark) => [String(mark.shipmentId), mark]));
+    shipments.value = items.map((row) => ({ ...row, invoice: invoicesByShipment.get(row.id) }));
+    selected.value = selected.value.filter((id) => shipments.value.some((row) => row.id === id && !row.invoice));
   } catch (failure) {
     if (!signal.aborted) loadError.value = failure.message || "載入出貨失敗";
   } finally {
@@ -50,7 +50,7 @@ const customerOf = (id) => shipments.value.find((row) => row.id === id)?.custome
 const selectedCustomer = computed(() => (selected.value.length ? customerOf(selected.value[0]) : null));
 // 一張發票只可以係同一客戶；幣別由 server 驗（出貨列表冇幣別）。
 function blockedReason(row) {
-  if (invoiced.value.has(row.id)) return `已在發票 ${invoiced.value.get(row.id).invoiceNumber || "（草稿）"}`;
+  if (row.invoice) return "已開票";
   if (selectedCustomer.value && row.customer.id !== selectedCustomer.value.id) return "不同客戶";
   if (!selected.value.includes(row.id) && selected.value.length >= MAX_SHIPMENTS) return `最多 ${MAX_SHIPMENTS} 張`;
   return "";
@@ -96,13 +96,19 @@ const retry = () => submit();
       <q-banner v-if="loadError" role="alert" class="bg-negative text-white">{{ loadError }}<template #action><q-btn flat label="重試" @click="find" /></template></q-banner>
       <p v-else-if="searched && !loading && !shipments.length" role="status">沒有符合條件的已出貨出貨單。</p>
       <q-list v-else-if="shipments.length" bordered separator>
-        <q-item v-for="row in shipments" :key="row.id" tag="label" :disable="locked || Boolean(blockedReason(row))" data-testid="ar-create-shipment">
+        <q-item v-for="row in shipments" :key="row.id" :tag="row.invoice ? 'div' : 'label'"
+          :disable="!row.invoice && (locked || Boolean(blockedReason(row)))" data-testid="ar-create-shipment">
           <q-item-section side><q-checkbox :model-value="selected.includes(row.id)" :disable="locked || Boolean(blockedReason(row))" :aria-label="`選擇 ${row.number}`" @update:model-value="(on) => toggle(row.id, on)" /></q-item-section>
           <q-item-section>
             <q-item-label>{{ row.number }} — {{ row.customer.code }} {{ row.customer.name }}</q-item-label>
             <q-item-label caption>銷售單 {{ row.salesOrder.number }}，出貨日期 {{ row.shipmentDate || "—" }}，{{ row.lineCount }} 行</q-item-label>
           </q-item-section>
-          <q-item-section v-if="blockedReason(row)" side><q-item-label caption>{{ blockedReason(row) }}</q-item-label></q-item-section>
+          <q-item-section v-if="row.invoice" side>
+            <q-item-label caption>已在發票
+              <router-link :to="`/ar/invoices/${row.invoice.invoiceId}`">{{ row.invoice.invoiceNumber || "草稿（未編號）" }}</router-link>
+            </q-item-label>
+          </q-item-section>
+          <q-item-section v-else-if="blockedReason(row)" side><q-item-label caption>{{ blockedReason(row) }}</q-item-label></q-item-section>
         </q-item>
       </q-list>
     </div>
