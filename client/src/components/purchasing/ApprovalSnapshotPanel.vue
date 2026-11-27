@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, useId, watch } from "vue";
 import appConfig from "@config/app.js";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
@@ -18,8 +18,9 @@ const emit = defineEmits(["decide", "reload"]);
 const WARNINGS = Object.freeze({ ZERO_PRICE: "有零價明細", NO_PAYMENT_TERM: "未選擇付款條款" });
 // 重建後顯示返原本提交、重試會再送嘅原因。
 const reason = ref(props.pendingReason), password = ref(""), localError = ref(""), clicked = ref(null);
+const reasonInput = ref(null), reasonMessage = ref(""), reasonHelpId = useId();
 watch(() => props.pendingReason, (value) => { if (props.uncertainAction) reason.value = value; });
-const message = computed(() => localError.value || props.errorMessage);
+const message = computed(() => reasonMessage.value ? "" : localError.value || props.errorMessage);
 const snapshot = computed(() => props.approval.snapshot);
 const canDecide = computed(() => props.actions.includes("approve") || props.actions.includes("reject"));
 const reasonError = (required) => {
@@ -48,9 +49,15 @@ const columns = [
   { name: "lineNote", label: "備註", field: "lineNote", align: "left" }
 ];
 
-function decide(action) {
+async function decide(action) {
   if (props.busy || (props.uncertainAction && props.uncertainAction !== action)) return;
-  localError.value = reasonError(action === "reject") || (password.value ? "" : "請輸入密碼");
+  reasonMessage.value = reasonError(action === "reject");
+  localError.value = !reasonMessage.value && !password.value ? "請輸入密碼" : "";
+  if (reasonMessage.value) {
+    await nextTick();
+    reasonInput.value?.focus();
+    return;
+  }
   if (localError.value) return;
   clicked.value = action;
   emit("decide", { action, reason: reason.value.trim(), password: password.value });
@@ -82,7 +89,11 @@ function decide(action) {
     <q-card-section v-if="canDecide">
       <h2 class="text-h6 q-ma-none q-mb-sm">審批決定</h2>
       <q-banner v-if="message" role="alert" class="bg-negative text-white q-mb-sm">{{ message }}<template v-if="stale && !localError" #action><q-btn flat label="重新載入" @click="emit('reload')" /></template></q-banner>
-      <q-input v-model="reason" label="原因（批准選填，拒絕必填）" type="textarea" autogrow maxlength="500" counter :readonly="!!uncertainAction || busy" outlined dense />
+      <q-input ref="reasonInput" v-model="reason" label="原因（批准選填，拒絕必填）" type="textarea" autogrow maxlength="500" counter
+        :aria-describedby="reasonMessage ? undefined : reasonHelpId" :error="!!reasonMessage" :error-message="reasonMessage"
+        :readonly="!!uncertainAction || busy" outlined dense @update:model-value="reasonMessage = ''">
+        <template #hint><span :id="reasonHelpId">如填寫原因，請輸入 5 至 500 字。</span></template>
+      </q-input>
       <q-input v-model="password" label="密碼 *" type="password" autocomplete="current-password" class="q-mt-sm" outlined dense />
       <div class="row q-gutter-sm q-mt-sm">
         <q-btn v-if="actions.includes('approve')" color="primary" label="批准" :loading="busy && clicked === 'approve'" :disable="busy || (!!uncertainAction && uncertainAction !== 'approve')" @click="decide('approve')" />

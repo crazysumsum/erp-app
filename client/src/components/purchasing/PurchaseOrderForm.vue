@@ -88,6 +88,7 @@ onBeforeUnmount(() => { generation += 1; window.removeEventListener("beforeunloa
 
 const currency = computed(() => options.currencies.find((row) => row.code === form.currencyCode)
   ?? (props.document?.currencyCode === form.currencyCode ? { code: form.currencyCode, name: props.document.currencyName, decimalPlaces: props.document.currencyDecimalPlaces } : null));
+const currencyLabel = (option) => typeof option === "string" ? option : [option?.code, option?.name].filter(Boolean).join(" — ");
 const places = computed(() => currency.value?.decimalPlaces ?? null);
 const currencyOptions = computed(() => (currency.value && !options.currencies.includes(currency.value) ? [currency.value, ...options.currencies] : options.currencies));
 const paymentTermOptions = computed(() => {
@@ -243,7 +244,7 @@ async function submit() {
             role="alert" class="bg-warning text-dark q-mb-md">此採購單的供應商已封鎖。請更換供應商並儲存草稿後再提交。</q-banner>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6"><q-select :model-value="supplier" label="供應商 *" :options="options.suppliers" :option-label="row => `${row.supplierCode} — ${row.displayName || row.supplierName}`" use-input input-debounce="250" :rules="[required]" :error="!!fieldError('supplierId')" :error-message="fieldError('supplierId')" outlined dense @filter="(q, update) => search('suppliers', 'lookupSuppliers', q, update)" @update:model-value="chooseSupplier"><template #no-option><q-item><q-item-section>沒有符合條件的啟用供應商；請縮小搜尋。</q-item-section></q-item></template></q-select></div>
-            <div class="col-12 col-md-3"><q-select :model-value="form.currencyCode" label="貨幣 *" :options="currencyOptions" option-value="code" :option-label="row => `${row.code} — ${row.name}`" emit-value map-options :rules="[required]" :error="!!fieldError('currencyCode')" :error-message="fieldError('currencyCode')" outlined dense @update:model-value="value => touch('currencyCode', value)" /></div>
+            <div class="col-12 col-md-3"><q-select :model-value="form.currencyCode || null" label="貨幣 *" :options="currencyOptions" option-value="code" :option-label="currencyLabel" emit-value map-options :rules="[required]" :error="!!fieldError('currencyCode')" :error-message="fieldError('currencyCode')" outlined dense @update:model-value="value => touch('currencyCode', value)" /></div>
             <div class="col-12 col-md-3"><q-select :model-value="form.paymentTermId" label="付款條款（選填）" :options="paymentTermOptions" option-value="id" :option-label="row => `${row.code} — ${row.name}`" emit-value map-options clearable :error="!!fieldError('paymentTermId')" :error-message="fieldError('paymentTermId')" outlined dense @update:model-value="value => touch('paymentTermId', value)" /></div>
             <div class="col-12 col-md-6">
               <q-toggle v-model="useAddress" label="使用供應商主要訂購地址" :disable="!address" @update:model-value="syncAddress" />
